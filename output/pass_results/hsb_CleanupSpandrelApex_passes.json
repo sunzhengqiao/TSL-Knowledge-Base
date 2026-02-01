@@ -1,0 +1,311 @@
+{
+  "filename": "hsb_CleanupSpandrelApex.mcr",
+  "status": "completed",
+  "total_tokens": 33358,
+  "processing_time": 190.99432969093323,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.3",
+            "date": "19.10.2012",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4985,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "PrEntity prompt for ElementWallSF (Stud Frame Walls), direct manipulation of Beam objects (dbCreate, addToolStatic), 3D geometric calculations (PlaneProfile, shadowProfile, CoordSys), absence of sd_ prefix or _Viewport references."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWallSF"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4187,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select one or More Elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dBmLength",
+            "type": "PropDouble",
+            "displayName": "|Beam Length|",
+            "defaultValue": "300",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "sName",
+            "type": "PropString",
+            "displayName": "|Beam Name|",
+            "defaultValue": "Blocking",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sMaterial",
+            "type": "PropString",
+            "displayName": "|Beam Material|",
+            "defaultValue": "CLS",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 2,
+            "variable": "sGrade",
+            "type": "PropString",
+            "displayName": "|Beam Grade|",
+            "defaultValue": "C16",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6751,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the detailing of wall apexes in spandrel or gable conditions by trimming angled plates, removing redundant studs at overlaps, and inserting structural blocking where angled top plates meet bottom plates.",
+          "category": "Framing/Automation",
+          "typicalUseCase": "Used when generating stud frame walls with angled top plates (e.g., vaulted ceilings, gable ends, or dormers) to ensure the connection at the peak or transition point is structurally sound and geometrically clean."
+        },
+        "parameters": [
+          {
+            "name": "dBmLength",
+            "technicalDefault": "300",
+            "businessMeaning": "Specifies the length of the blocking beam to be inserted at the wall apex. This determines how far the blocking extends along the wall line to support the intersection of the plates.",
+            "validRange": "0 - 2000",
+            "unit": "mm",
+            "affectsOutput": "If > 0, a new blocking beam is generated. If 0, only cleanup cuts/stud deletion occurs. Directly controls the longitudinal size of the generated blocking."
+          },
+          {
+            "name": "sName",
+            "technicalDefault": "Blocking",
+            "businessMeaning": "Assigns the catalog or reporting name to the generated blocking beam.",
+            "validRange": "Text string (any valid beam name)",
+            "unit": "string",
+            "affectsOutput": "Sets the 'Name' property of the new beam, used in BOMs and labeling."
+          },
+          {
+            "name": "sMaterial",
+            "technicalDefault": "CLS",
+            "businessMeaning": "Defines the material code for the inserted blocking beam (e.g., CLS for Canadian Lumber Standard).",
+            "validRange": "Text string (valid catalog material code)",
+            "unit": "string",
+            "affectsOutput": "Sets the material property, affecting cost estimation and potentially machining specifications."
+          },
+          {
+            "name": "sGrade",
+            "technicalDefault": "C16",
+            "businessMeaning": "Defines the structural grade of the timber used for the blocking.",
+            "validRange": "Text string (e.g., C16, C24, SS)",
+            "unit": "string",
+            "affectsOutput": "Sets the structural grade property, used for engineering calculations and labels."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dBmLength is set to 0 or less",
+            "effect": "The script will perform cleanup (erasing studs, cutting plates) but will NOT generate the blocking beam entity.",
+            "cascade": [
+              "dBmLength"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam (Blocking)",
+            "description": "A new timber beam generated at the calculated intersection point of the bottom plate and angled top plate.",
+            "appliedTo": "The selected ElementWallSF."
+          },
+          {
+            "type": "Cut (Tooling)",
+            "description": "Static cuts applied to the existing Angled Top Plate, Bottom Plate, and the newly created Blocking to ensure they fit together flush.",
+            "appliedTo": "Existing intersecting Top/Bottom plates and new Blocking."
+          },
+          {
+            "type": "Beam Erasure",
+            "description": "Existing studs (Left/Right types) located in the overlap zone between the bottom plate and angled top plate are deleted to resolve conflicts.",
+            "appliedTo": "Selected ElementWallSF (specific Studs)."
+          }
+        ]
+      },
+      "tokens_used": 5729,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch script via hsbCAD palette or command line.",
+          "2. System checks insertCycleCount. If > 1, erase instance and abort (prevents multiple insertions).",
+          "3. If not called by a specific execute key (_kExecuteKey==\"\"), display the Properties Dialog (showDialogOnce) for user configuration.",
+          "4. Prompt user to select one or more ElementWallSF entities.",
+          "5. Validate that at least one element was selected. If empty, erase instance and exit.",
+          "6. Iterate through each selected ElementWallSF.",
+          "7. Retrieve all beams within the element and categorize them: Angled Top Plates, Bottom Plates, Studs, and generic Studs.",
+          "8. Iterate through all Bottom Plates found in the element.",
+          "9. Determine geometric intersection and spatial overlap with Angled Top Plates.",
+          "10. [Branch A - Significant Overlap] If the intersection area between Top and Bottom plates is substantial (>1mm²): Apply Cuts to both plates and erase any Studs located in the overlap zone.",
+          "11. [Branch B - Apex Contact] If intersection area is small, check if the top of the Bottom plate is within 0-5mm of the base of the Angled Top Plate.",
+          "12. If Apex Contact condition is met: Calculate new coordinate system for blocking.",
+          "13. [Branch C - Length Check] Check Property 'dBmLength'.",
+          "14. [Path C1 - Insert Blocking] If dBmLength > 0: Create new Beam (Blocking) at intersection, assign Name/Material/Grade, and add static cuts. Check for generic studs to stretch.",
+          "15. [Path C2 - No Blocking] If dBmLength <= 0: Skip creation of the blocking beam.",
+          "16. Mark for instance erasure (nErase=true).",
+          "17. After processing all elements, erase the script instance from the drawing, leaving only the generated geometry and cuts."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Spatial overlap analysis between Bottom Plate and Angled Top Plate.",
+            "path1": {
+              "name": "Cleanup Only (Large Overlap)",
+              "steps": [
+                "Detect intersection area > 1mm².",
+                "Cut Angled Top Plate (perpendicular to plate orientation).",
+                "Cut Bottom Plate (perpendicular to Top Plate orientation).",
+                "Identify and Erase Studs intersecting the overlap area."
+              ]
+            },
+            "path2": {
+              "name": "Apex Blocking (Small/Point Overlap)",
+              "steps": [
+                "Detect intersection area <= 1mm².",
+                "Check vertical gap (0-5mm) between plates.",
+                "Calculate intersection point.",
+                "Check 'dBmLength' property.",
+                "If > 0, create Blocking Beam and apply cuts.",
+                "Stretch adjacent generic studs if found."
+              ]
+            }
+          },
+          {
+            "condition": "Value of Property 'dBmLength' (Beam Length).",
+            "path1": {
+              "name": "Generate Blocking",
+              "steps": [
+                "Validate dBmLength > 0.",
+                "Create Beam entity.",
+                "Set dimensions, position, and rotation.",
+                "Assign properties (Name, Material, Grade, Type).",
+                "Apply cuts to Blocking and potentially stretch other studs."
+              ]
+            },
+            "path2": {
+              "name": "Skip Blocking",
+              "steps": [
+                "Detect dBmLength <= 0.",
+                "Skip beam creation command.",
+                "Script proceeds to exit (cleanup still performed in other branches)."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script automatically erases itself if it detects it is running more than once per command sequence."
+          },
+          {
+            "check": "Element Selection",
+            "errorMessage": "None (Silent)",
+            "recovery": "If user cancels selection or selects nothing (ssE.go() fails or empty set), the script erases itself immediately."
+          },
+          {
+            "check": "Element Validity",
+            "errorMessage": "None (Silent)",
+            "recovery": "Iterates through selection; if an element is invalid (bIsValid() is false), script erases instance and stops."
+          },
+          {
+            "check": "Beam Availability",
+            "errorMessage": "None (Silent)",
+            "recovery": "If an Element contains no beams, the script skips that element and continues to the next one."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Edit Dimensions",
+            "how": "OPM (Object Properties Palette)",
+            "effect": "Changing 'dBmLength' and re-running the script (or triggering recalculation) will resize the blocking beam length. Changing 'sName', 'sMaterial', 'sGrade' updates the blocking beam attributes."
+          },
+          {
+            "action": "Manual Geometry Adjustment",
+            "how": "CAD Grips/Move",
+            "effect": "Since the script instance erases itself after running, moving the wall or plates manually does not automatically update the blocking. The user must re-invoke the script on the modified elements to regenerate the apex details."
+          }
+        ]
+      },
+      "tokens_used": 6341,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_CleanupSpandrelApex.mcr\n\n## Overview\nThis script automates the detailing of wall apexes for stud frame walls in spandrel or gable conditions. It trims angled plates, removes redundant studs at overlaps, and inserts structural blocking where angled top plates meet bottom plates.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D wall elements. |\n| Paper Space | No | Not designed for 2D layout views. |\n| Shop Drawing | No | Intended for model detailing only. |\n\n## Prerequisites\n- **Required Entities**: `ElementWallSF` (Stud Frame Walls).\n- **Minimum Beam Count**: 0 (Selects entire wall elements).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_CleanupSpandrelApex.mcr` from the file dialog.\n\n### Step 2: Configure Properties (Optional)\nIf the script is not launched via a specific execute key, a properties dialog may appear automatically.\n```\nAction: Adjust the Beam Length, Name, Material, or Grade if needed, then click OK.\n```\n\n### Step 3: Select Wall Elements\n```\nCommand Line: Select one or More Elements\nAction: Click on the Stud Frame Wall (ElementWallSF) entities you wish to process. Press Enter to confirm selection.\n```\n\n### Step 4: Execution\nThe script will automatically process the selected walls, trim plates, remove conflicting studs, and insert blocking if configured. The script instance will delete itself upon completion.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Beam Length** | number | 300 | The length (in mm) of the blocking beam to insert at the apex. Set to 0 to perform cleanup only without adding blocking. |\n| **Beam Name** | text | Blocking | The catalog name assigned to the blocking beam (used in lists and labels). |\n| **Beam Material** | text | CLS | The material code for the blocking beam (e.g., CLS). |\n| **Beam Grade** | text | C16 | The structural grade of the timber for the blocking beam. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not add persistent context menu items as the instance erases itself after execution. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: No external settings files are required.\n\n## Tips\n- **Cleanup Only Mode**: If you only want to trim plates and remove overlapping studs without adding a new blocking beam, set the **Beam Length** property to `0` before running the script.\n- **Re-running**: The script instance erases itself after running. If you modify the wall geometry later, you must manually re-run the script on the elements to update the details.\n- **Large Overlaps**: The script detects if the overlap between the top and bottom plates is too large. In these cases, it performs cuts and stud removal but skips the blocking insertion to prevent errors.\n\n## FAQ\n- **Q: What happens if I change the wall geometry after running the script?**\n  - A: The blocking and cuts are not dynamically linked. You must select the wall elements and run the script again to recalculate the apex details.\n- **Q: Why didn't the script insert a blocking beam?**\n  - A: This usually happens for one of two reasons: 1) The **Beam Length** property is set to `0`, or 2) The script detected a large area of overlap between the plates where a single block isn't appropriate, so it performed a cleanup cut instead.\n- **Q: Can I process multiple walls at once?**\n  - A: Yes, you can select multiple `ElementWallSF` entities during the selection prompt, and the script will process all of them."
+      },
+      "tokens_used": 5365,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,347 @@
+{
+  "filename": "BMF-Winkelverbinder.mcr",
+  "status": "completed",
+  "total_tokens": 50858,
+  "processing_time": 422.7048861980438,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.6",
+            "date": "05may17",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "Verbindungsmittel ergänzt"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8375,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script creates 3D Body objects representing a metal connector, uses getBeam() to select a structural beam in 3D space, and assigns the connector to an Element group (assignToElementGroup) for manufacturing export. No usage of _Viewport, sd_ prefixed functions, or ShopDrawing entity iteration found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6695,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9993,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates 3D geometry and production data for standardized metal angle connectors (L-brackets) from specific manufacturers (BMF, Simpson).",
+          "category": "Hardware / Connection",
+          "typicalUseCase": "Used by a design engineer to select a specific off-the-shelf metal angle bracket, position it on a timber beam, and ensure it appears correctly in the BOM and shop drawings."
+        },
+        "parameters": [
+          {
+            "name": "sType",
+            "technicalDefault": "Index 7 of array (BMF-Zuganker)",
+            "businessMeaning": "Selects the specific commercial connector model from a catalog. This determines the physical dimensions (height, length, width, thickness) and the default label text.",
+            "validRange": "Limited to the predefined list of approx. 54 specific BMF and Simpson Strong-Tie products.",
+            "unit": "Enum (Text List)",
+            "affectsOutput": "Changes the 3D geometry size, the label text displayed, and the dimensions exported to the BOM."
+          },
+          {
+            "name": "sOrientH",
+            "technicalDefault": "Y-Achse",
+            "businessMeaning": "Defines the direction in which the 'Height' leg of the angle bracket extends relative to the beam's coordinate system.",
+            "validRange": "X-Achse, Y-Achse, Z-Achse, -X-Achse, -Y-Achse, -Z-Achse",
+            "unit": "Direction Vector",
+            "affectsOutput": "Rotates the 3D body so the vertical leg points in the specified global direction (e.g., Z for vertical, Y for perpendicular to beam face)."
+          },
+          {
+            "name": "sOrientL",
+            "technicalDefault": "X-Achse",
+            "businessMeaning": "Defines the direction in which the 'Length' leg of the angle bracket extends relative to the beam's coordinate system.",
+            "validRange": "X-Achse, Y-Achse, Z-Achse, -X-Achse, -Y-Achse, -Z-Achse",
+            "unit": "Direction Vector",
+            "affectsOutput": "Rotates the 3D body so the horizontal leg points in the specified global direction."
+          },
+          {
+            "name": "sSwitch",
+            "technicalDefault": "No",
+            "businessMeaning": "Swaps the dimensions of the Height and Length legs. Useful for rotating the bracket 90 degrees or adapting an asymmetric bracket (e.g., 90x60) to fit specific geometry constraints.",
+            "validRange": "Yes, No",
+            "unit": "Boolean",
+            "affectsOutput": "Exchanges the dimensional values used for the two legs of the 3D model."
+          },
+          {
+            "name": "sArt1",
+            "technicalDefault": "Empty",
+            "businessMeaning": "The manufacturer Article Number or Part Number for the bracket.",
+            "validRange": "Alphanumeric string",
+            "unit": "String",
+            "affectsOutput": "Updates the article number in the BOM/Metalpart list."
+          },
+          {
+            "name": "sMat1",
+            "technicalDefault": "Stahl, feuerverzinkt",
+            "businessMeaning": "The material specification of the bracket (e.g., Galvanized Steel, Stainless Steel).",
+            "validRange": "Material string from library",
+            "unit": "String",
+            "affectsOutput": "Updates the material in the BOM/Metalpart list and may change the visual appearance in renders."
+          },
+          {
+            "name": "nNail",
+            "technicalDefault": "0",
+            "businessMeaning": "The quantity of fasteners (nails/screws) required to attach this bracket.",
+            "validRange": "Integer (0+)",
+            "unit": "Count",
+            "affectsOutput": "Controls the generation of the 'Nail' Hardware entry in the BOM. Does not visually place individual nail geometry, only the logical entry."
+          },
+          {
+            "name": "sLayer",
+            "technicalDefault": "I-Layer",
+            "businessMeaning": "Assigns the connector to a specific construction layer (e.g., Inner, Outer, Tenon) for filtering in production views and CNC export.",
+            "validRange": "I-Layer, J-Layer, T-Layer, Z-Layer",
+            "unit": "String",
+            "affectsOutput": "Determines which layer the part is assigned to in the Element Group properties."
+          },
+          {
+            "name": "sNY",
+            "technicalDefault": "Yes",
+            "businessMeaning": "Toggles the visibility of the text description (Type and Subtype) in the drawing/model space.",
+            "validRange": "Yes, No",
+            "unit": "Boolean",
+            "affectsOutput": "Hides or shows the text label drawn at the insertion point."
+          },
+          {
+            "name": "dxFlag / dyFlag",
+            "technicalDefault": "200 / 300",
+            "businessMeaning": "Offset distance for the text label from the insertion point to prevent overlap with other elements.",
+            "validRange": "Positive or negative distances",
+            "unit": "mm",
+            "affectsOutput": "Moves the text label location relative to the connector origin."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects a different value for sType",
+            "effect": "The script looks up the index and updates the internal dimensions (dH, dL, dW, dT) used to generate the 3D Body.",
+            "cascade": [
+              "sArType1",
+              "sArType2",
+              "dH",
+              "dL",
+              "dW",
+              "dT"
+            ]
+          },
+          {
+            "trigger": "User sets sSwitch to 'Yes'",
+            "effect": "The script swaps the values of Height and Length before passing them to the Body generation function.",
+            "cascade": [
+              "dLenWid[0]",
+              "dLenWid[1]"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Body (3D Geometry)",
+            "description": "Two rectangular prisms combined to form an L-shaped angle bracket representing the selected hardware.",
+            "appliedTo": "Model Space at the selected insertion point, oriented by sOrientH and sOrientL."
+          },
+          {
+            "type": "Hardware (Logical Entity)",
+            "description": "BOM entries for the Connector itself and the associated Nails/Fasteners.",
+            "appliedTo": "Linked to the parent Element group for export lists (e.g., Prenest, hsbCAM)."
+          },
+          {
+            "type": "Text/Dimension",
+            "description": "Text labels displaying the connector Type and Subtype, positioned relative to the insertion point.",
+            "appliedTo": "Model/Sheet Drawing view."
+          }
+        ]
+      },
+      "tokens_used": 9463,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Initialization: Declare properties for Type, Orientation, Dimensions, Material, Nails, Layer, and Visibility.",
+          "2. Input Phase (Insert Only): User selects a GenBeam.",
+          "3. Validation 1: Check if a beam was selected. If not, exit script.",
+          "4. Configuration: Dialog appears allowing user to set Type, Orientation, Material, etc.",
+          "5. Validation 2: Check if sOrientH equals sOrientL. If yes, show error, erase instance, and exit.",
+          "6. Positioning: User selects an insertion point (_Pt0) in 3D space.",
+          "7. Calculation Loop: Script runs a second time (due to setExecutionLoops(2)).",
+          "8. Geometry Setup: Retrieve beam vectors and calculate local coordinate system.",
+          "9. Index Mapping: Find the index 'f' in the catalog arrays matching the selected sType.",
+          "10. Dimension Logic: Apply 'Switch' logic to swap Height/Length if sSwitch is 'Yes'.",
+          "11. Vector Math: Calculate global vectors for the bracket legs based on sOrientH and sOrientL.",
+          "12. Coordinate System: Define the hardware coordinate system (csbd) and generate Grip Points.",
+          "13. Locking: Set Orientation and Flag properties to Read-Only.",
+          "14. Body Generation: Create two rectangular prisms (Body bd1, bd2) to form the L-bracket.",
+          "15. BOM Output: Generate Hardware entries for the Connector and Nails.",
+          "16. Integration: Assign the connector to the beam's Element Group and specific Layer (I/J/T/Z).",
+          "17. Visualization: Draw Text labels (if enabled) and the 3D Body."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Is the script in Insertion mode? (_bOnInsert)",
+            "path1": {
+              "name": "Insertion Mode",
+              "steps": [
+                "Prompt for Beam selection.",
+                "Show Dialog.",
+                "Validate Orientation.",
+                "Prompt for Insertion Point."
+              ]
+            },
+            "path2": {
+              "name": "Recalculation Mode",
+              "steps": [
+                "Skip input prompts.",
+                "Regenerate geometry based on current property values.",
+                "Update display and BOM data."
+              ]
+            }
+          },
+          {
+            "condition": "Does the selected Beam belong to a valid Element?",
+            "path1": {
+              "name": "Element Valid",
+              "steps": [
+                "Assign display properties to Element Layer (I/J/T/Z).",
+                "Link to Element Group (assignToElementGroup).",
+                "Export DXA data for manufacturing."
+              ]
+            },
+            "path2": {
+              "name": "No Element",
+              "steps": [
+                "Draw in default space.",
+                "Skip Element-specific exports."
+              ]
+            }
+          },
+          {
+            "condition": "Is 'Switch' (sSwitch) set to 'Yes'?",
+            "path1": {
+              "name": "Swapped Dimensions",
+              "steps": [
+                "Swap dH and dL values.",
+                "Generate body with swapped lengths."
+              ]
+            },
+            "path2": {
+              "name": "Standard Dimensions",
+              "steps": [
+                "Use dH and dL as defined in catalog."
+              ]
+            }
+          },
+          {
+            "condition": "Is 'Show description' (sNY) set to 'Yes'?",
+            "path1": {
+              "name": "Text Visible",
+              "steps": [
+                "Draw Type (sArType1[f]).",
+                "Draw Subtype (sArType2[f]).",
+                "Draw leader line if offsets exist."
+              ]
+            },
+            "path2": {
+              "name": "Text Hidden",
+              "steps": [
+                "Suppress text drawing commands."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam Selection",
+            "errorMessage": "(Implicit) No beam selected.",
+            "recovery": "Script terminates; user must re-run command and select a beam."
+          },
+          {
+            "check": "Orientation Configuration",
+            "errorMessage": "You need two different orientations for the Height and the Length",
+            "recovery": "Script erases the instance; user must re-insert and select different axes (e.g., Z for Height, X for Length)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Connector Catalog",
+            "how": "OPM Property 'Type'",
+            "effect": "Updates dimensions (H/L/W/T) from the internal array. Rebuilds Body and BOM strings."
+          },
+          {
+            "action": "Swap Legs",
+            "how": "OPM Property 'Switch'",
+            "effect": "Swaps the physical length of the two legs of the angle bracket."
+          },
+          {
+            "action": "Update Material/Article",
+            "how": "OPM Properties 'Article', 'Material', 'Nail Model'",
+            "effect": "Updates BOM metadata; does not change geometry."
+          },
+          {
+            "action": "Change Production Layer",
+            "how": "OPM Property 'Layer'",
+            "effect": "Re-assigns the part to I-Layer, J-Layer, T-Layer, or Z-Layer within the Element Group."
+          },
+          {
+            "action": "Toggle Text Visibility",
+            "how": "OPM Property 'Show description'",
+            "effect": "Hides or shows the Type/Subtype labels in the drawing."
+          },
+          {
+            "action": "Move Text Label",
+            "how": "Grip Edit (Grip Point 3)",
+            "effect": "Relocates the text label anchor point. Note: dxFlag/dyFlag properties are Read-Only post-insert, but the grip point effectively controls this offset."
+          }
+        ]
+      },
+      "tokens_used": 9786,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# BMF-Winkelverbinder.mcr\n\n## Overview\nThis script inserts standardized metal angle connectors (L-brackets) from BMF and Simpson Strong-Tie catalogs into your 3D model. It generates the physical 3D geometry, assigns material and article codes for production, and manages the integration with the selected timber beam's Element Group for export lists.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script creates 3D Bodies and assigns them to structural beams. |\n| Paper Space | No | Not supported for annotation or detailing in 2D layouts. |\n| Shop Drawing | No | Geometry is generated in the model; shop drawings view the result. |\n\n## Prerequisites\n- **Required Entities**: One `GenBeam` (structural timber beam).\n- **Minimum Beam Count**: 1\n- **Required Settings**: None (Catalog data is embedded in the script).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `BMF-Winkelverbinder.mcr`\n\n### Step 2: Select Structural Beam\n```\nCommand Line: Select beam:\nAction: Click on the timber beam where you want to attach the angle connector.\n```\n\n### Step 3: Configure Connector\nA dialog box will appear.\n```\nAction: \n1. Select the 'Type' from the dropdown list (e.g., BMF-Zuganker, Simpson models).\n2. Set the 'Orient H' (Height direction) and 'Orient L' (Length direction).\n   Note: These must be different axes (e.g., Z and X).\n3. (Optional) Toggle 'Switch' to Yes to swap leg dimensions.\n4. Set Material and Article Number as required.\n5. Click OK.\n```\n\n### Step 4: Set Insertion Point\n```\nCommand Line: Insertion point:\nAction: Click in the 3D model to place the origin of the connector.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Type | Dropdown | Index 7 (BMF-Zuganker) | Selects the specific commercial connector model. This determines dimensions and the default label. |\n| OrientH | Dropdown | Y-Achse | Sets the direction vector for the vertical leg of the bracket (Height). Options: X, Y, Z, -X, -Y, -Z. |\n| OrientL | Dropdown | X-Achse | Sets the direction vector for the horizontal leg of the bracket (Length). Options: X, Y, Z, -X, -Y, -Z. |\n| Switch | Yes/No | No | If 'Yes', swaps the physical length of the two legs (swaps Height and Length dimensions). Useful for rotating asymmetric brackets. |\n| Article | String | Empty | The manufacturer Article Number or Part Number for BOM export. |\n| Material | String | Stahl, feuerverzinkt | Defines the material (e.g., Galvanized Steel) for BOM export. |\n| Nail | Integer | 0 | Number of fasteners (nails/screws) associated with this connector for the BOM. |\n| Layer | Dropdown | I-Layer | Assigns the part to a production layer (I, J, T, or Z) for filtering in exports and CNC. |\n| Show description | Yes/No | Yes | Toggles the visibility of the text label (Type/Subtype) in the drawing. |\n| X Flag / Y Flag | Number | 200 / 300 | Distance offsets for the text label from the insertion point. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Properties | Opens the AutoCAD Properties palette to edit Type, Orientation, Material, etc. |\n| Erase | Removes the connector instance from the drawing. |\n\n## Settings Files\nNone. The connector dimensions and catalog data are hardcoded within the script.\n\n## Tips\n- **Orientation Validation**: The script will delete itself if `OrientH` and `OrientL` are set to the same axis (e.g., both set to Z). Ensure they point in different directions.\n- **Swapping Legs**: If you have a 90x60 bracket and need it to fit a 60x90 space, use the **Switch** property instead of calculating new dimensions.\n- **Moving Text**: While `X Flag` and `Y Flag` are Read-Only after insertion, you can use the **Grip Point** (displayed near the text) to drag the label to a new location dynamically.\n- **Layer Assignment**: Use the **Layer** property to control if the part is treated as Inner (I), Outer (J), Tenon (T), or Construction (Z) hardware in your production lists.\n\n## FAQ\n- **Q: Why did the connector disappear immediately after I placed it?**\n- **A:** You likely set the Height Orientation (`OrientH`) and Length Orientation (`OrientL`) to the same axis (e.g., both Z). The script requires two different directions to generate the L-shape. Re-insert and choose different axes (e.g., Z and X).\n\n- **Q: How do I rotate the bracket 90 degrees without changing the axis directions?**\n- **A:** Set the **Switch** property to 'Yes'. This swaps the Height and Length dimensions, effectively rotating the bracket geometry.\n\n- **Q: Can I update the material after insertion?**\n- **A:** Yes. Select the connector, open the Properties palette, and change the **Material** string. This updates the BOM entry without altering the geometry."
+      },
+      "tokens_used": 6546,
+      "error": null
+    }
+  }
+}

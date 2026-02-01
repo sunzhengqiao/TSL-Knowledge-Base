@@ -1,0 +1,322 @@
+{
+  "filename": "HSB_E-CompoundToSingleCut.mcr",
+  "status": "completed",
+  "total_tokens": 26933,
+  "processing_time": 577.0057489871979,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 2,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl converts compound cuts into single cuts",
+        "versionHistory": [
+          {
+            "version": "1.02",
+            "date": "03.11.2017",
+            "author": "RP",
+            "changes": "Add BeamCodeFilter"
+          },
+          {
+            "version": "1.01",
+            "date": "31.07.2017",
+            "author": "AS",
+            "changes": "Update logo"
+          },
+          {
+            "version": "1.00",
+            "date": "17.09.2015",
+            "author": "AS",
+            "changes": "Pilot version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": [
+          "HSB_G-FilterGenBeams"
+        ]
+      },
+      "tokens_used": 4396,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly uses `_kModelSpace` in the `dbCreate` call during the insertion phase. It performs geometric modifications on 3D beams (`bm.addToolStatic`) and analyzes 3D tools (`analysedTools`). There are no references to viewports, paper space entities, or drawing generation (sd_*)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4879,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDialog",
+            "trigger": "Insertion (if not executed via key)",
+            "title": null,
+            "dataSource": "OPM Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "excludeString",
+            "type": "PropString",
+            "displayName": "|Filter mode|",
+            "defaultValue": "|Exclude|",
+            "inputType": "dropdown",
+            "options": [
+              "|Exclude|",
+              "|Include|"
+            ],
+            "category": "|Filters|",
+            "description": "|Specify wheter you want to include or exclude the beams matching the filtercriteria|"
+          },
+          {
+            "index": 1,
+            "variable": "sFilterBC",
+            "type": "PropString",
+            "displayName": "|Filter beams with beamcode|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": "|Filters|",
+            "description": "|Specify which beams and sheets you want to filter by specifying a beamcode or a list of beamcodes with semicolon as delimeter|"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "Catalog entries (HSB_E-CompoundToSingleCut)",
+            "handler": "_kExecuteKey",
+            "action": "Sets properties from catalog and processes elements",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 3659,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Simplifies complex compound cuts on timber beams into single-planar cuts to accommodate manufacturing limitations or specific processing requirements.",
+          "category": "Manufacturing/Preprocessing",
+          "typicalUseCase": "Applied when production machinery cannot handle compound angles (simultaneous tilt in two axes) or when design standards require simplified cuts for specific structural elements."
+        },
+        "parameters": [
+          {
+            "name": "excludeString",
+            "technicalDefault": "|Exclude|",
+            "businessMeaning": "Defines the logic for the beam code filter. It decides whether the specified beam codes should be skipped during processing or if the script should run exclusively on them.",
+            "validRange": "|Exclude|, |Include|",
+            "unit": "Mode (Enum)",
+            "affectsOutput": "If set to 'Exclude', matching beams retain their original geometry. If set to 'Include', only matching beams have their cuts modified; all others are ignored."
+          },
+          {
+            "name": "sFilterBC",
+            "technicalDefault": "",
+            "businessMeaning": "A list of beam codes (identifiers) used to target specific timber elements within the construction. This acts as a mask to determine which beams are candidates for cut simplification.",
+            "validRange": "Valid beam code strings separated by semicolons (e.g., 'POST;BEAM;PLATE') or empty string (implying all beams if 'Exclude' is active).",
+            "unit": "String list",
+            "affectsOutput": "Determines the subset of beams within the selected Element that will be scanned for compound cuts and subsequently modified."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sFilterBC is populated",
+            "effect": "The 'excludeString' parameter acts as a switch to interpret the list in 'sFilterBC'. Without a value in 'sFilterBC', this dependency has no effect.",
+            "cascade": [
+              "excludeString"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Modified Cut Geometry",
+            "description": "Replaces existing compound cuts with single-planar cuts. The geometric calculation projects the original cut normal onto the beam's cross-sectional plane (removing the rotation around the beam's longitudinal axis), resulting in a cut that is only perpendicular to the beam's weak or strong axis.",
+            "appliedTo": "GenBeams contained within the selected Elements that match the filter criteria defined by 'excludeString' and 'sFilterBC'."
+          }
+        ]
+      },
+      "tokens_used": 3867,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Launch Script (HSB_E-CompoundToSingleCut)",
+          "Check if insertion mode (_bOnInsert)",
+          "Check Execute Key or Show Dialog",
+          "User Input: Select Elements via PrEntity",
+          "Validate Selection",
+          "Create TSL Instance on each selected Element in ModelSpace",
+          "Erase temporary insertion instance",
+          "Instance executes on Element (_bOnDbCreated/_bOnElementConstructed)",
+          "Load Filter Properties (excludeString, sFilterBC)",
+          "Retrieve Beams from Element",
+          "Filter Beams via 'HSB_G-FilterGenBeams' based on Beam Code",
+          "Loop through Filtered Beams",
+          "Identify Compound Cuts (ToolType _kACCompound) on each Beam",
+          "Calculate Single Cut Normal (remove longitudinal tilt)",
+          "Apply New Static Cut Tool to Beam",
+          "Erase Instance"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Trigger on Insertion",
+            "path1": {
+              "name": "Execute Key Match",
+              "steps": [
+                "Check if _kExecuteKey exists in catalog list",
+                "Load properties from Catalog",
+                "Skip OPM Dialog",
+                "Proceed to Element Selection"
+              ]
+            },
+            "path2": {
+              "name": "Standard Insertion",
+              "steps": [
+                "Show OPM Dialog (ShowDialog)",
+                "Save properties to '_LastInserted' catalog",
+                "Proceed to Element Selection"
+              ]
+            }
+          },
+          {
+            "condition": "Filter Mode (excludeString)",
+            "path1": {
+              "name": "Exclude Mode",
+              "steps": [
+                "Set 'Exclude' flag to true",
+                "Call FilterGenBeams to REMOVE beams matching sFilterBC",
+                "Process remaining beams"
+              ]
+            },
+            "path2": {
+              "name": "Include Mode",
+              "steps": [
+                "Set 'Exclude' flag to false",
+                "Call FilterGenBeams to KEEP beams matching sFilterBC",
+                "Process selected beams"
+              ]
+            }
+          },
+          {
+            "condition": "Duplicate Instance on Element",
+            "path1": {
+              "name": "Existing Instance Found",
+              "steps": [
+                "Detect existing TSL with same scriptName on Element",
+                "Erase existing instance",
+                "Create new instance"
+              ]
+            },
+            "path2": {
+              "name": "No Existing Instance",
+              "steps": [
+                "Create new instance directly"
+              ]
+            }
+          },
+          {
+            "condition": "Valid Element Reference",
+            "path1": {
+              "name": "Valid",
+              "steps": [
+                "Proceed to processing"
+              ]
+            },
+            "path2": {
+              "name": "Invalid/Null",
+              "steps": [
+                "Report Warning: 'invalid or no element selected.'",
+                "Erase Instance",
+                "Abort"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "Warning: |invalid or no element selected.|",
+            "recovery": "User must select a valid Element and re-run the script."
+          },
+          {
+            "check": "Insertion Cycle Count",
+            "errorMessage": "None (Silent exit)",
+            "recovery": "Script self-erases if cycle count > 1 to prevent duplicate insertion prompts."
+          },
+          {
+            "check": "Cut Geometry Data",
+            "errorMessage": "None",
+            "recovery": "Script silently skips cuts if 'bodyPointsInPlane' length is 0."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Properties (Filter Criteria)",
+            "how": "OPM Properties Palette",
+            "effect": "Changing 'Filter mode' or 'Filter beams with beamcode' and triggering recalculation (via element update or context menu) will re-run the filter logic and apply cuts to a different set of beams within the element."
+          },
+          {
+            "action": "Delete Instance",
+            "how": "Erase/Select and Delete",
+            "effect": "Removes the script instance. The modified cuts (static tools) remain on the beams unless manually removed or the beams are regenerated/re-calculated by their parent element."
+          }
+        ]
+      },
+      "tokens_used": 5197,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-CompoundToSingleCut\n\n## Overview\nConverts complex compound cuts (cuts angled in two directions) on timber beams into simplified single cuts (cut angled in only one direction). This is typically used to accommodate machinery limitations or specific manufacturing requirements.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D elements and beams. |\n| Paper Space | No | Not designed for 2D drawing views. |\n| Shop Drawing | No | Does not generate drawings or views. |\n\n## Prerequisites\n- **Required Entities**: You must have Elements (containing GenBeams) in your model.\n- **Minimum Beam Count**: 0 (Script processes whatever is found in selected elements).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the command line.\n2. Navigate to the script folder and select `HSB_E-CompoundToSingleCut.mcr`.\n\n### Step 2: Configure Filters (Optional)\nBefore selecting elements, you can adjust the filters in the AutoCAD Properties Palette (OPM) if you only want to process specific beams.\n1. Press `Ctrl+1` to open the Properties Palette if not already visible.\n2. Set **Filter mode** to \"Include\" or \"Exclude\".\n3. Enter **Filter beams with beamcode** (e.g., `POST;BEAM`) to target specific elements.\n\n### Step 3: Select Elements\n1. The command line will prompt: `|Select elements|`\n2. Click on the Elements in the model that contain the beams you wish to process.\n3. Press `Enter` to confirm selection.\n4. The script will process the beams, modify the cuts, and automatically remove itself from the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Filter mode | dropdown | |Exclude| | Determines if the beam code filter excludes specific beams (ignores them) or includes only specific beams (processes only them). |\n| Filter beams with beamcode | text | (empty) | Enter beam codes to filter, separated by semicolons (e.g., `RW1;RW2`). Leave empty to apply to all beams (depending on Filter mode). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Catalog entries (HSB_E-CompoundToSingleCut) | Allows you to load predefined property sets (catalogs) to instantly apply specific filter settings and process the element. |\n\n## Settings Files\n- None required.\n\n## Tips\n- **Targeting Specific Parts**: Use the \"Filter beams with beamcode\" property to run the script only on specific structural parts (e.g., only rafters) without affecting other beams in the same element.\n- **Persistence**: This script modifies the beam geometry and then deletes itself. The cuts it creates remain as \"static tools.\" If you want to revert the changes, you must remove the tools or update the beam from its original generator.\n- **Manufacturing**: Use this script when your CNC machine or saw cannot handle compound angles (simultaneous tilt and rotation).\n\n## FAQ\n- **Q: Where did the script go after I ran it?**\n  - **A**: This is a \"fire and forget\" script. It modifies the geometry and erases its own instance to keep the drawing clean.\n- **Q: How do I undo the changes made by this script?**\n  - **A**: You cannot simply \"undo\" the script execution once the session is over. You must manually delete the static cut tools from the beam or refresh/re-generate the beam from its parent element.\n- **Q: Can I use this on a single beam?**\n  - **A**: The script works at the **Element** level. If you need to process a single beam, ensure it is isolated in its own Element or use the Beam Code filter to single it out."
+      },
+      "tokens_used": 4935,
+      "error": null
+    }
+  }
+}

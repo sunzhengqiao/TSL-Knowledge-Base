@@ -1,0 +1,286 @@
+{
+  "filename": "hsb_Apply Naillines to Elements.mcr",
+  "status": "completed",
+  "total_tokens": 51801,
+  "processing_time": 235.59065008163452,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9470,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Filename uses 'hsb_' prefix, indicating a standard hsbCAD model script. The script manipulates Element properties using 'el.attachPropSet' and 'el.setAttachedPropSetFromMap', which modifies model data. It calls 'assignToElementGroup' to link the instance to an Element. There are no 'sd_' prefixes, '#Type E' declarations, or '_Viewport' interactions typical of Paper Space scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element (Specifically ElementWall)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Must be associated with a Wall Element in the Model to calculate nailing zones and write property sets.",
+          "requiredSettings": [
+            "Property Set definition 'hsbElementNailing' attached to the element",
+            "Nailing hardware definitions (DuoFast, NKT, etc.) referenced in script arrays"
+          ]
+        }
+      },
+      "tokens_used": 7810,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10239,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Calculates and assigns structural nailing patterns (spacing, nail type, and hardware counts) to specific zones of a Wall Element based on sheathing material requirements.",
+          "category": "Hardware/Calculation",
+          "typicalUseCase": "Applying engineering-defined nailing schedules (e.g., 150/300mm spacing for OSB sheathing) to wall panels for production reports and CNC data export."
+        },
+        "parameters": [
+          {
+            "name": "strNailType1",
+            "technicalDefault": "Other Nail Type",
+            "businessMeaning": "The specific hardware (nail or screw) catalog entry to be used for sheathing nailing in Zone 1 (e.g., the outer sheathing layer).",
+            "validRange": "List of defined hardware (e.g., DuoFast coil nails, NKT screws)",
+            "unit": "String (Catalog Name)",
+            "affectsOutput": "Determines the 'Material' and 'Description' fields in the generated 'SHEETNAILING' hardware list for BOMs."
+          },
+          {
+            "name": "dSpacingEdge1",
+            "technicalDefault": "150",
+            "businessMeaning": "The on-center spacing (in mm) for nails along the perimeter edges of the sheet in Zone 1.",
+            "validRange": "50mm to 300mm (Structural requirements)",
+            "unit": "mm",
+            "affectsOutput": "Calculates the total quantity of nails required for the sheet edges and writes the value to the Element Property Set 'Zone1_Perimeter_Nailing'."
+          },
+          {
+            "name": "dSpacingCenter1",
+            "technicalDefault": "300",
+            "businessMeaning": "The on-center spacing (in mm) for nails in the intermediate (field) area of the sheet in Zone 1.",
+            "validRange": "100mm to 600mm",
+            "unit": "mm",
+            "affectsOutput": "Calculates the total quantity of nails required for the sheet field and writes the value to the Element Property Set 'Zone1_Intermediate_Nailing'."
+          },
+          {
+            "name": "nZones1",
+            "technicalDefault": "0",
+            "businessMeaning": "Index identifying which physical material layer or 'zone' (e.g., Zone 0 for outer sheathing, Zone 1 for inner) the parameters apply to.",
+            "validRange": "0 to 10",
+            "unit": "Index",
+            "affectsOutput": "Directs the script to calculate nail quantities for the specific geometric layer defined by this index."
+          },
+          {
+            "name": "strNailTypeFrame",
+            "technicalDefault": "Other Nail Type",
+            "businessMeaning": "The specific hardware used for framing connections (e.g., nailing studs to plates) rather than sheathing.",
+            "validRange": "List of defined hardware",
+            "unit": "String (Catalog Name)",
+            "affectsOutput": "Populates the 'FRAMENAILING' hardware component in the BOM."
+          },
+          {
+            "name": "nShowNailingDescriptionZone1",
+            "technicalDefault": "FALSE",
+            "businessMeaning": "Toggles the visibility of a text label in the CAD drawing displaying the spacing schedule (e.g., '150 / 300') for Zone 1.",
+            "validRange": "TRUE/FALSE",
+            "unit": "Boolean",
+            "affectsOutput": "Draws text entities in ModelSpace indicating the nailing pattern if TRUE."
+          },
+          {
+            "name": "sFilterZone1",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "A filter rule to exclude specific beams from the nailing calculation for this zone (e.g., excluding trimmers or specific blocking).",
+            "validRange": "Valid filter strings (beam codes, subcodes)",
+            "unit": "String",
+            "affectsOutput": "Reduces the calculated nail count by ignoring beams matching the filter criteria."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "nNailYN1 is FALSE",
+            "effect": "Disables calculations for Zone 1. No hardware or property set values are generated for this zone.",
+            "cascade": [
+              "dSpacingEdge1",
+              "dSpacingCenter1",
+              "strNailType1",
+              "nShowNailingDescriptionZone1",
+              "sFilterZone1"
+            ]
+          },
+          {
+            "trigger": "dSpacingEdge1 or dSpacingCenter1 changes",
+            "effect": "Recalculates the total quantity of nails and updates the Element Property Set 'hsbElementNailing' fields.",
+            "cascade": [
+              "SHEETNAILING Hardware Quantity",
+              "Zone1_Perimeter_Nailing",
+              "Zone1_Intermediate_Nailing"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "HardWrComp (Hardware Component)",
+            "description": "Virtual 'SHEETNAILING' and 'FRAMENAILING' objects containing quantities and material descriptions for export to production lists.",
+            "appliedTo": "The Wall Element linked to the script."
+          },
+          {
+            "type": "Property Set (hsbElementNailing)",
+            "description": "Key-Value pairs attached to the Element (e.g., 'Zone1_Perimeter_Nailing') used by CAM software or drawings to display nailing requirements.",
+            "appliedTo": "The Wall Element."
+          },
+          {
+            "type": "Text Entity",
+            "description": "Visual annotation in the model displaying the nailing spacing (e.g., '150 / 300').",
+            "appliedTo": "ModelSpace (relative to the wall insertion point)."
+          }
+        ]
+      },
+      "tokens_used": 8279,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initialization: Set units to mm, initialize arrays for nail types and Yes/No states.",
+          "2. Load Properties: Read user-defined properties (Nail types, Spacings, Zone indices, Display options) from the Properties Palette or defaults.",
+          "3. Execute Calculation (Internal): Traverse the Wall Element's composition to calculate nail quantities for specified zones based on beam geometry and spacing rules (logic in truncated section).",
+          "4. Prepare Hardware: Call 'prepareHardware' function to generate 'SHEETNAILING' and 'FRAMENAILING' HardWrComp objects based on calculated quantities.",
+          "5. Aggregate Nailing Info: Populate 'mpNailInfo' map with spacing parameters for all active zones (1-10).",
+          "6. Assign to Element: Link the script instance to the parent Element Group to ensure synchronization.",
+          "7. Update Property Set: Attach or update the 'hsbElementNailing' property set on the Element with the calculated spacing values (mapping dSpacingEdge/Center to Zone/ -Zone fields).",
+          "8. Generate Visuals: Draw coordinate cross-hairs and conditional text labels ('150 / 300' or 'Nailing') at the insertion point."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Zone Activation (nNailYN1 through nNailYN10)",
+            "path1": {
+              "name": "Zone Active (YES)",
+              "steps": [
+                "Calculate nail quantities for the specific zone.",
+                "Add zone data (index, spacing, nail type) to 'mpNailInfo' map.",
+                "Include hardware for this zone in the final list."
+              ]
+            },
+            "path2": {
+              "name": "Zone Inactive (NO)",
+              "steps": [
+                "Skip calculation for this zone.",
+                "Do not write spacing values to the 'mpNailInfo' map for this index."
+              ]
+            }
+          },
+          {
+            "condition": "Display Description Toggle (nShowNailingDescriptionZone1)",
+            "path1": {
+              "name": "TRUE",
+              "steps": [
+                "Determine text position based on Element type (Wall vs Generic).",
+                "Draw text displaying 'dSpacingEdge1 / dSpacingCenter1'."
+              ]
+            },
+            "path2": {
+              "name": "FALSE",
+              "steps": [
+                "Skip drawing specific spacing text.",
+                "Check CNC visibility flag (sNailYNCNC)."
+              ]
+            }
+          },
+          {
+            "condition": "CNC Visibility Flag (sNailYNCNC) AND Description Toggle (FALSE)",
+            "path1": {
+              "name": "Generic Label Shown",
+              "steps": [
+                "If sNailYNCNC is FALSE (Visible) AND nShowNailingDescriptionZone1 is FALSE, draw generic text 'Nailing' at insertion point."
+              ]
+            },
+            "path2": {
+              "name": "No Text",
+              "steps": [
+                "If sNailYNCNC is TRUE, suppress text drawing entirely."
+              ]
+            }
+          },
+          {
+            "condition": "Framing Nailing Quantity",
+            "path1": {
+              "name": "Quantity > 0",
+              "steps": [
+                "Create 'FRAMENAILING' HardWrComp entry.",
+                "Append to hardware list."
+              ]
+            },
+            "path2": {
+              "name": "Quantity == 0",
+              "steps": [
+                "Skip creation of 'FRAMENAILING' HardWrComp."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Association",
+            "errorMessage": "Script requires a valid parent Element (preferably ElementWall).",
+            "recovery": "Insert the script on a valid Wall Element in the model."
+          },
+          {
+            "check": "Property Set Definition",
+            "errorMessage": "Property set 'hsbElementNailing' not found or invalid.",
+            "recovery": "Ensure the 'hsbElementNailing' property set definition exists in the hsbCAD catalog/database."
+          },
+          {
+            "check": "Zone Index Validity",
+            "errorMessage": "Calculated quantities may be zero if nZones index does not match a material layer in the Element.",
+            "recovery": "Verify the 'nZones' properties correspond to actual sheathing layer indices (0-based) defined in the Element."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Nailing Parameters",
+            "how": "Select script instance -> Edit values in AutoCAD Properties Palette (OPM)",
+            "effect": "Changing 'dSpacingEdge', 'dSpacingCenter', or 'Nail Type' triggers a recalculation of hardware quantities and updates the 'hsbElementNailing' property set on the element immediately."
+          },
+          {
+            "action": "Toggle Visuals",
+            "how": "OPM -> Toggle 'nShowNailingDescriptionZone1' or 'sNailYNCNC'",
+            "effect": "Immediately updates the text label in ModelSpace to show specific spacing, generic 'Nailing', or hide text."
+          },
+          {
+            "action": "Relocate Script",
+            "how": "Grip edit the script instance cross-hairs",
+            "effect": "Moves the visual indicators (cross-hairs and text) to the new location in ModelSpace."
+          },
+          {
+            "action": "Context Menu Recalc",
+            "how": "Right-click script -> 'Recalculate'",
+            "effect": "Forces a re-execution of the calculation logic (useful if Element geometry changed but script didn't auto-update)."
+          }
+        ]
+      },
+      "tokens_used": 10509,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_Apply Naillines to Elements\n\n## Overview\nThis script automatically calculates structural nailing patterns (spacing and quantities) for Wall Elements and applies them to specific sheathing zones. It generates hardware lists for production and updates Element property sets with nailing schedules.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be inserted in the Model Space and linked to a Wall Element. |\n| Paper Space | No | Not designed for use in Layouts or Shop Drawings. |\n| Shop Drawing | No | Does not process 2D drawing views. |\n\n## Prerequisites\n- **Required Entities:** A Wall Element (ElementWall) must exist in the model.\n- **Minimum Beam Count:** 0 (Calculations are based on Element composition, not individual beams).\n- **Required Settings:**\n  - The Property Set definition `hsbElementNailing` must exist in your catalog.\n  - Nailing hardware definitions (e.g., DuoFast, NKT) must be available in the database.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_Apply Naillines to Elements.mcr`\n\n### Step 2: Select Element\n```\nCommand Line: Select Element:\nAction: Click on the Wall Element you wish to apply nailing calculations to.\n```\n\n### Step 3: Set Insertion Point\n```\nCommand Line: Insertion point:\nAction: Click in the Model Space to place the script instance. This location determines where the visual text label (if enabled) will appear.\n```\n\n## Properties Panel Parameters\n\nOnce inserted, select the script instance to view and edit the following parameters in the AutoCAD Properties Palette.\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Zone 1 Settings** | | | |\n| nNailYN1 | Boolean | FALSE | Enable or disable nailing calculations for Zone 1. |\n| nZones1 | Integer | 0 | The index of the material layer (0-based) this zone applies to (e.g., 0 for outer sheathing). |\n| dSpacingEdge1 | Double | 150 | On-center spacing (mm) for nails along the perimeter edges of the sheet. |\n| dSpacingCenter1 | Double | 300 | On-center spacing (mm) for nails in the intermediate (field) area of the sheet. |\n| strNailType1 | String | Other Nail Type | Select the hardware catalog entry (nail/screw) to be used for Zone 1. |\n| sFilterZone1 | String | | Filter rule to exclude specific beams (e.g., trimmers) from the calculation. |\n| nShowNailingDescriptionZone1 | Boolean | FALSE | Show the specific spacing schedule (e.g., \"150 / 300\") as text in the model. |\n| **Framing Settings** | | | |\n| strNailTypeFrame | String | Other Nail Type | Select the hardware used for framing connections (studs to plates). |\n| **Visual Settings** | | | |\n| sNailYNCNC | Boolean | FALSE | Toggle CNC visibility. If FALSE, generic \"Nailing\" text may appear if detailed descriptions are hidden. |\n\n*Note: The script supports multiple zones (1-10) following the pattern above.*\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Forces the script to re-run the nail quantity calculations based on the current Element geometry and property settings. |\n\n## Settings Files\n- **Property Set**: `hsbElementNailing`\n- **Purpose**: This script reads and writes to this property set attached to the Element. It stores values like `Zone1_Perimeter_Nailing` and `Zone1_Intermediate_Nailing` which are used for labeling and export.\n\n## Tips\n- **Zone Indexing**: If your calculated nail quantities are zero, check if `nZones1` matches the actual material layer index of your wall. Usually, `0` is the outer layer and `1` is the inner layer.\n- **Visual Feedback**: Enable `nShowNailingDescriptionZone1` to verify the spacing (e.g., \"150 / 300\") directly on the drawing before exporting to production.\n- **Hardware Lists**: The script automatically generates `SHEETNAILING` and `FRAMENAILING` entries in the Element's hardware list for BOMs.\n\n## FAQ\n- **Q: Why is the nailing text not appearing in my model?**\n  A: Check the `nShowNailingDescriptionZone1` property. If it is FALSE, the text is hidden. Also check `sNailYNCNC`; if set to TRUE, text may be suppressed for CNC purposes.\n\n- **Q: The nail count seems incorrect.**\n  A: Use the \"Recalculate\" option in the right-click menu. If the wall geometry changed recently, the script needs an update trigger. Also verify your `sFilterZone1` is not excluding the studs you expect to be nailed.\n\n- **Q: Can I use this for roof elements?**\n  A: This script is designed for `ElementWall`. While it may technically run on other element types, the calculations are optimized for wall sheathing patterns."
+      },
+      "tokens_used": 5494,
+      "error": null
+    }
+  }
+}

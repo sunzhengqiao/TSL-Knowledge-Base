@@ -1,0 +1,207 @@
+{
+  "filename": "DrillPatternDimension.mcr",
+  "status": "completed",
+  "total_tokens": 44409,
+  "processing_time": 224.33457493782043,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.7",
+            "date": "15.03.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-18273 creation by blockspace mode improved, dimlines always drawn in front of other entities"
+          },
+          {
+            "version": "1.6",
+            "date": "15.06.2022",
+            "author": "Thorsten Huck",
+            "changes": "HSB-15746 supports definition in multipage blockspace for automatic model creation"
+          },
+          {
+            "version": "1.5",
+            "date": "02.05.2022",
+            "author": "Thorsten Huck",
+            "changes": "HSB-15384 formatting on dimlines suppressed when perpendicular to 2D pattern"
+          },
+          {
+            "version": "1.4",
+            "date": "26.04.2022",
+            "author": "Thorsten Huck",
+            "changes": "HSB-15328 Creation by Multipage supported"
+          },
+          {
+            "version": "1.3",
+            "date": "25.04.2022",
+            "author": "Thorsten Huck",
+            "changes": "HSB-15319 loose drills added"
+          },
+          {
+            "version": "1.2",
+            "date": "22.04.2022",
+            "author": "Thorsten Huck",
+            "changes": "HSB-14915 alignment shopdrawings enhanced"
+          },
+          {
+            "version": "1.1",
+            "date": "07.04.2022",
+            "author": "Thorsten Huck",
+            "changes": "HSB-15167 new commands to add/remove points and drill locations"
+          },
+          {
+            "version": "1.0",
+            "date": "28.03.2022",
+            "author": "Thorsten Huck",
+            "changes": "HSB-15053 Initial version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8000,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "Both",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": true,
+          "isMultipageScript": true,
+          "detectionEvidence": "Script comments indicate 'Select genbeams, multipages or childpanels'. Version history 1.4 and 1.6 explicitly mention 'Creation by Multipage' and 'definition in multipage blockspace'. Code checks for Element entities (ShopDrawing context)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element",
+            "Multipage",
+            "ChildPanel"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Operates in both Model Space (for GenBeams) and Paper Space (for Multipages/ShopDrawings).",
+          "requiredSettings": [
+            "hsbGeoPattern.dll"
+          ]
+        }
+      },
+      "tokens_used": 6037,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10387,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the dimensioning of drill hole patterns on beams or within shop drawings, supporting manual overrides and layout adjustments.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Used during the detailing phase to accurately dimension complex drilling layouts (e.g., for MEP services or connections) on timber beams or walls, ensuring manufacturing clarity."
+        },
+        "parameters": [
+          {
+            "name": "DeltaOnTop",
+            "technicalDefault": "0",
+            "businessMeaning": "Controls the display mode of dimensions, toggling between showing individual distances (Delta) versus cumulative distances (Chain) along the pattern.",
+            "validRange": "0 (Chain mode), 1 (Delta mode)",
+            "unit": "Boolean/Integer",
+            "affectsOutput": "Alters the numeric values displayed on the dimension lines, changing how spacing information is communicated to the manufacturer."
+          },
+          {
+            "name": "vecDir",
+            "technicalDefault": "Calculated from selection view",
+            "businessMeaning": "The primary direction vector along which the dimension line is drawn and measured.",
+            "validRange": "Any normalized Vector3d",
+            "unit": "Vector (direction)",
+            "affectsOutput": "Determines the rotation and alignment of the dimension line relative to the drilled holes."
+          },
+          {
+            "name": "vecPerp",
+            "technicalDefault": "Calculated perpendicular to vecDir",
+            "businessMeaning": "The vector perpendicular to the dimension direction, used to define the offset distance of the dimension line from the pattern.",
+            "validRange": "Any normalized Vector3d perpendicular to vecDir",
+            "unit": "Vector (direction)",
+            "affectsOutput": "Controls the lateral position of the dimension line away from the drill holes."
+          },
+          {
+            "name": "Scale",
+            "technicalDefault": "1.0",
+            "businessMeaning": "Scaling factor applied to dimension components (text size, arrowheads) to match the specific drawing scale.",
+            "validRange": "0.1 to 10.0 (typically standard drawing scales like 1:10, 1:50 represented as factors)",
+            "unit": "Factor",
+            "affectsOutput": "Ensures dimension annotations are legible at the specific scale of the output drawing."
+          },
+          {
+            "name": "textHeight",
+            "technicalDefault": "0 (uses dim style default)",
+            "businessMeaning": "Explicit override for the height of the dimension text characters.",
+            "validRange": "1.5mm to 5.0mm (standard plotting sizes)",
+            "unit": "mm",
+            "affectsOutput": "Resizes the dimension text specifically if the default style settings are unsuitable."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User executes 'Flip Delta <> Chain' context menu command",
+            "effect": "Inverts the 'DeltaOnTop' boolean value and triggers a recalculation of the script.",
+            "cascade": [
+              "DeltaOnTop"
+            ]
+          },
+          {
+            "trigger": "User executes 'Reset Modifications' context menu command",
+            "effect": "Clears the internal list of removed points ('RemovedLocation[]') from the map object and recalculates.",
+            "cascade": [
+              "pps (PlaneProfiles)",
+              "ppRemovals[]"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "DimensionLine",
+            "description": "Visual lines with arrows indicating the extent of the drill pattern.",
+            "appliedTo": "GenBeams, Multipages, ChildPanels"
+          },
+          {
+            "type": "DimensionText",
+            "description": "Text labels displaying hole spacing (delta or chain) and potentially diameters.",
+            "appliedTo": "ShopDrawings / Model Space annotations"
+          }
+        ]
+      },
+      "tokens_used": 7474,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8010,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# DrillPatternDimension.mcr\n\n## Overview\nThis script automates the dimensioning of drill hole patterns on beams, multipages, and shop drawings. It provides tools to display hole spacing (Delta) or cumulative distances (Chain) and supports manual adjustments for optimal layout.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Can dimension GenBeams directly. |\n| Paper Space | Yes | Can dimension Multipages and Shop Drawings. |\n| Shop Drawing | Yes | Fully compatible with Element and ChildPanel entities. |\n\n## Prerequisites\n- **Required Entities**: `GenBeam`, `Element`, `Multipage`, or `ChildPanel`.\n- **Minimum Beam Count**: 0 (Selection depends on the target entity type).\n- **Required Dependencies**: `hsbGeoPattern.dll` must be available.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `DrillPatternDimension.mcr`\n\n### Step 2: Select Entity\n```\nCommand Line: Select genbeams, multipages or childpanels\nAction: Click on the beam, multipage sheet, or childpanel you wish to dimension.\n```\n\n### Step 3: Adjust Configuration\n```\nAction: After selection, the script generates the dimension lines. Use the Properties Palette to adjust scale, text height, or direction vectors.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| DeltaOnTop | Integer | 0 | Toggles dimension mode. **0** displays cumulative distances (Chain), **1** displays individual spacing (Delta). |\n| vecDir | Vector | Calculated | Sets the primary direction vector for the dimension line alignment. |\n| vecPerp | Vector | Calculated | Sets the perpendicular vector (offset) controlling the distance of the dimension line from the holes. |\n| Scale | Double | 1.0 | Scales the dimension components (arrows, text) to match the drawing scale. |\n| textHeight | Double | 0 | Overrides the default text height (in mm). Set to 0 to use the standard dimension style settings. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Flip Delta <> Chain | Toggles between displaying individual hole spacing and cumulative chain dimensions. |\n| Reset Modifications | Clears any manually removed points or drill locations, restoring the full pattern. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script does not use external XML settings files; it relies on entity properties and internal logic.\n\n## Tips\n- **Drawing Clarity**: If dimension lines appear cluttered, try setting `DeltaOnTop` to 1 to show individual spacings, or use `Scale` to adjust the size of annotations relative to the view.\n- **Paper Space**: When working in shop drawings, ensure the script is inserted onto the correct `Element` or `ChildPanel` to capture the specific drill pattern for that view.\n- **Offset Adjustments**: If the dimension text overlaps the beam geometry, modify the `vecPerp` vector to push the dimension line further away from the material.\n\n## FAQ\n- **Q: Can I use this script on a standard beam in Model Space?**\n  A: Yes, you can select a `GenBeam` directly in Model Space to dimension its drill patterns.\n\n- **Q: What happens if I change the scale of my drawing?**\n  A: Update the `Scale` property in the Properties Palette to ensure the dimension text and arrows remain legible at the new scale.\n\n- **Q: How do I restore a drill point I accidentally deleted from the dimension?**\n  A: Right-click the script instance and select **Reset Modifications** to restore all points."
+      },
+      "tokens_used": 4501,
+      "error": null
+    }
+  }
+}

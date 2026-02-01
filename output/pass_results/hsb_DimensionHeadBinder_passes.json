@@ -1,0 +1,258 @@
+{
+  "filename": "hsb_DimensionHeadBinder.mcr",
+  "status": "completed",
+  "total_tokens": 28646,
+  "processing_time": 178.2244176864624,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "29.07.2010",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Add the Gap around the openings when they have."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4282,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly prompts for a viewport using _Viewport.append(getViewport(...)). It retrieves the element from the viewport (vp.element()), performs calculations in Model Space (ms), but draws dimensions in Paper Space using Display dp(-1) and transforms them via transformBy(ms2ps)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "The script requires a layout with a viewport containing an element. It operates on the 2D projection of that element.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3030,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getViewport",
+              "promptOriginal": "Select a viewport",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "Properties Dialog",
+            "trigger": "On Insert",
+            "title": "Properties",
+            "dataSource": "OPM Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sDimLayout",
+            "type": "PropString",
+            "displayName": "Dim Style",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "dOffset",
+            "type": "PropDouble",
+            "displayName": "Offset",
+            "defaultValue": "150",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3881,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7251,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script launched/Inserted",
+          "2. Prompt user to select a Viewport on the layout",
+          "3. Open Properties Dialog (OPM) to configure Dim Style and Offset",
+          "4. Script Recalculates",
+          "5. Validate selected Viewport contains a valid Element",
+          "6. Validate Element contains Beams",
+          "7. Determine Element Orientation (check for reversal in Viewport)",
+          "8. Filter Beams: Separate Top Plates from Structural/Stud beams",
+          "9. Generate Convex Hull of Structural beams to find element bounds",
+          "10. Calculate extreme points (Left, Right, Top, Bottom) relative to panel coordinate system",
+          "11. Project Top Plate vertices onto the Element X-axis",
+          "12. [Conditional] Check if Top Plate vertices exist (>1)",
+          "13. [If True] Draw Main Dimension for Top Plate length",
+          "14. [Conditional] Check Left Overhang (Top Plate vs Structural bound > 5mm)",
+          "15. [If True] Draw Left Overhang Dimension",
+          "16. [Conditional] Check Right Overhang (Top Plate vs Structural bound > 5mm)",
+          "17. [If True] Draw Right Overhang Dimension"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Element X-axis orientation in Viewport",
+            "path1": {
+              "name": "Reversed (Negative Dot Product)",
+              "steps": [
+                "Invert Element X vector (vx = -vx)"
+              ]
+            },
+            "path2": {
+              "name": "Normal Orientation",
+              "steps": [
+                "Keep Element X vector as is"
+              ]
+            }
+          },
+          {
+            "condition": "Element Z-axis orientation in Viewport",
+            "path1": {
+              "name": "Reversed (Negative Dot Product)",
+              "steps": [
+                "Invert Element Z vector (vz = -vz)"
+              ]
+            },
+            "path2": {
+              "name": "Normal Orientation",
+              "steps": [
+                "Keep Element Z vector as is"
+              ]
+            }
+          },
+          {
+            "condition": "Left Side Overhang > 5mm",
+            "path1": {
+              "name": "Significant Overhang",
+              "steps": [
+                "Create dimension line at offset + 150mm",
+                "Draw dimension between Plate Start and Element Start"
+              ]
+            },
+            "path2": {
+              "name": "No/Minor Overhang",
+              "steps": [
+                "Skip drawing left overhang dimension"
+              ]
+            }
+          },
+          {
+            "condition": "Right Side Overhang > 5mm",
+            "path1": {
+              "name": "Significant Overhang",
+              "steps": [
+                "Create dimension line at offset + 150mm",
+                "Draw dimension between Plate End and Element End"
+              ]
+            },
+            "path2": {
+              "name": "No/Minor Overhang",
+              "steps": [
+                "Skip drawing right overhang dimension"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Viewport Collection is not empty",
+            "errorMessage": "(None - Implicit)",
+            "recovery": "Script calls eraseInstance() and exits if no viewport found."
+          },
+          {
+            "check": "Viewport Element is Valid (el.bIsValid())",
+            "errorMessage": "(None - Implicit)",
+            "recovery": "Script terminates execution if element is invalid."
+          },
+          {
+            "check": "Element contains at least 1 beam",
+            "errorMessage": "(None - Implicit)",
+            "recovery": "Script terminates execution if beam count < 1."
+          },
+          {
+            "check": "Top Plate Vertices count > 1",
+            "errorMessage": "(None - Implicit)",
+            "recovery": "Script skips drawing dimensions if insufficient points are calculated."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Update Dimension Style",
+            "how": "OPM Property 'Dim Style'",
+            "effect": "Updates the visual style of the dimensions (e.g., arrows, text size) based on the selected named style."
+          },
+          {
+            "action": "Adjust Dimension Offset",
+            "how": "OPM Property 'Offset'",
+            "effect": "Moves the main dimension line closer or further from the element geometry. Offset distance is in model units."
+          },
+          {
+            "action": "Viewport Scale Update",
+            "how": "Modify Viewport Properties in CAD",
+            "effect": "Script recalculates `ms2ps.scale()`, automatically updating the scale of the dimensions to match the new viewport zoom level."
+          }
+        ]
+      },
+      "tokens_used": 5936,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_DimensionHeadBinder\n\n## Overview\nThis script automatically dimensions the head binder (top plate) of a timber wall element displayed in a Paper Space viewport. It generates dimensions for the overall plate length and indicates specific side overhangs if the top plate extends beyond the structural wall bounds.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script must be run from a Layout tab. |\n| Paper Space | Yes | This is the primary environment. You must select a viewport containing an element. |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Entities**: A Layout tab with a Viewport containing a valid timber wall Element.\n- **Minimum Beam Count**: 1 (The element must contain beams to calculate dimensions).\n- **Required Settings Files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n```\nCommand: TSLINSERT\nAction: Browse and select hsb_DimensionHeadBinder.mcr\n```\n\n### Step 2: Select Viewport\n```\nCommand Line: Select a viewport\nAction: Click on the viewport border or inside the viewport that displays the wall element you wish to dimension.\n```\n\n### Step 3: Configure Properties\n```\nAction: Press Enter to confirm selection. The Properties Palette (OPM) will open.\nAction: Adjust the \"Dim Style\" or \"Offset\" values if necessary. The script will automatically recalculate and draw the dimensions.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Dim Style | text | Current Style | Sets the AutoCAD dimension style (e.g., arrows, text size) used for the generated dimensions. |\n| Offset | number | 150 | Sets the distance (in mm) between the element geometry and the dimension line. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu options are defined for this script. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Overhang Threshold**: Side overhang dimensions only appear if the top plate extends more than 5mm past the structural studs. Small discrepancies will not be dimensioned.\n- **Viewport Orientation**: The script automatically detects the orientation of the wall within the viewport. Ensure your viewport is aligned correctly before running the script.\n- **Dynamic Updates**: If you change the wall geometry or viewport scale, select the script entity and right-click to \"Recalculate\" (if available) or re-run the command to update dimensions.\n\n## FAQ\n- **Q: Why don't I see dimensions for the left or right side?**\n  **A:** The script only draws side overhang dimensions if the difference between the top plate edge and the structural wall edge is greater than 5mm. If they are flush or very close, no dimension is drawn.\n\n- **Q: The dimension text is too small or huge.**\n  **A:** This is controlled by the \"Dim Style\" property. Select the dimension object in the drawing, open the Properties Palette, and change the \"Dim Style\" to a style with your preferred text height settings.\n\n- **Q: Can I use this in Model Space?**\n  **A:** No, this script is designed specifically for creating dimensions on Layouts (Paper Space) based on a Viewport selection."
+      },
+      "tokens_used": 4266,
+      "error": null
+    }
+  }
+}

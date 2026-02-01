@@ -1,0 +1,325 @@
+{
+  "filename": "HSB_E-DistributeSheeting.mcr",
+  "status": "completed",
+  "total_tokens": 40147,
+  "processing_time": 770.2259130477905,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 11,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl distributes sheets in a specified area.",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "12.03.2014",
+            "author": "AS",
+            "changes": "First revision"
+          },
+          {
+            "version": "1.01",
+            "date": "14.03.2014",
+            "author": "AS",
+            "changes": "_Pt0 is no start of distribution"
+          },
+          {
+            "version": "1.02",
+            "date": "14.03.2014",
+            "author": "AS",
+            "changes": "Start distribution outside area"
+          },
+          {
+            "version": "1.03",
+            "date": "19.03.2014",
+            "author": "AS",
+            "changes": "Project _Pt0 to start of pline."
+          },
+          {
+            "version": "1.04",
+            "date": "19.03.2014",
+            "author": "AS",
+            "changes": "Add an extra row. Limit rows and columns to 500."
+          },
+          {
+            "version": "1.05",
+            "date": "19.03.2014",
+            "author": "AS",
+            "changes": "Enable rotation."
+          },
+          {
+            "version": "1.06",
+            "date": "19.03.2014",
+            "author": "AS",
+            "changes": "Split hatch and sheet rotation in the properties"
+          },
+          {
+            "version": "1.07",
+            "date": "19.03.2014",
+            "author": "AS",
+            "changes": "Report notice when invalid group is selected."
+          },
+          {
+            "version": "1.08",
+            "date": "19.03.2014",
+            "author": "AS",
+            "changes": "Add option to specify the distribution direction."
+          },
+          {
+            "version": "1.09",
+            "date": "13.11.2019",
+            "author": "rvw",
+            "changes": "Add option to select a sheet also during bOnInsert. And delete the earlier created sheets in the _Map when the tsl is run again."
+          },
+          {
+            "version": "1.10",
+            "date": "15.01.2020",
+            "author": "rvw",
+            "changes": "Add option to assign the generated sheets to the element the original selected sheet belongs to."
+          },
+          {
+            "version": "1.11",
+            "date": "17.01.2020",
+            "author": "rvw",
+            "changes": "Assign the sheets to the chosen zone if they are assigned to the element."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8636,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Filename prefix HSB_E-, creates Sheet entities via dbCreate, uses getEntity on Model entities (Sheet, EntPLine), no _Viewport references."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sheet",
+            "EntPLine"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (Script remark suggests insertion in elevation view)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6867,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10279,
+      "error": null
+    },
+    "4": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "Request timeout after retries"
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch script in Model Space (elevation view recommended).",
+          "2. [Insertion Phase] Prompt user to select a closed polyline or an existing sheet defining the area.",
+          "3. Validate selection: Must be Sheet or EntPLine. If invalid, report error and erase instance.",
+          "4. Prompt user to select start point for distribution (_Pt0).",
+          "5. Display configuration dialog (showDialogOnce) to set properties (dimensions, material, gaps, etc.).",
+          "6. Process initial selection:",
+          "   - If Sheet selected: Generate envelope polyline, erase original sheet.",
+          "   - Assign the generated polyline (area boundary) to the Floor Group or Element based on 'Assign to element' property.",
+          "7. Store initial polyline in _Map.",
+          "8. [Calculation Phase] Delete previously generated sheets (cleanup based on _Map[\"Entity[]\"]).",
+          "9. Retrieve properties: Assign-to-Element status, Floor Group, Zone Index, Direction.",
+          "10. Validate Floor Group selection. If invalid, report warning and exit.",
+          "11. Assign the TSL instance itself to the appropriate Group or Element.",
+          "12. Check Context Menu triggers ('Add area' or 'Subtract area') if executed.",
+          "   - Prompt for additional polyline/sheet.",
+          "   - Validate selection.",
+          "   - Add/Subtract logic stored in _Map (Subtract boolean).",
+          "13. Retrieve all polylines from _Map and filter invalid entities.",
+          "14. Sort polylines: Additive operations first, Subtractive operations last.",
+          "15. Calculate distribution vectors based on Sheet Angle and Distribution Direction.",
+          "16. Project user start point (_Pt0) onto the main polyline plane.",
+          "17. Create PlaneProfile (ppArea) by joining all polyline rings (Boolean addition/subtraction).",
+          "18. [Optional] Draw Area visualization (Hatch) if enabled.",
+          "19. Calculate bounding box and start point for sheet distribution grid.",
+          "20. Loop to create sheets:",
+          "   - Iterate Rows (Max 500).",
+          "   - Iterate Columns (Max 500).",
+          "   - Calculate sheet corners (BL, BR, TR, TL).",
+          "   - Check if sheet position is within extreme distribution bounds.",
+          "   - Create temporary PlaneProfile for the sheet.",
+          "   - Check intersection between sheet profile and Area profile.",
+          "   - If intersecting (and not an opening):",
+          "     - Create Sheet entity (dbCreate).",
+          "     - Set Color and Material.",
+          "     - Assign Sheet to Floor Group or Element based on 'Assign to element' property.",
+          "     - Add Sheet to _Map (Entity[]).",
+          "21. Update _Map with created entities."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Initial Entity Type Selection",
+            "path1": {
+              "name": "Sheet Selected",
+              "steps": [
+                "Extract envelope polyline.",
+                "Create new EntPLine from envelope.",
+                "If not assigning to element and Floor Group selected: Add polyline to Floor Group.",
+                "Else: Assign polyline to the original sheet's Element.",
+                "Erase original Sheet.",
+                "Proceed with generated polyline."
+              ]
+            },
+            "path2": {
+              "name": "Polyline Selected",
+              "steps": [
+                "Use polyline directly as the boundary.",
+                "Proceed with polyline."
+              ]
+            }
+          },
+          {
+            "condition": "Assignment Target (Property)",
+            "path1": {
+              "name": "Assign to Element = Yes",
+              "steps": [
+                "Get Element from initial selection.",
+                "Assign TSL instance and generated Sheets to this Element."
+              ]
+            },
+            "path2": {
+              "name": "Assign to Element = No",
+              "steps": [
+                "Check if Floor Group is selected.",
+                "Assign TSL instance and generated Sheets to the chosen Floor Group."
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Trigger",
+            "path1": {
+              "name": "Add Area",
+              "steps": [
+                "Prompt for polyline/sheet.",
+                "Add to internal list with Subtract flag = FALSE.",
+                "Update Map."
+              ]
+            },
+            "path2": {
+              "name": "Subtract Area",
+              "steps": [
+                "Prompt for polyline/sheet.",
+                "Add to internal list with Subtract flag = TRUE.",
+                "Update Map."
+              ]
+            },
+            "path3": {
+              "name": "Standard Recalc",
+              "steps": [
+                "Skip context prompts.",
+                "Process existing list in Map."
+              ]
+            }
+          },
+          {
+            "condition": "Zone Index Input",
+            "path1": {
+              "name": "Zone Index <= 5",
+              "steps": [
+                "Use Zone Index directly."
+              ]
+            },
+            "path2": {
+              "name": "Zone Index > 5",
+              "steps": [
+                "Calculate nZnIndex = 5 - nZoneIndex."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Initial entity type",
+            "errorMessage": "Invalid selection. Select a closed polyline or a sheet",
+            "recovery": "User must restart script and select valid entity."
+          },
+          {
+            "check": "Floor Group validity (on insert and recalc)",
+            "errorMessage": "Invalid group selected",
+            "recovery": "Select a valid floor group from properties list."
+          },
+          {
+            "check": "Context menu selection type",
+            "errorMessage": "Invalid selection. Select a closed polyline or a sheet",
+            "recovery": "Script halts, user must retry selection."
+          },
+          {
+            "check": "Internal List Synchronization",
+            "errorMessage": "Different length of internal lists!",
+            "recovery": "Script reports error and stops (internal logic error)."
+          },
+          {
+            "check": "Distribution Bounds",
+            "errorMessage": "(None - silently skips)",
+            "recovery": "Loops break if row/column count > 500 or sheet is out of bounds."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Geometry (Dimensions/Position)",
+            "how": "OPM Properties Palette (Grip Edit for _Pt0)",
+            "effect": "Updates distribution grid, start point, and regenerates sheets."
+          },
+          {
+            "action": "Change Assignment Target",
+            "how": "OPM Properties Palette (Assign to element / Assign to floorgroup)",
+            "effect": "Reassigns TSL instance and generated sheets between Element and Floor Group."
+          },
+          {
+            "action": "Add/Remove Area",
+            "how": "Right-click Context Menu ('Add area', 'Subtract area')",
+            "effect": "Prompts for new polyline, updates Boolean area calculation, regenerates sheets."
+          },
+          {
+            "action": "Change Appearance",
+            "how": "OPM Properties Palette (Color, Material, Hatch pattern)",
+            "effect": "Updates visual representation of sheets and area."
+          },
+          {
+            "action": "Change Distribution Settings",
+            "how": "OPM Properties Palette (Length, Width, Gaps, Angle, Direction)",
+            "effect": "Alters the grid calculation and resulting sheet layout."
+          }
+        ]
+      },
+      "tokens_used": 8919,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-DistributeSheeting.mcr\n\n## Overview\nThis script automates the distribution of sheeting materials (e.g., OSB, plywood) within a defined area. It allows users to generate a grid of sheets based on specified dimensions, gaps, and rotation, handling complex boundary shapes through addition and subtraction.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Recommended to be used in an Elevation View. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Entities**: A closed Polyline (`EntPLine`) or an existing `Sheet` entity to define the boundary.\n- **Minimum Beam Count**: 0.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command:** `TSLINSERT` → Select `HSB_E-DistributeSheeting.mcr`\n\n### Step 2: Define Area\n```\nCommand Line: Select closed polyline or sheet [Sheet/EntPLine]:\nAction: Click on a closed polyline or an existing sheet in the drawing to define the sheathing boundary.\n```\n\n### Step 3: Set Start Point\n```\nCommand Line: Start point of distribution:\nAction: Click in the drawing to specify where the sheet distribution should begin (_Pt0).\n```\n\n### Step 4: Configure Properties\n**Action:** The script will insert. Open the **Properties Palette** (Ctrl+1) to adjust sheet dimensions, material, gaps, and rotation.\n\n### Step 5: Modify Geometry (Optional)\n**Action:** Use the grip point `_Pt0` in the model to drag the start of the distribution grid. The sheets will regenerate automatically.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Length | Double | - | The length of the individual sheets to be generated. |\n| Width | Double | - | The width of the individual sheets to be generated. |\n| Gap X | Double | 0 | The gap between sheets along the X-axis. |\n| Gap Y | Double | 0 | The gap between sheets along the Y-axis. |\n| Sheet Angle | Double | 0.0 | The rotation angle applied to the sheets. |\n| Direction | Integer | 0 | Specifies the primary direction of the distribution grid. |\n| Material | String | - | The material assigned to the generated sheets. |\n| Material Hatch | String | - | The hatch pattern used for the area visualization. |\n| Draw area hatch | Boolean | - | If true, draws a hatch representing the total distribution area. |\n| Color | Integer | - | The color index for the generated sheets. |\n| Assign to element | Boolean | No | If checked, assigns the new sheets to the Element of the original selected entity. |\n| Assign to floorgroup | Entity | - | The Floor Group to which sheets are assigned (if \"Assign to element\" is No). |\n| Zone Index | Integer | - | The zone index for the generated sheets. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Add area | Prompts the user to select an additional polyline or sheet to merge with the current sheathing area. |\n| Subtract area | Prompts the user to select a polyline or sheet to create an opening (hole) within the current sheathing area. |\n\n## Settings Files\n- None required.\n\n## Tips\n- **Modifying Existing Layouts**: If you select an existing `Sheet` entity during insertion, the script will use its envelope as the boundary and replace the original sheet with the new distribution.\n- **Complex Shapes**: For areas with openings like windows or doors, insert the script on the outer boundary first, then use the **\"Subtract area\"** right-click option to cut out the openings.\n- **Grip Editing**: You can dynamically adjust the layout by dragging the `_Pt0` grip point in the drawing rather than typing coordinates.\n- **Performance**: The script limits generation to a maximum of 500 rows and 500 columns to prevent system overload.\n\n## FAQ\n- **Q: What happens if I select an invalid group?**\n  A: The script will report \"Invalid group selected\" in the command line and stop generation. Ensure a valid Floor Group is selected in the properties if \"Assign to element\" is disabled.\n- **Q: Can I change the sheet angle after insertion?**\n  A: Yes, you can change the \"Sheet Angle\" and \"Distribution Direction\" in the Properties Palette at any time, and the sheets will update.\n- **Q: How do I reset the start point?**\n  A: Simply click and drag the `_Pt0` grip point visible in the drawing to the desired location."
+      },
+      "tokens_used": 5446,
+      "error": null
+    }
+  }
+}

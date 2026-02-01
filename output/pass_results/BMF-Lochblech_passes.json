@@ -1,0 +1,360 @@
+{
+  "filename": "BMF-Lochblech.mcr",
+  "status": "completed",
+  "total_tokens": 60828,
+  "processing_time": 464.2972366809845,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10656,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses getBeam() to select beams interactively, creates 3D geometry using Body(), modifies beams with Cut() and addTool(), and defines production data using Hardware(). No Shop Drawing specific patterns ('#Type E', 'sd_' prefix, _Viewport, or _Entity arrays) are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Beam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space (3D environment)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7790,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"getBeam\",\n        \"promptOriginal\": \"|Select first Beam|\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      },\n      {\n        \"step\": 2,\n        \"function\": \"getBeam\",\n        \"promptOriginal\": \"|Select second Beam|\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      },\n      {\n        \"step\": 3,\n        \"function\": \"getPoint\",\n        \"promptOriginal\": null,\n        \"condition\": \"_bOnInsert && vx1.isParallelTo(vx2) && !(bm1.ptCen() - bm2.ptCen()).isParallelTo(vx1)\",\n        \"required\": true\n      },\n      {\n        \"step\": 4,\n        \"function\": \"PrEntity.go\",\n        \"promptOriginal\": \"Select optional beam\",\n        \"condition\": \"_bOnInsert && !vx1.isParallelTo(vx2)\",\n        \"required\": false\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [],\n  \"opmProperties\": [\n    {\n      \"index\": \"nStringIndex++\",\n      \"variable\": \"sType\",\n      \"type\": \"PropString\",\n      \"displayName\": \"|Type|\",\n      \"defaultValue\": \"40x120x2,0 BMF-Lochblech\",\n      \"inputType\": \"dropdown\",\n      \"options\": [\n        \"40x120x2,0 BMF-Lochblech\",\n        \"40x160x2,0 BMF-Lochblech\",\n        \"50x200x2,0 BMF-Lochblech\",\n        \"60x140x2,0 BMF-Loch"
+      },
+      "tokens_used": 11342,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates BMF perforated metal plate connectors (Lochblech) for connecting 2 or 3 timber beams. Supports splice connections (parallel beams) and corner/T-junctions, with options to recess the plate into the wood or apply custom plate dimensions.",
+          "category": "Hardware/Connection",
+          "typicalUseCase": "Creating structural timber joints using BMF standard plates or custom steel straps, specifically where beams meet at an intersection or run parallel (spliced)."
+        },
+        "parameters": [
+          {
+            "name": "sType",
+            "technicalDefault": "40x120x2,0 BMF-Lochblech",
+            "businessMeaning": "Standard Plate Catalog Selection. Choose from a pre-defined list of BMF perforated plate sizes (Width x Length x Thickness).",
+            "validRange": "List of 50 specific BMF sizes (e.g., 40x120x2.0 up to 300x1200x2.5)",
+            "unit": "mm (encoded in string)",
+            "affectsOutput": "Determines the geometric dimensions (dL, dW, dT) of the metal plate body unless 'Free Steel Plate' is active."
+          },
+          {
+            "name": "sFreeSteelPlate",
+            "technicalDefault": "|No|",
+            "businessMeaning": "Use Custom Dimensions. Toggle to override the standard catalog and define a custom steel plate size.",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "Enables the Length, Width, and Thickness inputs for manual definition."
+          },
+          {
+            "name": "dLength",
+            "technicalDefault": "3000",
+            "businessMeaning": "Custom Plate Length. The length of the steel strap along the primary beam axis.",
+            "validRange": "1 to 3000 (practical timber limits)",
+            "unit": "mm",
+            "affectsOutput": "Stretches or shrinks the plate geometry along the beam's X-axis."
+          },
+          {
+            "name": "dWidth",
+            "technicalDefault": "1300",
+            "businessMeaning": "Custom Plate Width. The width of the plate perpendicular to the beam axis.",
+            "validRange": "1 to 3000",
+            "unit": "mm",
+            "affectsOutput": "Stretches or shrinks the plate geometry perpendicular to the beam's X-axis."
+          },
+          {
+            "name": "dThickness",
+            "technicalDefault": "2.0",
+            "businessMeaning": "Plate Thickness. The material thickness of the steel plate.",
+            "validRange": "1.5, 2.0, 2.5, 3.0",
+            "unit": "mm",
+            "affectsOutput": "Defines the 3D depth of the plate body."
+          },
+          {
+            "name": "sDuplex",
+            "technicalDefault": "|Yes|",
+            "businessMeaning": "Double Plate (Two-sided). Determines if one plate or two mirrored plates are generated (one on each side of the joint plane).",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "If Yes, creates two separate Body entities mirrored across the joint and doubles the nail count."
+          },
+          {
+            "name": "sSide",
+            "technicalDefault": "|Left|",
+            "businessMeaning": "Plate Side Placement. Selects which side of the joint plane the single plate is placed on.",
+            "validRange": "Left/Right",
+            "unit": "Direction",
+            "affectsOutput": "Moves the plate to the positive or negative side of the joint's Z-vector."
+          },
+          {
+            "name": "dOffset",
+            "technicalDefault": "0",
+            "businessMeaning": "Plate Offset. Shifts the plate position along the primary beam's axis from the intersection point.",
+            "validRange": "-500 to 500",
+            "unit": "mm",
+            "affectsOutput": "Slides the plate along the beam length without rotating it."
+          },
+          {
+            "name": "sStretch",
+            "technicalDefault": "|Yes|",
+            "businessMeaning": "Cut Beams to Fit. Automatically applies cuts (machining) to the timber beams so the plate sits flush or recessed.",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "If Yes, adds 'Cut' tools to the beams, modifying their geometry to accommodate the plate thickness/position."
+          },
+          {
+            "name": "sArticle1 / sMaterial1",
+            "technicalDefault": "\"\" / \"Stahl, feuerverzinkt\"",
+            "businessMeaning": "Plate Production Data. ERP codes for the article number and material (e.g., galvanized steel).",
+            "validRange": "String",
+            "unit": "Text",
+            "affectsOutput": "Populates the BOM/Hardware list for manufacturing."
+          },
+          {
+            "name": "nNumNail",
+            "technicalDefault": "8",
+            "businessMeaning": "Nail Quantity per Plate. The number of nails associated with a single plate instance.",
+            "validRange": "0 to 100",
+            "unit": "Count",
+            "affectsOutput": "Updates the Hardware quantity for the fastener. (Doubled internally if Duplex is Yes)."
+          },
+          {
+            "name": "sMod2 / sArticle2 / sMaterial2",
+            "technicalDefault": "\"Kammnagel\" / \"\" / \"Stahl, feuerverzinkt\"",
+            "businessMeaning": "Fastener Specifications. Defines the nail model (e.g., nail plate/comb nail), article code, and material.",
+            "validRange": "String",
+            "unit": "Text",
+            "affectsOutput": "Populates the BOM/Hardware list for fasteners."
+          },
+          {
+            "name": "sDescription",
+            "technicalDefault": "|Yes|",
+            "businessMeaning": "Show Label. Toggles the visibility of the text dimension label in the CAD model.",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "Shows/Hides the text drawing the plate size (e.g., \"40x120x2.0\")."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sFreeSteelPlate is set to Yes",
+            "effect": "Unlocks dLength, dWidth, dThickness for editing. sType is effectively ignored for geometry.",
+            "cascade": [
+              "dLength",
+              "dWidth",
+              "dThickness"
+            ]
+          },
+          {
+            "trigger": "sFreeSteelPlate is set to No",
+            "effect": "Locks dLength, dWidth, dThickness. Geometry is driven by sType selection.",
+            "cascade": [
+              "dLength",
+              "dWidth",
+              "dThickness"
+            ]
+          },
+          {
+            "trigger": "sDuplex is set to Yes",
+            "effect": "Locks sSide (since both sides are used) and internally doubles the nail count.",
+            "cascade": [
+              "sSide",
+              "nNumNail"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Body",
+            "description": "3D solid representation of the perforated metal plate.",
+            "appliedTo": "Calculated intersection point between Beam 1 and Beam 2 (and Beam 3)."
+          },
+          {
+            "type": "Cut",
+            "description": "Machining operation to recess the plate into the timber beams.",
+            "appliedTo": "Beam 1 and Beam 2 (and Beam 3 if present). Controlled by 'Stretch' property."
+          },
+          {
+            "type": "Hardware",
+            "description": "Production data entry for the metal plate.",
+            "appliedTo": "Aggregate BOM."
+          },
+          {
+            "type": "Hardware",
+            "description": "Production data entry for nails/fasteners.",
+            "appliedTo": "Aggregate BOM."
+          },
+          {
+            "type": "Text/Dimension",
+            "description": "Label showing the plate dimensions.",
+            "appliedTo": "Model Space visualization."
+          }
+        ]
+      },
+      "tokens_used": 11382,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initialization: Define constants, load catalog arrays (sArType), and declare Properties (sType, sFreeSteelPlate, dimensions, materials, nails).",
+          "2. Property Evaluation: Determine dimensions (dL, dW, dT) based on 'sType' selection or 'sFreeSteelPlate' override.",
+          "3. Entity Selection (Insertion Only):",
+          "   a. Prompt user to Select first Beam (_Beam[0]).",
+          "   b. Prompt user to Select second Beam (_Beam[1]).",
+          "   c. Validate Beam selection (minimum 2 beams required).",
+          "4. Geometric Analysis:",
+          "   a. Calculate beam vectors (vx1, vx2) and intersection plane (vz1).",
+          "   b. Determine if beams are Parallel or Intersecting.",
+          "   c. [Conditional: Parallel Beams] Prompt user for a Reference Point (_Pt0) to define the plate location.",
+          "   d. [Conditional: Intersecting Beams] Prompt user for optional third beam.",
+          "5. Geometry Generation:",
+          "   a. Calculate insertion point and orientation based on beam configuration (2 parallel, 2 intersecting, or 3 intersecting).",
+          "   b. Generate Steel Plate Body (Body()) based on dimensions and Duplex setting.",
+          "   c. [Conditional: Stretch enabled] Apply Cuts (addTool) to beams to recess the plate.",
+          "   d. [Conditional: Duplex enabled] Generate second mirrored body and lock 'Side' property.",
+          "6. Visualization & Output:",
+          "   a. Draw text dimension labels if 'sDescription' is Yes.",
+          "   b. Render the 3D body in the model.",
+          "   c. Add Hardware entries for Plate and Nails to the BOM.",
+          "   d. Set CompareKey for update management."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Beam Orientation during Insertion",
+            "path1": {
+              "name": "Parallel Beams (Splice)",
+              "steps": [
+                "Script detects vx1.isParallelTo(vx2) is true.",
+                "User is prompted for a Reference Point (getPoint).",
+                "Plate orientation is aligned perpendicular to beam axis.",
+                "Optional 3rd beam loop is skipped."
+              ]
+            },
+            "path2": {
+              "name": "Intersecting Beams (Corner/T-Junction)",
+              "steps": [
+                "Script detects vx1.isParallelTo(vx2) is false.",
+                "User enters a loop to select an optional 3rd Beam.",
+                "Intersection geometry is calculated automatically.",
+                "Plate orientation is aligned with the intersection plane."
+              ]
+            }
+          },
+          {
+            "condition": "Plate Configuration",
+            "path1": {
+              "name": "Standard Catalog (sFreeSteelPlate = No)",
+              "steps": [
+                "Dimensions locked to values defined in 'sType' string.",
+                "dLength, dWidth, dThickness properties are read-only.",
+                "sType1 string matches catalog item."
+              ]
+            },
+            "path2": {
+              "name": "Free Steel Plate (sFreeSteelPlate = Yes)",
+              "steps": [
+                "Dimensions read from dLength, dWidth, dThickness properties.",
+                "sType1 string updated to reflect custom dimensions (e.g., 'BMF-Lochblech: 300x1300x2.0')."
+              ]
+            }
+          },
+          {
+            "condition": "Duplex Setting",
+            "path1": {
+              "name": "Single Plate (sDuplex = No)",
+              "steps": [
+                "One Body entity generated.",
+                "Position determined by 'sSide' property (Left/Right).",
+                "Nail count matches 'nNumNail'."
+              ]
+            },
+            "path2": {
+              "name": "Double Plate (sDuplex = Yes)",
+              "steps": [
+                "Two Body entities generated (mirrored).",
+                "'sSide' property is locked/ignored.",
+                "Nail count doubled (nNumNail1 = nNumNail * 2).",
+                "Hardware quantity doubled."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Minimum Beam Count",
+            "errorMessage": "Implicit - Script returns early if less than 2 beams selected.",
+            "recovery": "User must select at least 2 beams to run the script."
+          },
+          {
+            "check": "Parallel Beam Reference Point",
+            "errorMessage": "None specified in code, but getPoint requires input.",
+            "recovery": "User must click a point in 3D space to locate the splice plate."
+          },
+          {
+            "check": "Catalog Match",
+            "errorMessage": "If 'sFreeSteelPlate' is No, 'sType' must exist in sArType array.",
+            "recovery": "Select a valid type from the dropdown list."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Plate Dimensions",
+            "how": "OPM Properties Palette",
+            "effect": "Toggle 'Free Steel Plate' to Yes, then adjust Length/Width/Thickness. Body updates immediately."
+          },
+          {
+            "action": "Toggle Plate Duplex",
+            "how": "OPM Properties Palette ('Duplex' property)",
+            "effect": "Adds or removes the second mirrored plate and updates nail counts."
+          },
+          {
+            "action": "Toggle Beam Cutting",
+            "how": "OPM Properties Palette ('Stretch' property)",
+            "effect": "Adds or removes machining cuts on the connected beams."
+          },
+          {
+            "action": "Move Plate",
+            "how": "Grip Edit (via _PtG) or OPM ('Offset' property)",
+            "effect": "Slides the plate along the beam axis or moves it freely via grip."
+          },
+          {
+            "action": "Rotate/Flip Plate",
+            "how": "OPM Properties Palette ('Side' property)",
+            "effect": "Flips the plate to the other side of the joint (only active if Duplex is No)."
+          }
+        ]
+      },
+      "tokens_used": 11748,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# BMF-Lochblech.mcr\n\n## Overview\nGenerates BMF perforated metal plate connectors (Lochblech) for connecting 2 or 3 timber beams. It supports splice connections (parallel beams) and corner/T-junctions, with options to recess the plate into the wood or define custom dimensions.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for 3D beam interaction. |\n| Paper Space | No | Not applicable. |\n| Shop Drawing | No | Not applicable. |\n\n## Prerequisites\n- **Required Entities**: At least 2 Timber Beams.\n- **Minimum Beam Count**: 2.\n- **Required Settings**: None (uses internal catalog).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `BMF-Lochblech.mcr` from the file dialog.\n\n### Step 2: Select Primary Beams\n```\nCommand Line: Select first Beam\nAction: Click on the first timber beam to connect.\n```\n```\nCommand Line: Select second Beam\nAction: Click on the second timber beam.\n```\n\n### Step 3: Define Plate Location\n*The script detects if the beams are parallel or intersecting.*\n\n**If beams are PARALLEL (Splice):**\n```\nCommand Line: [Point Prompt]\nAction: Click a point in the model to locate the plate along the splice.\n```\n\n**If beams are INTERSECTING (Corner/T-Junction):**\n```\nCommand Line: Select optional beam\nAction: Click a third beam if present, or press Enter to finish with two beams.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Type** | Dropdown | 40x120x2,0 BMF-Lochblech | Select a standard plate size from the BMF catalog. |\n| **Free Steel Plate** | Dropdown | No | Set to **Yes** to unlock custom dimensions below. |\n| **Length** | Number | 3000 | Custom plate length (mm). Active only if Free Steel Plate is Yes. |\n| **Width** | Number | 1300 | Custom plate width (mm). Active only if Free Steel Plate is Yes. |\n| **Thickness** | Number | 2.0 | Custom plate thickness (mm). Active only if Free Steel Plate is Yes. |\n| **Duplex** | Dropdown | Yes | If **Yes**, creates two mirrored plates (one on each side). |\n| **Side** | Dropdown | Left | Selects side for a single plate. Locked if Duplex is Yes. |\n| **Offset** | Number | 0 | Shifts the plate along the beam axis (mm). |\n| **Stretch** | Dropdown | Yes | If **Yes**, automatically cuts the timber beams to fit the plate. |\n| **Article1** | String | [Empty] | ERP Article number for the plate. |\n| **Material1** | String | Stahl, feuerverzinkt | Material specification for the plate. |\n| **NumNail** | Number | 8 | Number of nails associated with one plate. |\n| **Mod2** | String | Kammnagel | Model name for the nail/fastener. |\n| **Article2** | String | [Empty] | ERP Article number for the nails. |\n| **Material2** | String | Stahl, feuerverzinkt | Material specification for the nails. |\n| **Description** | Dropdown | Yes | Toggle visibility of the dimension label text. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Re-calculate** | Refreshes the script geometry if parameters change. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script uses an internal array (`sArType`) for standard BMF sizes. No external XML configuration file is required.\n\n## Tips\n- **Custom Sizes**: To create a plate not in the standard list, set **Free Steel Plate** to **Yes**. You can then manually enter Length, Width, and Thickness.\n- **Moving the Plate**: You can slide the plate along the beam after insertion by changing the **Offset** property or using the visible grip point.\n- **Double-Sided Joints**: Use **Duplex = Yes** to automatically generate plates on both sides of the joint. This is faster than inserting two separate scripts.\n- **Hiding Labels**: If the model gets too cluttered with text, set **Description** to **No** to hide the dimension label.\n\n## FAQ\n- **Q: How do I cut a recess into the wood for the plate?**\n- **A:** Set the **Stretch** property to **Yes**. This will apply a machining operation (Cut) to the selected beams.\n- **Q: Why can't I change the Side property?**\n- **A:** The Side property is locked when **Duplex** is set to **Yes**, because the script automatically generates plates on both sides. Change Duplex to **No** to select a specific side.\n- **Q: Can I use this for non-90 degree connections?**\n- **A:** Yes, the script calculates the intersection plane based on the selected beams, supporting corners and T-junctions at various angles."
+      },
+      "tokens_used": 7910,
+      "error": null
+    }
+  }
+}

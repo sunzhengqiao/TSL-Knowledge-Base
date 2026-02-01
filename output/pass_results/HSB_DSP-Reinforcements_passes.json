@@ -1,0 +1,269 @@
+{
+  "filename": "HSB_DSP-Reinforcements.mcr",
+  "status": "completed",
+  "total_tokens": 22268,
+  "processing_time": 262.3941237926483,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "23.11.2017",
+            "author": "AS",
+            "changes": "Pilot version"
+          },
+          {
+            "version": "1.01",
+            "date": "08.01.2018",
+            "author": "AS",
+            "changes": "Check if tsl is attached to a detail line. If so it has an extra grip point."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4730,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script runs on the _bOnElementConstructed trigger, manipulates Element and Beam objects directly (3D model entities), uses 3D geometric operations (Vector3d, Plane intersection), and performs database copies (dbCopy). No ShopDrawing sd_ functions or Viewport logic present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element (Roof or Floor)",
+            "GenBeam (Reinforcements with hsbId 4110)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Must be attached to a DSP detail in Model Space; cannot be inserted manually.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3167,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowNotice",
+            "trigger": "_bOnInsert",
+            "title": null,
+            "dataSource": "Script generated message",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          },
+          {
+            "type": "ShowNotice",
+            "trigger": "_Element.length() == 0",
+            "title": null,
+            "dataSource": "Script generated message",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          },
+          {
+            "type": "ShowNotice",
+            "trigger": "Invalid element type check",
+            "title": null,
+            "dataSource": "Script generated message",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          },
+          {
+            "type": "ShowMessage",
+            "trigger": "_PtG.length() == 0",
+            "title": null,
+            "dataSource": "Script generated message",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2512,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Mirrors reinforcement beams (hsbId 4110) across a detail line to the opposite side of a roof or floor element.",
+          "category": "Framing",
+          "typicalUseCase": "When reinforcing a roof or floor element on one side of a split line (detail) and requiring the same reinforcements automatically duplicated on the adjacent side."
+        },
+        "parameters": [],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "GenBeam",
+            "description": "A mirrored copy of the original reinforcement beam, displaced to the opposite side of the detail line by a distance equal to the element's beam height plus its own depth.",
+            "appliedTo": "Roof or Floor Element"
+          }
+        ]
+      },
+      "tokens_used": 2149,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script triggered by event (not manual insertion)",
+          "Verify script is not in manual insert mode",
+          "Verify an Element is selected",
+          "Verify selected Element is a Roof or Floor type",
+          "Check if Element is constructed (_bOnElementConstructed)",
+          "Verify Detail Line geometry points exist (_PtG)",
+          "Calculate Element X-axis vector and Detail Line vector",
+          "Iterate through all beams in the Element",
+          "Check if beam hsbId matches '4110' (Reinforcement)",
+          "[Conditional] Check if beam crosses the detail line",
+          "Calculate intersection point of beam and detail line",
+          "Copy the beam to the database",
+          "Transform (Move) the copied beam along negative Element X-axis",
+          "Erase script instance and exit"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Manual Insertion Attempt",
+            "path1": {
+              "name": "Manual Insert",
+              "steps": [
+                "Show notice: 'Must be attached to a DSP detail'",
+                "Erase Instance",
+                "Exit"
+              ]
+            },
+            "path2": {
+              "name": "Event Triggered",
+              "steps": [
+                "Proceed to Element validation"
+              ]
+            }
+          },
+          {
+            "condition": "Element Validation",
+            "path1": {
+              "name": "Invalid/No Element",
+              "steps": [
+                "Show notice: 'No element selected' or 'Not a roof or floor'",
+                "Erase Instance",
+                "Exit"
+              ]
+            },
+            "path2": {
+              "name": "Valid Roof/Floor",
+              "steps": [
+                "Proceed to Detail Line validation"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Identification (hsbId 4110)",
+            "path1": {
+              "name": "Is Reinforcement",
+              "steps": [
+                "Check geometric intersection with detail line"
+              ]
+            },
+            "path2": {
+              "name": "Other Beam Type",
+              "steps": [
+                "Skip to next beam"
+              ]
+            }
+          },
+          {
+            "condition": "Geometric Intersection (Dot Product)",
+            "path1": {
+              "name": "Crosses Detail Line",
+              "steps": [
+                "Calculate intersection point",
+                "dbCopy() beam",
+                "transformBy() to mirror position"
+              ]
+            },
+            "path2": {
+              "name": "Does Not Cross Line",
+              "steps": [
+                "Skip beam (Continue loop)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insertion Method",
+            "errorMessage": "This tsl must be attached to a DSP detail and cannot be inserted manually.",
+            "recovery": "Attach the TSL to a construction detail/DSP entity in the catalog or drawing properties."
+          },
+          {
+            "check": "Element Selection",
+            "errorMessage": "No element selected.",
+            "recovery": "Ensure the script is applied to a valid Element entity."
+          },
+          {
+            "check": "Element Type",
+            "errorMessage": "The selected element is not a roof or a floor element.",
+            "recovery": "Select a valid Roof or Floor Element to apply this script."
+          },
+          {
+            "check": "Detail Line Geometry",
+            "errorMessage": "Invalid detail line, the split direction could not be determined.",
+            "recovery": "Ensure the element has a valid detail definition with geometry points (_PtG) that define the split line."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "The script instance erases itself immediately after execution. The resulting reinforcement beams are standard GenBeams and must be edited manually if changes are required."
+          }
+        ]
+      },
+      "tokens_used": 4900,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_DSP-Reinforcements.mcr\n\n## Overview\nThis script automatically duplicates and mirrors reinforcement beams (hsbId 4110) across a detail line to the opposite side of a roof or floor element during construction.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates entirely within the 3D model. |\n| Paper Space | No | Not applicable for layouts or shop drawings. |\n| Shop Drawing | No | Does not process 2D shop drawings. |\n\n## Prerequisites\n- **Required Entities**: An Element (Roof or Floor) containing a valid DSP (Detail) definition with geometry points.\n- **Required Beams**: The Element must contain beams assigned the catalog number (hsbId) **4110** (Reinforcement).\n- **Setup**: The script must be assigned to a DSP Detail in the hsbCAD Catalog; it cannot be inserted manually via the command line.\n\n## Usage Steps\n\n### Step 1: Assign Script to Detail\nThis script is event-driven and cannot be run manually.\n1.  Open the hsbCAD **Catalog**.\n2.  Navigate to the **Details** or **DSP** section.\n3.  Select the Detail entry associated with your reinforcement construction.\n4.  Attach `HSB_DSP-Reinforcements.mcr` to the detail properties.\n\n### Step 2: Apply Detail to Element\n1.  In the drawing, select a **Roof** or **Floor** element.\n2.  Open the **Properties** palette.\n3.  Assign the Detail (configured in Step 1) to the element.\n\n### Step 3: Construct or Update Element\n1.  Construct the element or trigger a recalculation (e.g., by changing a dimension or using the refresh command).\n2.  The script runs automatically, detects the reinforcement beams, and creates mirrored copies on the opposite side of the detail split line.\n\n### System Notices (Errors)\nIf the script encounters an issue, it will display one of the following notices on the screen:\n- **\"This tsl must be attached to a DSP detail.\"**: Shown if you try to insert the script manually.\n- **\"No element selected.\"**: Shown if the script cannot find a parent element.\n- **\"The selected element is not a roof or a floor element.\"**: Shown if attached to a Wall or other element type.\n- **\"Invalid detail line, the split direction could not be determined.\"**: Shown if the detail geometry points are missing or invalid.\n\n## Properties Panel Parameters\nThis script has no editable parameters in the Properties panel. It runs automatically based on geometry.\n\n## Right-Click Menu Options\nNo custom context menu options are available for this script.\n\n## Settings Files\nNo external settings files (XML) are used by this script.\n\n## Tips\n- **Beam Identification**: Only beams with the specific catalog ID **4110** will be mirrored. Standard joists or rafters will be ignored.\n- **Script Life Cycle**: This script instance erases itself immediately after execution. You cannot select it later to edit it; changes must be made in the Catalog or by re-applying the Detail.\n- **Geometry**: Ensure the element has valid geometry points defining the split line; otherwise, the script will fail to calculate the mirror position.\n\n## FAQ\n- **Q: Can I insert this script using the `TSLINSERT` command?**\n  **A:** No. Attempting to do so will result in an error message stating it must be attached to a DSP detail.\n\n- **Q: Why are my reinforcement beams not appearing on the other side?**\n  **A:** Verify that the beams you want to duplicate are assigned the hsbId **4110** in the catalog. Also, ensure the element is defined as a Roof or Floor.\n\n- **Q: How do I adjust the distance the beams are moved?**\n  **A:** The script calculates the offset based on the element's beam height plus the reinforcement's own depth. This logic is hard-coded; to change it, the script code must be modified by a developer."
+      },
+      "tokens_used": 4810,
+      "error": null
+    }
+  }
+}

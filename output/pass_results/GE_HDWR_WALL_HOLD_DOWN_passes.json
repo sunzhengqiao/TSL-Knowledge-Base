@@ -1,0 +1,363 @@
+{
+  "filename": "GE_HDWR_WALL_HOLD_DOWN.mcr",
+  "status": "completed",
+  "total_tokens": 50110,
+  "processing_time": 877.6199867725372,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": [
+          "GE_HDWR_WALL_ANCHOR"
+        ]
+      },
+      "tokens_used": 8033,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script generates 3D geometry using 'Body' objects (bdConnector, bdSide), sets hardware components using 'HardWrComp' and '_ThisInst.setHardWrComps', and dynamically creates other TSL instances via 'dbCreate'. It operates on an 'Element el' and performs vector calculations (vUp, vZ, vOff). It lacks '_Viewport', 'sd_' prefixes, and ShopDrawing specific entry points."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space context with a valid Element selected or referenced",
+          "requiredSettings": [
+            "GE_HDWR_WALL_ANCHOR.mcr"
+          ]
+        }
+      },
+      "tokens_used": 7601,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "Add Anchor",
+            "handler": "Add Anchor",
+            "action": "Creates an instance of the 'GE_HDWR_WALL_ANCHOR' script linked to this hold-down.",
+            "alsoTriggeredBy": "_bOnDbCreated (if iState==0)"
+          },
+          {
+            "menuItem": "Release Anchor",
+            "handler": "Release Anchor",
+            "action": "Removes the linked 'GE_HDWR_WALL_ANCHOR' instance and clears the map reference.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 7063,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates 3D geometry, machining, and BOM data for metal hold-down brackets (e.g., Simpson Strong-Tie) attached to wall elements, including automatic clash removal with studs and dynamic linking to anchor rods.",
+          "category": "Hardware",
+          "typicalUseCase": "Applying structural hold-downs to the ends of shear walls or shear panels to resist uplift forces, calculating necessary holes, and managing the associated fastener counts."
+        },
+        "parameters": [
+          {
+            "name": "arConnDescript",
+            "technicalDefault": "HTT4 SIMPSON",
+            "businessMeaning": "The catalog name of the hold-down connector (e.g., Simpson HTT4, HTT5, LTT19). This acts as a master selector that loads specific geometric dimensions and engineering data.",
+            "validRange": "Dependent on hardcoded catalog list (approx 20+ variations including HTT, LTT, HDQ, DTT, HDU series).",
+            "unit": "String",
+            "affectsOutput": "Determines the 3D shape of the bracket, the diameter/position of the anchor rod hole, the layout of fastener holes, and the default fastener types/quantities."
+          },
+          {
+            "name": "arDx",
+            "technicalDefault": "U(2.625)",
+            "businessMeaning": "The depth or width of the connector plate perpendicular to the wall face.",
+            "validRange": "1.5\" to 4.0\" (varies by model).",
+            "unit": "Length (inches/mm)",
+            "affectsOutput": "Defines the extrusion depth of the 3D metal body and how far the bracket projects from the wall."
+          },
+          {
+            "name": "arDy",
+            "technicalDefault": "U(12.375)",
+            "businessMeaning": "The vertical height of the connector.",
+            "validRange": "6\" to 32\" (varies by model).",
+            "unit": "Length (inches/mm)",
+            "affectsOutput": "Defines the vertical span of the bracket and the spacing for multiple rows of fasteners."
+          },
+          {
+            "name": "arDz",
+            "technicalDefault": "U(2.5)",
+            "businessMeaning": "The thickness of the metal plate.",
+            "validRange": "0.1\" to 0.25\".",
+            "unit": "Length (inches/mm)",
+            "affectsOutput": "Controls the thickness of the 3D body generation; used for collision detection against studs."
+          },
+          {
+            "name": "arDRod",
+            "technicalDefault": "U(0.625)",
+            "businessMeaning": "The diameter of the anchor rod (all-thread) that passes through the hold-down.",
+            "validRange": "0.5\" (1/2\") to 1.0\" (1\").",
+            "unit": "Length (inches/mm)",
+            "affectsOutput": "Sets the diameter of the main vertical drill hole through the bottom plates."
+          },
+          {
+            "name": "arDDrillCL",
+            "technicalDefault": "U(1.3125)",
+            "businessMeaning": "The distance from the wall face to the centerline of the anchor rod hole.",
+            "validRange": "0.75\" to 2.0\".",
+            "unit": "Length (inches/mm)",
+            "affectsOutput": "Locates the position of the large vertical drill hole relative to the wall surface."
+          },
+          {
+            "name": "arIShape",
+            "technicalDefault": "1",
+            "businessMeaning": "A code determining the geometric topology of the connector (e.g., standard, strap, heavy-duty, etc.).",
+            "validRange": "Integer (0, 1, 2, 3, 4, 5, 6).",
+            "unit": "Code",
+            "affectsOutput": "Switches logic for generating different 3D shapes (e.g., L-brackets vs. flat straps vs. complex H/DQ shapes)."
+          },
+          {
+            "name": "pFastenersType",
+            "technicalDefault": "0.148 x 1 1/2\"",
+            "businessMeaning": "The specific fastener (nail or screw) used to attach the bracket to the timber.",
+            "validRange": "Catalog of nail/screw types (e.g., 10d, SDS 1/4\", etc.).",
+            "unit": "String",
+            "affectsOutput": "Updates the Bill of Materials (HardWrComp) description."
+          },
+          {
+            "name": "iFastenersQty",
+            "technicalDefault": "18",
+            "businessMeaning": "The total quantity of fasteners required for installation.",
+            "validRange": "4 to 30+ (depending on connector height).",
+            "unit": "Count",
+            "affectsOutput": "Updates the quantity reported in the Hardware list."
+          },
+          {
+            "name": "strInstallation",
+            "technicalDefault": "Field Installed",
+            "businessMeaning": "Indicates the installation context (Field vs Shop) for reporting purposes.",
+            "validRange": "Field Installed, Shop Installed.",
+            "unit": "String",
+            "affectsOutput": "Adds notes to the hardware entry (e.g., '-Field Installed')."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects arConnDescript (Model)",
+            "effect": "Resets Dx, Dy, Dz, DRod, DDrillCL, IShape, and default fastener quantities to match the specific catalog data for that model.",
+            "cascade": [
+              "arDx",
+              "arDy",
+              "arDz",
+              "arDRod",
+              "arDDrillCL",
+              "arIShape",
+              "iFastenerQty"
+            ]
+          },
+          {
+            "trigger": "Script Insertion",
+            "effect": "Detects intersection between the generated connector body and existing wall studs; deletes intersecting studs to allow space for the hardware.",
+            "cascade": [
+              "Element Beams (Studs)"
+            ]
+          },
+          {
+            "trigger": "Context Menu 'Add Anchor'",
+            "effect": "Instantiates the dependent script 'GE_HDWR_WALL_ANCHOR' to generate the concrete rod and embed details.",
+            "cascade": [
+              "GE_HDWR_WALL_ANCHOR Instance"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "3D Body (Visual)",
+            "description": "A solid body representation of the hold-down bracket, colored for visibility.",
+            "appliedTo": "Model Space (Visualized near the wall end)."
+          },
+          {
+            "type": "Drill (Vertical)",
+            "description": "A large clearance hole for the anchor rod.",
+            "appliedTo": "Wall Bottom Plates (and potentially intermediate plates)."
+          },
+          {
+            "type": "Drill (Fastener)",
+            "description": "Smaller holes for nails/screws, generated in a pattern based on the bracket height.",
+            "appliedTo": "End Stud / Rim Joist."
+          },
+          {
+            "type": "HardWrComp (BOM)",
+            "description": "Hardware entries for the bracket itself and the associated fasteners.",
+            "appliedTo": "Element / CAM Lists."
+          },
+          {
+            "type": "Entity Link",
+            "description": "Map-based link to an 'Anchor' script instance if created.",
+            "appliedTo": "_Map storage."
+          }
+        ]
+      },
+      "tokens_used": 9605,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initialization: Load catalog arrays, check debug state, and read current 'State' from Map.",
+          "2. Parameter Resolution: Match user-selected 'strConnector' property against catalog arrays to determine dimensions (Dx, Dy, Dz), Shape (arIShape), and Rod Size.",
+          "3. Coordinate Calculation: Calculate insertion vectors (vUp, vZ, vOff) and base points relative to the selected Element.",
+          "4. Geometry Generation: Generate main connector body and side plates based on the Shape code (arIShape).",
+          "5. Machining Application: Subtract Anchor Rod hole and Fastener holes (pattern depends on Shape code).",
+          "6. Clash Resolution (Insertion Only): Detect intersections with perpendicular wall studs; erase intersecting studs to create clearance.",
+          "7. Automatic Linking: If 'State' is 0 (First Run), automatically spawn 'GE_HDWR_WALL_ANCHOR' instance.",
+          "8. BOM & Map Update: Generate Hardware components (fastener logic checks for user overrides) and write DXA data to Map."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Connector Shape (arIShape)",
+            "path1": {
+              "name": "Shape 0, 1 (Standard/HTT)",
+              "steps": [
+                "Generate rectangular side profile.",
+                "Transform side profile by half-thickness Z-offset.",
+                "Subtract fastener holes in a stepped loop up the height."
+              ]
+            },
+            "path2": {
+              "name": "Shape 2 (HDQ Series)",
+              "steps": [
+                "Generate trapezoidal side profile (wider at bottom).",
+                "Offset profile vertically by half-thickness.",
+                "Subtract fastener holes in a stepped loop."
+              ]
+            },
+            "path3": {
+              "name": "Shape 4 (LTT Series)",
+              "steps": [
+                "Generate bent/angled side profile with return lip.",
+                "Calculate extrusion depth based on 'dThick'.",
+                "Subtract fastener holes in a stepped loop."
+              ]
+            },
+            "path4": {
+              "name": "Shape 6 (DH Series)",
+              "steps": [
+                "Generate variable-height side profile.",
+                "Subtract fastener holes using a distributed pattern based on 'dExtra2' (hole count) rather than a fixed loop."
+              ]
+            }
+          },
+          {
+            "condition": "Stud Clash Removal Trigger",
+            "path1": {
+              "name": "First Insert / Creation",
+              "steps": [
+                "Filter beams perpendicular to Element.",
+                "Check for intersection with Connector Body.",
+                "Erase intersecting beams (usually studs) to provide hardware clearance."
+              ]
+            },
+            "path2": {
+              "name": "Subsequent Updates",
+              "steps": [
+                "Skip clash removal loop to prevent deleting studs added by the user after initial insertion."
+              ]
+            }
+          },
+          {
+            "condition": "Anchor Linkage (arIShape != 5)",
+            "path1": {
+              "name": "Supported Shape (!= 5)",
+              "steps": [
+                "Enable 'Add Anchor' and 'Release Anchor' context menu items.",
+                "If State==0, auto-create 'GE_HDWR_WALL_ANCHOR' instance.",
+                "Map link between HoldDown and Anchor."
+              ]
+            },
+            "path2": {
+              "name": "Unsupported Shape (== 5)",
+              "steps": [
+                "Disable Anchor context options.",
+                "Erase any existing linked Anchor instance.",
+                "Clear Anchor reference from Map."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Availability",
+            "errorMessage": "Implicit: Script requires a valid Wall Element ('el') to function.",
+            "recovery": "User must select or associate the script with a valid Element."
+          },
+          {
+            "check": "Catalog Match",
+            "errorMessage": "Implicit: 'strConnector' must match a string in the internal catalog array.",
+            "recovery": "User selects a valid model from the Property Palette drop-down."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Connector Type",
+            "how": "OPM Property Palette (arConnDescript)",
+            "effect": "Updates dimensions (Dx, Dy, Dz), Shape code, and default fasteners. Rebuilds 3D body."
+          },
+          {
+            "action": "Adjust Fasteners",
+            "how": "OPM Property Palette (pFastenersType, iFastenersQty)",
+            "effect": "Updates BOM entries. If values differ from catalog defaults, adds explicit fastener line to BOM."
+          },
+          {
+            "action": "Add Anchor Rod",
+            "how": "Context Menu -> 'Add Anchor'",
+            "effect": "Creates new 'GE_HDWR_WALL_ANCHOR' script instance and maps it to the hold-down."
+          },
+          {
+            "action": "Release Anchor Rod",
+            "how": "Context Menu -> 'Release Anchor'",
+            "effect": "Removes the map link to the anchor instance (clearing the reference)."
+          }
+        ]
+      },
+      "tokens_used": 11553,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_HDWR_WALL_HOLD_DOWN\n\n## Overview\nThis script generates 3D geometry, machining, and BOM data for metal hold-down brackets (e.g., Simpson Strong-Tie HTT, HDQ) attached to wall elements. It handles drilling for anchor rods and fasteners, automatically removes clashing studs during insertion, and manages dynamic links to anchor rod components.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script operates in 3D model space to generate solid bodies and apply drilling to wall elements. |\n| Paper Space | No | This script does not generate 2D details directly in layout views. |\n| Shop Drawing | No | This script is for model generation and BOM data, not shop drawing annotations. |\n\n## Prerequisites\n- **Required Entities**: A valid Wall Element (selected during insertion).\n- **Minimum Beam Count**: 1 (The script relies on the Element context).\n- **Required Settings**: `GE_HDWR_WALL_ANCHOR.mcr` (Must be available for anchor linking functionality).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_HDWR_WALL_HOLD_DOWN.mcr`\n\n### Step 2: Select Element\n```\nCommand Line: Select Element:\nAction: Click on the Wall Element where the hold-down should be placed.\n```\n*Note: The script will automatically calculate the position based on the element's coordinate system.*\n\n### Step 3: Configure Properties (Optional)\nAfter insertion, select the generated connector and open the **Properties Palette** to adjust the connector model, dimensions, or fastener settings.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| arConnDescript | String | HTT4 SIMPSON | Select the specific catalog model of the hold-down. Changing this updates dimensions, hole positions, and shape logic automatically. |\n| arDx | Length | 2.625\" | The depth (width) of the connector plate perpendicular to the wall face. |\n| arDy | Length | 12.375\" | The vertical height of the connector. |\n| arDz | Length | 0.25\" | The thickness of the metal plate. |\n| arDRod | Length | 0.625\" | The diameter of the anchor rod (all-thread) that passes through the hold-down. |\n| arDDrillCL | Length | 1.3125\" | The distance from the wall face to the centerline of the anchor rod hole. |\n| arIShape | Integer | 1 | A code determining the geometric topology (e.g., 1 for standard/HTT, 2 for HDQ, 4 for LTT, 6 for DH). |\n| pFastenersType | String | 0.148 x 1 1/2\" | The specific fastener (nail or screw) description used for the BOM. |\n| iFastenersQty | Integer | 18 | The total quantity of fasteners required for installation. |\n| strInstallation | String | Field Installed | Indicates the installation context (Field vs Shop) for reporting in lists. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Add Anchor | Creates an instance of the `GE_HDWR_WALL_ANCHOR` script linked to this hold-down, representing the concrete rod and embed. |\n| Release Anchor | Removes the linked `GE_HDWR_WALL_ANCHOR` instance and clears the map reference. |\n\n## Settings Files\n- **Filename**: `GE_HDWR_WALL_ANCHOR.mcr`\n- **Location**: TSL Search Path\n- **Purpose**: Provides the anchor rod geometry and data that can be dynamically linked to this hold-down.\n\n## Tips\n- **Automatic Stud Removal**: When first inserted, the script checks for studs that clash with the connector body and automatically deletes them to provide clearance. This only happens during the initial creation.\n- **Fastener Overrides**: If you modify the fastener type or quantity in the properties, the script will add an explicit line to the BOM, overriding the default catalog values.\n- **Shape Logic**: The `arIShape` parameter controls the 3D generation logic. If you manually change dimensions but the shape looks wrong, ensure `arIShape` matches the connector type you are trying to simulate (e.g., ensure it is set to '2' for HDQ series brackets).\n\n## FAQ\n- **Q: Why did a stud disappear from my wall when I inserted the connector?**\n  A: The script is designed to automatically detect and remove intersecting studs during the first insertion to ensure the hardware fits.\n- **Q: How do I show the concrete rod in the foundation?**\n  A: Right-click the hold-down connector and select **Add Anchor**. This will spawn the linked anchor script.\n- **Q: I changed the connector model in the properties, but the holes didn't update.**\n  A: Ensure you selected a valid model from the `arConnDescript` list. If you are manually adjusting dimensions, ensure `arIShape` matches the geometry logic you intend to use."
+      },
+      "tokens_used": 6255,
+      "error": null
+    }
+  }
+}

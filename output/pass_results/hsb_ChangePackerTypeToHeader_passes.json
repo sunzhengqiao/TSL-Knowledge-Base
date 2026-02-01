@@ -1,0 +1,247 @@
+{
+  "filename": "hsb_ChangePackerTypeToHeader.mcr",
+  "status": "completed",
+  "total_tokens": 20750,
+  "processing_time": 129.15040731430054,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3956,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script operates on ElementWallSF entities and retrieves GenBeam objects via el.genBeam(0). It manipulates structural beam types (_kSFTopPlate, _kSFPacker, _kHeader) within the 3D model. No sd_ prefixes, Viewport handling, or ShopDrawing specific entities are used."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWallSF",
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing Shear Wall elements with Top Plate and Packer beams.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2844,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3571,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically converts Top Plate beams that intersect with Packer beams in a Shear Wall into Header beams.",
+          "category": "Framing",
+          "typicalUseCase": "Used when structural requirements dictate that top plates located above packers (typically over openings or specific junctions) must be classified as Headers rather than standard top plates."
+        },
+        "parameters": [
+          {
+            "name": "ssE",
+            "technicalDefault": "User Selection",
+            "businessMeaning": "The set of Shear Wall elements selected by the user to be processed.",
+            "validRange": "One or more ElementWallSF entities in the model.",
+            "unit": "Selection Set",
+            "affectsOutput": "Determines the scope of the operation; only Top Plates within the selected walls will be evaluated for conversion to Headers."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects Elements via PrEntity command line prompt",
+            "effect": "The script attaches instances to the selected elements, clears duplicates, and initiates the beam type conversion logic.",
+            "cascade": [
+              "ElementWallSF Validation",
+              "Beam Filtering (Top Plate vs Packer)",
+              "Geometric Intersection Check",
+              "Beam Type Assignment"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam Type Modification",
+            "description": "Changes the semantic type of specific beams from Top Plate/Angled Top Plate to Header.",
+            "appliedTo": "Top Plate beams within the selected Shear Wall that physically intersect with Packer beams aligned to the wall's X-axis."
+          }
+        ]
+      },
+      "tokens_used": 2524,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Initialization: Set sequence number and load properties from catalog",
+          "Check Insertion State: Verify if the script is being inserted (_bOnInsert)",
+          "Insertion Cycle Check: If insertCycleCount() > 1, erase instance and exit (cleanup duplicate)",
+          "User Prompt: Use PrEntity to prompt user to select a set of elements",
+          "Selection Handling: Append selected elements to _Element list",
+          "Script Attachment Loop: Iterate through selected elements",
+          "Duplicate Removal: Check for existing instances of this script on each element and erase them",
+          "Instance Creation: Attach a new instance of the script to each selected element using dbCreate",
+          "Source Erasure: Erase the initial script instance (the 'launcher')",
+          "Execution Phase: Attached instance runs, checks if _Element list is populated",
+          "Element Validation: Verify element is a valid ElementWallSF",
+          "Beam Retrieval: Get all GenBeam objects from zone 0 of the wall",
+          "Beam Classification: Filter beams into bmTop (Top Plates) and bmPacker (Packer beams aligned to Wall X-axis)",
+          "Intersection Logic: Identify Top Plates that geometrically intersect with Packer beams",
+          "Type Conversion: Change the type of intersecting Top Plates to _kHeader",
+          "Cleanup: Erase the processing instance"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Is the script being inserted? (_bOnInsert)",
+            "path1": {
+              "name": "Insertion Mode (Launcher)",
+              "steps": [
+                "Check insert cycle count",
+                "Prompt user for element selection",
+                "Clean duplicates on target elements",
+                "Spawn attached instances on selected elements",
+                "Erase self"
+              ]
+            },
+            "path2": {
+              "name": "Execution Mode (Attached)",
+              "steps": [
+                "Check attached elements",
+                "Validate ElementWallSF",
+                "Process beams (Filter -> Intersect -> Change Type)",
+                "Erase self"
+              ]
+            }
+          },
+          {
+            "condition": "Is insertCycleCount greater than 1?",
+            "path1": {
+              "name": "Duplicate Cycle",
+              "steps": [
+                "Erase instance",
+                "Exit"
+              ]
+            },
+            "path2": {
+              "name": "First Cycle",
+              "steps": [
+                "Continue to PrEntity prompt"
+              ]
+            }
+          },
+          {
+            "condition": "Is the Element valid? (bIsValid)",
+            "path1": {
+              "name": "Valid Element",
+              "steps": [
+                "Extract coordinate system",
+                "Get GenBeams",
+                "Proceed to beam processing"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Element",
+              "steps": [
+                "Erase instance",
+                "Exit"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Type Classification",
+            "path1": {
+              "name": "Top Plate",
+              "steps": [
+                "Add to bmTop list",
+                "Checked for intersection with Packers"
+              ]
+            },
+            "path2": {
+              "name": "Packer (Aligned)",
+              "steps": [
+                "Check alignment (dotProduct > 0.99)",
+                "Add to bmPacker list"
+              ]
+            },
+            "path3": {
+              "name": "Other",
+              "steps": [
+                "Ignored by filtering logic"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "None explicitly shown in code, but PrEntity usually allows cancelling.",
+            "recovery": "User must select valid elements to proceed."
+          },
+          {
+            "check": "Element Type",
+            "errorMessage": "None (Script erases silently if invalid)",
+            "recovery": "Script only works on ElementWallSF entities."
+          },
+          {
+            "check": "Beam Availability",
+            "errorMessage": "None (Script returns silently if none found)",
+            "recovery": "Ensure the wall has generated beams in zone 0."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 3854,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_ChangePackerTypeToHeader.mcr\n\n## Overview\nThis script automatically converts Top Plate beams into Header beams within Shear Walls wherever they intersect with Packer beams. It is used to ensure that top plates situated above packers (typically over openings or specific structural junctions) are correctly classified as Headers to meet structural requirements.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be run in the 3D model where Shear Wall elements are located. |\n| Paper Space | No | Not designed for use in layout views. |\n| Shop Drawing | No | Does not generate drawings or details. |\n\n## Prerequisites\n- **Required Entities**: `ElementWallSF` (Shear Wall elements) that contain generated beams.\n- **Minimum Beam Count**: The selected wall must contain at least one Top Plate beam and one Packer beam.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_ChangePackerTypeToHeader.mcr` from the file dialog, or use the assigned macro button/icon.\n\n### Step 2: Select Shear Walls\n```\nCommand Line: Select a set of elements\nAction: Click on one or more Shear Wall elements in the model and press Enter.\n```\nThe script will automatically process the selected walls, check for intersections between Top Plates and Packers, and convert the beam types. The script instance will remove itself from the project automatically after completion.\n\n## Properties Panel Parameters\nThis script has no configurable properties in the Properties Palette (OPM). It runs based on the geometry of the selected elements.\n\n## Right-Click Menu Options\nThis script does not add specific options to the right-click context menu.\n\n## Settings Files\nNo external settings files are required for this script.\n\n## Tips\n- **Batch Processing**: You can select multiple Shear Walls at once during the prompt; the script will iterate through all of them.\n- **Automatic Cleanup**: The script creates temporary instances to process the walls and deletes them automatically. You do not need to manually remove the script from the element after it runs.\n- **Visual Verification**: After running, use the `List` command or select the beams to verify that the beam type has changed to \"Header\" in the properties.\n\n## FAQ\n- **Q: Why didn't the script change my top plate to a header?**\n  **A:** Ensure that the Top Plate beam physically intersects with a Packer beam that is aligned to the wall's X-axis. If there is no geometric intersection, the type will not change.\n  \n- **Q: Can I use this on standard walls (not Shear Walls)?**\n  **A:** No, this script is designed specifically for `ElementWallSF` entities.\n\n- **Q: Do I need to regenerate the wall for the changes to take effect?**\n  **A:** No, the script modifies the existing beam entities directly. No regeneration is required."
+      },
+      "tokens_used": 4001,
+      "error": null
+    }
+  }
+}

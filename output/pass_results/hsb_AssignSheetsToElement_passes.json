@@ -1,0 +1,247 @@
+{
+  "filename": "hsb_AssignSheetsToElement.mcr",
+  "status": "completed",
+  "total_tokens": 22247,
+  "processing_time": 225.12963914871216,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "02.12.2010",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.1",
+            "date": "20.11.2010",
+            "author": "",
+            "changes": "Add Zone 0 to the dropdown"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3550,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script operates via interactive prompts using `PrEntity` to select `Sheet` and `Element` entities within the model. It lacks `sd_` prefixes, `Multipage` prefixes, `_Viewport` checks, or `#Type E + _Entity[]` constructs which are indicative of Shop Drawing or Paper Space scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Sheet"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1500,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getElement",
+              "promptOriginal": "Select an Element",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect a set of sheets",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "nZones",
+            "type": "PropInt",
+            "displayName": "Zone to Assign the Sheets",
+            "defaultValue": 0,
+            "inputType": "dropdown",
+            "options": [
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "10"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4281,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Assigns selected production drawing sheets to a specific structural element and categorizes them into a defined 'Zone' for organization.",
+          "category": "Management/Documentation",
+          "typicalUseCase": "Organizing manufacturing drawings by construction stage or section; e.g., assigning all section drawings for a specific wall to 'Zone 1' (Ground Floor) or 'Zone 3' (Roof)."
+        },
+        "parameters": [
+          {
+            "name": "nZones",
+            "technicalDefault": 0,
+            "businessMeaning": "The logical grouping identifier (Zone) assigned to the relationship between the drawing sheets and the element. It allows users to categorize drawings within an element, often representing floors, phases, or specific structural layers.",
+            "validRange": "0 to 10 (UI Selection). Internally maps to values: 0,1,2,3,4,5 and -1,-2,-3,-4,-5.",
+            "unit": "Index/ID",
+            "affectsOutput": "Modifies the metadata of the Sheet-Element relationship. This affects how sheets are sorted, filtered in production lists, or processed by downstream export routines (e.g., CNC lists or labeling)."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of Element and Sheets",
+            "effect": "The current value of 'nZones' is applied to the selected Sheets to define their association.",
+            "cascade": [
+              "nZones"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Data Association",
+            "description": "Updates the link between an Element and its Sheets to include the specified Zone attribute.",
+            "appliedTo": "Selected Sheet entities and the target Element entity."
+          }
+        ]
+      },
+      "tokens_used": 4133,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User launches script (Insert)",
+          "2. Script checks insertion cycle (safety check to prevent loops)",
+          "3. System displays dialog (if not run via catalog)",
+          "4. User is prompted to select a single structural Element",
+          "5. User is prompted to select a set of Sheets (multiple selection allowed)",
+          "6. System retrieves 'nZones' property value from OPM/Dialog",
+          "7. System maps UI Zone value (0-10) to internal Real Zone value (0-5 or -1 to -5)",
+          "8. Validation: Check if an Element was actually selected",
+          "9. Validation: Check if any Sheets were actually selected",
+          "10. System iterates through the list of selected Sheets",
+          "11. For each Sheet, system executes 'assignToElementGroup' linking it to the Element with the calculated Zone and type 'Z'",
+          "12. Script erases itself from the model (cleanup)",
+          "13. Process Complete"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle Count",
+            "path1": {
+              "name": "Cycle > 1",
+              "steps": [
+                "Script detects it is running in a loop",
+                "Script calls eraseInstance()",
+                "Script terminates immediately"
+              ]
+            },
+            "path2": {
+              "name": "Cycle == 1",
+              "steps": [
+                "Script proceeds to Element selection"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Selection Validation",
+            "path1": {
+              "name": "Selection Successful",
+              "steps": [
+                "Element and Sheets arrays contain data",
+                "Mapping and Assignment loop executes"
+              ]
+            },
+            "path2": {
+              "name": "Selection Failed/Missing",
+              "steps": [
+                "Script detects _Element.length() == 0 OR _Sheet.length() == 0",
+                "Script calls eraseInstance()",
+                "Script terminates without assigning anything (Silent Failure)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "None (Silent)",
+            "recovery": "User must re-run the script and ensure an Element is selected during the first prompt."
+          },
+          {
+            "check": "Sheet Selection",
+            "errorMessage": "None (Silent)",
+            "recovery": "User must re-run the script and ensure at least one Sheet is selected during the second prompt."
+          },
+          {
+            "check": "Zone Mapping Integrity",
+            "errorMessage": "None (Handled by Dropdown)",
+            "recovery": "The 'nZones' property is restricted to a dropdown list (0-10), ensuring invalid indices cannot be entered manually."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "The script executes as a 'Command' and calls eraseInstance() at the end. It does not remain in the drawing to be edited via OPM, context menu, or grips. To change assignments, the user must delete the Element-Sheet links manually or re-run the script with different parameters (if the logic supports overwriting)."
+          }
+        ]
+      },
+      "tokens_used": 4631,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_AssignSheetsToElement\n\n## Overview\nThis script assigns selected production drawing sheets to a specific structural element and categorizes them into a defined \"Zone\" for better management, filtering, and export processing.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Operates in the 3D model environment to link elements and sheets. |\n| Paper Space | No | Not designed for use in layout views. |\n| Shop Drawing | No | This is a management tool, not a drawing generator. |\n\n## Prerequisites\n- An existing **Element** (e.g., a wall or floor assembly) in the model.\n- Existing **Sheet** entities (production drawings) available in the drawing.\n- No specific settings files are required.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_AssignSheetsToElement.mcr`\n\n### Step 2: Select Element\n```\nCommand Line: Select an Element\nAction: Click on the structural Element (e.g., a wall or floor) to which you want to link the sheets.\n```\n\n### Step 3: Select Sheets\n```\nCommand Line: Select a set of sheets\nAction: Select one or multiple drawing sheets from the model or drawing list. Press Enter to confirm the selection.\n```\n\n*(Note: You may need to set the \"Zone\" property in the Properties Palette before selecting entities if you wish to change it from the default.)*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Zone to Assign the Sheets | dropdown | 0 | Select the logical grouping ID (0-10) for the assignment. This is often used to represent floors, phases, or specific construction sections. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script runs as a one-time command and does not persist in the model for editing via the context menu. |\n\n## Settings Files\n- **Filename**: N/A\n- **Location**: N/A\n- **Purpose**: None required for this script.\n\n## Tips\n- The script will automatically delete itself from the drawing after execution; you do not need to delete it manually.\n- Use the \"Zone\" parameter strategically to organize your drawings. For example, assign ground floor sheets to \"Zone 1\" and roof sheets to \"Zone 2\" to easily filter production lists later.\n- Selections are validated silently. If the script closes immediately without result, ensure you actually selected an Element and at least one Sheet.\n\n## FAQ\n- **Q: I ran the script, but nothing happened. Why?**\n  **A:** The script requires both an Element and at least one Sheet to be selected to function. It performs a silent check and will exit if either selection is missing. Ensure you click an Element and select Sheets before pressing Enter.\n- **Q: Can I use this to remove sheets from an element?**\n  **A:** No, this script is designed only to assign or update the Zone association. To remove links, you would typically use other hsbCAD management tools or delete the entity links manually."
+      },
+      "tokens_used": 4152,
+      "error": null
+    }
+  }
+}

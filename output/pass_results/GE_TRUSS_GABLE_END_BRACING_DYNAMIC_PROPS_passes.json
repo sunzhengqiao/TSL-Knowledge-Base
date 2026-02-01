@@ -1,0 +1,410 @@
+{
+  "filename": "GE_TRUSS_GABLE_END_BRACING_DYNAMIC_PROPS.mcr",
+  "status": "completed",
+  "total_tokens": 42460,
+  "processing_time": 474.1032524108887,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "v1.4",
+            "date": "03.nov.2013",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Stickframe path added to mapIn when calling dll"
+          },
+          {
+            "version": "v1.3",
+            "date": "19.mar.2013",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Description updated"
+          },
+          {
+            "version": "v1.2",
+            "date": "19.ago.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Thumbnail added"
+          },
+          {
+            "version": "v1.1",
+            "date": "19.jan.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Set _kBrace type to created beams\n- Created beams assigned to same group than truss."
+          },
+          {
+            "version": "v1.0",
+            "date": "01.dic.2011",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Release"
+          }
+        ],
+        "settingsFiles": [
+          "GE_TRUSS_GABLE_END_BRACING_CUSTOM_PROPS"
+        ],
+        "dependencies": []
+      },
+      "tokens_used": 7051,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses interactive input methods (`getEntity`, `getPoint`) to select a `TrussEntity` and a point in 3D space. It generates new physical geometry using `Beam.dbCreate()` rather than annotating existing elements. There are no references to `sd_` functions, `_Viewport`, or `#Type E` entity selection typical of ShopDrawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "TrussEntity"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space containing an existing Truss",
+          "requiredSettings": [
+            "GE_TRUSS_GABLE_END_BRACING_CUSTOM_PROPS",
+            "hsbFramingDefaults.Inventory.dll",
+            "TSL_Edit_Gable_End_Settings.dll"
+          ]
+        }
+      },
+      "tokens_used": 6574,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getEntity",
+              "promptOriginal": "|Select truss|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "|Pick front side of truss|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "DotNet Form",
+            "trigger": "Insertion",
+            "title": "Gable End Settings (Implicit)",
+            "dataSource": "TSL_Edit_Gable_End_Settings.dll",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": [
+          {
+            "filename": "GE_TRUSS_GABLE_END_BRACING_CUSTOM_PROPS",
+            "searchPaths": [
+              "_kPathHsbCompany",
+              "_kPathHsbInstall"
+            ],
+            "purpose": "Provides bracing configuration (connection types, dimensions, material) based on vertical web length.",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 6118,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically applies web bracing to gable end trusses based on vertical web lengths, using presets to configure size, material, and placement.",
+          "category": "Framing",
+          "typicalUseCase": "Detailing gable end trusses to add stability or wind bracing to webs without manually drawing each piece."
+        },
+        "parameters": [
+          {
+            "name": "dL",
+            "technicalDefault": "bm.dL()",
+            "businessMeaning": "The physical length of the specific vertical web member. The script uses this to look up the correct bracing settings from the configuration file.",
+            "validRange": "Determined by truss geometry (typically 300mm to 6000mm)",
+            "unit": "mm",
+            "affectsOutput": "Determines which row of settings (Connection Type, Dimensions, Material) is applied to that specific web."
+          },
+          {
+            "name": "nOption",
+            "technicalDefault": "mapSettings.getInt(...\\CONNECTION_TYPE)",
+            "businessMeaning": "The geometric configuration of the bracing relative to the web: 'L' type (flush to face) or 'T' type (centered on back), in single or double quantities.",
+            "validRange": "0 (Single L), 1 (Single T), 2 (Double L), 3 (Double T)",
+            "unit": "Enumeration",
+            "affectsOutput": "Controls the number of brace beams generated (1 or 2) and their lateral offset (sticking out front vs mounted on back)."
+          },
+          {
+            "name": "dTopGap",
+            "technicalDefault": "mapSettings.getDouble(...\\TOP_OFFSET) * 25.4",
+            "businessMeaning": "The vertical setback from the highest point of the web's top cut down to the top of the brace.",
+            "validRange": "0mm to 150mm",
+            "unit": "mm",
+            "affectsOutput": "Moves the brace beam vertically down, creating a square or angled top cut depending on the web slope."
+          },
+          {
+            "name": "dBottomGap",
+            "technicalDefault": "mapSettings.getDouble(...\\BOTTOM_OFFSET) * 25.4",
+            "businessMeaning": "The vertical clearance from the bottom of the web up to the bottom of the brace.",
+            "validRange": "0mm to 150mm",
+            "unit": "mm",
+            "affectsOutput": "Determines the overall length of the brace beam; sets the bottom cut height."
+          },
+          {
+            "name": "dBmW",
+            "technicalDefault": "mapSettings.getDouble(...\\WIDTH) * 25.4",
+            "businessMeaning": "The thickness (width) of the bracing lumber.",
+            "validRange": "Standard lumber widths (e.g., 38mm, 45mm, 89mm)",
+            "unit": "mm",
+            "affectsOutput": "Defines the width of the generated brace beam."
+          },
+          {
+            "name": "dBmH",
+            "technicalDefault": "mapSettings.getDouble(...\\HEIGHT) * 25.4",
+            "businessMeaning": "The depth (height) of the bracing lumber.",
+            "validRange": "Standard lumber depths (e.g., 89mm, 140mm, 184mm)",
+            "unit": "mm",
+            "affectsOutput": "Defines the depth of the generated brace beam."
+          },
+          {
+            "name": "sBmGrade",
+            "technicalDefault": "mapSettings.getString(...\\MATERIAL)",
+            "businessMeaning": "The structural grade of the timber (e.g., SS, #1, #2).",
+            "validRange": "Grading agency standards",
+            "unit": "String",
+            "affectsOutput": "Sets the engineering grade attribute for BOM and labeling."
+          },
+          {
+            "name": "sBmMaterial",
+            "technicalDefault": "mapSettings.getString(...\\GRADE)",
+            "businessMeaning": "The species code of the timber (e.g., SPF, SYP). Note: Variable naming in script appears inverted relative to hsbCAD norms.",
+            "validRange": "Species codes (SPF, SYP, DF/L)",
+            "unit": "String",
+            "affectsOutput": "Sets the material attribute for BOM and labeling."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Vertical Web Length (dL) changes",
+            "effect": "The script selects a new configuration range from the settings map.",
+            "cascade": [
+              "nOption",
+              "dTopGap",
+              "dBottomGap",
+              "dBmW",
+              "dBmH",
+              "sBmGrade",
+              "sBmMaterial"
+            ]
+          },
+          {
+            "trigger": "Connection Type (nOption) changes",
+            "effect": "The calculation logic for the brace center point shifts between flush/centered placement.",
+            "cascade": [
+              "ptCen"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam",
+            "description": "Rectangular lumber members used for bracing or wind blocking.",
+            "appliedTo": "Vertical webs of the selected Truss."
+          },
+          {
+            "type": "Saw Cut",
+            "description": "Top cut is angled to match the roof pitch of the specific web location; Bottom cut is square.",
+            "appliedTo": "Generated Brace Beams."
+          }
+        ]
+      },
+      "tokens_used": 7898,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch",
+          "Check Insert Cycle (Count > 1?)",
+          "User Input: Select Truss Entity",
+          "Validation: Is Entity a Truss?",
+          "User Input: Pick Front Side Point",
+          "DotNet Call: Load Lumber Inventory",
+          "DotNet Call: Load Bracing Settings (Dialog)",
+          "Filter Truss Beams (Verticals Only)",
+          "Loop Through Vertical Webs",
+          "Calculate Web Geometry (Top/Bottom Points, Length)",
+          "Lookup Settings based on Web Length",
+          "Branch: Connection Type (Single L, Single T, Double L, Double T)",
+          "Create Brace Beam(s)",
+          "Apply Cuts, Material, and Grade",
+          "Assign to Truss Group",
+          "End Loop",
+          "Clean Up Temporary Geometry",
+          "Erase Script Instance"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count",
+            "path1": {
+              "name": "First Cycle",
+              "steps": [
+                "Execute Input Prompts",
+                "Initialize Settings"
+              ]
+            },
+            "path2": {
+              "name": "Repeat Cycle (>1)",
+              "steps": [
+                "Erase Instance",
+                "Return (Exit)"
+              ]
+            }
+          },
+          {
+            "condition": "Selected Entity Type",
+            "path1": {
+              "name": "Valid Truss",
+              "steps": [
+                "Proceed to Point Input"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Entity",
+              "steps": [
+                "Report Message: 'No valid truss selected'",
+                "Erase Instance",
+                "Return (Exit)"
+              ]
+            }
+          },
+          {
+            "condition": "ExecutionMode State",
+            "path1": {
+              "name": "Mode 0 (Generation)",
+              "steps": [
+                "Calculate Geometry",
+                "Generate Beams"
+              ]
+            },
+            "path2": {
+              "name": "Mode 1 (Post-Generation)",
+              "steps": [
+                "Skip to Cleanup",
+                "Erase Instance"
+              ]
+            }
+          },
+          {
+            "condition": "Configuration Lookup (Web Length)",
+            "path1": {
+              "name": "Range Found (nOption >= 0)",
+              "steps": [
+                "Retrieve Dimensions/Gaps/Material",
+                "Generate Brace"
+              ]
+            },
+            "path2": {
+              "name": "No Range Found (nOption < 0)",
+              "steps": [
+                "Continue (Skip current Web)"
+              ]
+            }
+          },
+          {
+            "condition": "Connection Type (nOption)",
+            "path1": {
+              "name": "Option 0 (Single L)",
+              "steps": [
+                "Create 1 Beam on Front Face (Short Side)"
+              ]
+            },
+            "path2": {
+              "name": "Option 1 (Single T)",
+              "steps": [
+                "Create 1 Beam on Back Face (Centered)"
+              ]
+            },
+            "path3": {
+              "name": "Option 2 (Double L)",
+              "steps": [
+                "Create 2 Beams on Front Face (Both Sides)"
+              ]
+            },
+            "path4": {
+              "name": "Option 3 (Double T)",
+              "steps": [
+                "Create 2 Beams on Back Face (Offset)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Kind",
+            "errorMessage": "No valid truss selected",
+            "recovery": "User must select a valid TrussEntity and restart the script."
+          },
+          {
+            "check": "Truss Validity",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Ensure the selected Truss exists and has valid geometry."
+          },
+          {
+            "check": "Settings Configuration",
+            "errorMessage": "None (Skips specific web)",
+            "recovery": "Update 'GE_TRUSS_GABLE_END_BRACING_CUSTOM_PROPS' to include the length range of the web being skipped."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Geometry",
+            "how": "Edit Truss geometry (e.g., pitch, span) and re-run script.",
+            "effect": "Script instance erases itself upon completion, so it must be manually re-inserted to update the bracing."
+          },
+          {
+            "action": "Adjust Properties",
+            "how": "Edit the external XML configuration file.",
+            "effect": "Changes affect future executions of the script; does not automatically update existing braces."
+          }
+        ]
+      },
+      "tokens_used": 8572,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_TRUSS_GABLE_END_BRACING_DYNAMIC_PROPS.mcr\n\n## Overview\nThis script automatically applies vertical web bracing to gable end trusses. It selects the appropriate bracing size, material, and connection type based on the length of the truss webs and a pre-configured settings file.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be run in the 3D model. |\n| Paper Space | No | Cannot be used in layout views. |\n| Shop Drawing | No | This is a modeling tool, not a detailing tool. |\n\n## Prerequisites\n- **Required entities**: A valid Truss Entity already drawn in the model.\n- **Minimum beam count**: The truss must have vertical web members.\n- **Required settings files**: \n  - `GE_TRUSS_GABLE_END_BRACING_CUSTOM_PROPS` (Must exist in Company or Install path).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_TRUSS_GABLE_END_BRACING_DYNAMIC_PROPS.mcr`\n\n### Step 2: Select Truss\n```\nCommand Line: Select truss\nAction: Click on the gable end truss entity you wish to brace.\n```\n\n### Step 3: Define Orientation\n```\nCommand Line: Pick front side of truss\nAction: Click a point on the front face of the truss. This determines which side is \"Front\" for L-type or T-type brace placement.\n```\n\n### Step 4: Configure Settings (Dialog)\n```\nAction: A settings dialog will appear (referencing TSL_Edit_Gable_End_Settings.dll).\nReview the mapping between web lengths and brace configurations. Click OK to proceed.\n```\n*Note: This step loads the inventory and bracing presets required for generation.*\n\n### Step 5: Generation\n```\nAction: The script automatically scans the vertical webs, calculates lengths, looks up the settings, and generates the brace beams. The script instance will erase itself upon completion.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not expose parameters in the Properties Palette. All configuration is handled via the external settings file `GE_TRUSS_GABLE_END_BRACING_CUSTOM_PROPS`. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu options are available for this script. |\n\n## Settings Files\n- **Filename**: `GE_TRUSS_GABLE_END_BRACING_CUSTOM_PROPS`\n- **Location**: Searches in `_kPathHsbCompany` first, then `_kPathHsbInstall`.\n- **Purpose**: This file contains the logic for mapping vertical web lengths to specific bracing configurations. It defines:\n  - **Connection Type**: Single L, Single T, Double L, or Double T.\n  - **Dimensions**: Width and Height of the brace lumber.\n  - **Offsets**: Top and Bottom gaps relative to the web.\n  - **Material**: Species and Grade codes.\n\n## Tips\n- **Update Workflow**: This script erases itself after running. If you modify the truss geometry (e.g., change pitch or span), you must manually re-insert the script to update the braces.\n- **Skipped Webs**: If a specific vertical web does not get a brace, check the settings file to ensure the web's length falls within a defined range.\n- **Orientation**: The \"Front\" side selection is critical. \"L-type\" braces flush to the face, while \"T-type\" braces center on the back. Ensure your point click is on the correct face relative to your desired bracing direction.\n\n## FAQ\n- **Q: Why did the script generate different size braces on different webs?**\n  - A: The script is designed to be \"Dynamic.\" It checks the length of each individual vertical web and applies the specific size defined in your settings file for that length range.\n  \n- **Q: Can I edit the brace size via the Properties Palette?**\n  - A: No. The generated beams are standard timber beams that can be edited individually, but the script parameters are not exposed in the Properties Palette. To change the global logic, you must edit the XML settings file.\n\n- **Q: I get an error \"No valid truss selected\". What do I do?**\n  - A: Ensure you are selecting a Truss Entity (generated by the Truss Generator) and not just a collection of lines or individual beams."
+      },
+      "tokens_used": 6247,
+      "error": null
+    }
+  }
+}

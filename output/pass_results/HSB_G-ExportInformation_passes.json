@@ -1,0 +1,283 @@
+{
+  "filename": "HSB_G-ExportInformation.mcr",
+  "status": "completed",
+  "total_tokens": 48744,
+  "processing_time": 479.4678032398224,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8866,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses getPoint() for insertion at _Pt0, utilizes Display() to draw text and polylines relative to insertion point, and explicitly spawns the 'HSB_G-ReplicatorExport' script using the _kModelSpace constant. The script prefix 'HSB_G-' and lack of '#Type E' or '_Viewport' handling indicate it is a general model-space tool."
+        },
+        "prerequisites": {
+          "requiredEntities": [],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (for placing the delivery information block).",
+          "requiredSettings": [
+            "Model Map configuration (accessed via ModelMap().exporterGroups() and exporterShortcuts())",
+            "Project Map 'Delivery[]' structure for storing delivery data"
+          ]
+        }
+      },
+      "tokens_used": 6566,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"getPoint\",\n        \"promptOriginal\": \"Specify insert\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      },\n      {\n        \"step\": 2,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"|Select elements|"
+      },
+      "tokens_used": 9606,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates a visual delivery note block in the model to manage, verify, and export batches of timber elements (packages/truck loads) to production formats like Prenest or BTL.",
+          "category": "ProductionManagement",
+          "typicalUseCase": "Used by the production manager to define a shipment, visualize which elements are included, and trigger the generation of machine data for that specific batch."
+        },
+        "parameters": [
+          {
+            "name": "pGroup",
+            "technicalDefault": "",
+            "businessMeaning": "Selects a predefined collection of elements (from the hsbCAD ModelMap) that belong to a specific production export group.",
+            "validRange": "Available ModelMap exporter groups",
+            "unit": "String",
+            "affectsOutput": "Filters the elements displayed in the report block and sent to the export script."
+          },
+          {
+            "name": "pShortcut",
+            "technicalDefault": "",
+            "businessMeaning": "Selects a specific single export configuration or preset (e.g., specific machine or format configuration) rather than a broad group.",
+            "validRange": "Available ModelMap export shortcuts",
+            "unit": "String",
+            "affectsOutput": "Determines the exact export configuration format used when the export process runs."
+          },
+          {
+            "name": "deliveryName",
+            "technicalDefault": "New delivery",
+            "businessMeaning": "The unique name or ID for the delivery batch (e.g., 'Truck-01', 'Stage-1-Floor').",
+            "validRange": "Alphanumeric strings specific to project labeling",
+            "unit": "String",
+            "affectsOutput": "Used as the key to store/retrieve the element list in the Project Map and labels the report block."
+          },
+          {
+            "name": "deliveryDescription",
+            "technicalDefault": "New description",
+            "businessMeaning": "Additional descriptive text for the delivery (e.g., 'Ground floor walls', 'Roof trusses').",
+            "validRange": "Free text",
+            "unit": "String",
+            "affectsOutput": "Updates the descriptive text in the generated report block."
+          },
+          {
+            "name": "onlySelection",
+            "technicalDefault": "No",
+            "businessMeaning": "Defines whether to check for and include replicated (mirrored/similar) elements or strictly only the specifically selected unique elements.",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "If 'No', includes all linked replications in the package count. If 'Yes', restricts the export to unique instances only."
+          },
+          {
+            "name": "export",
+            "technicalDefault": "No",
+            "businessMeaning": "The switch to actually run the data export process when triggered.",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "When set to 'Yes', the script executes the 'HSB_G-ReplicatorExport' to generate production files."
+          },
+          {
+            "name": "dimStyle",
+            "technicalDefault": "Standard",
+            "businessMeaning": "The drafting style (font, size, arrow type) applied to the visual report block text.",
+            "validRange": "Available dimension styles in the current CAD standard",
+            "unit": "Style Name",
+            "affectsOutput": "Alters the graphical appearance of the text and dimensions in the delivery block."
+          },
+          {
+            "name": "dTextHeight",
+            "technicalDefault": "100",
+            "businessMeaning": "The physical height of the text in the delivery report block.",
+            "validRange": "50 - 300 (depending on drawing scale/view)",
+            "unit": "mm",
+            "affectsOutput": "Scales the size of the visual report block and text readability."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Setting 'export' to 'Yes'",
+            "effect": "Initiates the spawn of the 'HSB_G-ReplicatorExport' script to process the selected group/shortcut.",
+            "cascade": [
+              "pGroup",
+              "pShortcut",
+              "deliveryName"
+            ]
+          },
+          {
+            "trigger": "Changing 'deliveryName'",
+            "effect": "Updates the linkage to the Project Map data, causing the script to read/write to the specific entry for that delivery name.",
+            "cascade": [
+              "projectMapX"
+            ]
+          },
+          {
+            "trigger": "Executing 'Show current delivery' context menu",
+            "effect": "Turns off all other elements in the model and only displays those associated with the current 'deliveryName'.",
+            "cascade": [
+              "Model Visibility"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Visual Report Block",
+            "description": "A graphical display in Model Space showing delivery details (Name, Date, Export Group, Total Qty) and a list of element numbers.",
+            "appliedTo": "Model Space (at insertion point _Pt0)"
+          },
+          {
+            "type": "Project Map Entry",
+            "description": "Stores the list of elements and quantities associated with a specific delivery name in the project database.",
+            "appliedTo": "Project Map (Key: 'Delivery[]')"
+          },
+          {
+            "type": "Production Export Job",
+            "description": "When triggered, generates production data files via the HSB_G-ReplicatorExport script.",
+            "appliedTo": "External File System / Machine Control Software"
+          }
+        ]
+      },
+      "tokens_used": 7694,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch script from catalog or command line.",
+          "2. Specify insertion point (_Pt0) in Model Space.",
+          "3. Initialize properties: Delivery Name, Export Group/Shortcut, Text Height, etc.",
+          "4. Check for Execute Keys (Recalculation triggers).",
+          "5. [Branch] Process Context Menu commands (Show/Hide/Remove).",
+          "6. Check 'Export' property state.",
+          "7. [Branch] If 'Export' is 'Yes', spawn HSB_G-ReplicatorExport script, update map, and exit.",
+          "8. Retrieve Project Map data for the current 'deliveryName'.",
+          "9. Generate Visual Report: Calculate text offsets, draw header, date, and status.",
+          "10. Iterate through delivery elements: Draw list of element numbers and quantities.",
+          "11. Update visibility status based on active 'Show' or 'Hide' triggers.",
+          "12. Display the completed delivery information block in Model Space."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Key 'Remove Element From Current Group' is triggered",
+            "path1": {
+              "name": "Removal Path",
+              "steps": [
+                "Prompt user to select elements (PrEntity).",
+                "Validate selection (if empty, exit).",
+                "Search Project Map 'Delivery[]' for current delivery name.",
+                "Remove selected elements from the internal Map structure.",
+                "Save updated Map back to Project.",
+                "Force script recalculation to update visual block."
+              ]
+            }
+          },
+          {
+            "condition": "Property 'Export' is set to 'Yes'",
+            "path1": {
+              "name": "Export Path",
+              "steps": [
+                "Collect current properties and element map data.",
+                "Construct parameters for HSB_G-ReplicatorExport script.",
+                "Spawn the Export script instance in Model Space.",
+                "Update 'Exported' status in Project Map with current date.",
+                "Reset 'Export' property to 'No'.",
+                "Stop execution and Recalc instance."
+              ]
+            },
+            "path2": {
+              "name": "Visualization Path",
+              "steps": [
+                "Skip export process.",
+                "Proceed to draw the delivery report block."
+              ]
+            }
+          },
+          {
+            "condition": "Execution Key 'Show current delivery' is active",
+            "path1": {
+              "name": "Isolation Mode",
+              "steps": [
+                "Turn off visibility for all Groups in the model.",
+                "Identify groups containing elements in the current delivery.",
+                "Turn visibility ON only for those specific groups."
+              ]
+            },
+            "path2": {
+              "name": "Standard Mode",
+              "steps": [
+                "Leave model visibility as is.",
+                "Draw report block."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element selection during 'Remove Element From Current Group'",
+            "errorMessage": "None (Silent exit with loop reset)",
+            "recovery": "The script checks `if(els.length()==0)` and calls `setExecutionLoops(2); return;` effectively restarting the instance without applying changes."
+          },
+          {
+            "check": "Existence of Delivery Name in Project Map",
+            "errorMessage": "None (Visual Consequence)",
+            "recovery": "If the map entry does not exist, the loop `for (int m=0;m<thisMap.length();m++)` does not execute, resulting in a report block with 0 items shown."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Export Settings",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changing 'export' to 'Yes' immediately triggers the production export process. Changing 'pGroup' or 'pShortcut' updates the target configuration."
+          },
+          {
+            "action": "Adjust Visual Appearance",
+            "how": "Properties Palette (OPM)",
+            "effect": "Modifying 'dimStyle' or 'Text Height' dynamically redraws the report block with new formatting."
+          },
+          {
+            "action": "Remove Elements from Delivery",
+            "how": "Right-click Context Menu -> 'Remove Element From Current Group'",
+            "effect": "Initiates a selection set to pick elements; removes them from the delivery list and updates the total quantity displayed."
+          },
+          {
+            "action": "Isolate Delivery in Model",
+            "how": "Right-click Context Menu -> 'Show current delivery'",
+            "effect": "Turns off all layers/groups except those containing elements assigned to the current delivery name."
+          }
+        ]
+      },
+      "tokens_used": 10316,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_G-ExportInformation.mcr\n\n## Overview\nCreates a visual delivery information block in the model to manage, verify, and export batches of timber elements (packages/truck loads) to production formats like Prenest or BTL.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for placing the delivery information block. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required Entities**: None required for insertion, but timber elements must exist in the model to populate the delivery list.\n- **Minimum Beam Count**: 0.\n- **Required Settings**:\n  - Model Map configuration (must have defined Export Groups and Export Shortcuts).\n  - Project Map 'Delivery[]' structure enabled to store delivery data.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Select `HSB_G-ExportInformation.mcr` from the catalog and press Enter.\n\n### Step 2: Specify Insertion Point\n```\nCommand Line: Specify insert\nAction: Click anywhere in the Model Space to place the delivery information block.\n```\n\n### Step 3: Configure Delivery\nAfter insertion, the block displays default text.\n1. Select the inserted block.\n2. Open the **Properties** palette (Ctrl+1).\n3. Enter a unique **Delivery Name** (e.g., \"Truck-01\").\n4. Select the appropriate **Export Group** or **Shortcut** from the Model Map.\n5. (Optional) Modify the **Description** to provide details about the shipment.\n\n### Step 4: Manage Elements\n- **To Check Elements**: Use the context menu option \"Show current delivery\" to isolate the parts belonging to this batch.\n- **To Remove Elements**: Use the context menu option \"Remove Element From Current Group\", select the timber elements in the model or drawing, and confirm to remove them from the list.\n\n### Step 5: Export Data\n1. Select the block.\n2. In the Properties palette, find the **Export** parameter.\n3. Change the value from \"No\" to **\"Yes\"**.\n4. The script will automatically trigger the `HSB_G-ReplicatorExport` script to generate production files for the current list.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| pGroup | String | [Empty] | Selects a predefined collection of elements (from the ModelMap) to include in the export. |\n| pShortcut | String | [Empty] | Selects a specific export configuration preset (e.g., specific machine settings). |\n| deliveryName | String | New delivery | The unique ID or name for this delivery batch (e.g., \"Stage-1\", \"Truck-02\"). |\n| deliveryDescription | String | New description | Additional descriptive text for the delivery notes. |\n| onlySelection | Boolean | No | If \"No\", includes all replications of elements. If \"Yes\", only includes strictly selected unique elements. |\n| export | Boolean | No | Toggle to \"Yes\" to trigger the production data export immediately. |\n| dimStyle | String | Standard | The drafting style (font, arrows) applied to the text in the block. |\n| dTextHeight | Number | 100 | The physical height of the text in the block (in mm). Adjust based on drawing scale. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Show current delivery | Hides all other elements in the model and displays only the parts assigned to the current delivery name. |\n| Remove Element From Current Group | Prompts you to select elements in the drawing to remove them from the current delivery list. |\n\n## Settings Files\n- **Configuration**: Model Map\n- **Location**: hsbCAD Project Settings\n- **Purpose**: Defines the available Export Groups and Shortcuts used to filter elements and determine export formats.\n\n## Tips\n- **Visibility Check**: Use the \"Show current delivery\" right-click option to verify visually that the correct elements are assigned to the package before exporting.\n- **Text Size**: If the text in the information block is too small to read, increase the `dTextHeight` property to 200 or 300.\n- **Export Status**: After setting `Export` to \"Yes\", it will automatically reset to \"No\" once the process is complete. Check the visual block for the updated \"Exported\" date.\n\n## FAQ\n- Q: Why is my delivery block empty (0 items)?\n- A: Ensure the `deliveryName` matches the name used in your Project Map data, or verify that elements exist in the selected `pGroup`.\n- Q: How do I undo an export?\n- A: You cannot undo the file generation directly, but you can modify the `deliveryName` or adjust the element list and export again.\n- Q: What happens if I change the Export Group?\n- A: The list of elements in the visual report will update to reflect the elements belonging to the newly selected group."
+      },
+      "tokens_used": 5696,
+      "error": null
+    }
+  }
+}

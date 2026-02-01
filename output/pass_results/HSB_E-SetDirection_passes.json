@@ -1,0 +1,169 @@
+{
+  "filename": "HSB_E-SetDirection.mcr",
+  "status": "completed",
+  "total_tokens": 28203,
+  "processing_time": 390.7519860267639,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5510,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly uses `_kModelSpace` in the `dbCreate` function. It interacts with `Element` and `ElementRoof` entities to set 3D direction vectors (`setVecY`). There are no references to `_Viewport`, `sd_` prefixes, or Paper Space APIs."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "ElementRoof"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3400,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select one or more elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "|Select start point direction|",
+              "condition": "_bOnInsert && Selection successful",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "PrPoint",
+              "promptOriginal": "|Select end point direction|",
+              "condition": "_bOnInsert && Start point selected",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4619,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Sets the primary Y-axis direction (system axis) of a roof element, either by picking two points in 3D space to define the vector or by automatically aligning it with a specific rafter identified by HSB ID 4101.",
+          "category": "Data Management / Model Setup",
+          "typicalUseCase": "Used to manually correct or define the main processing/rafter direction of a roof element when the automatic calculation is incorrect or when a specific layout angle is required."
+        },
+        "parameters": [
+          {
+            "name": "ssE (Element Selection)",
+            "technicalDefault": "null",
+            "businessMeaning": "The target roof element(s) to receive the direction update.",
+            "validRange": "Valid Element or ElementRoof entities in Model Space",
+            "unit": "Selection",
+            "affectsOutput": "Determines which elements in the model will have their internal coordinate system modified."
+          },
+          {
+            "name": "ptStartDirection",
+            "technicalDefault": "User Input",
+            "businessMeaning": "The 3D start point used to define the direction vector.",
+            "validRange": "Any Point3d in Model Space",
+            "unit": "mm",
+            "affectsOutput": "Acts as the origin for the vector calculation determining the element's new Y-axis."
+          },
+          {
+            "name": "ptEndDirection",
+            "technicalDefault": "User Input",
+            "businessMeaning": "The 3D end point used to define the direction vector.",
+            "validRange": "Any Point3d in Model Space",
+            "unit": "mm",
+            "affectsOutput": "Combined with the start point, this calculates the normalized vector assigned to the element's Y-axis (rafter direction)."
+          },
+          {
+            "name": "vecY (Calculated Vector)",
+            "technicalDefault": "Normalized vector from points or from Beam X-axis",
+            "businessMeaning": "The new primary direction of the roof element (often corresponding to rafter or purlin direction).",
+            "validRange": "Normalized 3D Vector (Magnitude = 1)",
+            "unit": "Direction",
+            "affectsOutput": "Updates the ElementRoof's local Y-axis via `setVecY`, influencing subsequent machining, layout calculations, and exports."
+          },
+          {
+            "name": "bm.hsbId() (Check for '4101')",
+            "technicalDefault": "String '4101'",
+            "businessMeaning": "Identifier for a specific rafter or primary beam that dictates the element's default direction if manual points are not used.",
+            "validRange": "HSB String Attribute",
+            "unit": "String",
+            "affectsOutput": "If found, the element's Y-axis is aligned to this beam's X-axis; otherwise, the logic falls through without changes (if manual points also absent)."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "_PtG.length() > 0 (Manual points provided)",
+            "effect": "Overrides the automatic beam detection and forces the direction based on the selected points.",
+            "cascade": [
+              "vecY",
+              "ElementRoof.setVecY()"
+            ]
+          },
+          {
+            "trigger": "_PtG.length() == 0 (No manual points)",
+            "effect": "Triggers a search for a beam with HSB ID 4101 to determine direction.",
+            "cascade": [
+              "bm.vecX()",
+              "ElementRoof.setVecY()"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Element Modification",
+            "description": "Updates the system axis (Y-vector) of the ElementRoof entity. No geometric entities (beams/cuts) are created directly; existing element data is modified.",
+            "appliedTo": "Selected ElementRoof entities"
+          }
+        ]
+      },
+      "tokens_used": 3672,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. User launches script HSB_E-SetDirection\",\n    \"2. Script checks insertion cycle (duplicates erased if found)\",\n    \"3. Prompt displayed: Select one or more elements (PrEntity)\",\n    \"4. User selects target Element(s)\",\n    \"5. Prompt displayed: Select start point direction (getPoint)\",\n    \"6. User picks 3D start point\",\n    \"7. Prompt displayed: Select end point direction (PrPoint)\",\n    \"8. User picks 3D end point (defines visual line, only Start Point is used for vector calc relative to origin)\",\n    \"9. Script removes any existing instances of HSB_E-SetDirection from selected elements\",\n    \"10. Script creates a new instance of itself attached to each selected element, passing the selected points\",\n    \"11. Script reports the count of inserted TSLs\",\n    \"12. The command-line instance erases itself\",\n    \"13. [Execution Phase] The attached instance validates the Element exists\",\n    \"14. [Execution Phase] Instance checks if points were passed (_PtG)\",\n    \"15. [Execution Phase] If points exist: Calculate Vector (Start Point - Script Origin), Normalize, Set ElementRoof Y-vector\",\n    \"16. [Execution Phase] If no points: Search"
+      },
+      "tokens_used": 6787,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-SetDirection\n\n## Overview\nThis script sets the primary Y-axis direction (system axis) of selected roof elements. It allows you to manually define this direction by picking two points in 3D space, which updates the element's internal processing axis.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script runs in the 3D model environment. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | Not applicable for 2D drawings. |\n\n## Prerequisites\n- **Required entities**: Element or ElementRoof entities must exist in the model.\n- **Minimum beam count**: 0\n- **Required settings files**: None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_E-SetDirection.mcr` from the file dialog.\n\n### Step 2: Select Elements\n```\nCommand Line: Select one or more elements\nAction: Click on the roof element(s) you wish to modify. Press Enter to confirm selection.\n```\n\n### Step 3: Define Start Point\n```\nCommand Line: Select start point direction\nAction: Pick a 3D point in the model representing the start of your desired direction vector.\n```\n\n### Step 4: Define End Point\n```\nCommand Line: Select end point direction\nAction: Pick a second 3D point. The line formed between the start point and this point determines the new Y-axis direction for the selected elements.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not expose editable parameters in the Properties Palette (OPM). All inputs are collected via the command line during insertion. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | This script does not add specific options to the entity right-click menu. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Batch Processing**: You can select multiple roof elements in Step 2 to apply the same direction vector to all of them simultaneously.\n- **Vector Definition**: Ensure the direction you pick accurately represents the intended rafter or processing direction, as this affects subsequent machining and layout calculations.\n- **Visualization**: Use object snaps (OSNAP) to ensure your start and end points align precisely with existing geometry if you need the direction to be parallel to a specific edge.\n\n## FAQ\n- **Q: What exactly does this script change?**\n  - A: It updates the internal Y-vector (system axis) of the ElementRoof. It does not draw new lines or beams but modifies how the element interprets its own orientation.\n\n- **Q: Can I use this on single beams?**\n  - A: No, this script is designed specifically for Element or ElementRoof entities.\n\n- **Q: How is the direction calculated?**\n  - A: The script creates a vector from the Start Point to the End Point you select, normalizes it, and assigns that as the element's new Y-axis."
+      },
+      "tokens_used": 4215,
+      "error": null
+    }
+  }
+}

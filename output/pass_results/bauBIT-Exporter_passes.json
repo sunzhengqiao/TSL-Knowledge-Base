@@ -1,0 +1,369 @@
+{
+  "filename": "bauBIT-Exporter.mcr",
+  "status": "completed",
+  "total_tokens": 46480,
+  "processing_time": 254.97244358062744,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 6,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "Dieses TSL schreibt erweiterte Daten für den bauBit Export in jedes Panel und startet den Export der Daten Die Verwendung dieses Befehls setzt die Definition eines bauBIT-Exports voraus, vergl. benutzerdefinierte Dokumentation",
+        "versionHistory": [
+          {
+            "version": "1.6",
+            "date": "22dec17",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "debug removed"
+          },
+          {
+            "version": "1.5",
+            "date": "08dec17",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "bugfix beamcut length enhanced"
+          },
+          {
+            "version": "1.4",
+            "date": "22nov17",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "bugfix beamcut length"
+          },
+          {
+            "version": "1.3",
+            "date": "15apr15",
+            "author": "th@hsbCAD.de",
+            "changes": "bugfix spline beam output"
+          },
+          {
+            "version": "1.2",
+            "date": "27jan15",
+            "author": "th@hsbCAD.de",
+            "changes": "element, beam and electrical output added"
+          },
+          {
+            "version": "1.1",
+            "date": "17nov14",
+            "author": "th@hsbCAD.de",
+            "changes": "cut normals are exported  as cuts"
+          },
+          {
+            "version": "1.0",
+            "date": "27jan14",
+            "author": "th@hsbCAD.de",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8931,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly collects entities from '_kModelSpace' (e.g., Group().collectEntities(true,GenBeam(),_kModelSpace)). It interacts with 3D constructs like Sip, Element, GenBeam, MasterPanel, and Body objects. No references to Viewports, Paper Space, or sd_ prefixes were found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sip",
+            "GenBeam",
+            "Element",
+            "MasterPanel",
+            "ChildPanel"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "Exporter Group (defined in hsbCAD)",
+            "bauBIT-Export definition"
+          ]
+        }
+      },
+      "tokens_used": 6153,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select object(s)| |<Enter> to select all|",
+              "condition": "_bOnInsert",
+              "required": false
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "",
+              "condition": "_bOnInsert && bDebug",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "_bOnInsert && _kExecuteKey == \"\" && sExporterGroups.length() > 1",
+            "title": "Properties",
+            "dataSource": "PropString sExporterGroup",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          },
+          {
+            "type": "ShowNotice",
+            "trigger": "_bOnInsert && sExporterGroups.length() < 1",
+            "title": "Notice",
+            "dataSource": "Script Report",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sExporterGroup",
+            "type": "PropString",
+            "displayName": "|Exporter Group|",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": [
+              "sExporterGroups (Dynamic list from ModelMap)"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 9890,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Prepares and exports manufacturing data from hsbCAD to the bauBIT production system by writing extended machining details to panels and triggering the external export process.",
+          "category": "Data Export / Production",
+          "typicalUseCase": "Used at the end of the design phase to transfer geometry, drilling, and cutting information to production machinery or management software."
+        },
+        "parameters": [
+          {
+            "name": "sExporterGroup",
+            "technicalDefault": "sExporterGroups (Dynamic list from ModelMap)",
+            "businessMeaning": "Selects the specific export configuration (defined in the hsbCAD ModelMap) that determines which data format and attributes are generated for the production line.",
+            "validRange": "Any valid Exporter Group name defined in the project configuration",
+            "unit": "String (List)",
+            "affectsOutput": "Determines the target destination format and dictates exactly which machining and geometric data is extracted and sent to the bauBIT system."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sExporterGroup selection",
+            "effect": "The script uses this selection to call `ModelMap().callExporter`. If the group is invalid or missing, the export fails.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "SubMap 'Tool[]'",
+            "description": "Internal data structure attached to each Panel (Sip) containing categorized lists of 'Drill', 'Cut', and 'Beamcut' tools with dimensions and quantities.",
+            "appliedTo": "Selected Panels/Elements (Sip entities)"
+          },
+          {
+            "type": "bauBIT Production File",
+            "description": "External file generated by the ModelMap exporter based on the collected entities and their attached tool maps.",
+            "appliedTo": "Selected Model Space Entities"
+          }
+        ]
+      },
+      "tokens_used": 7169,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch",
+          "Retrieve and Sort Exporter Groups from ModelMap",
+          "Check Execution Context (_bOnInsert)",
+          "Verify Exporter Groups Configuration",
+          "User Interaction: Select Exporter Group (if multiple groups exist)",
+          "User Interaction: Select Entities (PrEntity) or Press Enter to Select All",
+          "Check for Debug Mode (selected Sip OR _kExecuteKey=='DEBUG' OR projectSpecial flag)",
+          "Auto-Select Entities: Collect GenBeam, Element, TslInst, ChildPanel, MasterPanel from ModelSpace (if selection was empty)",
+          "Filter Selection: Remove unsupported beam types (check type against allowed list)",
+          "Expand Selection: Append Sip entities from MasterPanels, ChildPanels, and Elements",
+          "Iterate Selected Sips:",
+          "  - Trigger MapIO for each Sip (recursively calls script for analysis)",
+          "  - Analyze Sip geometry (Drills, Cuts, Beamcuts)",
+          "  - Compile Machining Data into Map structure",
+          "  - Attach 'Tool[]' SubMap to Sip entity",
+          "Append Parent Elements to Entity List",
+          "Configure ModelMap Flags (addSolidInfo, addAnalysedToolInfo, etc.)",
+          "Call ModelMap Exporter using selected Group and Destination Folder",
+          "Erase Script Instance",
+          "Completion"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Number of defined Exporter Groups",
+            "path1": {
+              "name": "Multiple Groups Found",
+              "steps": [
+                "Show Dynamic Dialog (ShowDialog)",
+                "User selects Group",
+                "Proceed to Entity Selection"
+              ]
+            },
+            "path2": {
+              "name": "Single Group Found",
+              "steps": [
+                "Skip Dialog",
+                "Use Default Group",
+                "Proceed to Entity Selection"
+              ]
+            },
+            "path3": {
+              "name": "No Groups Found",
+              "steps": [
+                "Show Notice (ReportNotice)",
+                "Erase Instance",
+                "Terminate Script"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Selection",
+            "path1": {
+              "name": "User Selected Objects",
+              "steps": [
+                "Use user selection set",
+                "Check for Debug Mode on first item",
+                "Proceed to Filter"
+              ]
+            },
+            "path2": {
+              "name": "User Pressed Enter (Empty Selection)",
+              "steps": [
+                "Execute Auto-Select Logic (Collect all valid types)",
+                "Proceed to Filter"
+              ]
+            }
+          },
+          {
+            "condition": "Debug Mode Detection (selected Sip and (_kExecuteKey=='DEBUG' OR bDebug))",
+            "path1": {
+              "name": "Debug Active",
+              "steps": [
+                "Append first Sip to internal _Sip array",
+                "Set bDebug flag to true",
+                "Erase Instance",
+                "Wait for MapIO execution (Analysis loop)"
+              ]
+            },
+            "path2": {
+              "name": "Normal Mode",
+              "steps": [
+                "Proceed to Data Collection Loop",
+                "Call ModelMap Exporter"
+              ]
+            }
+          },
+          {
+            "condition": "MapIO Execution (Internal Recursive Call)",
+            "path1": {
+              "name": "Analysis Phase (_bOnMapIO)",
+              "steps": [
+                "Retrieve Sip reference from Map",
+                "Extract Body, Edges, Envelope",
+                "Analyze Drills (GenBeam)",
+                "Analyze Cuts (GenBeam)",
+                "Analyze Beamcuts (Advanced geometry check)",
+                "Populate MapTools",
+                "Set SubMap 'Tool[]' on Sip",
+                "Return from recursive call"
+              ]
+            }
+          },
+          {
+            "condition": "Beamcut Geometry Analysis",
+            "path1": {
+              "name": "Tool intersects at least one edge",
+              "steps": [
+                "Calculate intersection points",
+                "Decompose tool using Edge Planes",
+                "Calculate Volume/Dimensions",
+                "Detect Type (Rabbet vs Dado)",
+                "Store Data"
+              ]
+            },
+            "path2": {
+              "name": "Simple intersection or No edge decomposition",
+              "steps": [
+                "Use Original Tool Box",
+                "Calculate Dimensions",
+                "Store Data"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Existence of Exporter Groups in ModelMap",
+            "errorMessage": "[ScriptName]\\nPlease define an Exporter Group first and try again.",
+            "recovery": "Define Exporter Group in hsbCAD ModelMap configuration."
+          },
+          {
+            "check": "Validity of Sip Entity in MapIO",
+            "errorMessage": "invalid sip ref",
+            "recovery": "Script skips entity and continues."
+          },
+          {
+            "check": "Beam Type compatibility",
+            "errorMessage": "None (Silent removal)",
+            "recovery": "Beams not of type '_kPanelSplineLumber' are removed from the selection set automatically."
+          },
+          {
+            "check": "Exporter Call Result",
+            "errorMessage": "Tsl::callExporter failed.",
+            "recovery": "Check Exporter Group configuration, file write permissions, or destination folder."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 9045,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# bauBIT-Exporter.mcr\n\n## Overview\nThis script prepares and exports manufacturing data from hsbCAD models to the bauBIT production system. It processes selected panels to extract geometry and machining details, then triggers the generation of the external production file.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates exclusively in 3D Model Space. |\n| Paper Space | No | Not applicable for layouts. |\n| Shop Drawing | No | Not intended for 2D drawing generation. |\n\n## Prerequisites\n- **Required Entities**: Elements, MasterPanels, or Sips present in the model.\n- **Minimum Beam Count**: None (you can select all objects in the model).\n- **Required Settings**: A valid \"Exporter Group\" for bauBIT must be defined in your hsbCAD ModelMap configuration before running the script.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `bauBIT-Exporter.mcr` from the file list.\n\n### Step 2: Select Exporter Group\n**Note**: This step only appears if multiple Exporter Groups are defined in your configuration.\n- **Dialog**: A properties dialog will appear.\n- **Action**: Select the specific Exporter Group configuration you wish to use from the dropdown list.\n- **Error Handling**: If no Exporter Groups are found, a notice will appear stating \"Please define an Exporter Group first and try again.\" You must configure this in the ModelMap to proceed.\n\n### Step 3: Select Entities\n```\nCommand Line: Select object(s) <Enter> to select all:\n```\n- **Action**: Click on the specific panels or elements you want to include in the export, OR press **Enter** to automatically select all valid entities in the current Model Space.\n\n### Step 4: Execute\n- The script will automatically analyze the selected geometry, compile the machining data, and run the export process. The script instance will erase itself from the drawing once finished.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Exporter Group | Dropdown | (Dynamic List) | Selects the specific export configuration (defined in hsbCAD ModelMap) that determines how data is formatted for the bauBIT system. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No specific context menu items are defined for this script. |\n\n## Settings Files\n- **Configuration**: ModelMap Exporter Group\n- **Location**: Defined within hsbCAD Project/ModelMap settings\n- **Purpose**: Contains the logic for mapping hsbCAD geometry attributes to the bauBIT file format requirements.\n\n## Tips\n- Use the **Enter** key when prompted for selection to process the entire project quickly without manually picking individual walls.\n- The script automatically filters out unsupported beam types, so you do not need to worry about selecting invalid geometry.\n- Ensure your work is saved before running the export, as the process writes external data files.\n\n## FAQ\n- **Q: Why does the script show a notice saying \"Please define an Exporter Group first\"?**\n  **A**: The script relies on a pre-configured definition in the hsbCAD ModelMap to know what to export. This needs to be set up by your CAD Manager or system administrator.\n\n- **Q: Can I export just a single wall instead of the whole house?**\n  **A**: Yes. When the command line asks you to select objects, simply click on the specific wall (MasterPanel or Element) you wish to export instead of pressing Enter.\n\n- **Q: What happens if I select a mix of panels and beams?**\n  **A**: The script will intelligently filter the selection, processing the supported panels and ignoring unsupported entities automatically."
+      },
+      "tokens_used": 5292,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,344 @@
+{
+  "filename": "GE_PLOT_SHOW_ELEMENT_WEIGHT.mcr",
+  "status": "completed",
+  "total_tokens": 53680,
+  "processing_time": 462.85159182548523,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 2,
+          "minorVersion": 1,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "21.mar.2013",
+            "author": "David Rueda",
+            "changes": "Copied from hsb_ShowElementWeight, to keep US content folder naming standards\n\t- Thumbnail added"
+          },
+          {
+            "version": "1.7",
+            "date": "21.mar.2013",
+            "author": "David Rueda",
+            "changes": "Version control from 1.0 to 1.7, to keep updated with hsb_ShowElementWeight"
+          },
+          {
+            "version": "1.8",
+            "date": "19.apr.2013",
+            "author": "David Rueda",
+            "changes": "sMode propstring set to read only after set\n\t- \"Materials list not found\" message relocated to bOnInsert\n\t- TSL will delete itself when materials list not found\n\t- Messages edited, will be displayed on command line only, and will be a resume of issues, added translator\n\t- Display (Kg/Lbs) on \"Max weight\" prop\n\t- Added functionality for imperial units\n\t- Added \"Using Defaults Editor\" PropString, and checks material upon this new flag\n\t- Description updated"
+          },
+          {
+            "version": "1.9",
+            "date": "02.may.2013",
+            "author": "David Rueda",
+            "changes": "Brokendependency on hsb_ShowElementWeight. From now on this TSL is lonely since is not using densities anymore.\n\t- PropString sUsingDefaults deleted, since all is based on defaults editor in this TSL.\n\t- Extracted lumber items and sheathing items maps reading from _bOnInsert so user won't ahve to be aware of reinserting when changing weight values in Defaults Editor"
+          },
+          {
+            "version": "2.0",
+            "date": "11.may.2013",
+            "author": "David Rueda",
+            "changes": "From now on this TSL is independent from hsb_ShowElementWeight since we're using a diferent way to store material weights through Defaults Editor\n\t- Added control for lumber items based upon sizes\n\t- Issues report improved"
+          },
+          {
+            "version": "2.1",
+            "date": "11.may.2013",
+            "author": "David Rueda",
+            "changes": "All strings to be translated\n\t- Prop. \"Prefix\" reeplaced by \"Show Prefix\" (No/Yes)(Yes default) in order to have template always translated"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8838,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "Both",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script defines a property 'sMode' allowing selection between 'Model' and 'Viewport'. It contains logic for getViewport() (Paper Space) and PrEntity selection (Model Space). It checks _Viewport.length() to determine execution path."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space or Paper Space",
+          "requiredSettings": [
+            "hsbFramingDefaults.Inventory.dll",
+            "Defaults Editor Inventory data (Lumber items with WEIGHTPERWEIGHTLENGTH, Sheathing items with WEIGHTPERWEIGHTAREA)"
+          ]
+        }
+      },
+      "tokens_used": 8401,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10350,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Calculates the total weight of a timber wall element (including beams and sheathing) based on material inventory data, displays a visual tag, and attaches weight data to the element for export.",
+          "category": "ShopDrawing / Annotation / Data",
+          "typicalUseCase": "Used during the drawing or detailing phase to label wall panels with their weight for transport planning, crane logistics, or structural safety checks. Highlights panels exceeding a specific weight limit."
+        },
+        "parameters": [
+          {
+            "name": "sMode",
+            "technicalDefault": "Model",
+            "businessMeaning": "Defines the target environment for the weight tag. 'Model' places the tag in 3D space attached to the wall, while 'Viewport' places the tag in 2D paper space (shop drawings) based on a selected view.",
+            "validRange": "Model, Viewport",
+            "unit": "enum",
+            "affectsOutput": "Determines the insertion workflow (Select Elements vs. Select Viewport/Point) and whether the script attaches to the Element or the Viewport."
+          },
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "",
+            "businessMeaning": "Selects the CAD dimension style (text font, size, arrows) to be used for the weight label, ensuring consistency with drafting standards.",
+            "validRange": "List of available DimStyles in the drawing",
+            "unit": "string",
+            "affectsOutput": "Visual appearance (height, font, color) of the weight text tag."
+          },
+          {
+            "name": "dMaxWeight",
+            "technicalDefault": "230 (Metric) / 500 (Imperial)",
+            "businessMeaning": "The maximum allowable weight limit. If the calculated wall weight exceeds this value, the tag changes color (typically to red) to serve as a visual warning for handling or transport.",
+            "validRange": "Greater than 0",
+            "unit": "kg (Metric) / lbs (Imperial)",
+            "affectsOutput": "Triggers a color change (index 1/Red) of the text tag if the calculated weight is higher than this value."
+          },
+          {
+            "name": "sShowPrefix",
+            "technicalDefault": "Yes",
+            "businessMeaning": "Controls whether the text label includes the word 'Weight:' before the numeric value.",
+            "validRange": "Yes, No",
+            "unit": "enum",
+            "affectsOutput": "Text format of the label (e.g., 'Weight: 500kg' vs '500kg')."
+          },
+          {
+            "name": "sEraseAfterInsertion",
+            "technicalDefault": "No",
+            "businessMeaning": "If set to 'Yes' (in Model mode), the script deletes itself immediately after calculating and tagging the weight. This keeps the model database light by not storing persistent scripts.",
+            "validRange": "Yes, No",
+            "unit": "enum",
+            "affectsOutput": "Persistence of the TSL instance in the model tree. If Yes, the script runs once and disappears."
+          },
+          {
+            "name": "dOffset",
+            "technicalDefault": "50 (Metric) / 10 (Imperial)",
+            "businessMeaning": "The distance between the wall element (arrow point) and the weight label. Used to prevent the text from overlapping the wall geometry.",
+            "validRange": "Any positive distance",
+            "unit": "mm (Metric) / inch (Imperial)",
+            "affectsOutput": "Position of the text label relative to the wall."
+          },
+          {
+            "name": "strReportIssues",
+            "technicalDefault": "Report issues",
+            "businessMeaning": "A right-click context menu command that re-prints warning messages to the command line. These warnings detail which beams or sheets had missing material grades or weight definitions in the Defaults Editor.",
+            "validRange": "Context Menu Item",
+            "unit": "action",
+            "affectsOutput": "Does not change geometry; outputs text logs to the CAD command line."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sMode is set to 'Viewport'",
+            "effect": "Hides and locks 'sEraseAfterInsertion' and 'dOffset' because placement is manual in Paper Space and the script must remain to track the viewport.",
+            "cascade": [
+              "sEraseAfterInsertion",
+              "dOffset"
+            ]
+          },
+          {
+            "trigger": "Calculation Execution",
+            "effect": "The calculated weight depends on 'hsbFramingDefaults.Inventory.dll' data (Lumber items and Sheathing items). Missing data triggers warnings accessible via 'strReportIssues'.",
+            "cascade": [
+              "strReportIssues",
+              "dMaxWeight"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Text Tag",
+            "description": "A text label displaying the calculated weight (e.g., 'Weight: 1200 Kg') positioned relative to the wall or viewport.",
+            "appliedTo": "Model Space (Wall Element) or Paper Space (Viewport)"
+          },
+          {
+            "type": "ElemItem (Tool)",
+            "description": "An invisible data entity named 'PANELWEIGHT' attached to the element containing the weight quantity, used for exporting data to BOMs or lists.",
+            "appliedTo": "Element"
+          }
+        ]
+      },
+      "tokens_used": 9458,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User executes script (GE_PLOT_SHOW_ELEMENT_WEIGHT).",
+          "2. Script initializes properties (sMode, sDimStyle, dMaxWeight, etc.).",
+          "3. If initial insert, user selects sMode ('Model' or 'Viewport') via dynamic dialog.",
+          "4. [Conditional] Branch based on sMode.",
+          "5. [Model Path] User selects one or more Elements via PrEntity prompt.",
+          "6. [Model Path] Script copies itself onto each selected Element with current properties, then erases the original instance.",
+          "7. [Viewport Path] User selects an insertion point (Point3d).",
+          "8. [Viewport Path] User selects a Viewport.",
+          "9. Script retrieves Element geometry (Local coordinate system, Arrow point).",
+          "10. Script queries 'hsbFramingDefaults.Inventory.dll' for Lumber and Sheathing weight data.",
+          "11. Script iterates through all Beams in the Element: checks Grade, Width, and Height to find matching weight in Inventory.",
+          "12. Script iterates through all Sheets in the Element: checks Material and Thickness to find matching weight in Inventory.",
+          "13. Script sums weights (Beams + Sheets) to calculate Total Weight.",
+          "14. Script formats display string (Prefix + Value + Unit).",
+          "15. [Conditional] Check Max Weight Limit. If Total > dMaxWeight, set Text Color to Red; otherwise use standard color.",
+          "16. Script draws the Text Tag at calculated location relative to element or insertion point.",
+          "17. [Model Only] Script creates invisible 'PANELWEIGHT' ElemItem attached to the Element for export data.",
+          "18. Script compiles a list of any missing material definitions or empty grades.",
+          "19. Script prints warning report to command line if issues are found.",
+          "20. [Model Only] If 'Erase after insertion' is Yes, the script instance deletes itself (leaving only the text tag).",
+          "21. [Viewport Only] Script locks 'Erase after insertion' and 'Offset' properties."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Mode (sMode)",
+            "path1": {
+              "name": "Model Mode",
+              "steps": [
+                "Prompt user to select Elements.",
+                "Iterate selection: Create attached TSL instance for each.",
+                "Erase master script.",
+                "Position tag relative to Element's arrow point + offset.",
+                "Allow 'Erase after insertion' behavior.",
+                "Attach 'PANELWEIGHT' data to Element."
+              ]
+            },
+            "path2": {
+              "name": "Viewport Mode",
+              "steps": [
+                "Prompt user for Insertion Point.",
+                "Prompt user to select Viewport.",
+                "Identify Element referenced by Viewport.",
+                "Position tag at selected Point (2D Paper Space).",
+                "Force 'Erase after insertion' to No.",
+                "Ignore 'PANELWEIGHT' data export."
+              ]
+            }
+          },
+          {
+            "condition": "Weight Comparison (dWeight vs dMaxWeight)",
+            "path1": {
+              "name": "Overweight",
+              "steps": [
+                "Set Color Index to 1 (Red).",
+                "Draw Text Tag in Red to indicate limit exceeded."
+              ]
+            },
+            "path2": {
+              "name": "Within Limit",
+              "steps": [
+                "Set Color Index to -1 (ByLayer/Style).",
+                "Draw Text Tag in standard color."
+              ]
+            }
+          },
+          {
+            "condition": "Beam Weight Calculation",
+            "path1": {
+              "name": "Inventory Match Found",
+              "steps": [
+                "Calculate weight: (Length * WeightPerLength) / WeightLength.",
+                "Add to Total Beam Weight."
+              ]
+            },
+            "path2": {
+              "name": "No Match / Empty Grade",
+              "steps": [
+                "Skip beam in calculation.",
+                "Add beam details to warning log (Undefined Grade or Missing Data)."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam Grade Property",
+            "errorMessage": "Found [Beam Name] with empty GRADE value, not considered for WEIGHT calculations.",
+            "recovery": "Assign a valid Grade to the beam in its properties that exists in the Defaults Editor."
+          },
+          {
+            "check": "Sheet Material Property",
+            "errorMessage": "SHEATHING with empty GRADE value, not considered for WEIGHT calculations.",
+            "recovery": "Assign a valid Material to the sheet in its properties."
+          },
+          {
+            "check": "Inventory Definition (Lumber)",
+            "errorMessage": "Found [Beam Name] with undefined weight value for [Grade] not considered for WEIGHT calculations.",
+            "recovery": "Ensure the Defaults Editor contains a Lumber Item with matching Width, Height, and Grade, and that WEIGHTPERWEIGHTLENGTH is defined."
+          },
+          {
+            "check": "Inventory Definition (Sheathing)",
+            "errorMessage": "SHEATHING with undefined weight value for [Material] not considered for WEIGHT calculations.",
+            "recovery": "Ensure the Defaults Editor contains a Sheathing Item with matching Material and Thickness, and that WEIGHTPERWEIGHTAREA is defined."
+          },
+          {
+            "check": "Element Validity",
+            "errorMessage": "Script erases itself if no valid element is attached.",
+            "recovery": "Ensure the script is attached to a valid Element (or Viewport in Paper Space)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Report Issues",
+            "how": "Right-click Context Menu",
+            "effect": "Re-prints the accumulated warning log of missing grades/materials to the command line."
+          },
+          {
+            "action": "Update Visuals",
+            "how": "OPM (Properties Palette) - Change sDimStyle, dOffset, dMaxWeight",
+            "effect": "Immediately updates the text font, position, or color (if max weight threshold changes)."
+          },
+          {
+            "action": "Update Weight Data",
+            "how": "Modify Element Geometry (Beams/Sheets)",
+            "effect": "Script recalculates weight and updates the tag text and 'PANELWEIGHT' export data automatically due to Entity Dependency."
+          },
+          {
+            "action": "Move Tag",
+            "how": "Grip Edit (Model Mode) / Move Command (Viewport Mode)",
+            "effect": "Relocates the text tag. In Model mode, if moved manually, it may snap back to calculated offset on next update unless the grip logic specifically overrides the arrow offset calculation (Script recalculates position based on arrow in Model mode)."
+          }
+        ]
+      },
+      "tokens_used": 10293,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_PLOT_SHOW_ELEMENT_WEIGHT\n\n## Overview\nThis script calculates the total weight of a timber wall element (including beams and sheathing) based on your inventory defaults. It displays a weight tag in either Model Space or Paper Space (Viewports) and attaches the weight data to the element for export. Panels exceeding a defined weight limit are automatically highlighted in red.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Attaches to the element; follows the element in 3D. |\n| Paper Space | Yes | Places tags in 2D viewports; does not attach to the element. |\n| Shop Drawing | No | Used for tagging and logistics planning, not generating fabrication drawings. |\n\n## Prerequisites\n- **Required Entities**: Wall Element.\n- **Minimum Beam Count**: 0 (Calculates weight for both beams and sheets/sheathing).\n- **Required Settings**:\n  - `hsbFramingDefaults.Inventory.dll` must be configured.\n  - **Lumber Items**: Must have `Grade`, `Width`, `Height`, and `WEIGHTPERWEIGHTLENGTH` defined.\n  - **Sheathing Items**: Must have `Material`, `Thickness`, and `WEIGHTPERWEIGHTAREA` defined.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_PLOT_SHOW_ELEMENT_WEIGHT.mcr`\n\n### Step 2: Select Mode\nA dialog will appear upon insertion.\n- **Action**: Choose the operating mode.\n  - **Model**: Places the tag on the physical wall element in the model.\n  - **Viewport**: Places the tag in a 2D layout view.\n\n### Step 3: Execute (Based on Mode)\n\n**If Model Mode is selected:**\n```\nCommand Line: Select elements:\nAction: Click on the wall element(s) you wish to tag and press Enter.\nResult: The script attaches to the elements, calculates the weight, and draws the tag.\n```\n\n**If Viewport Mode is selected:**\n```\nCommand Line: Specify insertion point:\nAction: Click in the layout where you want the weight text to appear.\nCommand Line: Select viewport:\nAction: Click on the viewport border that shows the wall element.\nResult: The script identifies the element in that view and places the text.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sMode | Dropdown | Model | Sets whether the tag lives in **Model** (3D) or **Viewport** (2D). |\n| sDimStyle | String | (Current) | The AutoCAD Dimension Style used for the text (controls font and size). |\n| dMaxWeight | Number | 230 (kg) / 500 (lbs) | The weight limit. If the element is heavier, the text turns **Red**. |\n| sShowPrefix | Enum | Yes | Adds the word \"Weight:\" before the number (e.g., \"Weight: 500kg\"). |\n| sEraseAfterInsertion | Enum | No | **Model Only**. If Yes, deletes the script instance after running once to keep the file size small. |\n| dOffset | Number | 50 (mm) / 2 (in) | **Model Only**. The distance between the wall arrow and the text label. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Report issues | Re-prints warning messages to the command line (e.g., beams with missing grades or missing weight data in the Defaults Editor). |\n\n## Settings Files\n- **Filename**: `hsbFramingDefaults.Inventory.dll` (accessed via Defaults Editor)\n- **Location**: Defined in your hsbCAD configuration.\n- **Purpose**: Provides material density data. Ensure Lumber items have `WEIGHTPERWEIGHTLENGTH` and Sheathing items have `WEIGHTPERWEIGHTAREA` populated for specific grades/materials.\n\n## Tips\n- **Troubleshooting 0 Weight**: If the tag shows \"Weight: 0\", use the **Report issues** right-click option. You likely have beams without a Grade assigned or materials missing weight definitions in the Defaults Editor.\n- **Transport Planning**: Use the `dMaxWeight` property to highlight heavy panels (Red) automatically, helping to identify if a wall needs to be split for transport.\n- **Clean Model**: In **Model Mode**, set `sEraseAfterInsertion` to **Yes**. The tag will remain visible, but the script instance is removed, preventing the script from recalculating unnecessarily and slowing down the model.\n\n## FAQ\n- **Q: Why is my text Red?**\n  - A: The calculated weight of the element exceeds the `dMaxWeight` value set in the properties. Increase the limit or verify the element weight.\n- **Q: Can I move the text tag manually?**\n  - A: Yes. You can use standard AutoCAD grips or the Move command to reposition the text. Note that in Model Mode, updating the script properties may reset the position to the calculated offset.\n- **Q: What units does it use?**\n  - A: The script automatically adapts to your drawing units (Metric or Imperial), displaying kg or lbs respectively."
+      },
+      "tokens_used": 6340,
+      "error": null
+    }
+  }
+}

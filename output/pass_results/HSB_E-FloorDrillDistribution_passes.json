@@ -1,0 +1,433 @@
+{
+  "filename": "HSB_E-FloorDrillDistribution.mcr",
+  "status": "completed",
+  "total_tokens": 48925,
+  "processing_time": 448.4179599285126,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"header\": {\n    \"type\": null,\n    \"numBeamsReq\": null,\n    \"keywords\": null,\n    \"majorVersion\": 1,\n    \"minorVersion\": 2,\n    \"dxaOut\": null,\n    \"implInsert\": null\n  },\n  \"description\": null,\n  \"versionHistory\": [\n    {\n      \"version\": \"1.00\",\n      \"date\": \"02.10.2019\",\n      \"author\": \"RVW\",\n      \"changes\": \"Pilot version.\"\n    },\n    {\n      \"version\": \"1.01\",\n      \"date\": \"04.10.2019\",\n      \"author\": \"RVW\",\n      \"changes\": \"Change creation of the plane profile. Create the plane profile from the Envelope of the Element.\"\n    },\n    {\n      \"version\": \"1.02\",\n      \"date\": \"15.10.2019\",\n      \"author\":"
+      },
+      "tokens_used": 8297,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script operates on hsbCAD Element entities (selected via PrEntity) and modifies 3D geometry using SolidSubtract, ElemDrill, and ElemMill. The filename prefix 'HSB_E-' indicates an Element script. It assigns itself to the element group using 'assignToElementGroup'. There is no usage of ShopDrawing specific patterns like '#Type E', '_Viewport', or 'sd_' prefixes."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "EntPLine (Polyline)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (hsbCAD 3D Model)",
+          "requiredSettings": [
+            "HSB_G-Distribution.mcr (must be loaded to calculate distribution points)"
+          ]
+        }
+      },
+      "tokens_used": 6196,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9279,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Distributes and places drilling and milling operations on floor elements along a user-defined polyline path, creating holes through both structural beams and sheeting layers.",
+          "category": "Machining/CNC",
+          "typicalUseCase": "Creating evenly spaced penetrations for electrical sockets, ventilation ducts, or pipe runs across prefabricated floor cassettes."
+        },
+        "parameters": [
+          {
+            "name": "dDrillBeam",
+            "technicalDefault": "Yes",
+            "businessMeaning": "Specifies whether to drill holes into the structural beams underneath the sheeting.",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "If Yes, cylindrical holes are created in beams intersecting the path. If No, beams remain untouched while sheeting may still be milled."
+          },
+          {
+            "name": "dBeamDrillDiameter",
+            "technicalDefault": "5",
+            "businessMeaning": "Diameter of the drill bit used on the structural beams.",
+            "validRange": "5 - 50",
+            "unit": "mm",
+            "affectsOutput": "Determines the size of the hole in the beam. Usually smaller than the sheeting mill diameter."
+          },
+          {
+            "name": "dDrillDepth",
+            "technicalDefault": "75",
+            "businessMeaning": "Depth of the hole drilled into the beam from the top surface.",
+            "validRange": "10 - Total Beam Depth",
+            "unit": "mm",
+            "affectsOutput": "Controls penetration depth. If less than beam thickness, results in a blind hole."
+          },
+          {
+            "name": "nZoneElemDrillElemMill",
+            "technicalDefault": "2",
+            "businessMeaning": "Construction zone defining the reference surface (top level) from which drilling/milling depth is calculated downwards.",
+            "validRange": "1 - 5",
+            "unit": "Zone Index",
+            "affectsOutput": "Sets the start height Z-position for the machining operation."
+          },
+          {
+            "name": "nToolingIndexBeam",
+            "technicalDefault": "1",
+            "businessMeaning": "CNC machine tool reference number for the beam drill operation.",
+            "validRange": "1 - 99",
+            "unit": "Index",
+            "affectsOutput": "Affects CAM data export only; no visual change in 3D model."
+          },
+          {
+            "name": "dDistributionDistance",
+            "technicalDefault": "300",
+            "businessMeaning": "Target spacing between centers of drill holes along the polyline.",
+            "validRange": "50 - 2000",
+            "unit": "mm",
+            "affectsOutput": "Controls the frequency/count of holes generated along the path."
+          },
+          {
+            "name": "dOffsetFirstPoint",
+            "technicalDefault": "0",
+            "businessMeaning": "Distance from the start of the path to the center of the first hole.",
+            "validRange": "0 - Distribution Distance",
+            "unit": "mm",
+            "affectsOutput": "Shifts the pattern of holes away from the start of the polyline."
+          },
+          {
+            "name": "dOffsetLastPoint",
+            "technicalDefault": "0",
+            "businessMeaning": "Distance from the end of the path to the center of the last hole.",
+            "validRange": "0 - Distribution Distance",
+            "unit": "mm",
+            "affectsOutput": "Ensures the last hole is not placed too close to the end of the polyline."
+          },
+          {
+            "name": "sDistributionType",
+            "technicalDefault": "Left",
+            "businessMeaning": "Anchor point for the spacing calculation (Start, End, or Center of the path).",
+            "validRange": "Left/Right/Center",
+            "unit": "Enum",
+            "affectsOutput": "Changes alignment of the hole pattern along the segment."
+          },
+          {
+            "name": "sDistrEvenly",
+            "technicalDefault": "No",
+            "businessMeaning": "If Yes, divides the available space evenly, using 'Distribution spacing' as the maximum allowed gap.",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "Modifies hole positions to ensure equal spacing between them, potentially reducing the gap to fit the geometry."
+          },
+          {
+            "name": "sMillSheets",
+            "technicalDefault": "Yes",
+            "businessMeaning": "Enables or disables the milling of floor sheeting/panels.",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "If Yes, creates holes in the sheeting material. If No, sheeting is ignored."
+          },
+          {
+            "name": "sIncludedSheetingZones",
+            "technicalDefault": "",
+            "businessMeaning": "Specific list of sheeting zones to apply milling to (e.g., '1;2'). If empty, mills all positive zones.",
+            "validRange": "String of semicolon-separated integers",
+            "unit": "Zone List",
+            "affectsOutput": "Restricts milling to specific layers of the floor construction."
+          },
+          {
+            "name": "dDiameterMillSheets",
+            "technicalDefault": "10",
+            "businessMeaning": "Diameter of the milling tool used for the sheeting.",
+            "validRange": "10 - 150",
+            "unit": "mm",
+            "affectsOutput": "Size of the opening in the floor panels. Often larger than the beam drill to clear tolerances."
+          },
+          {
+            "name": "nToolingIndexSheet",
+            "technicalDefault": "1",
+            "businessMeaning": "CNC machine tool reference number for the sheet milling operation.",
+            "validRange": "1 - 99",
+            "unit": "Index",
+            "affectsOutput": "Affects CAM data export only."
+          },
+          {
+            "name": "resetPositions",
+            "technicalDefault": "Context Action",
+            "businessMeaning": "Recalculates all drill positions based on the polyline and spacing parameters, resetting any manual edits.",
+            "validRange": "N/A",
+            "unit": "Action",
+            "affectsOutput": "Clears manually added/deleted points and reapplies the automatic distribution."
+          },
+          {
+            "name": "deleteDrill",
+            "technicalDefault": "Context Action",
+            "businessMeaning": "Removes a specific drill hole located near a user-selected point.",
+            "validRange": "N/A",
+            "unit": "Action",
+            "affectsOutput": "Removes machining at a specific location."
+          },
+          {
+            "name": "addDrill",
+            "technicalDefault": "Context Action",
+            "businessMeaning": "Adds a new drill/mill at a specific user-selected point.",
+            "validRange": "N/A",
+            "unit": "Action",
+            "affectsOutput": "Creates new machining geometry at the clicked location."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sMillSheets is No",
+            "effect": "Sheeting parameters are ignored and no milling occurs.",
+            "cascade": [
+              "sIncludedSheetingZones",
+              "dDiameterMillSheets",
+              "nToolingIndexSheet"
+            ]
+          },
+          {
+            "trigger": "dDrillBeam is No",
+            "effect": "Beam drilling parameters are ignored.",
+            "cascade": [
+              "dBeamDrillDiameter",
+              "dDrillDepth",
+              "nToolingIndexBeam"
+            ]
+          },
+          {
+            "trigger": "sIncludedSheetingZones is empty string",
+            "effect": "Script defaults to milling all available positive sheeting zones found in the element.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "ElemDrill",
+            "description": "Element-level drilling operation used for production data and BOM.",
+            "appliedTo": "Selected Floor Elements"
+          },
+          {
+            "type": "ElemMill",
+            "description": "Element-level milling operation used for sheeting penetrations.",
+            "appliedTo": "Selected Floor Elements"
+          },
+          {
+            "type": "Drill (Beam Tool)",
+            "description": "Geometric hole applied to individual structural beams within the element.",
+            "appliedTo": "Beams intersecting the distribution path"
+          },
+          {
+            "type": "SolidSubtract",
+            "description": "Boolean subtraction body used to cut through GenBeams and Sheets.",
+            "appliedTo": "Sheeting and General Beams in the path"
+          }
+        ]
+      },
+      "tokens_used": 8670,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Insertion: User runs script from hsbCAD toolbar or command line.",
+          "Check Insert Cycle: If insertCycleCount > 1, erase instance and exit (prevents re-running).",
+          "Input Polyline: Prompt user to select a polyline (EntPLine) to define the distribution path.",
+          "Validation: Check if selected polyline is valid. If invalid, report error.",
+          "Store Path: Save the polyline geometry into the internal Map ('Pline').",
+          "Input Elements: Prompt user to select one or more floor Elements.",
+          "Assignment: Assign the script instance to the Element Group of the selected elements.",
+          "Initialization: On DB creation (or reset), retrieve the stored polyline from the Map.",
+          "Coordinate Calculation: Iterate through polyline segments to identify start and end points.",
+          "Distribution Call: Invoke 'HSB_G-Distribution.mcr' script to calculate drill positions based on spacing and offset parameters.",
+          "Validation: Check if distribution script is loaded. If failed, report warning and erase instance.",
+          "Store Points: Save calculated distribution points to the global point array (_PtG).",
+          "Geometry Processing: Iterate through each calculated distribution point.",
+          "Element Association: Check which Element's PlaneProfile contains the current point.",
+          "Zone Analysis: Detect existing sheeting zones in the element (positive and negative).",
+          "Depth Calculation: Determine top and bottom limits for milling/drilling based on selected zones or defaults.",
+          "Sheet Milling: If enabled, create Body cut and apply ElemMill to the element and SolidSubtract to sheets.",
+          "Beam Drilling: If enabled, create Body cut and apply ElemDrill to the element and Drill tools to individual beams.",
+          "Visuals: Draw center lines for verification if display is active.",
+          "Completion: Update hardware and exit."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count",
+            "path1": {
+              "name": "First Cycle",
+              "steps": [
+                "Continue execution",
+                "Select entities",
+                "Initialize data"
+              ]
+            },
+            "path2": {
+              "name": "Subsequent Cycle",
+              "steps": [
+                "Erase instance",
+                "Exit script"
+              ]
+            }
+          },
+          {
+            "condition": "User executes 'Reset Positions' context action",
+            "path1": {
+              "name": "Reset Flow",
+              "steps": [
+                "Clear existing points array (_PtG)",
+                "Recalculate distribution via HSB_G-Distribution",
+                "Overwrite points with new pattern"
+              ]
+            }
+          },
+          {
+            "condition": "User executes 'Delete drill' context action",
+            "path1": {
+              "name": "Delete Flow",
+              "steps": [
+                "Prompt user to select a point near the drill",
+                "Loop through existing points",
+                "Check if selection point falls within drill circle radius",
+                "Remove matching point from array"
+              ]
+            }
+          },
+          {
+            "condition": "User executes 'Add drill' context action",
+            "path1": {
+              "name": "Add Flow",
+              "steps": [
+                "Prompt user to select a location",
+                "Append new point to the global points array"
+              ]
+            }
+          },
+          {
+            "condition": "Parameter 'sIncludedSheetingZones' (Sheeting Zones to Mill)",
+            "path1": {
+              "name": "Specific Zones Defined",
+              "steps": [
+                "Use first specified zone as bottom limit for milling depth",
+                "Only mill zones specified in the list"
+              ]
+            },
+            "path2": {
+              "name": "Empty/Default",
+              "steps": [
+                "Detect all positive zones with sheeting",
+                "Use the lowest positive zone as bottom limit",
+                "Mill all positive sheeting"
+              ]
+            }
+          },
+          {
+            "condition": "Parameter 'sMillSheets' (Mill the sheets)",
+            "path1": {
+              "name": "Yes",
+              "steps": [
+                "Create cylindrical Body based on Mill Diameter",
+                "Apply SolidSubtract to intersecting Sheets",
+                "Add ElemMill to Element"
+              ]
+            },
+            "path2": {
+              "name": "No",
+              "steps": [
+                "Skip sheet milling operations",
+                "Continue to beam drilling if enabled"
+              ]
+            }
+          },
+          {
+            "condition": "Parameter 'dDrillBeam' (Drill beams in zone 0)",
+            "path1": {
+              "name": "Yes",
+              "steps": [
+                "Create cylindrical Body for beam drill",
+                "Identify individual Beams intersecting the drill body",
+                "Add Drill tool to intersecting beams",
+                "Add SolidSubtract for GenBeams",
+                "Add ElemDrill to Element"
+              ]
+            },
+            "path2": {
+              "name": "No",
+              "steps": [
+                "Skip beam drilling operations"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Selected Polyline Validity",
+            "errorMessage": "BonInsert is EntPline not valid",
+            "recovery": "User must re-run the script and ensure a valid polyline is selected."
+          },
+          {
+            "check": "Availability of 'HSB_G-Distribution' Script",
+            "errorMessage": "Drills could not be distributed! Make sure that the tsl HSB_G-Distribution is loaded in the drawing.",
+            "recovery": "User must load the HSB_G-Distribution.mcr script into the CAD drawing and reset the positions."
+          },
+          {
+            "check": "Point inside Element Profile",
+            "errorMessage": "None (Silent skip)",
+            "recovery": "If a distribution point falls outside the element's envelope, it is ignored; the user may need to adjust the polyline."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Drill Parameters",
+            "how": "Properties Palette (OPM)",
+            "effect": "Updates diameters, depths, spacing, and tooling indices instantly upon property change."
+          },
+          {
+            "action": "Reset Positions",
+            "how": "Right-click Context Menu -> Reset positions",
+            "effect": "Clears all manual edits and recalculates the hole pattern along the polyline based on current spacing/offset properties."
+          },
+          {
+            "action": "Delete Individual Drill",
+            "how": "Right-click Context Menu -> Delete drill",
+            "effect": "Prompts for a point; removes the specific drill hole closest to/under that point."
+          },
+          {
+            "action": "Add Individual Drill",
+            "how": "Right-click Context Menu -> Add drill",
+            "effect": "Prompts for a point; adds a new drill/mill at that specific location."
+          },
+          {
+            "action": "Modify Geometry",
+            "how": "Grip Edit the Polyline",
+            "effect": "Modifying the polyline geometry usually requires a 'Reset Positions' to update the hole locations to the new path."
+          }
+        ]
+      },
+      "tokens_used": 9515,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-FloorDrillDistribution.mcr\n\n## Overview\nThis script automatically distributes drill holes and milling cuts along a user-defined polyline path across selected floor elements. It is designed to create penetrations for utilities (such as cables or pipes) through both floor sheeting and underlying structural beams.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be run in the 3D hsbCAD model. |\n| Paper Space | No | Not applicable in 2D layouts. |\n| Shop Drawing | No | This script modifies physical 3D geometry, not drawing views. |\n\n## Prerequisites\n- **Required Entities:**\n  - An `Element` (Floor cassette or panel).\n  - A `Polyline` (Path defining the center line of the distribution).\n- **Required Settings:**\n  - `HSB_G-Distribution.mcr` must be loaded in the drawing to calculate point positions.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_E-FloorDrillDistribution.mcr`\n\n### Step 2: Define Distribution Path\n```\nCommand Line: Select polyline:\nAction: Click on the polyline in the model that represents the path where holes should be placed.\n```\n\n### Step 3: Select Floor Elements\n```\nCommand Line: Select elements:\nAction: Select one or more floor elements. The script will apply holes only where the distribution path intersects with these elements.\n```\n\n### Step 4: Configuration\nAfter selection, the script attaches to the elements. You can now adjust parameters using the **Properties Palette** (Ctrl+1) while the element is selected.\n\n## Properties Panel Parameters\n\n### Distribution Settings\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Distribution Distance | Number | 300 | The spacing between the centers of drill holes along the path (mm). |\n| Offset First Point | Number | 0 | Distance from the start of the polyline to the first hole (mm). |\n| Offset Last Point | Number | 0 | Distance from the end of the polyline to the last hole (mm). |\n| Distribution Type | Dropdown | Left | Anchors the pattern: **Left** (from start), **Right** (from end), or **Center** (middle alignment). |\n| Distribute Evenly | Yes/No | No | If **Yes**, divides the path length equally, using the Distribution Distance as the *maximum* gap allowed. |\n\n### Beam Drilling Settings\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Drill Beams | Yes/No | Yes | Enables or disables drilling into structural beams. |\n| Beam Drill Diameter | Number | 5 | Diameter of the hole in the beam (mm). |\n| Drill Depth | Number | 75 | Depth of the hole drilled from the top surface downwards (mm). |\n| Tooling Index Beam | Number | 1 | CNC tool reference number for beam drilling. |\n| Reference Zone | Number | 2 | The construction zone index used to determine the top Z-level for drilling. |\n\n### Sheet Milling Settings\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Mill Sheets | Yes/No | Yes | Enables or disables milling of floor sheeting/panels. |\n| Mill Diameter | Number | 10 | Diameter of the milling cutter for sheeting (mm). |\n| Included Zones | String | (Empty) | Specific sheeting zones to mill (e.g., \"1;3\"). Leave empty to mill all positive zones. |\n| Tooling Index Sheet | Number | 1 | CNC tool reference number for sheet milling. |\n\n## Right-Click Menu Options\nSelect the element instance in the model, right-click, and choose from the following:\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Reset positions** | Clears all manual edits (added/deleted holes) and recalculates the entire pattern based on current polyline and spacing parameters. |\n| **Delete drill** | Prompts you to click near a specific hole to remove it from the pattern. |\n| **Add drill** | Prompts you to click a location to add a new drill/mill hole manually at that specific point. |\n\n## Settings Files\n- **Filename**: `HSB_G-Distribution.mcr`\n- **Location**: Must be loaded in the current drawing.\n- **Purpose**: This helper script is responsible for the mathematical calculation of point coordinates along the polyline based on the spacing and offset settings provided.\n\n## Tips\n- **Polyline Editing:** If you use grips to move or stretch the distribution polyline after the script is inserted, the holes will not update automatically until you run the **Reset positions** context command.\n- **Selective Milling:** Use the *Included Zones* parameter to target specific layers of a floor build-up. For example, if you only want to mill through the decking but not a finish layer, specify only the deck zone number.\n- **Uneven Spacing:** If the polyline length is not an exact multiple of the spacing distance, enable **Distribute Evenly** to ensure the holes are spaced consistently with smaller gaps at the ends, rather than one large final gap.\n\n## FAQ\n- **Q: Why do I get an error \"Drills could not be distributed\"?**\n  **A:** This usually means the helper script `HSB_G-Distribution.mcr` is not loaded in your drawing. Use the TSL Load command to add it and try again.\n  \n- **Q: The holes appear in the sheeting but not in the beams. Why?**\n  **A:** Check the **Drill Beams** property in the palette. If it is set to \"No\", beams will be ignored. Also, ensure the path actually crosses the centerline of the structural beams.\n\n- **Q: Can I have different spacing for different elements?**\n  **A:** No. Since a single script instance controls the distribution along one polyline, the spacing is uniform for all elements attached to that instance. If you need different spacing, use separate polylines and script instances."
+      },
+      "tokens_used": 6968,
+      "error": null
+    }
+  }
+}

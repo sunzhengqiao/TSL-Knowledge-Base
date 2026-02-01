@@ -1,0 +1,198 @@
+{
+  "filename": "hsb_BeamNotch.mcr",
+  "status": "completed",
+  "total_tokens": 22210,
+  "processing_time": 217.68762826919556,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "19.05.2010",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.1",
+            "date": "11.02.2011",
+            "author": "",
+            "changes": "Remove bOnInsert so allow the user to insert multiple instances in one go."
+          },
+          {
+            "version": "1.2",
+            "date": "14.10.2014",
+            "author": "",
+            "changes": "Add Tolerance."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4473,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script manipulates 3D geometry using Body operations (envelopeBody, getSlice, SolidSubtract) and modifies beam entities via bmMale.addTool(). It accesses the _Beam array directly. No ShopDrawing (sd_*) or Paper Space (_Viewport) specific functions are used."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2623,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dTolerance",
+            "type": "PropDouble",
+            "displayName": "Tolerance",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2081,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically creates a notch in one beam to accommodate the cross-section of an intersecting beam, ensuring a clean geometric connection.",
+          "category": "Framing/Joinery",
+          "typicalUseCase": "Used when two timber members cross or intersect in 3D space, and one beam requires a cut-out (mortise notch) so the other beam can fit without collision."
+        },
+        "parameters": [
+          {
+            "name": "dTolerance",
+            "technicalDefault": 0,
+            "businessMeaning": "Clearance gap added to the notch dimensions. It ensures the hole cut into the main beam is slightly larger than the intersecting beam, allowing for easier assembly, paint thickness, or timber expansion.",
+            "validRange": "0 to 10 mm",
+            "unit": "mm",
+            "affectsOutput": "Adjusts the size of the void cut into the target beam. A positive value increases the notch size (looser fit), while 0 creates a mathematically exact match to the intersecting beam's profile."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Cut/Void",
+            "description": "A subtractive body operation derived from the profile of the intersecting beam, extruded to remove material from the main beam.",
+            "appliedTo": "The beam selected to be notched (referenced internally as bmMale / _Beam[1])."
+          }
+        ]
+      },
+      "tokens_used": 3720,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User pre-selects two beams in the Model Space.",
+          "User launches the script (Insert command).",
+          "Script assigns the first selected beam to Index 0 (Female/Source profile) and the second to Index 1 (Male/Target beam).",
+          "System prompts for insertion point (Origin of the notch plane).",
+          "Script generates the envelope body of the Female beam.",
+          "Script calculates a slice (2D profile) of that body at the insertion point.",
+          "Script applies the 'dTolerance' property to shrink the 2D profile.",
+          "Script extrudes the profile to create a 3D cutting tool.",
+          "Script subtracts the tool from the Male beam.",
+          "Script draws a coordinate system indicator at the insertion point."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Point location relative to Female Beam envelope",
+            "path1": {
+              "name": "Valid Intersection",
+              "steps": [
+                "The insertion point plane intersects the Female beam's envelope body.",
+                "A valid closed PLine (profile) is generated.",
+                "Notch is successfully cut into the Male beam."
+              ]
+            },
+            "path2": {
+              "name": "Invalid Intersection",
+              "steps": [
+                "The insertion point plane misses the Female beam's envelope body.",
+                "The getSlice method returns an empty result set.",
+                "Script encounters a runtime error (Index out of bounds) accessing 'plAll[0]' and fails."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Pre-selection of Beams",
+            "errorMessage": "Runtime Error (likely Null reference or Index out of bounds).",
+            "recovery": "User must select two GenBeams before running the script. Ensure the beam defining the notch shape is selected first (Index 0) and the beam to be cut is selected second (Index 1)."
+          },
+          {
+            "check": "Profile Generation at Slice",
+            "errorMessage": "Runtime Error accessing index 0 of empty array at line 'PLine plForBody=plAll[0]'.",
+            "recovery": "Ensure the insertion point click is positioned within the volume of the intersecting beam so the cut plane actually slices the geometry."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Notch Tolerance",
+            "how": "Select the script instance or element, open Properties Palette (OPM), edit 'dTolerance' value, and trigger Recalculate.",
+            "effect": "The 2D profile of the notch shrinks by the specified amount, increasing the clearance gap between the two beams."
+          },
+          {
+            "action": "Move Script Instance",
+            "how": "Grip edit the insertion point (_Pt0) of the script.",
+            "effect": "The origin of the slice plane moves, potentially changing the shape of the notch if the intersection geometry of the beams varies along their length."
+          }
+        ]
+      },
+      "tokens_used": 5125,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_BeamNotch\n\n## Overview\nAutomatically creates a notch in a target beam to accommodate the cross-section of an intersecting beam, adding a specified tolerance for assembly clearance.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script operates on 3D beam geometry. |\n| Paper Space | No | Not designed for 2D drawing views. |\n| Shop Drawing | No | Does not generate shop drawings. |\n\n## Prerequisites\n- **Required Entities:** Two GenBeams (Timber beams).\n- **Minimum Beam Count:** 2.\n- **Required Settings:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_BeamNotch.mcr` from the list.\n\n### Step 2: Select Beams\n```\nAction: Pre-select two beams in the model before running the command.\nOrder Matters:\n- 1st Selected Beam: Defines the shape/profile of the notch.\n- 2nd Selected Beam: The beam that will be cut (notched).\n```\n\n### Step 3: Define Insertion Point\n```\nCommand Line: Specify insertion point:\nAction: Click a point in 3D space.\nNote: This point represents the origin of the cutting plane. You must click inside the physical volume of the first beam (the one defining the shape). If you click outside, the script will fail to generate a profile.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Tolerance | Number | 0 | The clearance gap (in mm) added to the notch. Increasing this value makes the notch slightly larger than the intersecting beam to allow for easier assembly or paint thickness. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Updates the notch geometry based on changes to the beams or the Tolerance property. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Beam Order:** Always select the \"profile\" beam first and the \"target\" beam second. If you reverse them, the wrong beam will be cut.\n- **Visualizing the Cut:** Imagine a plane cutting through the first beam exactly where you click. The shape of that cut is what will be carved out of the second beam.\n- **Tolerance:** Use the Tolerance property to create a loose fit. For tight connections, leave it at 0.\n- **Placement:** If the script fails, check that your insertion point click is actually hitting the first beam, not just near it.\n\n## FAQ\n- **Q: Why does the script fail with an error?**\n  A: This usually happens if the insertion point you clicked is outside the volume of the first beam. Ensure you click directly on or inside the body of the beam defining the notch shape.\n- **Q: Can I move the notch after creation?**\n  A: Yes, you can grip-edit the script instance (the coordinate system created at the insertion point) to move the origin of the notch along the beam.\n- **Q: How do I make the hole bigger?**\n  A: Select the script instance, open the Properties palette, and increase the \"Tolerance\" value. Right-click and choose \"Recalculate\" to apply the change."
+      },
+      "tokens_used": 4188,
+      "error": null
+    }
+  }
+}

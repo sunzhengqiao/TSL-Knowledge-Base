@@ -1,0 +1,128 @@
+{
+  "filename": "GE_HDWR_STUD_PLATE_TIE_SPTS.mcr",
+  "status": "completed",
+  "total_tokens": 43078,
+  "processing_time": 653.1965732574463,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8370,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script creates 3D geometry (Body) based on GenBeam selections (PrEntity) and 3D point inputs (getPoint). It uses tsl.dbCreate to generate hardware instances attached to beams. No paper space specific variables (_Viewport, sd_*) or ShopDrawing entities are used."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": [
+            "TSL_Read_Metalpart_Family_Props.dll located in installation folder\\Utilities\\TslCustomSettings",
+            "TXT file containing SPTS family details",
+            "TSL_HARDWARE_FAMILY_LIST.dxx located in Company TSL Catalog path"
+          ]
+        }
+      },
+      "tokens_used": 6240,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5673,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the insertion of a specific hardware family (SPTS - Stud Plate Tie) to connect vertical studs to horizontal top or bottom plates, ensuring correct orientation and face attachment.",
+          "category": "Hardware",
+          "typicalUseCase": "Reinforcing wall framing connections by applying metal ties (hurricane ties/straps) between studs and plates to resist wind uplift or lateral loads."
+        },
+        "parameters": [
+          {
+            "name": "sType",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The specific product code or model name of the Simpson Strong-Tie style strap (e.g., SPTS20). This determines the physical dimensions of the hardware.",
+            "validRange": "Alphanumeric string from valid catalog entries",
+            "unit": "Text",
+            "affectsOutput": "Selects the corresponding property set (Length/Width) from the external database to drive the 3D geometry generation."
+          },
+          {
+            "name": "dLength",
+            "technicalDefault": "U(170, 6.6875)",
+            "businessMeaning": "The vertical height of the tie strap. A critical structural dimension determining the number of nails and uplift resistance capacity.",
+            "validRange": "150mm - 400mm (Typical manufacturer ranges)",
+            "unit": "mm",
+            "affectsOutput": "Scales the vertical dimension (Z-axis relative to plate) of the 3D Body representing the metal strap."
+          },
+          {
+            "name": "dWidth",
+            "technicalDefault": "U(35, 1.375)",
+            "businessMeaning": "The width of the tie strap, usually matching the width of the stud (e.g., 45mm, 90mm).",
+            "validRange": "35mm - 140mm (Standard timber widths)",
+            "unit": "mm",
+            "affectsOutput": "Scales the horizontal dimension (Y-axis relative to plate) of the 3D Body."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User executes 'Change type' context menu command",
+            "effect": "Script calls external DotNet assembly to lookup dimensions in TXT catalog file based on selected part number.",
+            "cascade": [
+              "sType",
+              "dLength",
+              "dWidth"
+            ]
+          },
+          {
+            "trigger": "Beam geometry or location changes (Recalc)",
+            "effect": "Script recalculates the insertion point (_Pt0) and coordinate vectors (vx, vy, vz) to snap the tie to the nearest valid face of the stud relative to the plates.",
+            "cascade": [
+              "_Pt0",
+              "vx",
+              "vy",
+              "vz"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Body (3D Model)",
+            "description": "A parametric 3D solid representing a metal stud plate tie, consisting of a vertical face plate and a perpendicular base flange with cut corners (chamfers).",
+            "appliedTo": "Visual representation is created at the intersection of the selected Stud and Top/Bottom Plate in the 3D Model Space."
+          }
+        ]
+      },
+      "tokens_used": 7762,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"User executes script via catalog or command line.\",\n    \"Check execution mode: Is it 'Help' context menu command?\",\n    \"If 'Help', display usage instructions in report and exit.\",\n    \"Initialize Insert Cycle check: If count > 1, erase instance and exit (prevents duplication during batch creation).\",\n    \"Determine Data Source: Load hardware properties (Map).\",\n    \"   - If '_bOnRecalc' is true, load stored properties from '_Map'.\",\n    \"   - Otherwise, call DotNet assembly 'TSL_Read_Metalpart_Family_Props.dll' to read catalog files.\",\n    \"Check 'Change Type' context menu command.\",\n    \"   - If triggered, update '_Map' with new catalog selection.\",\n    \"Check Insertion Mode: Is it '_bOnInsert'?\",\n    \"   \"[Path A: Manual Insertion] Prompt user for Entity Selection (Studs and Plates).\",\n    \"   \"[Path A] Prompt user for Reference Point (Pick face).\",\n    \"   \"[Path A] Analyze selected Beams to categorize into Verticals, Bottom Plates, and Top Plates.\",\n    \"   \"[Path A] Validate inputs: Must have at least one Vertical and one Plate (Top or Bottom).\",\n    \"   \"[Path A] Batch Loop: For each valid vertical stud, spawn a new script instance ('dbCreate') attached to that stud and the plates.\",\n    \"   \"[Path A] Erase original 'host' instance and return.\",\n    \"   \"[Path B: Instance Execution] Verify dependencies: '_Beam' (Stud) and '_Map' must be valid.\",\n    \"   \"[Path B] Determine Orientation Logic based on 'bOnInsert' flag (Manual vs Tool-spawned).\",\n    \"   \"[Path B] Calculate local coordinate system (vx, vy, vz) based on Stud and Plate geometry.\",\n    \"   \"[Path B] Calculate dimensions (Length/Width) from Map or apply defaults.\",\n    \"   \"[Path B] Cleanup: Check for duplicate TSL instances on the same beam at the same location and erase them.\",\n    \"   \"[Path B] Generate 3D Geometry: Draw Front Plate and Base flange using calculated vectors and dimensions.\",\n    \"Finalize: Draw bodies to display.\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Initial Script Trigger (Context Menu)\",\n      \"path1\": {\n        \"name\": \"Help Command\",\n        \"steps\": [\n          \"Execute specific code block for _kExecuteKey == sHelp\",\n          \"Report notice with instructions\",\n          \"Terminate execution\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Normal Execution\",\n        \"steps\": [\n          \"Proceed to Insert/Recalc logic\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Execution Phase\",\n      \"path1\": {\n        \"name\": \"Manual Insertion (User Selection)\",\n        \"steps\": [\n          \"Prompt for Stud and Plate selection (PrEntity)\",\n          \"Prompt for Reference Point (getPoint)\",\n          \"Sort Beams into Verticals, Bottom, and Top arrays\",\n          \"Validate array counts (Fail if no verticals or no plates)\",\n          \"Loop through Verticals\",\n          \"Call dbCreate to generate individual hardware instances\",\n          \"Erase master instance\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Instance Calculation (Single Hardware)\",\n        \"steps\": [\n          \"Check 'bOnInsert' flag within the instance data\",\n          \"Calculate geometry based on Stud (Beam[0]) and Plate relationships\",\n          \"Resolve Vector orientations relative to Plate Y/Z axes\",\n          \"Construct parametric Body\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Plate Availability (During Manual Insertion)\",\n      \"path1\": {\n        \"name\": \"Bottom Plates Present\",\n        \"steps\": [\n          \"Identify Bottom/VeryBottom plates in selection\",\n          \"Set flag bTieBottom = true\",\n          \"Generate instances connecting Studs to Bottom Plates\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Top Plates Present\",\n        \"steps\": [\n          \"Identify Top/VeryTop plates in selection\",\n          \"Set flag bTieTop = true\",\n          \"Generate instances connecting Studs to Top Plates\"\n        ]\n      },\n      \"path3\": {\n        \"name\": \"Both Present\",\n        \"steps\": [\n          \"Set both flags true\",\n          \"Generate two instances per stud (one top, one bottom)\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Vector Logic (During Instance Calculation)\",\n      \"path1\": {\n        \"name\": \"bOnInsert == 1 (From Manual Insert)\",\n        \"steps\": [\n          \"Analyze Plates to find intersecting bmFirstPlate and bmExtraPlate\",\n          \"Calculate vectors based on Plate geometry and Reference Point location\",\n          \"Store vector data into subMap for future recalcs\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"bOnInsert == 0 (From Tool/Paste)\",\n        \"steps\": [\n          \"Retrieve vectors (vx, vy, vz) directly from stored _Map\",\n          \"Use stored PlateWidth dimensions\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Catalog Data Retrieval\",\n      \"path1\": {\n        \"name\": \"Valid Catalog Entry\",\n        \"steps\": [\n          \"Extract 'Length' and 'Width' from Map\",\n          \"Apply dimensions to geometry variables\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Missing/Invalid Data\",\n        \"steps\": [\n          \"Display warning in color red\",\n          \"Fallback to hardcoded defaults (L=170mm, W=35mm)\"\n        ]\n      }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"Insert Cycle Count\",\n      \"errorMessage\": \"None (Silent)\",\n      \"recovery\": \"Script auto-erases duplicate master instances created during batch processing loops.\"\n    },\n    {\n      \"check\": \"DotNet Assembly Availability\",\n      \"errorMessage\": \"None in code (System error expected)\",\n      \"recovery\": \"Ensure 'TSL_Read_Metalpart_Family_Props.dll' exists in Utilities\\\\TslCustomSettings.\"\n    },\n    {\n      \"check\": \"Beam Selection Validity (Manual Insert)\",\n      \"errorMessage\": \"Not valid top or bottom plates provided\",\n      \"recovery\": \"User must select at least one horizontal plate beam along with vertical studs.\"\n    },\n    {\n      \"check\": \"Vertical Stud Availability\",\n      \"errorMessage\": \"Not valid vertical studs provided\",\n      \"recovery\": \"User must select at least one vertical beam (parallel to World Z).\"\n    },\n    {\n      \"check\": \"Instance Integrity (Recalc)\",\n      \"errorMessage\": \"None (Silent)\",\n      \"recovery\": \"Script erases itself if the attached beam (_Beam[0]) becomes invalid or the internal Map (_Map) is empty.\"\n    },\n    {\n      \"check\": \"Plate Intersection (Calculation)\",\n      \"errorMessage\": \"None (Silent)\",\n      \"recovery\": \"Script erases instance if it cannot find a valid intersecting plate (bmFirstPlate) based on the stud's geometry.\"\n    }\n  ],\n  \"postInsertionActions\": [\n    {\n      \"action\": \"Change Hardware Type\",\n      \"how\": \"Right-click context menu -> 'Change type'\",\n      \"effect\": \"Opens DotNet dialog to select new SPTS model from the TXT catalog. Updates dimensions (Length/Width) and redraws geometry.\"\n    },\n    {\n      \"action\": \"Move / Relocate\",\n      \"how\": \"Grip edit / Standard AutoCAD Move\",\n      \"effect\": \"Triggers '_bOnRecalc'. The script recalculates the coordinate system (vx, vy, vz). If moved to the opposite side of the stud, the geometry flips to face the new direction (logic: `if( vz.dotProduct(_Pt0-bm.ptCen()) < 0 ) vz= -vz;`).\"\n    },\n    {\n      \"action\": \"View Help\",\n      \"how\": \"Right-click context menu -> 'Help'\",\n      \"effect\": \"Displays a text report describing the tool's purpose and usage.\"\n    },\n    {\n      \"action\": \"View/Modify Properties\",\n      \"how\": \"AutoCAD Properties Palette (OPM)\",\n      \"effect\": \"View 'Type', 'Lenght', and 'Width'. Note: These are read-only (setReadOnly=true)). Modification must happen via 'Change type' command.\"\n    },\n    {\n      \"action\": \"Reset Catalog\",\n      \"how\": \"External script 'GE_HDWR_RESET_CATALOG_ENTRY'\",\n      \"effect\": \"Clears the stored path to the TXT family details, forcing the script to prompt for location again next time.\"\n    }\n  ]\n}\n```"
+      },
+      "tokens_used": 9000,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_HDWR_STUD_PLATE_TIE_SPTS.mcr\n\n## Overview\nAutomates the insertion of Stud Plate Tie (SPTS) hardware to connect vertical studs to horizontal top or bottom plates, ensuring correct orientation and attachment based on your selection.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Creates 3D solid representations attached to beams. |\n| Paper Space | No | Not supported for 2D views. |\n| Shop Drawing | No | Not designed for shop drawing layouts. |\n\n## Prerequisites\n- **Required Entities**: `GenBeam` (Vertical Studs and Top/Bottom Plates).\n- **Minimum Beams**: At least 1 Vertical Stud and 1 Horizontal Plate.\n- **Required Settings**:\n  - `TSL_Read_Metalpart_Family_Props.dll` located in `installation folder\\Utilities\\TslCustomSettings`.\n  - `TSL_HARDWARE_FAMILY_LIST.dxx` located in the Company TSL Catalog path.\n  - A TXT file containing SPTS family dimensions (referenced by the list above).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or select from TSL Catalog) → Select `GE_HDWR_STUD_PLATE_TIE_SPTS.mcr`\n\n### Step 2: Select Beams\n```\nCommand Line: Select beams (Studs and Plates):\nAction: Select the vertical studs AND the horizontal plates (Top or Bottom) you wish to connect. Press Enter to confirm.\n```\n\n### Step 3: Define Reference Point\n```\nCommand Line: Pick a point on the face:\nAction: Click on the face of the stud or plate intersection where you want the tie to be installed. This defines the side of the beam the hardware will attach to.\n```\n\n### Step 4: Automatic Generation\nThe script will automatically detect the configuration (Top Plate, Bottom Plate, or both) and generate the hardware instances on all selected valid studs.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sType | Text | (Empty) | The product code of the tie (e.g., SPTS20). This is read-only. |\n| dLength | Number | 170 mm | The vertical height of the tie. Read-only (determined by sType). |\n| dWidth | Number | 35 mm | The width of the tie. Read-only (determined by sType). |\n\n*Note: Dimension values are controlled by the selected product catalog entry. Do not attempt to modify these numbers directly in the palette.*\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Change type** | Opens a dialog to select a different product code from the catalog. This updates the Length and Width automatically. |\n| **Help** | Displays a help report with usage instructions. |\n| **Erase** | Removes the hardware instance. |\n| **Move / Grip Edit** | Dragging the hardware grips or moving the stud triggers a recalculation. The tie will snap to the new position and flip orientation if moved to the other side of the stud. |\n\n## Settings Files\n- **Filename**: `TSL_HARDWARE_FAMILY_LIST.dxx` (and referenced TXT files)\n- **Location**: Company TSL Catalog path or Utility folder.\n- **Purpose**: These files store the database of available SPTS models and their corresponding dimensions (Length/Width). The DotNet utility reads these to populate the \"Change type\" menu.\n\n## Tips\n- **Batch Processing**: You can select multiple studs and multiple plates at once. The script will intelligently match studs to the intersecting plates.\n- **Dual Application**: If you select both Top and Bottom plates in the same command, the script will generate ties at both the top and bottom of the studs automatically.\n- **Orientation**: If the tie generates on the wrong side of the wall, simply use the AutoCAD `Move` command or grip-edit the tie to flip it to the other face.\n\n## FAQ\n- **Q: Why can't I type a new length in the Properties palette?**\n  A: The dimensions are locked to the specific manufacturer part number (`sType`). To change dimensions, use the Right-Click -> **Change type** option and select a different catalog entry.\n- **Q: The script failed to generate hardware. Why?**\n  A: Ensure you selected at least one vertical stud (parallel to World Z) and at least one horizontal plate. The script requires both to calculate the intersection.\n- **Q: How do I reset the link to the catalog file?**\n  A: Run the external script `GE_HDWR_RESET_CATALOG_ENTRY` to clear the stored path and force the script to ask for the file location again."
+      },
+      "tokens_used": 6033,
+      "error": null
+    }
+  }
+}

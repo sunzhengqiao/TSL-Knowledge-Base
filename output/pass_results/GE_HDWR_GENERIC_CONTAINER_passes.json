@@ -1,0 +1,173 @@
+{
+  "filename": "GE_HDWR_GENERIC_CONTAINER.mcr",
+  "status": "completed",
+  "total_tokens": 15793,
+  "processing_time": 459.1317138671875,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "v1.0",
+            "date": "06.jun.2014",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "-Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2328,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No detection patterns for Paper Space found. The script uses _Map.getString, _Beam, and calls dbCreate immediately without checking Viewports or using sd_ prefixes. It calls eraseInstance(), which is characteristic of an insert-and-run generator script that creates entities in the model environment."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "The script must be inserted or executed while a beam is selected (passed via _Beam context). It appears to be a generator that spawns a child script instance (tsl.dbCreate) based on the selected beam.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1259,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 1617,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Acts as a dynamic loader or wrapper that instantiates another TSL script specified in the map properties, passing the current beam context to it. It serves as a generic container to delegate hardware or component generation to a configurable child script.",
+          "category": "Utility/Container",
+          "typicalUseCase": "Used when the specific hardware or logic to apply depends on a setting defined in the execution map (e.g., 'Scriptname'), allowing one macro entry point to trigger various specific scripts based on context or configuration."
+        },
+        "parameters": [
+          {
+            "name": "sScriptName",
+            "technicalDefault": "_Map.getString(\"Scriptname\")",
+            "businessMeaning": "The filename of the specific TSL script to be executed. This determines which hardware or component logic is actually applied to the selected beam.",
+            "validRange": "Any valid filename in the TSL search path (e.g., 'GE_HDWR_SCREW.mcr').",
+            "unit": "String",
+            "affectsOutput": "Determines the entire nature of the output, as this script simply forwards execution to the script named here. If empty or invalid, the script does nothing."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Change in the Map entry for 'Scriptname'",
+            "effect": "Completely changes which script is executed and therefore what geometry/logic is applied.",
+            "cascade": [
+              "OutputEntities"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Delegated (Variable)",
+            "description": "This script itself generates no geometry. It delegates the creation of elements (such as MetalParts, Drills, or Cuts) to the script defined in 'sScriptName'.",
+            "appliedTo": "The beam passed in the 'lstBeams' array (which is the currently selected beam)."
+          }
+        ]
+      },
+      "tokens_used": 2186,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Retrieve the 'Scriptname' string from the execution map (_Map).",
+          "Capture the current UCS vectors (World X/Y) and the currently selected beam context (_Beam).",
+          "Initialize empty arrays for additional entities, points, integers, doubles, and strings.",
+          "Execute tsl.dbCreate to instantiate the target script specified in 'Scriptname', passing the current beam and map properties.",
+          "Call eraseInstance() to immediately remove the current container script from the drawing.",
+          "Exit execution."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Validity of the 'Scriptname' parameter in the execution map",
+            "path1": {
+              "name": "Valid Target Script",
+              "steps": [
+                "dbCreate successfully spawns the child script instance attached to the beam.",
+                "The container script deletes itself.",
+                "The child script executes its own logic."
+              ]
+            },
+            "path2": {
+              "name": "Missing or Invalid Scriptname",
+              "steps": [
+                "dbCreate fails to generate an instance (no visible error feedback provided by this script).",
+                "The container script deletes itself.",
+                "No geometry is generated."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Execution map contains a valid key named 'Scriptname'",
+            "errorMessage": "None (The script does not perform explicit checks or show error messages).",
+            "recovery": "User must verify the Macro or Catalog entry defines the correct 'Scriptname' property."
+          },
+          {
+            "check": "A Beam is selected during insertion",
+            "errorMessage": "None (The script passes an empty beam handle to the child script, which likely results in inaction or internal error in the child).",
+            "recovery": "User must select a beam before running the script."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None (Script is transient)",
+            "how": "N/A",
+            "effect": "The script executes once and calls eraseInstance(), removing itself from the drawing database. Subsequent edits must be performed on the generated child script instance, not this container."
+          }
+        ]
+      },
+      "tokens_used": 4372,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_HDWR_GENERIC_CONTAINER.mcr\n\n## Overview\nThis script acts as a generic launcher that applies a specific hardware or component script to a selected beam. It allows a single catalog entry to dynamically trigger different hardware types based on configuration settings defined in the map properties.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates within the 3D model to generate components. |\n| Paper Space | No | This script is not designed for layout or detailing views. |\n| Shop Drawing | No | This script does not generate shop drawing annotations. |\n\n## Prerequisites\n- **Required Entities:** At least one Beam (GenBeam) must be selected before running the script.\n- **Minimum Beam Count:** 1\n- **Required Settings:** The Macro or Catalog entry calling this script must have a specific string property named `Scriptname` defined in its execution map (e.g., `GE_HDWR_SCREW.mcr`). If this is missing, the script will do nothing.\n\n## Usage Steps\n\n### Step 1: Select Beam\n```\nAction: Select the beam(s) in the model that you wish to apply hardware to.\n```\n\n### Step 2: Run Macro\n```\nCommand: Catalog Browser (or execute specific Macro)\nAction: Double-click the catalog entry associated with this script.\n```\n\n### Step 3: Automatic Execution\n```\nAction: The script will automatically read the target script name from the map properties, generate the specific hardware on the selected beam, and then remove itself from the drawing.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script runs once and immediately deletes itself. It does not retain properties in the Properties Palette for editing. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | This script is transient and does not remain in the drawing to offer context menu options. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script does not use external settings files. Configuration is handled via the Catalog/Macro map properties.\n\n## Tips\n- **Configuration is Key:** Since this script acts as a container, the behavior is entirely determined by the `Scriptname` setting in the Catalog or Macro definition. Ensure your administrator has configured this correctly.\n- **No Trace Left:** After insertion, you will not find a script instance named \"GE_HDWR_GENERIC_CONTAINER\" in your drawing. You should look for the resulting hardware or component (e.g., a screw or metal plate) that was generated by the target script.\n- **Troubleshooting:** If you run the script and nothing happens, ensure the `Scriptname` property in the catalog map matches an existing TSL file in your search path.\n\n## FAQ\n- **Q: Why does the script disappear immediately after I use it?**\n- A: This script is designed as a \"launcher.\" Its only job is to start the correct hardware script and then get out of the way so the specific hardware script can manage the component.\n- **Q: How do I change the hardware type?**\n- A: You cannot change it via the Properties palette. You must change the `Scriptname` property in the Catalog or Macro definition, or use a different catalog entry that points to the desired hardware script.\n- **Q: I selected a beam and ran the script, but no geometry appeared. Why?**\n- A: This usually means the `Scriptname` entry in the map is missing, spelled incorrectly, or the target script file cannot be found. Contact your CAD manager to verify the catalog configuration."
+      },
+      "tokens_used": 4031,
+      "error": null
+    }
+  }
+}

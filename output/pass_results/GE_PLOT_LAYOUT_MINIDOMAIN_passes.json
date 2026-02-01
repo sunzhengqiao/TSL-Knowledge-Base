@@ -1,0 +1,212 @@
+{
+  "filename": "GE_PLOT_LAYOUT_MINIDOMAIN.mcr",
+  "status": "completed",
+  "total_tokens": 21377,
+  "processing_time": 292.13881158828735,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5384,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Uses _Viewport system array and getViewport() to link to viewports. Performs ms2ps (Model Space to Paper Space) coordinate transformations (ms2ps, ps2ms). Casts element to ElementWallSF. Filename indicates PLOT/LAYOUT usage."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "ElementWallSF"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "A Layout (Paper Space) containing at least one viewport with a valid Wall element.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3536,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getPoint",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getViewport",
+              "promptOriginal": "Select a viewport, you can add others later on with the HSB_LINKTOOLS command.",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "d0",
+            "type": "PropDouble",
+            "displayName": "Size",
+            "defaultValue": 2,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2424,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates a 2D graphical annotation symbol in Paper Space that is aligned to a specific Wall element viewed through a viewport. It visually represents a directional marker or zone indicator relative to the wall's geometry.",
+          "category": "Annotation/Detailing",
+          "typicalUseCase": "Used during the creation of shop drawings or layouts to mark specific directions, zones, or hinge locations on wall panels directly on the drawing sheet."
+        },
+        "parameters": [
+          {
+            "name": "d0",
+            "technicalDefault": "2",
+            "businessMeaning": "Scale factor for the annotation symbol. It adjusts the overall size and aspect ratio of the graphical arrow/chevron shape to ensure it is legible on the plotted drawing.",
+            "validRange": "0.5 - 5.0",
+            "unit": "Multiplier",
+            "affectsOutput": "Changes the vertex offsets of the PLine geometry. Specifically, it scales the horizontal spread (50*d0) and vertical extension (100*d0, 200*d0) of the symbol."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Viewport selection",
+            "effect": "Defines the transformation matrix (ms2ps) used to project the wall's Model Space coordinates to Paper Space.",
+            "cascade": []
+          },
+          {
+            "trigger": "Wall geometry change",
+            "effect": "Recalculates the origin point (pX) and directional vectors (vx, vy, vz) used to position and orient the symbol.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "PLine",
+            "description": "A 2D polyline drawn in Paper Space resembling an arrow or chevron. It is positioned at the center of the wall's length and projected 'up' relative to the wall's surface normal.",
+            "appliedTo": "Paper Space (Layer 0, Color Red/1)"
+          }
+        ]
+      },
+      "tokens_used": 2580,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched via command or palette",
+          "User prompted to select an insertion point in Paper Space (getPoint)",
+          "User prompted to select a viewport (getViewport)",
+          "Viewport reference stored in internal array",
+          "Script calculates geometry based on Wall Element linked to the viewport",
+          "Annotation symbol generated in Paper Space aligned to the projected Wall coordinates"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Check if a Viewport exists in the internal array",
+            "path1": {
+              "name": "Valid Viewport Exists",
+              "steps": [
+                "Retrieve the last added Viewport from the array",
+                "Invalidate previous viewports (force connection to the last one)",
+                "Check if Viewport has valid hsb data (element)",
+                "Process Wall geometry and draw symbol"
+              ]
+            },
+            "path2": {
+              "name": "No Viewport / Empty Array",
+              "steps": [
+                "Script halts execution immediately (return)"
+              ]
+            }
+          },
+          {
+            "condition": "Check if linked Element is a valid ElementWallSF",
+            "path1": {
+              "name": "Valid Wall Element",
+              "steps": [
+                "Extract Coordinate System vectors (X, Y, Z)",
+                "Calculate wall center point",
+                "Transform vectors and point to Paper Space (ms2ps)",
+                "Draw specific PLine chevron/arrow shape"
+              ]
+            },
+            "path2": {
+              "name": "Invalid or Non-Wall Element",
+              "steps": [
+                "Calculate envelope polyline of the element",
+                "Transform to Paper Space",
+                "Do not draw (commented out code)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Viewport array length > 0",
+            "errorMessage": "None (Silent fail)",
+            "recovery": "User must delete and re-insert the script ensuring a viewport is selected."
+          },
+          {
+            "check": "Viewport contains a valid hsbCAD element (vp.element().bIsValid())",
+            "errorMessage": "None (Silent fail)",
+            "recovery": "User must select a viewport that actually looks at a valid element."
+          },
+          {
+            "check": "Element is castable to ElementWallSF",
+            "errorMessage": "None (Silent fail, falls to generic envelope)",
+            "recovery": "User must ensure the viewport targets a Wall element (ElementWallSF) for the specific symbol to appear."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Adjust Annotation Size",
+            "how": "OPM Property 'Size' (d0)",
+            "effect": "Rescales the dimensions of the PLine symbol (horizontal width and vertical length)."
+          },
+          {
+            "action": "Update Geometry on Model Change",
+            "how": "Automatic Recalculation / Regen",
+            "effect": "The symbol re-aligns to the new wall position/orientation projected through the viewport."
+          }
+        ]
+      },
+      "tokens_used": 3487,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_PLOT_LAYOUT_MINIDOMAIN\n\n## Overview\nThis script inserts a 2D annotation symbol (resembling a chevron or arrow) into Paper Space that automatically aligns with a specific Wall element viewed through a viewport. It is used to mark directions or zones on drawings and updates dynamically if the wall geometry changes.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script operates in Layouts. |\n| Paper Space | Yes | This is the primary environment for this script. |\n| Shop Drawing | No | This is a general annotation tool. |\n\n## Prerequisites\n- **Required Entities**: A Layout tab containing at least one active Viewport.\n- **Linked Entity**: The selected Viewport must be looking at a valid Wall element (`ElementWallSF`).\n- **Minimum Beam Count**: 0.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse and select `GE_PLOT_LAYOUT_MINIDOMAIN.mcr`.\n\n### Step 2: Specify Insertion Point\n```\nCommand Line: Select a point\nAction: Click in the Paper Space area where you want to anchor the annotation.\n```\n\n### Step 3: Link to Viewport\n```\nCommand Line: Select a viewport, you can add others later on with the HSB_LINKTOOLS command.\nAction: Click on the border of the viewport that displays the Wall you wish to annotate.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Size | Number | 2.0 | Scale factor for the annotation symbol. Increase this value to make the arrow/chevron larger on the drawing sheet. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu options are defined for this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Visibility**: Ensure the viewport you select is currently active and displaying a Wall element. If the element is a beam or generic object, the specific symbol may not generate correctly.\n- **Updates**: If you modify the Wall in Model Space, run the `REGEN` command in AutoCAD to update the symbol's position and orientation in Paper Space.\n- **Scaling**: Adjust the **Size** property in the Properties Palette (Ctrl+1) if the symbol appears too small or too large for your plot scale.\n\n## FAQ\n- **Q: I inserted the script, but I don't see any lines?**\n  **A:** Ensure the viewport you selected actually contains a valid Wall element (`ElementWallSF`). The script relies on the wall's geometry to calculate the symbol's location. Also, check that your Layer 0 is turned on.\n- **Q: Can I move the symbol after inserting it?**\n  **A:** No, the symbol's position is calculated mathematically based on the center of the wall in the linked viewport. Moving the wall in Model Space will move the symbol.\n- **Q: What does the error \"Select a viewport\" mean?**\n  **A:** This usually occurs if you clicked in empty space during Step 3. You must click directly on the frame border of an existing viewport."
+      },
+      "tokens_used": 3966,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,372 @@
+{
+  "filename": "GE_BEAM_POST_TO_WALL.mcr",
+  "status": "completed",
+  "total_tokens": 46138,
+  "processing_time": 326.10218572616577,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.5",
+            "date": "03.nov.2013",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Stickframe path added to mapIn when calling dll"
+          },
+          {
+            "version": "1.4",
+            "date": "15.may.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Thumbnail added\n\t- Description added"
+          },
+          {
+            "version": "1.3",
+            "date": "25.jan.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Updated grade and material info from inventory\n\t- Added some beam props to manual definition"
+          },
+          {
+            "version": "1.2",
+            "date": "20.jul.2011",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Added beam info set by user"
+          },
+          {
+            "version": "1.1",
+            "date": "17.jul.2011",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Debugged"
+          },
+          {
+            "version": "1.0",
+            "date": "15.jul.2011",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7464,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script interacts with GenBeam(_Beam) and Element(_Element) objects directly using dbCreate. It calculates 3D geometry using Point3d and Vector3d (ptElOrg, vx, vy, vz). No 'sd_' prefixes, no '_Viewport' references, and no '#Type E + _Entity' patterns found. The logic revolves around spatial placement relative to a post and wall in the 3D model."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Requires a valid GenBeam (Post) and a valid Element (Wall) to be selected in the Model Space.",
+          "requiredSettings": [
+            "\\Utilities\\hsbFramingDefaultsEditor\\hsbFramingDefaults.Inventory.dll",
+            "Inventory Lumber Items"
+          ]
+        }
+      },
+      "tokens_used": 4946,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9255,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates a row of blocking or nailer beams attached to the side of a vertical post, automatically trimmed to align with the face of a selected wall.",
+          "category": "Framing",
+          "typicalUseCase": "Creating ledger support or blocking between a post and a wall line, such as rim joists or nailers for sheathing attachment."
+        },
+        "parameters": [
+          {
+            "name": "nBeams",
+            "technicalDefault": "1",
+            "businessMeaning": "The number of blocking beams to generate along the vertical post.",
+            "validRange": "1 to 20 (Limited by post width)",
+            "unit": "Count",
+            "affectsOutput": "Determines the quantity of GenBeam entities created. If the total width exceeds the post width (plus a small tolerance), the script errors and erases itself."
+          },
+          {
+            "name": "sDistribution",
+            "technicalDefault": "Centered",
+            "businessMeaning": "The alignment logic for the group of beams relative to the post's centerline.",
+            "validRange": "Left to right, Centered, Right to left",
+            "unit": "Enumeration",
+            "affectsOutput": "Changes the starting position of the generation loop. 'Left to right' starts at one edge of the post, 'Centered' spreads them outward from the middle, and 'Right to left' starts at the opposite edge."
+          },
+          {
+            "name": "sLumberItem",
+            "technicalDefault": "First available item from Inventory",
+            "businessMeaning": "The predefined lumber profile from the company's inventory database defining standard dimensions and grades.",
+            "validRange": "Any valid Inventory Key string",
+            "unit": "Reference",
+            "affectsOutput": "Supplies the default Width, Height, Material, and Grade for the beams. These values are used unless specific manual overrides are provided."
+          },
+          {
+            "name": "sSizeOPM",
+            "technicalDefault": "From inventory",
+            "businessMeaning": "Manual override for the beam's cross-sectional dimensions (Width x Height).",
+            "validRange": "2x1 to 2x16 or 'From inventory'",
+            "unit": "Nominal Size",
+            "affectsOutput": "If set to a specific size (e.g., 2x4), it forces the Width to 38.1mm (1.5\") and the Height to the selected dimension, ignoring the Inventory width. If 'From inventory' is selected, dimensions come from sLumberItem."
+          },
+          {
+            "name": "nColorOPM",
+            "technicalDefault": "32",
+            "businessMeaning": "The AutoCAD color index used to display the generated beams.",
+            "validRange": "0 to 255",
+            "unit": "ACI",
+            "affectsOutput": "Visual representation of the beams in the CAD model."
+          },
+          {
+            "name": "sTypeOPM",
+            "technicalDefault": "12 (User defined)",
+            "businessMeaning": "The functional classification of the beam (e.g., Stud, Joist, Beam) for reporting and filtering.",
+            "validRange": "Standard hsb Beam Types",
+            "unit": "Enumeration",
+            "affectsOutput": "Sets the 'Type' property on the generated beams."
+          },
+          {
+            "name": "sMaterialOPM",
+            "technicalDefault": "Empty",
+            "businessMeaning": "Textual description of the wood species/material, overriding the inventory default.",
+            "validRange": "String (e.g., 'SPF', 'GLULAM')",
+            "unit": "Text",
+            "affectsOutput": "Sets the 'Material' property if the field is not empty."
+          },
+          {
+            "name": "sGradeOPM",
+            "technicalDefault": "Empty",
+            "businessMeaning": "Structural grade of the lumber, overriding the inventory default.",
+            "validRange": "String (e.g., 'SS', '#2')",
+            "unit": "Text",
+            "affectsOutput": "Sets the 'Grade' property if the field is not empty."
+          },
+          {
+            "name": "sNameOPM",
+            "technicalDefault": "Empty",
+            "businessMeaning": "Custom entity name.",
+            "validRange": "String",
+            "unit": "Text",
+            "affectsOutput": "Sets the 'Name' property."
+          },
+          {
+            "name": "sInformationOPM",
+            "technicalDefault": "Empty",
+            "businessMeaning": "Additional descriptive text for manufacturing notes.",
+            "validRange": "String",
+            "unit": "Text",
+            "affectsOutput": "Sets the 'Information' property."
+          },
+          {
+            "name": "sLabelOPM",
+            "technicalDefault": "Empty",
+            "businessMeaning": "Primary identifier for labeling/export.",
+            "validRange": "String",
+            "unit": "Text",
+            "affectsOutput": "Sets the 'Label' property."
+          },
+          {
+            "name": "sSubLabelOPM",
+            "technicalDefault": "Empty",
+            "businessMeaning": "Secondary identifier for labeling/export.",
+            "validRange": "String",
+            "unit": "Text",
+            "affectsOutput": "Sets the 'SubLabel' property."
+          },
+          {
+            "name": "sSubLabel2OPM",
+            "technicalDefault": "Empty",
+            "businessMeaning": "Tertiary identifier for labeling/export.",
+            "validRange": "String",
+            "unit": "Text",
+            "affectsOutput": "Sets the 'SubLabel2' property."
+          },
+          {
+            "name": "sBeamCodeOPM",
+            "technicalDefault": "Empty",
+            "businessMeaning": "General classification code for data management.",
+            "validRange": "String",
+            "unit": "Text",
+            "affectsOutput": "Sets the 'BeamCode' property."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sSizeOPM is changed from 'From inventory' to a specific nominal size",
+            "effect": "Overrides the Width and Height derived from sLumberItem. Width is fixed to 38.1mm (1.5\") and Height is set by the nominal selection. Material/Grade still default to Inventory unless manually set.",
+            "cascade": [
+              "dW",
+              "dH"
+            ]
+          },
+          {
+            "trigger": "sMaterialOPM or sGradeOPM is populated with text",
+            "effect": "Overrides the corresponding values retrieved from the Inventory via sLumberItem.",
+            "cascade": [
+              "sMaterial",
+              "sGrade"
+            ]
+          },
+          {
+            "trigger": "sDistribution is changed",
+            "effect": "Recalculates the starting coordinate for beam generation along the post's lateral axis.",
+            "cascade": [
+              "ptNewBmCenter"
+            ]
+          },
+          {
+            "trigger": "nBeams is increased",
+            "effect": "Increases the total required width on the post. If (Beams * Width) > Post Width + Tolerance, the script fails.",
+            "cascade": [
+              "Script Existence"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "GenBeam",
+            "description": "Rectangular timber elements created perpendicular to the post face and parallel to the wall. They are initially 50mm (2\") long, acting as placeholders.",
+            "appliedTo": "New instances added to the model."
+          },
+          {
+            "type": "Cut",
+            "description": "A saw-cut operation applied to the end of the generated beams to trim them flush with the interior or exterior face of the selected wall.",
+            "appliedTo": "The newly created GenBeams."
+          }
+        ]
+      },
+      "tokens_used": 8064,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Initialize: Load Lumber Inventory from external DLL and populate lists.",
+          "2. User executes script (Insert).",
+          "3. Prompt user to select a Post (GenBeam).",
+          "4. Prompt user to select a Wall (Element).",
+          "5. Display Properties Dialog for user configuration.",
+          "6. Verify selected entities exist; erase script if missing.",
+          "7. Resolve Beam Dimensions and Material (Source: Inventory or Manual OPM overrides).",
+          "8. Validate Geometry: Check if Post is vertical and if Beams fit within Post width.",
+          "9. Calculate Base Coordinate System for new beams (perpendicular to Post, parallel to Wall).",
+          "10. Execute Generation Loop (Create GenBeams) based on 'Distribution' strategy.",
+          "11. Calculate Cut Plane (Wall interior or exterior face) based on Post location relative to Wall.",
+          "12. Apply Saw Cut to all generated beams.",
+          "13. Apply OPM attributes (Color, Type, Labels) to generated beams.",
+          "14. Erase Script Instance (Script acts as a generator only)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Size Source (sSizeOPM)",
+            "path1": {
+              "name": "From Inventory",
+              "steps": [
+                "Retrieve Width (dW) and Height (dH) from selected Lumber Item.",
+                "Retrieve Material and Grade from Lumber Item.",
+                "Override Material/Grade only if sMaterialOPM/sGradeOPM are explicitly populated."
+              ]
+            },
+            "path2": {
+              "name": "Manual Size (e.g., 2x4)",
+              "steps": [
+                "Force Width (dW) to 38.1mm (1.5\").",
+                "Set Height (dH) based on selected nominal index.",
+                "Material and Grade are taken solely from OPM inputs (defaulting to empty if not set)."
+              ]
+            }
+          },
+          {
+            "condition": "Beam Distribution Strategy (sDistribution)",
+            "path1": {
+              "name": "Left to Right",
+              "steps": [
+                "Start placement at the negative edge of the post (relative to local Z).",
+                "Increment position by beam width for each subsequent beam."
+              ]
+            },
+            "path2": {
+              "name": "Centered",
+              "steps": [
+                "Start placement at the post centerline.",
+                "Calculate offsets using an alternating positive/negative pattern (0, -1, +2, -3...) to spread beams symmetrically."
+              ]
+            },
+            "path3": {
+              "name": "Right to Left",
+              "steps": [
+                "Start placement at the positive edge of the post.",
+                "Decrement position by beam width for each subsequent beam."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Post Verticality",
+            "errorMessage": "Post is not vertical, tsl will be erased",
+            "recovery": "Select a vertical post (GenBeam) and re-run the script."
+          },
+          {
+            "check": "Beam Fit (Width constraint)",
+            "errorMessage": "Selected number of beams are not suitable on post",
+            "recovery": "Reduce the 'Number of beams' property or select a narrower lumber size to fit within the post width."
+          },
+          {
+            "check": "Inventory Data Integrity",
+            "errorMessage": "Data incomplete, check values on inventory for selected lumber item [Name, Material, Grade, Width, Height]",
+            "recovery": "Verify the selected Lumber Item in the company inventory has valid dimensional data."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Configuration",
+            "how": "N/A (Script self-destructs)",
+            "effect": "The script instance deletes itself upon completion. To change parameters (count, size, etc.), the user must delete the generated beams and re-run the script."
+          },
+          {
+            "action": "Edit Generated Beams",
+            "how": "Standard AutoCAD/hsbCAD Grips or Properties",
+            "effect": "The resulting beams are standard GenBeams. They can be moved, stretched, or manually edited using standard tools, but they will no longer update based on the original script logic."
+          }
+        ]
+      },
+      "tokens_used": 9999,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_BEAM_POST_TO_WALL.mcr\n\n## Overview\nGenerates a row of blocking or nailer beams attached to the side of a vertical post and automatically trims them to align with the face of a selected wall. This script is ideal for creating ledger supports or blocking between a post and a wall line.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in the 3D model environment. |\n| Paper Space | No | Not designed for 2D layouts or shop drawings. |\n| Shop Drawing | No | Does not generate detailing views. |\n\n## Prerequisites\n- **Required Entities**: A valid vertical GenBeam (Post) and a valid Element (Wall).\n- **Minimum Beam Count**: 1 Post must exist in the model.\n- **Required Settings**: Access to the company's Lumber Inventory (via `hsbFramingDefaults.Inventory.dll`).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_BEAM_POST_TO_WALL.mcr`\n\n### Step 2: Select Post\n```\nCommand Line: Select Post (GenBeam)\nAction: Click on the vertical post in the model where you want to attach the beams.\n```\n\n### Step 3: Select Wall\n```\nCommand Line: Select Wall (Element)\nAction: Click on the wall element that will define the trim line for the ends of the beams.\n```\n\n### Step 4: Configure Properties\nAfter selection, the Properties Palette (OPM) will display.\n```\nAction: Adjust parameters such as beam count, distribution, lumber size, and material.\n        The script will automatically calculate and generate the beams based on these settings.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Number of beams | Integer | 1 | The quantity of blocking beams to generate along the post. |\n| Distribution | Dropdown | Centered | Alignment logic relative to the post centerline (Left to right, Centered, Right to left). |\n| Lumber Item | String (Inventory) | *First Available* | The lumber profile from the inventory defining dimensions, material, and grade. |\n| Size | Dropdown | From inventory | Manual override for nominal dimensions (e.g., 2x4, 2x6). If set, ignores inventory width. |\n| Color | Integer | 32 | The AutoCAD Color Index (ACI) for the new beams. |\n| Type | Dropdown | 12 (User defined) | The functional classification of the beam (e.g., Stud, Joist, Beam). |\n| Material | String | Empty | Manual override for the wood species (e.g., SPF, GLULAM). |\n| Grade | String | Empty | Manual override for the structural grade (e.g., SS, #2). |\n| Name | String | Empty | Custom entity name. |\n| Information | String | Empty | Additional descriptive text for manufacturing notes. |\n| Label | String | Empty | Primary identifier for labeling/export. |\n| SubLabel | String | Empty | Secondary identifier for labeling/export. |\n| SubLabel2 | String | Empty | Tertiary identifier for labeling/export. |\n| BeamCode | String | Empty | General classification code for data management. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script deletes itself immediately after generating the beams. Standard right-click options do not apply post-generation. |\n\n## Settings Files\n- **Filename**: `hsbFramingDefaults.Inventory.dll`\n- **Location**: Defined in hsbCAD configuration (Utilities path).\n- **Purpose**: Provides the default dimensions (Width/Height), Material, and Grade properties based on the selected Lumber Item.\n\n## Tips\n- Ensure the post is perfectly vertical; otherwise, the script will erase itself and report an error.\n- If you receive an error that \"beams are not suitable on post,\" reduce the **Number of beams** or select a smaller lumber size to fit within the post's width.\n- The generated beams are created as standard GenBeams. Once created, they are independent of the script and can be edited manually using grips or the properties palette.\n\n## FAQ\n- **Q: Why did the script disappear after I ran it?**\n  - A: This is a \"generator\" script. It creates the geometry and then deletes itself to avoid cluttering the drawing management. The resulting beams remain in the model.\n- **Q: Can I change the number of beams after inserting?**\n  - A: No, because the script instance is removed. To change the configuration, delete the generated beams and run the script again.\n- **Q: What does \"Selected number of beams are not suitable on post\" mean?**\n  - A: The total width of the specified beams (e.g., 3 beams x 50mm width = 150mm) exceeds the width of the post you selected. Use fewer beams or narrower lumber."
+      },
+      "tokens_used": 6410,
+      "error": null
+    }
+  }
+}

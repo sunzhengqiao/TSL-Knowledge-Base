@@ -1,0 +1,263 @@
+{
+  "filename": "EdgeRounding.mcr",
+  "status": "completed",
+  "total_tokens": 49157,
+  "processing_time": 225.35170578956604,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 2,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.2",
+            "date": "28.02.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-16799 facetting of solid representation improved, CNC tool alignment fixed"
+          },
+          {
+            "version": "1.1",
+            "date": "28.02.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-16799 compatibel with hsbDesign 25"
+          },
+          {
+            "version": "1.0",
+            "date": "23.02.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-16799 initial beta version of genbeam edge rounding"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7801,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script targets GenBeam entities using PrEntity and 3D geometric operations (Body, SolidSubtract, PropellerSurfaceTool). It includes specific CNC export logic. There are no 'sd_' prefixes, Viewport checks, or Shop Drawing specific mappings (#Type E)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "ModelSpace",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6835,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n"
+      },
+      "tokens_used": 10262,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Applies a parametric convex rounding (bullnose) to the top or bottom longitudinal edges of selected beams using a specialized milling tool.",
+          "category": "Machining/CNC",
+          "typicalUseCase": "Applying aesthetic or safety edge rounding to glulam beams or joists where a standard chamfer is insufficient, utilizing a specific CNC milling head."
+        },
+        "parameters": [
+          {
+            "name": "sFace",
+            "technicalDefault": "Bottom Face",
+            "businessMeaning": "Specifies which vertical face of the beam (Top or Bottom) receives the edge rounding treatment.",
+            "validRange": "Top Face, Bottom Face",
+            "unit": "Enumeration",
+            "affectsOutput": "Determines the side of the beam where the material is subtracted and the CNC toolpath is generated."
+          },
+          {
+            "name": "dEdge",
+            "technicalDefault": "40.0",
+            "businessMeaning": "Defines the setback or offset distance from the face where the rounding profile effectively begins or interacts with the edge.",
+            "validRange": "0.0 <= dEdge <= Radius (approx 10-80mm)",
+            "unit": "mm",
+            "affectsOutput": "Adjusts the horizontal position of the profile relative to the beam edge. Constrained by the Radius parameter."
+          },
+          {
+            "name": "sOvershoot",
+            "technicalDefault": "No",
+            "businessMeaning": "Extends the milling path slightly beyond the selected start and end points to ensure the rounding runs completely off the material.",
+            "validRange": "Yes, No",
+            "unit": "Boolean",
+            "affectsOutput": "Adds lead-in/lead-out geometry to the toolpath to prevent uncut corners at the start/end of the contour."
+          },
+          {
+            "name": "nToolIndex",
+            "technicalDefault": "50",
+            "businessMeaning": "The unique identifier for the specific milling cutter in the CNC machine's configuration database.",
+            "validRange": "Integer matching CNC configuration",
+            "unit": "Index/ID",
+            "affectsOutput": "Crucial for correct CAM generation; tells the machine which physical tool to load for the operation."
+          },
+          {
+            "name": "dRadius",
+            "technicalDefault": "80.0",
+            "businessMeaning": "The radius of the convex milling cutter (e.g., R40, R80) used to create the rounded profile.",
+            "validRange": "Typical milling radii (e.g., 10mm to 100mm)",
+            "unit": "mm",
+            "affectsOutput": "Defines the curvature of the cut. Directly limits the maximum value for the Edge Offset parameter."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dEdge > dRadius",
+            "effect": "dEdge is automatically reset to equal dRadius",
+            "cascade": [
+              "dEdge"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "SolidSubtract",
+            "description": "A boolean subtraction operation that removes material from the GenBeam to represent the physical rounding in the 3D model.",
+            "appliedTo": "Selected GenBeam entities"
+          },
+          {
+            "type": "PropellerSurfaceTool",
+            "description": "A specialized CNC machining entity that generates the 3-axis or 5-axis toolpath for the rounding head based on the selected contour and tool index.",
+            "appliedTo": "Selected GenBeam entities"
+          }
+        ]
+      },
+      "tokens_used": 8491,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initialization: Declare constants, properties (Face, Edge Offset, Tool Index, Radius, Overshoot), and geometric helpers.",
+          "2. Insertion Start: Check if running in insert mode.",
+          "3. Property Acquisition: Load properties from Catalog (if key provided) or display the standard Dialog.",
+          "4. Entity Selection: Prompt user to select GenBeam entities.",
+          "5. Entity Filtering: Validate selected entities, filtering out dummy beams.",
+          "6. [Conditional Branch] Check Number of Selected Beams.",
+          "7. [Path: Single Beam] Activate Jig Interaction: Allow user to pick start/end points on the beam contour or switch keywords.",
+          "8. [Path: Multiple Beams] Skip Point Picking: Proceed using the full beam length or default configuration.",
+          "9. Contour Definition: Calculate the path (`plTool`) based on picked points or full contour.",
+          "10. [Conditional Branch] Check Overshoot Setting.",
+          "11. [Path: Overshoot = Yes] Extend Path: Calculate tangent extensions at start/end, generate fade-in/out transition bodies.",
+          "12. [Path: Overshoot = No] Direct Path: Use the raw defined contour without extensions.",
+          "13. Tooling Generation: Create SolidSubtract bodies for 3D material removal and PropellerSurfaceTool for CNC export.",
+          "14. Final Validation: Check resulting tool path length; erase instance if invalid.",
+          "15. Visualization: Draw preview lines/shadows and finish."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Number of GenBeams selected during insertion",
+            "path1": {
+              "name": "Single Beam (Interactive)",
+              "steps": [
+                "Enters Jig mode (`kJigSelectPath`).",
+                "User picks two points on the beam contour.",
+                "User can toggle keywords: 'Contour' (select whole path) or 'Face' (flip top/bottom).",
+                "Overshoot is enabled/allowed."
+              ]
+            },
+            "path2": {
+              "name": "Multiple Beams (Batch)",
+              "steps": [
+                "Skips Jig point picking.",
+                "Overshoot is automatically disabled and set to Read-Only.",
+                "Applies logic based on default or full beam contour."
+              ]
+            }
+          },
+          {
+            "condition": "Overshoot Property",
+            "path1": {
+              "name": "Enabled (Yes)",
+              "steps": [
+                "Calculates tangent vectors at path start/end.",
+                "Extends the geometry by `dOvershoot` amount.",
+                "Creates additional `SolidSubtract` bodies for smooth lead-in/lead-out transitions."
+              ]
+            },
+            "path2": {
+              "name": "Disabled (No)",
+              "steps": [
+                "Uses the exact points/contour defined by user or beam selection.",
+                "No lead-in/lead-out geometry added."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Edge Offset (dEdge) value",
+            "errorMessage": "EdgeRounding: invalid value for edge offset.",
+            "recovery": "Script erases instance. User must insert again with a valid value > 0.1mm."
+          },
+          {
+            "check": "Tool Radius (dRadius) value",
+            "errorMessage": "EdgeRounding: invalid value for tool radius.",
+            "recovery": "Script erases instance. User must insert again with a valid value > 0.1mm."
+          },
+          {
+            "check": "Edge Offset vs Radius dependency",
+            "errorMessage": "None (Silent correction)",
+            "recovery": "If `dEdge > dRadius`, `dEdge` is automatically reset to equal `dRadius`."
+          },
+          {
+            "check": "Final Tool Path Length",
+            "errorMessage": "EdgeRounding: invalid tooling contour.",
+            "recovery": "Script erases instance if path is too short (less than overshoot value). User must check selection points."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Edit Properties",
+            "how": "AutoCAD Properties Palette (OPM)",
+            "effect": "Changing Face, Radius, Edge Offset, or Tool Index triggers recalculation of the 3D geometry and CNC path."
+          },
+          {
+            "action": "Grip Edit",
+            "how": "Drag Start/End grips on the toolpath",
+            "effect": "Modifies the `plTool` contour geometry (if instance has grips defined via _PtG)."
+          },
+          {
+            "action": "Flip Side",
+            "how": "Context Menu / Command",
+            "effect": "Toggles `sFace` between Top and Bottom, recalculating the cut position."
+          }
+        ]
+      },
+      "tokens_used": 10298,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# EdgeRounding.mcr\n\n## Overview\nApplies a parametric convex rounding (bullnose) to the top or bottom longitudinal edges of selected timber beams. This script generates both the 3D material removal (visual model) and the specific CNC toolpath required for manufacturing.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D GenBeam entities. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | Does not generate 2D shop drawing annotations directly. |\n\n## Prerequisites\n- **Required Entities**: At least one `GenBeam` (General Beam) must exist in the model.\n- **Minimum Beam Count**: 1.\n- **Required Settings**: Ensure your CNC machine configuration (Catalog) includes the tool index specified in the script properties.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the command line.\n2. Browse to and select `EdgeRounding.mcr`.\n\n### Step 2: Configure Parameters\n1. The script will load default properties.\n2. You may adjust settings (Face, Radius, Tool Index, etc.) via the initial dialog or the Properties Palette (Ctrl+1) after insertion.\n\n### Step 3: Select Beams\n```\nCommand Line: Select GenBeam entities:\nAction: Click on the beam(s) you wish to process.\n```\n*Note: The behavior differs slightly depending on whether you select one or multiple beams.*\n\n### Step 4: Define Toolpath (Interactive Mode for Single Beam)\nIf only **one beam** is selected, the script enters interactive Jig mode:\n```\nCommand Line: Specify start point or [Contour/Face]:\nAction: Click a point on the edge where the rounding should start.\nOR Type 'F' to flip between Top/Bottom face.\nOR Type 'C' to select the entire beam contour automatically.\n```\n```\nCommand Line: Specify end point:\nAction: Click the point on the edge where the rounding should end.\n```\n*If **multiple beams** are selected, the script automatically applies the rounding based on the full beam length or current defaults, skipping the point-picking step.*\n\n### Step 5: Finalize\nThe script calculates the cut and generates the CNC data.\n- If the path is too short or parameters are invalid, the script will erase itself and display an error.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sFace | Dropdown | Bottom Face | Selects which side of the beam receives the rounding (Top Face or Bottom Face). |\n| dRadius | Number | 40.0 | The radius of the convex milling cutter (e.g., R40, R80). |\n| dEdge | Number | 40.0 | The offset distance from the face where the profile begins. *Must be smaller than the Radius.* |\n| sOvershoot | Boolean | No | If 'Yes', extends the milling path slightly beyond the start/end points for a cleaner finish (fade-in/out). *Only available for single beam selection.* |\n| nToolIndex | Number | 50 | The CNC Tool ID number. Must match a tool defined in your machine's post-processor configuration. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Flip Side | Toggles the rounding between the Top Face and Bottom Face of the beam. |\n| Update | Recalculates the geometry if manual edits or changes occurred. |\n| Erase | Removes the rounding instance and restores the original beam volume. |\n\n## Settings Files\n- **Filename**: None specific.\n- **Location**: N/A\n- **Purpose**: This script relies on standard hsbCAD Catalogs for CNC tool definitions rather than custom XML settings files.\n\n## Tips\n- **Multi-Beam Limitation**: When selecting multiple beams at once, the \"Overshoot\" feature is automatically disabled. If you need overshoot on specific beams, insert the script on them one by one.\n- **Parameter Logic**: The `dEdge` (Offset) is constrained by the `dRadius`. If you try to set the Offset larger than the Radius, the script will automatically reduce the Offset to match the Radius.\n- **CNC Export**: Always double-check the `nToolIndex` in the properties palette. If this number does not exist in your CNC machine's tool list, the manufacturing code generation will fail or use the wrong tool.\n\n## FAQ\n- **Q: Why can't I pick start and end points when I select multiple beams?**\n  - A: The script simplifies batch processing by skipping the interactive Jig mode. It defaults to the full beam contour for multiple selections.\n- **Q: What does \"Overshoot\" actually do?**\n  - A: It creates a lead-in and lead-out path for the machine head. This ensures the roundover starts smoothly off the material and doesn't leave a sharp corner exactly at the clicked start point.\n- **Q: The script disappeared after I inserted it.**\n  - A: This usually happens if the resulting tool path length is zero or if the specified Edge Offset was invalid (e.g., negative). Check your inputs and try again."
+      },
+      "tokens_used": 5470,
+      "error": null
+    }
+  }
+}

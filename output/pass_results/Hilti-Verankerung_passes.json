@@ -1,0 +1,337 @@
+{
+  "filename": "Hilti-Verankerung.mcr",
+  "status": "completed",
+  "total_tokens": 51441,
+  "processing_time": 264.47314262390137,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9440,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script defines HILTI Stexon connections (GenBeam/Element attachments), manipulates 3D geometry (drilling/milling), and generates Hardware components (HardWrComp). Uses 'Display' class for 3D visualization and 'ModelMap' with '_kModelSpace' for data export. No 'sd_' functions or viewport handling found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (3D Construction Environment)",
+          "requiredSettings": [
+            "Catalog files (HILTI types: HCW, HCWL, Custom)",
+            "XML/Catalog configuration for 'Baufritz' specific modifications"
+          ]
+        }
+      },
+      "tokens_used": 7026,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "|Hilti Export|",
+            "handler": "sTriggerExportHilti",
+            "action": "Exports all Hilti-Verankerung and Hilti-Stockschraube instances to a DXX file (HiltiExport.dxx) including solid and tool info.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Catalog Entries (Dynamic)",
+            "handler": "sEntries[i]",
+            "action": "Sets instance properties from the selected catalog entry (filtered by 'aw' or 'zw' prefix based on bExposed).",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "<Catalog Files>",
+            "searchPaths": [
+              "<hsbCAD Catalog Path>"
+            ],
+            "purpose": "Provides predefined sets of properties (Type, Diameter, Depth, Offsets) for different HILTI connector versions.",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 9922,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the detailing and BOM generation of Hilti wood-to-wood connectors (HCW series) for anchoring wall studs to floor joists or plates.",
+          "category": "Hardware/Connection",
+          "typicalUseCase": "Connecting a wall stud (or bottom/top plate) to a crossing floor beam using specific Hilti angled shear connectors or straight tension rods, ensuring correct drilling dimensions and material lists."
+        },
+        "parameters": [
+          {
+            "name": "nVersion",
+            "technicalDefault": "0 (Custom)",
+            "businessMeaning": "Selects the specific Hilti connector profile or system type (e.g., HCW angled bracket, HCWL long rod, HCW-P, Holzdolle). Determines geometry, machining strategy, and hardware number.",
+            "validRange": "0 (Custom), 1 (HCW), 2 (HCWL), 3 (HCW-P), 4 (Holzdolle), 5 (HCWL-K)",
+            "unit": "Index",
+            "affectsOutput": "Geometry (hole size/shape), Hardware Article Number, Machining depth requirements."
+          },
+          {
+            "name": "nFastener",
+            "technicalDefault": "0",
+            "businessMeaning": "Index representing the specific screw or rod type selected from the Hilti catalog to accompany the main connector.",
+            "validRange": "Index based on available catalog entries (e.g., HSW series screws)",
+            "unit": "Index",
+            "affectsOutput": "Hardware BOM entry (Article number and length of the screw/rod)."
+          },
+          {
+            "name": "dOffsetAxisZ",
+            "technicalDefault": "0",
+            "businessMeaning": "The longitudinal placement of the connector along the beam's axis (Z-direction).",
+            "validRange": "0 to Length of Beam",
+            "unit": "mm",
+            "affectsOutput": "Location of the drill hole/machining on the beam."
+          },
+          {
+            "name": "dEdgeOffsetX",
+            "technicalDefault": "0",
+            "businessMeaning": "The lateral distance from the beam's edge to the center of the connector.",
+            "validRange": "0 to Width of Beam",
+            "unit": "mm",
+            "affectsOutput": "Lateral position of the drill hole/machining on the beam."
+          },
+          {
+            "name": "bBaufritz",
+            "technicalDefault": "false",
+            "businessMeaning": "Flag to enable specific construction logic for the 'Baufritz' prefabrication system (modifies rules for plate handling, drilling, and unlocks custom connector types like Holzdolle).",
+            "validRange": "true/false",
+            "unit": "Boolean",
+            "affectsOutput": "Suppresses specific error messages, alters default drilling depths, adds special connector versions to the list."
+          },
+          {
+            "name": "bExposed",
+            "technicalDefault": "true",
+            "businessMeaning": "Determines the visible location of the connector (e.g., internal vs. external wall face), used to filter valid catalog entries.",
+            "validRange": "true/false",
+            "unit": "Boolean",
+            "affectsOutput": "Filters available catalog triggers ('aw' vs 'zw' prefixes)."
+          },
+          {
+            "name": "Rotation",
+            "technicalDefault": "0",
+            "businessMeaning": "The angle of the connector relative to the beam's coordinate system.",
+            "validRange": "0-360 degrees",
+            "unit": "degrees",
+            "affectsOutput": "Orientation of the drilling/machining and the visual block."
+          },
+          {
+            "name": "Diameter",
+            "technicalDefault": "42 (HCW)",
+            "businessMeaning": "The diameter of the drill hole required for the connector.",
+            "validRange": "20 - 100 mm",
+            "unit": "mm",
+            "affectsOutput": "Size of the cylinder drill (boring) in the timber."
+          },
+          {
+            "name": "Depth",
+            "technicalDefault": "100",
+            "businessMeaning": "The depth of the drill hole into the timber.",
+            "validRange": "50 - 300 mm",
+            "unit": "mm",
+            "affectsOutput": "Depth of the cylinder drill."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing Catalog Entry (Context Menu)",
+            "effect": "Updates 'nVersion', 'Diameter', 'Depth', and potentially offsets based on the preset configuration.",
+            "cascade": [
+              "nVersion",
+              "Diameter",
+              "Depth",
+              "dOffsetAxisZ",
+              "dEdgeOffsetX"
+            ]
+          },
+          {
+            "trigger": "Setting 'nVersion' to Custom (0)",
+            "effect": "Enables manual editing of 'Diameter' and 'Depth' properties.",
+            "cascade": [
+              "Diameter",
+              "Depth"
+            ]
+          },
+          {
+            "trigger": "Setting 'bBaufritz' to true",
+            "effect": "Unlocks 'Holzdolle' (Version 4) and 'HCWL-K' (Version 5) options and changes default depth logic.",
+            "cascade": [
+              "nVersion",
+              "Depth"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Cylinder Drill / Boring",
+            "description": "Creates a cylindrical hole in the wall stud or plate to accommodate the Hilti connector body.",
+            "appliedTo": "Selected GenBeam (Wall Stud) or Element (Plate)."
+          },
+          {
+            "type": "Hardware Component (HardWrComp)",
+            "description": "Adds the Hilti connector and associated screw/rod to the BOM (Bill of Materials) with correct Article Number and Manufacturer.",
+            "appliedTo": "TSL Instance (Associated with the linked Element)."
+          },
+          {
+            "type": "3D Block / Symbol",
+            "description": "Visual representation of the connector geometry in the 3D model and plan views.",
+            "appliedTo": "TSL Instance coordinate system."
+          },
+          {
+            "type": "ModelMap Export",
+            "description": "Exports geometric and tooling data to a .dxx file for Hilti software integration.",
+            "appliedTo": "External File (HiltiExport.dxx)."
+          }
+        ]
+      },
+      "tokens_used": 9402,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch Script: User executes 'Hilti-Verankerung' command.",
+          "2. Entity Selection: User selects one or more wall studs (GenBeam) or plates (Element).",
+          "3. Coordinate Calculation: Script calculates insertion point based on selected entities (prioritizing stud color 32 for Baufritz, otherwise beam start/end).",
+          "4. Property Initialization: Sets initial properties (Version, Diameter, Depth, Offsets). Defaults apply based on Baufritz flag.",
+          "5. Context Menu Filtering: Scans Catalog entries and filters them based on 'bExposed' property (aw vs zw prefixes). Adds valid entries to Right-Click Context Menu.",
+          "6. Geometry Generation: Generates cylindrical drill/machining on the selected beam/plate based on current properties.",
+          "7. Hardware BOM: Adds Hilti Connector (HardWrComp) to the Bill of Materials if 'nVersion' is not Custom (0). Adds Fastener if 'nFastener' > 0.",
+          "8. Visualization: Draws 3D Block representation of the connector.",
+          "9. Completion: Instance is inserted into ModelSpace."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Type of Connection selected (nVersion)",
+            "path1": {
+              "name": "Custom (0)",
+              "steps": [
+                "User manually sets Diameter, Depth, and offsets.",
+                "No Hardware (BOM) entries are generated automatically.",
+                "Geometry is purely based on user input parameters."
+              ]
+            },
+            "path2": {
+              "name": "Cataloged (1-5)",
+              "steps": [
+                "Properties are locked or preset (e.g., Diameter 42mm for standard HCW).",
+                "Hardware components (Connector + optional Fastener) are generated automatically.",
+                "Specific geometric rules apply (e.g., 'House' tooling entry for HCWL)."
+              ]
+            }
+          },
+          {
+            "condition": "Manufacturer Mode (bBaufritz)",
+            "path1": {
+              "name": "Baufritz Mode (True)",
+              "steps": [
+                "Unlocks specific connector types: Holzdolle (4) and HCWL-K (5).",
+                "Suppresses standard edge distance error messages.",
+                "Modifies logic to ignore plates <= 27mm height for drilling.",
+                "Changes default drill depth to 100mm.",
+                "Prioritizes Stud with Color 32 as reference point."
+              ]
+            },
+            "path2": {
+              "name": "Standard Mode (False)",
+              "steps": [
+                "Standard Hilti catalog options (HCW, HCWL, HCW-P).",
+                "Strict edge distance checks may apply (referenced via ETA documentation).",
+                "Standard reference point logic (usually beam start/end)."
+              ]
+            }
+          },
+          {
+            "condition": "Catalog Trigger Execution",
+            "path1": {
+              "name": "Entry contains 'D42'",
+              "steps": [
+                "Updates all properties including position (OffsetAxisZ, EdgeOffsetX) from catalog."
+              ]
+            },
+            "path2": {
+              "name": "Entry does NOT contain 'D42'",
+              "steps": [
+                "Updates Version, Diameter, Depth from catalog.",
+                "Preserves existing user-defined position (OffsetAxisZ, EdgeOffsetX)."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Presence of Reference Entities",
+            "errorMessage": "Implicitly handled by selection prompt. If TSL is attached to a stud and no plates are found, specific checks (Version 1.7) handle the scenario, often by adjusting drilling logic.",
+            "recovery": "Ensure valid GenBeam or Element is selected during insertion."
+          },
+          {
+            "check": "Catalog Filter Match",
+            "errorMessage": "Context menu items disappear if filter doesn't match.",
+            "recovery": "Toggle 'bExposed' property (Internal/External) to refresh the context menu list (aw vs zw prefixes)."
+          },
+          {
+            "check": "ETA Compliance (Edge Distances)",
+            "errorMessage": "User is directed to refer to European Technical Assessment ETA-21/0357 for edge distance and cross-section requirements (Notes in history, Version 2.11 removed strict code checks).",
+            "recovery": "Manual verification against the ETA document is required."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Connector Type",
+            "how": "Right-Click Context Menu -> Select 'Catalog Entry' (e.g., 'HCW D42...')",
+            "effect": "Updates nVersion, Diameter, Depth, and potentially position properties. Regenerates geometry and hardware."
+          },
+          {
+            "action": "Export Data to Hilti",
+            "how": "Right-Click Context Menu -> '|Hilti Export|'",
+            "effect": "Collects all 'Hilti-Verankerung' and 'Hilti-Stockschraube' instances in the model and writes them to 'HiltiExport.dxx' in the drawing folder."
+          },
+          {
+            "action": "Adjust Position/Size",
+            "how": "AutoCAD Properties Palette (OPM) / Grips",
+            "effect": "Modifies 'dOffsetAxisZ', 'dEdgeOffsetX', 'Rotation', 'Diameter', or 'Depth'. Geometry updates dynamically."
+          },
+          {
+            "action": "Flip Side",
+            "how": "Command Line: ^C^C... TSLCONTENT (Flip Side command defined in script header)",
+            "effect": "Executes 'Flip Side' logic (likely inverting X-offset or rotation)."
+          }
+        ]
+      },
+      "tokens_used": 9751,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Hilti-Verankerung\n\n## Overview\nAutomates the detailing, drilling, and Bill of Materials (BOM) generation for Hilti wood-to-wood connectors (such as the HCW series). It is used to anchor wall studs or plates to floor beams with precise geometric and hardware data.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for 3D construction and machining. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required Entities**: A `GenBeam` (e.g., wall stud) or an `Element` (e.g., top/bottom plate).\n- **Minimum Beam Count**: 1.\n- **Required Settings**: HILTI Catalog files (containing HCW, HCWL, Custom types) must be present in the hsbCAD catalog path.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `Hilti-Verankerung.mcr`\n\n### Step 2: Select Reference Entity\n```\nCommand Line: Select element:\nAction: Click on the wall stud (GenBeam) or plate (Element) where the Hilti connection is needed.\n```\n\n### Step 3: Configure Position\n```\nAction: Use the AutoCAD Properties Palette (Ctrl+1) to adjust offsets or use grips to move the connector along the beam.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| nVersion | Integer | 0 (Custom) | Selects the Hilti connector profile (0: Custom, 1: HCW, 2: HCWL, 3: HCW-P, 4: Holzdolle, 5: HCWL-K). |\n| nFastener | Integer | 0 | Selects the specific screw or rod type from the catalog (if applicable to the version). |\n| dOffsetAxisZ | Double | 0 mm | Longitudinal position of the connector along the beam's length. |\n| dEdgeOffsetX | Double | 0 mm | Lateral distance from the beam's edge to the center of the connector. |\n| bBaufritz | Boolean | False | Enables \"Baufritz\" prefabrication logic (unlocks Holzdolle/HCWL-K and modifies drilling rules). |\n| bExposed | Boolean | True | Toggles between internal/external wall logic (filters catalog entries: 'aw' vs 'zw'). |\n| Rotation | Double | 0 deg | The angle of the connector relative to the beam's coordinate system. |\n| Diameter | Double | 42 mm | The diameter of the drill hole (only editable if nVersion is 0). |\n| Depth | Double | 100 mm | The depth of the drill hole (only editable if nVersion is 0). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| |Hilti Export| | Exports all Hilti-Verankerung and Hilti-Stockschraube instances in the model to a `HiltiExport.dxx` file. |\n| [Catalog Entries] (Dynamic) | Lists available connectors (e.g., \"HCW D42...\"). Selecting one updates the instance properties to match that catalog entry. |\n\n## Settings Files\n- **Filename**: HILTI Catalog Files (varies by configuration)\n- **Location**: `<hsbCAD Catalog Path>`\n- **Purpose**: Provides predefined sets of properties (Type, Diameter, Depth, Offsets) for different HILTI connector versions.\n\n## Tips\n- **Toggle Visibility**: If you cannot find a specific connector in the Right-Click menu, toggle the `bExposed` property in the Properties palette. This switches between 'aw' (external) and 'zw' (internal) catalog filters.\n- **Baufritz Mode**: If working with Baufritz prefabricated walls, ensure `bBaufritz` is set to `True` to access special connector types like \"Holzdolle\" and to suppress standard edge distance warnings.\n- **Custom Holes**: If you need a non-standard hole size, set `nVersion` to `0` (Custom). This allows manual editing of `Diameter` and `Depth` but will not generate Hardware BOM entries automatically.\n\n## FAQ\n- Q: Why are no hardware items appearing in my BOM?\n- A: Check if `nVersion` is set to `0` (Custom). Custom holes do not generate automatic BOM entries. Select a specific catalog version (e.g., 1, 2, 3) to generate hardware.\n- Q: How do I send data to Hilti design software?\n- A: Right-click on any instance of this script and select `|Hilti Export|`. This creates a `.dxx` file in your drawing folder containing all relevant geometric and tooling data."
+      },
+      "tokens_used": 5900,
+      "error": null
+    }
+  }
+}

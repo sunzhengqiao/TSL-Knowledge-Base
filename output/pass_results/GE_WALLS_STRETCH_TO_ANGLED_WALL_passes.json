@@ -1,0 +1,349 @@
+{
+  "filename": "GE_WALLS_STRETCH_TO_ANGLED_WALL.mcr",
+  "status": "completed",
+  "total_tokens": 27319,
+  "processing_time": 450.39556860923767,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "v1.3",
+            "date": "21.jul.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Thumbnail updated"
+          },
+          {
+            "version": "v1.2",
+            "date": "04-may-2011",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Bugfix: tsl will erase itself, will avoid wrong behavior on angled connections"
+          },
+          {
+            "version": "v1.1",
+            "date": "14-apr-2011",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Bugfix: now tsl won't move openings."
+          },
+          {
+            "version": "v1.0",
+            "date": "02-apr-2011",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Released"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": [
+          "GE_WDET_SEARCH_ANGLED_CONNECTIONS"
+        ]
+      },
+      "tokens_used": 4748,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses PrEntity to select Elements, interacts with ElementWall and Wall classes directly, and uses geometric operations (Plane, Line, PLine). It does not use any 'sd_' prefixes, _Viewport checks, or Multipage patterns typically found in Paper Space or Shop Drawing scripts. It operates on 3D wall entities."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": [
+            "GE_WDET_SEARCH_ANGLED_CONNECTIONS"
+          ]
+        }
+      },
+      "tokens_used": 2563,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\n|Select wall(s) to stretch|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getElement",
+              "promptOriginal": "|Select wall to stretch to|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4600,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically adjusts the length of selected walls (source walls) to intersect perfectly with a target angled wall and triggers the generation of angled connection details.",
+          "category": "Framing/Utility",
+          "typicalUseCase": "Used during floor plan layout modifications when a wall is moved or rotated, requiring adjacent walls to be stretched to meet the new position while maintaining correct joinery."
+        },
+        "parameters": [
+          {
+            "name": "ssE",
+            "technicalDefault": "User Selection (Prompt)",
+            "businessMeaning": "The collection of wall elements that need to be stretched or shortened to meet the target wall.",
+            "validRange": "Any valid ElementWall entities in the model",
+            "unit": "Entity",
+            "affectsOutput": "Determines which walls have their geometry modified (Start/End points and Outline)."
+          },
+          {
+            "name": "el",
+            "technicalDefault": "User Selection (Prompt)",
+            "businessMeaning": "The target wall that acts as the boundary; the source walls will be stretched to intersect this wall's plane.",
+            "validRange": "Any valid ElementWall entity not parallel to the source walls",
+            "unit": "Entity",
+            "affectsOutput": "Defines the intersection plane used to calculate the new endpoints for the source walls and determines the angle for subsequent connection details."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Wall Selection (ssE, el)",
+            "effect": "Geometric validation for parallelism",
+            "cascade": [
+              "Script execution aborts if walls are parallel"
+            ]
+          },
+          {
+            "trigger": "Successful Stretch",
+            "effect": "Trigger Connection Detail Script",
+            "cascade": [
+              "GE_WDET_SEARCH_ANGLED_CONNECTIONS"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "ElementWall (Modified)",
+            "description": "Source walls are geometrically updated; their Start or End point is moved to the intersection plane, and the wall outline is stretched.",
+            "appliedTo": "Walls selected in the 'ssE' prompt."
+          },
+          {
+            "type": "TslInst (Generated)",
+            "description": "An instance of the script 'GE_WDET_SEARCH_ANGLED_CONNECTIONS' is created to handle the specific joinery/mitering logic between the stretched wall and the target wall.",
+            "appliedTo": "The pair of Male (stretched) and Female (target) walls."
+          }
+        ]
+      },
+      "tokens_used": 5144,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Insertion: Check if insertCycleCount > 1.",
+          "2. User Prompt: Select wall(s) to stretch (ssE).",
+          "3. Selection Validation: Check if at least one wall was selected.",
+          "4. User Prompt: Select wall to stretch to (el/elFemale).",
+          "5. Target Validation: Check if target wall is valid.",
+          "6. Loop: Iterate through each selected wall (elMale).",
+          "7. Wall Validation: Check if current source wall is valid.",
+          "8. Geometry Extraction: Get coordinate systems, points, and outlines for Male and Female walls.",
+          "9. Parallelism Check: Compare X vectors of Male and Female walls.",
+          "10. Plane Definition: Determine the intersection plane of the target wall based on closest edge.",
+          "11. Wall Stretch: Calculate intersection point and move Start or End point of the Male wall.",
+          "12. Opening Handling: Retrieve original opening geometry (visualization only for recovery reference).",
+          "13. Outline Stretch: Stretch the hsbWall outline to the defined plane.",
+          "14. Perpendicular Check: Check if walls are perpendicular.",
+          "15. TSL Generation: Clone 'GE_WDET_SEARCH_ANGLED_CONNECTIONS' to generate joinery.",
+          "16. Script End: Erase script instance."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count",
+            "path1": {
+              "name": "Cycle > 1",
+              "steps": [
+                "Erase Instance",
+                "Exit Script"
+              ]
+            },
+            "path2": {
+              "name": "First Cycle",
+              "steps": [
+                "Prompt for Input"
+              ]
+            }
+          },
+          {
+            "condition": "Selection Count (ssE)",
+            "path1": {
+              "name": "No Walls Selected",
+              "steps": [
+                "Erase Instance",
+                "Exit Script"
+              ]
+            },
+            "path2": {
+              "name": "Walls Selected",
+              "steps": [
+                "Prompt for Target Wall"
+              ]
+            }
+          },
+          {
+            "condition": "Target Wall Validity",
+            "path1": {
+              "name": "Invalid Target",
+              "steps": [
+                "Erase Instance",
+                "Exit Script"
+              ]
+            },
+            "path2": {
+              "name": "Valid Target",
+              "steps": [
+                "Process Loop"
+              ]
+            }
+          },
+          {
+            "condition": "Source Wall Validity (Inside Loop)",
+            "path1": {
+              "name": "Invalid Source Wall",
+              "steps": [
+                "Erase Instance",
+                "Exit Script"
+              ]
+            },
+            "path2": {
+              "name": "Valid Source Wall",
+              "steps": [
+                "Check Parallelism"
+              ]
+            }
+          },
+          {
+            "condition": "Parallelism Check",
+            "path1": {
+              "name": "Walls Parallel",
+              "steps": [
+                "Report Message",
+                "Skip to Next Wall"
+              ]
+            },
+            "path2": {
+              "name": "Not Parallel",
+              "steps": [
+                "Calculate Intersection Plane"
+              ]
+            }
+          },
+          {
+            "condition": "Start vs End Point Relocation",
+            "path1": {
+              "name": "Start Point Closer",
+              "steps": [
+                "Move Start Point to Intersection",
+                "Keep End Point"
+              ]
+            },
+            "path2": {
+              "name": "End Point Closer",
+              "steps": [
+                "Keep Start Point",
+                "Move End Point to Intersection"
+              ]
+            }
+          },
+          {
+            "condition": "Perpendicular Check",
+            "path1": {
+              "name": "Walls Perpendicular",
+              "steps": [
+                "Skip Detail Generation",
+                "Continue Loop"
+              ]
+            },
+            "path2": {
+              "name": "Angled Connection",
+              "steps": [
+                "Generate GE_WDET_SEARCH_ANGLED_CONNECTIONS"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insertion Cycle Count",
+            "errorMessage": "None (Silent fail)",
+            "recovery": "N/A (Script prevents re-entry)"
+          },
+          {
+            "check": "Source Wall Selection Count",
+            "errorMessage": "None (Silent fail)",
+            "recovery": "N/A (Script erases self)"
+          },
+          {
+            "check": "Target Wall Entity Validity",
+            "errorMessage": "None (Silent fail)",
+            "recovery": "N/A (Script erases self)"
+          },
+          {
+            "check": "Source Wall Entity Validity",
+            "errorMessage": "None (Silent fail)",
+            "recovery": "N/A (Script erases self)"
+          },
+          {
+            "check": "Wall Parallelism",
+            "errorMessage": "|Walls are paralell|",
+            "recovery": "User must select non-parallel walls and re-run script"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "N/A",
+            "how": "N/A",
+            "effect": "The script erases itself immediately after execution. It performs a one-time geometric modification and generates a separate detail script (GE_WDET_SEARCH_ANGLED_CONNECTIONS) but does not persist as an interactive element."
+          }
+        ]
+      },
+      "tokens_used": 5278,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_WALLS_STRETCH_TO_ANGLED_WALL\n\n## Overview\nThis utility script automatically stretches selected walls to intersect perfectly with a target wall. It is designed to update wall geometry during layout changes and automatically triggers the creation of angled connection details where the walls meet.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates on 3D ElementWall entities. |\n| Paper Space | No | Not designed for 2D drawings or views. |\n| Shop Drawing | No | Not designed for manufacturing views. |\n\n## Prerequisites\n- **Required Entities**: At least two `ElementWall` entities (one to stretch, one to stretch to).\n- **Minimum Beam Count**: 0 (Script operates on Walls, not beams).\n- **Required Settings**: The dependent script `GE_WDET_SEARCH_ANGLED_CONNECTIONS` must be available in the TSL search path.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_WALLS_STRETCH_TO_ANGLED_WALL.mcr`\n\n### Step 2: Select Walls to Stretch\n```\nCommand Line: |Select wall(s) to stretch|\nAction: Click on one or multiple walls in the model that need to be lengthened or shortened to meet the target wall. Press Enter to confirm selection.\n```\n\n### Step 3: Select Target Wall\n```\nCommand Line: |Select wall to stretch to|\nAction: Click on the single wall that defines the boundary plane. The selected walls from Step 2 will be stretched to intersect this wall.\n```\n\n### Step 4: Automatic Execution\nThe script will automatically:\n1. Calculate the intersection points.\n2. Stretch the wall geometry.\n3. Generate connection details (if the angle is not 90°).\n4. Erase itself from the model.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not have persistent properties. It executes immediately and erases itself. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | No right-click menu options are available as the script instance is removed immediately after execution. |\n\n## Settings Files\n- **Dependency**: `GE_WDET_SEARCH_ANGLED_CONNECTIONS.mcr`\n- **Location**: TSL Search Path\n- **Purpose**: This script relies on the dependent script to handle the geometric logic for creating the joinery/mitering details between the modified walls.\n\n## Tips\n- **Parallel Walls**: If you select a source wall that is parallel to the target wall, the script will report \"|Walls are paralell|\" and skip that specific wall.\n- **Perpendicular Walls**: The script stretches walls that meet at 90 degrees but will **not** generate angled connection details for them (assuming a standard butt joint).\n- **Openings**: The script logic ensures that wall openings (windows/doors) are not moved during the stretching operation; they retain their relative position.\n- **Undo**: If the result is not as expected, use the standard AutoCAD `U` (Undo) command to revert the changes.\n\n## FAQ\n- **Q: Why did the script disappear after I ran it?**\n  **A:** This is a \"fire-and-forget\" utility script. It performs the geometric modification once and then deletes itself to prevent cluttering your project with unused script instances.\n\n- **Q: Can I use this on timber beams?**\n  **A:** No, this script is specifically designed for `ElementWall` entities.\n\n- **Q: What happens if the target wall is not straight?**\n  **A:** The script calculates the intersection based on the target wall's coordinate system (Plane). It attempts to stretch the source wall to the closest intersection plane of the target wall."
+      },
+      "tokens_used": 4986,
+      "error": null
+    }
+  }
+}

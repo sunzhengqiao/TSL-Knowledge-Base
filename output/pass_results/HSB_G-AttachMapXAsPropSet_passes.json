@@ -1,0 +1,238 @@
+{
+  "filename": "HSB_G-AttachMapXAsPropSet.mcr",
+  "status": "completed",
+  "total_tokens": 22606,
+  "processing_time": 532.2318484783173,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5133,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses PrEntity to select entities directly from the drawing, indicating Model Space interaction. It lacks sd_* or Multipage* prefixes, and contains no references to Viewport or _kPaperSpace. It iterates through a global _Entity[] collection populated by user selection, typical of a Model Space utility script."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Entity"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing entities with subMapX data",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1448,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select one or more entities|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowNotice",
+            "trigger": "_Entity.length() == 0",
+            "title": null,
+            "dataSource": null,
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3070,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Converts hidden MapX data stored on entities into visible and editable Property Sets within the AutoCAD Properties Palette.",
+          "category": "DataManagement",
+          "typicalUseCase": "Used after importing data or running calculation scripts that store metadata in hidden MapX fields; this script makes that data accessible for filtering, labeling, or manual editing."
+        },
+        "parameters": [
+          {
+            "name": "ssE",
+            "technicalDefault": "Entity()",
+            "businessMeaning": "The target timber elements (beams, panels, etc.) currently holding hidden MapX data that needs to be exposed.",
+            "validRange": "1 or more existing entities in Model Space containing MapX data",
+            "unit": "Selection Set",
+            "affectsOutput": "Defines the scope of the data conversion. The selected entities will receive new Property Set definitions attached to them, populated with the values previously hidden in the MapX structure."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "ssE selection is empty",
+            "effect": "Script execution halts immediately with a warning message; no Property Sets are created.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Property Set Definition",
+            "description": "Creates new catalog definitions based on the keys found in the entity's MapX data. Handles nested maps by creating hierarchical property names (e.g., 'Parent.Child').",
+            "appliedTo": "Drawing Catalog"
+          },
+          {
+            "type": "Property Set Instance",
+            "description": "Attaches the Property Set to the specific entity and populates it with the values retrieved from the MapX data.",
+            "appliedTo": "Entities selected via ssE"
+          }
+        ]
+      },
+      "tokens_used": 3529,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script instance is inserted into the drawing.",
+          "2. System checks insertCycleCount to prevent re-initialization loops.",
+          "3. User is prompted via command line to select entities (PrEntity).",
+          "4. Selected entities are appended to the global _Entity array.",
+          "5. Script validates that the _Entity array is not empty.",
+          "6. Loop begins for each entity in the selection set.",
+          "7. Entity is queried for all top-level MapX keys (subMapXKeys).",
+          "8. Inner loop iterates through each MapX key to retrieve the data Map.",
+          "9. System iterates through items in the Map to check for nested Map structures.",
+          "10. [Nested Branch] If a nested Map is found: creates hierarchical PropSet name (Parent.Child), creates definition if needed, attaches to entity, and populates values. The nested data is then removed from the source Map.",
+          "11. [Flat Branch] Items not processed as nested maps remain in the source Map.",
+          "12. After nested processing, the remaining data in the source Map is processed as a flat Property Set (Definition creation, Attachment, Population).",
+          "13. Loop repeats for all entities.",
+          "14. Script instance erases itself."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count (insertCycleCount)",
+            "path1": {
+              "name": "Cycle > 1",
+              "steps": [
+                "Erase instance immediately",
+                "Stop execution"
+              ]
+            },
+            "path2": {
+              "name": "Cycle = 1",
+              "steps": [
+                "Proceed to User Selection Prompt"
+              ]
+            }
+          },
+          {
+            "condition": "User Selection (_Entity.length)",
+            "path1": {
+              "name": "No Entities Selected",
+              "steps": [
+                "Display 'No entitie selected' warning",
+                "Erase instance",
+                "Stop execution"
+              ]
+            },
+            "path2": {
+              "name": "Entities Selected",
+              "steps": [
+                "Proceed to entity processing loop"
+              ]
+            }
+          },
+          {
+            "condition": "Map Item Type (mapx.hasMap)",
+            "path1": {
+              "name": "Item is a Nested Map",
+              "steps": [
+                "Construct hierarchical key (e.g., 'Data.Info')",
+                "Check/Create PropSet Definition for hierarchical key",
+                "Attach PropSet to entity",
+                "Populate values from nested Map",
+                "Remove nested data from parent Map (cleanup)"
+              ]
+            },
+            "path2": {
+              "name": "Item is Simple Value (String/Double/Int)",
+              "steps": [
+                "Skip item in inner loop",
+                "Remain in source Map for later processing as flat PropSet"
+              ]
+            }
+          },
+          {
+            "condition": "PropSet Definition Status (entity.availablePropSetNames)",
+            "path1": {
+              "name": "Definition Does Not Exist",
+              "steps": [
+                "Create PropSet Definition in drawing catalog",
+                "Proceed to attachment"
+              ]
+            },
+            "path2": {
+              "name": "Definition Exists",
+              "steps": [
+                "Skip creation",
+                "Proceed to attachment"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "_Entity array length",
+            "errorMessage": "No entitie selected.",
+            "recovery": "User must execute the script again and select at least one entity from the Model Space."
+          },
+          {
+            "check": "MapX Data Presence",
+            "errorMessage": "None (Silent skip)",
+            "recovery": "If an entity has no MapX keys, the inner loops simply do not run, and no Property Sets are created for that specific entity."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Edit converted data",
+            "how": "AutoCAD Properties Palette (OPM)",
+            "effect": "Users can view and modify the data that was previously hidden in MapX fields directly in the standard properties window."
+          },
+          {
+            "action": "Data consumption/Cleanup",
+            "how": "Automatic Script Execution",
+            "effect": "The script removes the specific data entries from the entity's hidden MapX storage after successfully converting them to Property Sets, preventing duplicate data storage."
+          }
+        ]
+      },
+      "tokens_used": 5124,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_G-AttachMapXAsPropSet\n\n## Overview\nThis utility extracts hidden internal data (MapX) from selected timber elements and converts it into standard AutoCAD Property Sets. This allows you to view and edit this metadata directly in the Properties Palette, making the data accessible for filtering, labeling, and exporting.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Select elements directly from the drawing. |\n| Paper Space | No | Not designed for layout viewports. |\n| Shop Drawing | No | Use only in the model environment. |\n\n## Prerequisites\n- **Required entities**: At least one entity (beam, panel, etc.) in the model that contains hidden MapX data.\n- **Minimum beam count**: 1\n- **Required settings**: None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_G-AttachMapXAsPropSet.mcr`\n\n### Step 2: Select Entities\n```\nCommand Line: Select one or more entities\nAction: Click on the timber elements you wish to process and press Enter.\n```\n*Note: The script will automatically create Property Set definitions for any data found and then erase itself from the drawing.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not use editable parameters in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | No custom right-click menu options are available for this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Data Cleanup**: After the script successfully converts the data, the original hidden MapX data is removed from the entity to prevent data duplication.\n- **Nested Data**: If the hidden data is structured in folders (nested maps), the script creates Property Set names using a dot separator (e.g., `Production.Info`).\n- **Verification**: To verify the results, press `Ctrl+1` to open the Properties Palette, select a processed element, and look for the newly attached Property Sets.\n\n## FAQ\n- **Q: What if I see a warning \"No entitie selected\"?**\n  A: You must click on at least one object in the drawing before pressing Enter. Run the script again and make a selection.\n- **Q: Where can I see the data after running the script?**\n  A: Select an element and open the AutoCAD Properties Palette (Ctrl+1). The new properties will appear in the list, often under a category specific to the data found."
+      },
+      "tokens_used": 4302,
+      "error": null
+    }
+  }
+}

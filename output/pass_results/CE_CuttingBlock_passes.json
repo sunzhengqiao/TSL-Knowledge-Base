@@ -1,0 +1,195 @@
+{
+  "filename": "CE_CuttingBlock.mcr",
+  "status": "completed",
+  "total_tokens": 45534,
+  "processing_time": 242.51114964485168,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8980,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses getPoint for insertion, manipulates 3D geometry via Body/Vector3d/Point3d, and uses Display for preview. It does not interact with sd_* functions, #Type E entities, or Viewports. The script stores data in a Map ('mpBeamCut') intended for downstream processing, typical of ModelSpace tooling or connector scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5864,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10230,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6945,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch",
+          "Check Insert Cycle Count (if > 1, erase instance and exit)",
+          "Show Configuration Dialog (showDialogOnce)",
+          "Prompt user for Insertion Point (getPoint)",
+          "Prompt user for Tool Insert Direction (PrPoint)",
+          "[Conditional] Validate Direction Vector Length",
+          "Calculate and Normalize vCutDir",
+          "Prompt user for Width Direction with Jig Preview (PrPoint goJig)",
+          "Calculate vWidth and vLength vectors via cross product",
+          "Initialize Grip Point array (_PtG[0-7])",
+          "Store orientation vectors in Instance Map (_Map)",
+          "Exit Insert Phase",
+          "Execution Phase: Retrieve vectors and points from Map",
+          "Update geometry based on Grips or Properties",
+          "Draw 3D Body and Visual Indicators (Display)",
+          "Export Tool Data to Map (mpBeamCut)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count > 1",
+            "path1": {
+              "name": "Erase and Exit",
+              "steps": [
+                "eraseInstance()",
+                "return"
+              ]
+            },
+            "path2": {
+              "name": "Continue Insertion",
+              "steps": [
+                "proceed to user prompts"
+              ]
+            }
+          },
+          {
+            "condition": "User picks Insertion Direction",
+            "path1": {
+              "name": "Invalid Pick (Length < 0.001 inch)",
+              "steps": [
+                "reportMessage('Bad pick...')",
+                "eraseInstance()",
+                "return"
+              ]
+            },
+            "path2": {
+              "name": "Valid Pick",
+              "steps": [
+                "Set Cut Length to vector length if currently 0",
+                "Normalize vector",
+                "Proceed to Width Direction prompt"
+              ]
+            }
+          },
+          {
+            "condition": "User modifies Grips",
+            "path1": {
+              "name": "Rotation Grips (5, 6, 7)",
+              "steps": [
+                "Calculate rotation axis based on grip index",
+                "Calculate angle from reference vector",
+                "Apply rotation transform to vCutDir, vLength, vWidth",
+                "Recalculate all grip positions"
+              ]
+            },
+            "path2": {
+              "name": "Dimension/Position Grips (0-4)",
+              "steps": [
+                "Project point onto relevant axis line",
+                "Calculate new dimension (Depth, Width, or Length)",
+                "Update Property (pdCutDepth, pdCutWidth, pdCutLength)",
+                "Recenter geometry on axis if necessary"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Vector length of Insertion Direction pick",
+            "errorMessage": "Bad pick, could not determine directon",
+            "recovery": "Script erases instance; user must re-run command and pick distinct points."
+          },
+          {
+            "check": "Width Direction calculation (Jig phase)",
+            "errorMessage": "(Implicit) Width vector length too small",
+            "recovery": "Operation returns early; user must pick a point further away from base."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Resize Cut Depth",
+            "how": "Drag Grip _PtG0 or edit Property 'Cut Depth @ Center'",
+            "effect": "Updates vCutDir length and moves the depth grip point."
+          },
+          {
+            "action": "Resize Cut Width",
+            "how": "Drag Grips _PtG1/_PtG2 or edit Property 'Cut Width'",
+            "effect": "Updates pdCutWidth and re-centers the block along the Width vector."
+          },
+          {
+            "action": "Resize Cut Length",
+            "how": "Drag Grips _PtG3/_PtG4 or edit Property 'Cut Length'",
+            "effect": "Updates pdCutLength and re-centers the block along the Length vector."
+          },
+          {
+            "action": "Rotate Tool",
+            "how": "Drag Rotation Grips _PtG5 (Width), _PtG6 (CutDir), or _PtG7 (Length)",
+            "effect": "Rotates the entire block coordinate system around the specified axis passing through ptCutBase."
+          },
+          {
+            "action": "Move Tool Base",
+            "how": "Drag _Pt0 (if enabled, though setAllowGripAtPt0 is false in header, logic exists for _Pt0 update)",
+            "effect": "Moves the insertion point ptCutBase."
+          },
+          {
+            "action": "Change Configuration",
+            "how": "Edit Properties 'Target Beams', 'Corner Rounding', 'Tool Type'",
+            "effect": "Updates the internal Map 'mpBeamCut' for downstream data export."
+          }
+        ]
+      },
+      "tokens_used": 9389,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# CE_CuttingBlock.mcr\n\n## Overview\nThis script inserts a parametric 3D Cutting Block tool into the model. It allows users to define a specific volume for timber processing operations by graphically setting the insertion point, direction, and dimensions, with interactive grips for resizing and rotating.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Primary usage environment. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required Entities:** None (Standalone tool).\n- **Minimum Beams:** 0.\n- **Required Settings:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `CE_CuttingBlock.mcr`\n\n### Step 2: Set Insertion Point\n```\nCommand Line: Insertion point:\nAction: Click in the Model Space to set the base origin (ptCutBase) of the cutting block.\n```\n\n### Step 3: Define Cut Direction\n```\nCommand Line: Tool insert direction:\nAction: Click a second point to define the primary axis (Depth) and length of the tool.\nNote: Ensure the distance between the two points is sufficient; picking the same point will cancel the operation.\n```\n\n### Step 4: Define Width Direction\n```\nCommand Line: Width direction:\nAction: Click a third point to define the width orientation.\nNote: A dynamic preview (Jig) will show the block orientation as you move the cursor.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Cut Depth @ Center | Double | Calculated | The length of the tool along the primary insertion direction. |\n| Cut Width | Double | User Defined | The width of the cutting block. |\n| Cut Length | Double | User Defined | The length of the cutting block (perpendicular to Width). |\n| Target Beams | String | - | Specifies the target beams for this tool operation. |\n| Corner Rounding | Double | - | Sets the fillet radius for the block corners. |\n| Tool Type | String | - | Classification of the tool type for downstream processing. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Updates the script geometry and internal maps based on current properties or grip edits. |\n\n## Settings Files\n- **Filename:** None detected in script header.\n\n## Tips\n- **Visualizing Orientation:** Watch the preview block during Step 4 (Width Direction) to ensure the block is rotating correctly around the cut axis before clicking.\n- **Precise Rotation:** Use the rotation grips (Grips 5, 6, and 7) to rotate the block around specific axes relative to the base point if the initial placement was slightly off.\n- **Centering:** The block geometry automatically re-centers itself along the Width or Length axes when you resize it using the properties panel, ensuring the base point remains centered relative to those dimensions.\n\n## FAQ\n- **Q: I received an error \"Bad pick, could not determine direction\". Why?**\n  **A:** This happens if the points you clicked for the Insertion Direction are too close together (distance < 0.001 inch). The script will delete itself; simply run the command again and pick distinct points.\n- **Q: How do I change the size after inserting?**\n  **A:** You can either drag the dimension grips (Grips 0-4) in the model or type new values into the \"Cut Depth\", \"Cut Width\", or \"Cut Length\" fields in the Properties palette.\n- **Q: What do the different colored grips do?**\n  **A:** Grips 0-4 control the dimensions (Depth, Width, Length). Grips 5, 6, and 7 are rotation handles that allow you to rotate the tool around the Width, Cut Direction, and Length axes respectively."
+      },
+      "tokens_used": 4126,
+      "error": null
+    }
+  }
+}

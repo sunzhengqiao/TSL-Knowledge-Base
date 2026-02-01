@@ -1,0 +1,315 @@
+{
+  "filename": "HSB-AssignEntitiesToZone.mcr",
+  "status": "completed",
+  "total_tokens": 23798,
+  "processing_time": 278.6158404350281,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "13.09.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-20054 new option on insert to keep zone assignment over multiple elements"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3544,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity prompts for Element() and Entity() types without sd_ prefix or _Viewport checks. It modifies entity properties (assignToElementGroup) in the model data structure, not annotations in layouts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Entity"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing Elements and Entities to be grouped.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1614,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select the element to assign entities to|, <|Enter|> to keep current element association",
+              "condition": "_bOnInsert",
+              "required": false
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select entities|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDialog",
+            "trigger": "On Insert (if no Execute Key provided)",
+            "title": null,
+            "dataSource": "Default Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sExclusive",
+            "type": "PropString",
+            "displayName": "Add exclusive",
+            "defaultValue": "Yes",
+            "inputType": "dropdown",
+            "options": [
+              "Yes",
+              "No"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "nZnIndex",
+            "type": "PropInt",
+            "displayName": "Zone index",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sZoneCharacter",
+            "type": "PropString",
+            "displayName": "Zone character",
+            "defaultValue": "'E' for element tools",
+            "inputType": "dropdown",
+            "options": [
+              "'E' for element tools",
+              "'Z' for general items",
+              "'T' for beam tools",
+              "'I' for information",
+              "'C' for construction",
+              "'D' for dimension"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2884,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Organizes selected model entities (beams, parts) into specific logical groups or zones within an element, useful for phasing, transport planning, or filtering.",
+          "category": "Data Management / Organization",
+          "typicalUseCase": "Assigning specific beams to a 'Transport Zone' (e.g., splitting a long wall into pallets) or grouping auxiliary parts for specific export filters."
+        },
+        "parameters": [
+          {
+            "name": "sExclusive",
+            "technicalDefault": "Yes",
+            "businessMeaning": "Determines whether the entities should be removed from any other groups they currently belong to. If set to 'No', the entity can exist in multiple groups simultaneously.",
+            "validRange": "Yes, No",
+            "unit": "Boolean",
+            "affectsOutput": "Data hierarchy and filtering. If 'Yes', the entity is unassigned from previous zones; if 'No', it remains linked to previous zones."
+          },
+          {
+            "name": "nZnIndex",
+            "technicalDefault": "0",
+            "businessMeaning": "The numerical identifier for the specific sub-group or zone. This is typically used to distinguish between different sections of a large element (e.g., Zone 0 = Ground Floor, Zone 1 = First Floor, or Zone 1 = Pallet A, Zone 2 = Pallet B).",
+            "validRange": "0 to 10 (Logic converts values >5 to negative indices: -1, -2, etc.)",
+            "unit": "Index",
+            "affectsOutput": "How the entity is filtered or sorted in lists, drawings, or production exports that rely on zone numbers."
+          },
+          {
+            "name": "sZoneCharacter",
+            "technicalDefault": "'E' for element tools",
+            "businessMeaning": "Defines the category or 'context' of the zone assignment. This tells downstream hsbCAD tools (drawings, lists, exports) which rule set to apply to this group.",
+            "validRange": "'E', 'Z', 'T', 'I', 'C', 'D'",
+            "unit": "Category Code",
+            "affectsOutput": "Determines which specific hsbCAD modules or processing steps recognize the assignment. 'E' for general element processing, 'T' for beam-specific tooling, 'Z' for general lists, etc."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "nZnIndex input exceeds 5",
+            "effect": "The script mathematically inverts the index (Input 6 becomes -1, Input 7 becomes -2) to allow for negative zoning schemes.",
+            "cascade": [
+              "nZnIndex"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Entity Properties Update",
+            "description": "Updates the internal grouping data of the selected entities via the assignToElementGroup method.",
+            "appliedTo": "Entities selected during the 'Select entities' prompt."
+          }
+        ]
+      },
+      "tokens_used": 4311,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Execution Starts",
+          "2. Check Insert Cycle Count: if > 1, erase instance and exit to prevent duplicate execution.",
+          "3. Check for Execute Key (Catalog Name):",
+          "   - If valid key found, load properties from catalog.",
+          "   - If no key or invalid key, display the Property Dialog (ShowDialog) for user input.",
+          "4. Prompt User Input 1: Select target Element (Optional).",
+          "   - User can select an Element object or press Enter to skip.",
+          "5. Prompt User Input 2: Select Entities (Required).",
+          "   - User selects beams, parts, or other entities to be grouped.",
+          "6. Script Instance Created and Calculation Begins",
+          "7. Process Zone Index: Evaluate nZnIndex. If > 5, mathematically invert to negative (e.g., 6 becomes -1).",
+          "8. Loop through Selected Entities:",
+          "   - Retrieve the parent Element of the entity.",
+          "   - If a specific Element was selected in Step 4, override the parent with that selection.",
+          "   - Check if the entity is an Element itself (Self-assignment check); skip if true.",
+          "   - Check if the target Element is valid.",
+          "9. Execute Data Assignment: Call assignToElementGroup with calculated parameters (Index, Character, Exclusive flag).",
+          "10. Erase Instance: Script removes itself from the model (Fire-and-forget)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execute Key / Catalog Check on Insert",
+            "path1": {
+              "name": "Key Provided",
+              "steps": [
+                "Lookup properties in catalog database",
+                "Apply saved properties (Zone Index, Character, Exclusive)",
+                "Skip Property Dialog"
+              ]
+            },
+            "path2": {
+              "name": "No Key / Standard Insert",
+              "steps": [
+                "Trigger ShowDialog()",
+                "User manually selects Zone Index, Character, and Exclusive options",
+                "Proceed to Selection Prompts"
+              ]
+            }
+          },
+          {
+            "condition": "Target Element Selection (PrEntity 1)",
+            "path1": {
+              "name": "Element Selected",
+              "steps": [
+                "Assigns all subsequent selected entities to this specific Element",
+                "Overrides the entities' original parent association"
+              ]
+            },
+            "path2": {
+              "name": "User presses Enter (None)",
+              "steps": [
+                "Script retrieves the existing parent Element for each selected entity individually",
+                "Entities are assigned to zones within their current elements"
+              ]
+            }
+          },
+          {
+            "condition": "Zone Index Value (nZnIndex)",
+            "path1": {
+              "name": "Standard Range (0 to 5)",
+              "steps": [
+                "Value is used as-is (Positive integer)"
+              ]
+            },
+            "path2": {
+              "name": "Extended Range (6 to 10)",
+              "steps": [
+                "Value is converted to negative index (Formula: 5 - nZnIndex)",
+                "Resulting indices: -1, -2, -3, -4, -5"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script automatically erases the duplicate instance and returns."
+          },
+          {
+            "check": "Entity vs Element Comparison",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script detects if the selected entity is actually an Element container (`ent == el`) and skips the assignment for that item to prevent logic errors."
+          },
+          {
+            "check": "Target Element Validity",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script checks `el.bIsValid()`. If false, the assignment is skipped for that specific entity to prevent crashes."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None (Script Self-Deletes)",
+            "how": "Automatic",
+            "effect": "The TSL instance calls eraseInstance() at the end of the calculation, removing itself from the drawing tree. The changes to the entities (Zone assignment) persist, but the tool itself is gone."
+          },
+          {
+            "action": "Re-run Script",
+            "how": "Execute command again",
+            "effect": "To change assignments, the user must re-execute the tool, select the entities again, and choose new parameters."
+          }
+        ]
+      },
+      "tokens_used": 6309,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB-AssignEntitiesToZone.mcr\n\n## Overview\nAssigns selected model entities (beams, parts, etc.) to a specific logical zone or group within an element. This is useful for organizing elements for transport planning, phasing, or applying specific export filters.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required. Script operates on 3D model entities. |\n| Paper Space | No | Not applicable. |\n| Shop Drawing | No | Not applicable. |\n\n## Prerequisites\n- **Required Entities**: At least one Element and one Entity (beam, part, etc.) must exist in the drawing.\n- **Minimum Beam Count**: 0.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse and select `HSB-AssignEntitiesToZone.mcr`.\n\n### Step 2: Configure Properties\nAction: The Properties Palette (or a dialog box) will appear upon insertion. Set the desired Zone Index, Zone Character, and Exclusive mode before proceeding to the selection prompts.\n\n### Step 3: Select Target Element\n```\nCommand Line: |Select the element to assign entities to|, <|Enter|> to keep current element association\n```\nAction: Click on the specific Element you wish to assign the entities to, or press **Enter** to keep the entities assigned to their existing parent elements.\n\n### Step 4: Select Entities\n```\nCommand Line: |Select entities|\n```\nAction: Select the beams, parts, or other entities you wish to group. Press **Enter** to finalize the selection and run the assignment.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Add exclusive | dropdown | Yes | If 'Yes', the entity is removed from any other groups/zones it previously belonged to. If 'No', the entity is added to this zone while retaining previous assignments. |\n| Zone index | number | 0 | The numerical ID for the zone (e.g., 0, 1, 2). Note: Inputting values greater than 5 converts them to negative indices (e.g., 6 becomes -1, 7 becomes -2). |\n| Zone character | dropdown | 'E' for element tools | Defines the category context for the zone assignment. Options: 'E' (element tools), 'Z' (general items), 'T' (beam tools), 'I' (information), 'C' (construction), 'D' (dimension). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu items are added by this script. |\n\n## Settings Files\n- **Filename**: None detected.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Negative Indices**: To assign a negative Zone Index (e.g., -1), enter the value `6` in the Zone index field. The script converts inputs > 5 automatically (7 becomes -2, etc.).\n- **Parent Override**: Use the \"Select element\" prompt (Step 3) to move entities from one Element to another logically without physically moving them in the model.\n- **Script Behavior**: This script is \"fire-and-forget.\" Once the calculation is complete, the script instance deletes itself from the model. Only the property changes on the entities remain.\n\n## FAQ\n- **Q: Can an entity belong to multiple zones at the same time?**\n  A: Yes. Set the \"Add exclusive\" property to \"No\". This allows the entity to exist in multiple groups simultaneously.\n- **Q: What happens if I select the Element itself as an entity?**\n  A: The script detects this and skips the assignment to prevent logic errors. Elements cannot be assigned as zones of themselves.\n- **Q: Why did the script disappear after I used it?**\n  A: The script is designed to erase itself (`eraseInstance`) immediately after updating the entity properties. This is normal behavior to keep the drawing clean."
+      },
+      "tokens_used": 5136,
+      "error": null
+    }
+  }
+}

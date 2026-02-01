@@ -1,0 +1,237 @@
+{
+  "filename": "HSB_E-ChangeSheetSize.mcr",
+  "status": "completed",
+  "total_tokens": 38296,
+  "processing_time": 538.4241688251495,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 5,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "Change the width and the length of a sheet base on the envelope sheet that fit the most.",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "01.09.2014",
+            "author": "AS",
+            "changes": "Pilot version"
+          },
+          {
+            "version": "1.01",
+            "date": "11.05.2015",
+            "author": "AS",
+            "changes": "Add tolerance to sheet optimization (FogBugzId 1215)."
+          },
+          {
+            "version": "1.02",
+            "date": "11.06.2015",
+            "author": "AS",
+            "changes": "Add support for element filter and allow selection of multiple zones."
+          },
+          {
+            "version": "1.03",
+            "date": "11.06.2015",
+            "author": "AS",
+            "changes": "Only executeon element constructed or on manual insert."
+          },
+          {
+            "version": "1.04",
+            "date": "02.09.2015",
+            "author": "AS",
+            "changes": "Skip sheet if vertex points are not found"
+          },
+          {
+            "version": "1.05",
+            "date": "23.06.2016",
+            "author": "AS",
+            "changes": "Find y based on longest side instead of x based on shortest side"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6857,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses _kModelSpace for TSL instantiation and operates on Element and Sheet entities within the 3D model. It utilizes geometric properties (Sheet.plEnvelope, Sheet.vecX) and performs database modifications (Sheet.dbCreate, Sheet.dbErase). No drawing views, viewports, or shopdrawing prefixes (sd_) are used."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing Elements with Sheets.",
+          "requiredSettings": [
+            "Optional: Element filter catalog names for pre-selection filtering."
+          ]
+        }
+      },
+      "tokens_used": 4020,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDialog",
+            "trigger": "On Insert if no ExecuteKey is provided",
+            "title": null,
+            "dataSource": "OPM Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "elementFilter",
+            "type": "PropString",
+            "displayName": "|Element filter catalog|",
+            "defaultValue": null,
+            "inputType": "dropdown",
+            "options": [
+              "|Do not use an element filter|",
+              "<Dynamic list from hsbElementFilter catalog>"
+            ],
+            "category": "|Element filter|",
+            "description": "|Sets the element filter to use.|"
+          },
+          {
+            "index": 0,
+            "variable": "sequenceForGeneration",
+            "type": "PropInt",
+            "displayName": "|Sequence number|",
+            "defaultValue": "0",
+            "inputType": "number",
+            "options": [],
+            "category": "|Generation|",
+            "description": "|The sequence number is used to sort the list of tsls during the generation of the element.|"
+          },
+          {
+            "index": 1,
+            "variable": "sApplyToZone",
+            "type": "PropString",
+            "displayName": "Apply to zones",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": "|Specifies the zones to take the sheets from.|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 7420,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Optimizes sheet material orientation and dimensions by aligning the sheet's coordinate system with the longest side of the envelope, effectively re-squaring the sheet to minimize waste.",
+          "category": "Optimization / Manufacturing",
+          "typicalUseCase": "Used to adjust sheathing or cladding sheets in a wall or floor element to ensure they are cut optimally from standard raw material sizes, reducing off-cuts."
+        },
+        "parameters": [
+          {
+            "name": "elementFilter",
+            "technicalDefault": "|Do not use an element filter|",
+            "businessMeaning": "Restricts the script execution to specific types of elements (e.g., external walls only) based on predefined catalog filters.",
+            "validRange": "List of available Element Filter names",
+            "unit": "N/A",
+            "affectsOutput": "Controls which elements are processed. If an element does not match the filter, its sheets remain unchanged."
+          },
+          {
+            "name": "sequenceForGeneration",
+            "technicalDefault": "0",
+            "businessMeaning": "Determines the order in which this script runs during the element generation process relative to other scripts.",
+            "validRange": "Integer (typically 0-1000)",
+            "unit": "Count",
+            "affectsOutput": "Ensures sheet resizing happens at the correct time. If run too early, geometry might be missing; if too late, it might conflict with subsequent operations."
+          },
+          {
+            "name": "sApplyToZone",
+            "technicalDefault": "",
+            "businessMeaning": "Defines the specific construction zones (sides/layers) of the element where the sheets should be resized.",
+            "validRange": "String of zone indices (e.g., \"1;2;5\")",
+            "unit": "Zone Index",
+            "affectsOutput": "Limits the modification to sheets residing in the specified zones. Other zones are ignored."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Insertion via Execute Key",
+            "effect": "All properties are loaded from a catalog preset, overriding defaults.",
+            "cascade": [
+              "elementFilter",
+              "sequenceForGeneration",
+              "sApplyToZone"
+            ]
+          },
+          {
+            "trigger": "User Selection at Command Line",
+            "effect": "The 'elementFilter' property is used to filter the selected entities before processing.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Sheet",
+            "description": "Existing sheets are deleted and replaced with new sheets having optimized dimensions and a rotated coordinate system aligned to the longest envelope side.",
+            "appliedTo": "Specific zones within the selected Element(s)."
+          }
+        ]
+      },
+      "tokens_used": 5572,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. Script Launch: Check if _bOnInsert is true.\",\n    \"2. Cycle Check: If insertCycleCount > 1, erase instance and exit (prevent recursion).\",\n    \"3. Configuration: If _kExecuteKey is valid, load properties from catalog; otherwise, show properties dialog.\",\n    \"4. User Selection: Prompt user to select a set of Elements.\",\n    \"5. Filtering: If 'Element filter' is active, filter the selected elements; otherwise, use all selected elements.\",\n    \"6. Satellite Instantiation: Loop through valid elements and create a satellite TSL instance for each.\",\n    \"7. Master Cleanup: Report number of inserted TSLs and erase the master script instance.\",\n    \"8. Satellite Initialization: Satellite script loads properties from Map and checks Element validity.\",\n    \"9. Context Check: Proceed only if _bOnElementConstructed, _bOnDebug, or ManualInsert flag is true.\",\n    \"10. Zone Parsing: Parse 'sApplyToZone' string to determine target zones (handle indices > 5).\",\n    \"11. Sheet Collection: Collect all sheets belonging to the target zones of the element.\",\n    \"12. Sheet Processing Loop: Iterate through each collected sheet.\",\n    \"13. Geometry Check: Retrieve envelope vertex points; skip sheet if no vertices are found.\",\n    \"14. Orientation Analysis: Loop through envelope segments to calculate potential bounding box areas and dimensions for each rotation.\",\n    \"15. Sorting Logic: Sort candidates prioritizing the Longest Side, then the Smallest Bounding Area.\",\n    \"16. Geometry Creation: Create a new PlaneProfile and Sheet based on the optimized orientation (best candidate).\",\n    \"17. Attribute Transfer: Copy all attributes (material, label, etc.) from the original sheet to the new sheet.\",\n    \"18. Replacement: Assign new sheet to the element group and erase the original sheet.\",\n    \"19. Satellite Cleanup: Erase the satellite script instance.\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Insertion Cycle Count\",\n      \"path1\": {\n        \"name\": \"Cycle > 1\",\n        \"steps\": [\n          \"Erase instance immediately\",\n          \"Exit script\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Cycle = 1 (First Run)\",\n        \"steps\": [\n          \"Check Execute Key\",\n          \"Show Dialog or Load Preset\",\n          \"Prompt for Entity Selection\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Execute Key Availability\",\n      \"path1\": {\n        \"name\": \"Key Provided\",\n        \"steps\": [\n          \"Load properties from 'MasterToSatellite' catalog preset\",\n          \"Skip dialog display\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"No Key Provided\",\n        \"steps\": [\n          \"Display Properties Dialog\",\n          \"Wait for user input/confirmation\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Element Filter Usage\",\n      \"path1\": {\n        \"name\": \"Filter Active\",\n        \"steps\": [\n          \"Call 'hsbElementFilter' map IO\",\n          \"Process only filtered entities\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Filter Inactive\",\n        \"steps\": [\n          \"Use all entities from the user selection set\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Zone Index Value\",\n      \"path1\": {\n        \"name\": \"Index > 5\",\n        \"steps\": [\n          \"Transform index: newIndex = 5 - oldIndex\",\n          \"Process transformed zone\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Index <= 5\",\n        \"steps\": [\n          \"Process zone directly\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Envelope Vertices Found\",\n      \"path1\": {\n        \"name\": \"Vertices Exist\",\n        \"steps\": [\n          \"Calculate Area and Segment Lengths\",\n          \"Perform Optimization\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"No Vertices\",\n        \"steps\": [\n          \"Skip current sheet (continue loop)\",\n          \"Proceed to next sheet\"\n        ]\n      }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"Element availability\",\n      \"errorMessage\": \"|No element selected|\",\n      \"recovery\": \"Script erases itself. User must select a valid element and re-run.\"\n    },\n    {\n      \"check\": \"Element validity (bIsValid)\",\n      \"errorMessage\": \"Implicit error (Script exits)\",\n      \""
+      },
+      "tokens_used": 8918,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-ChangeSheetSize\n\n## Overview\nThis script optimizes the dimensions and orientation of sheets (such as sheathing or cladding) within a construction element. It aligns the sheet's coordinate system with the longest side of the envelope to minimize material waste and ensure the best fit from standard raw material sizes.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on Elements and Sheets within the 3D model. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | This is a model generation/manufacturing script. |\n\n## Prerequisites\n- **Required Entities:** Elements (walls/floors) that contain Sheets.\n- **Minimum Beams:** 0.\n- **Required Settings:** None strictly required, though Element Filter catalogs can be utilized for filtering.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_E-ChangeSheetSize.mcr` from the file dialog.\n\n### Step 2: Configure Properties\nIf the script is run manually without a predefined execute key, the Properties Palette will appear.\n- **Element filter catalog:** Select a specific filter (e.g., \"External Walls\") or leave as \"Do not use an element filter\" to apply to all selections.\n- **Apply to zones:** Enter the zone indices (e.g., \"1;2\") if you only wish to resize sheets in specific layers of the element. Leave blank to apply to all.\n\n### Step 3: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the desired Elements in the model or use a window selection. Press Enter to confirm.\n```\n\n### Step 4: Processing\nThe script will automatically process the selected elements. It creates a satellite instance for each, calculates the optimal sheet orientation based on the longest side of the sheet envelope, and replaces the existing sheets with the optimized versions.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Element filter catalog | Dropdown | \\|Do not use an element filter\\| | Filters the selected elements to only process those matching a specific catalog definition (e.g., specific wall types). |\n| Sequence number | Number | 0 | Determines the order in which this script runs relative to other scripts during element generation. |\n| Apply to zones | Text | (Empty) | Specifies the zone indices (e.g., \"1;3;5\") where the sheet resizing should be applied. If left empty, all zones are processed. |\n\n## Right-Click Menu Options\nThere are no custom right-click menu options added by this script.\n\n## Settings Files\n- **Filename:** N/A (No specific settings files are referenced in the script configuration).\n- **Catalogs:** Uses standard hsbCAD catalogs for `hsbElementFilter`.\n\n## Tips\n- **Zone Targeting:** Use the `Apply to zones` parameter to restrict changes to specific layers (like only the exterior sheathing) without affecting interior structural layers.\n- **Optimization Logic:** The script prioritizes the \"Longest Side\" of the sheet envelope. This is particularly useful for elements that are rotated or have non-rectangular shapes to ensure efficient material usage.\n- **Validation:** The script will automatically skip sheets where vertex points cannot be found or calculated, preventing errors on complex geometries.\n\n## FAQ\n- **Q: Why did my sheets remain unchanged after running the script?**\n  A: Check the `Element filter catalog` setting to ensure it isn't filtering out your selected elements. Also, verify the `Apply to zones` string matches the zones where your sheets are actually located.\n- **Q: Does this script change the material of the sheets?**\n  A: No. The script preserves all attributes (material, labels, etc.) from the original sheet; it only modifies the geometric dimensions and orientation.\n- **Q: Can I use this on an element that is currently being generated?**\n  A: Yes, the script checks if the element is constructed (`_bOnElementConstructed`) and will run automatically during the generation process if configured in the execute list."
+      },
+      "tokens_used": 5509,
+      "error": null
+    }
+  }
+}

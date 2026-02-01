@@ -1,0 +1,363 @@
+{
+  "filename": "hsb_CreateBoardsBetweenStuds.mcr",
+  "status": "completed",
+  "total_tokens": 40661,
+  "processing_time": 236.51096773147583,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "05.04.2022",
+            "author": "Marsel Nakuci",
+            "changes": "HSB-14908: fix when finding stud for zone 0"
+          },
+          {
+            "version": "1.0",
+            "date": "13.08.2010",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6237,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses getElement() to select a wall element and creates 3D Sheet and Beam objects using dbCreate(). It calculates geometry using Vector3d and CoordSys relative to the element. No 'sd_' prefixes, Viewport handling, or drawing entity types found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "The script requires an existing hsbCAD Element with vertical beams (studs) in Model Space. The user must select an Element and define a Start/End point inside the element.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4531,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"getElement\",\n        \"promptOriginal\": \"Please select an Element\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      },\n      {\n        \"step\": 2,\n        \"function\": \"getPoint\",\n        \"promptOriginal\": \"Pick Starting Point, must be inside of the element\",\n       "
+      },
+      "tokens_used": 7921,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates sheathing boards (e.g., OSB or plywood) between wall studs within a defined area, cutting them around openings and adding vertical timber battens at every cut edge.",
+          "category": "Framing/Sheathing",
+          "typicalUseCase": "Adding structural racking resistance to a timber frame wall panel by fixing boards between studs, ensuring adequate nailing/battens at board joints and around openings."
+        },
+        "parameters": [
+          {
+            "name": "sLocation",
+            "technicalDefault": "Front",
+            "businessMeaning": "Specifies which side of the wall element the sheathing and battens are applied to.",
+            "validRange": "Front, Back",
+            "unit": "Enum",
+            "affectsOutput": "Determines the sign of the normal vector used to offset the sheets and battens from the wall centerline."
+          },
+          {
+            "name": "dOffset",
+            "technicalDefault": "300",
+            "businessMeaning": "The vertical distance from the bottom of the wall element to the bottom edge of the sheathing board.",
+            "validRange": "0 to Wall Height (e.g., 0 - 3000 mm)",
+            "unit": "mm",
+            "affectsOutput": "Moves the entire row of sheathing up or down vertically."
+          },
+          {
+            "name": "dSheetHeight",
+            "technicalDefault": "1200",
+            "businessMeaning": "The vertical dimension of the sheathing board to be installed.",
+            "validRange": "Standard sheet lengths (e.g., 600, 1200, 2400, 2700 mm)",
+            "unit": "mm",
+            "affectsOutput": "Defines the height of the sheet geometry and the length of the vertical battens created."
+          },
+          {
+            "name": "dSheetThickness",
+            "technicalDefault": "15",
+            "businessMeaning": "The depth/thickness of the sheet material.",
+            "validRange": "Common sheathing depths (e.g., 12, 15, 18, 22 mm)",
+            "unit": "mm",
+            "affectsOutput": "Sets the 3D thickness of the sheet and offsets the battens by this amount so they sit flush with or behind the sheet face."
+          },
+          {
+            "name": "sSheetMaterial",
+            "technicalDefault": "OSB3",
+            "businessMeaning": "The commercial name or code for the sheet material (for BOM and labeling).",
+            "validRange": "String (e.g., OSB3, Plywood 18mm, Fermacell)",
+            "unit": "String",
+            "affectsOutput": "Sets the Name and Material properties of the generated Sheet objects."
+          },
+          {
+            "name": "dBattenWidth",
+            "technicalDefault": "50",
+            "businessMeaning": "The horizontal width (thickness) of the vertical supporting battens.",
+            "validRange": "Standard timber widths (e.g., 38, 45, 50, 63 mm)",
+            "unit": "mm",
+            "affectsOutput": "Controls the X-axis dimension of the batten beams."
+          },
+          {
+            "name": "dBattenHeight",
+            "technicalDefault": "50",
+            "businessMeaning": "The depth of the batten perpendicular to the wall plane.",
+            "validRange": "Standard timber depths (e.g., 45, 50, 70, 97 mm)",
+            "unit": "mm",
+            "affectsOutput": "Controls the Z-axis dimension of the batten beams."
+          },
+          {
+            "name": "sName",
+            "technicalDefault": "Battens",
+            "businessMeaning": "The name assigned to the batten beams for identification in drawings and lists.",
+            "validRange": "String",
+            "unit": "String",
+            "affectsOutput": "Sets the Name property of the batten beams."
+          },
+          {
+            "name": "sMaterial",
+            "technicalDefault": "CLS",
+            "businessMeaning": "The material grade/species of the timber battens.",
+            "validRange": "String (e.g., C24, CLS, Sawn)",
+            "unit": "String",
+            "affectsOutput": "Sets the Material property of the batten beams."
+          },
+          {
+            "name": "sGrade",
+            "technicalDefault": "C16",
+            "businessMeaning": "The structural strength grade of the timber battens.",
+            "validRange": "String (e.g., C14, C16, C24)",
+            "unit": "String",
+            "affectsOutput": "Sets the Grade property of the batten beams."
+          },
+          {
+            "name": "_Pt0",
+            "technicalDefault": "User Pick",
+            "businessMeaning": "The start point defining the horizontal extent of the sheathing area.",
+            "validRange": "Inside wall element width",
+            "unit": "Point3d",
+            "affectsOutput": "Defines the left boundary of the sheathing run."
+          },
+          {
+            "name": "_PtG[0]",
+            "technicalDefault": "User Pick",
+            "businessMeaning": "The end point defining the horizontal extent of the sheathing area.",
+            "validRange": "Inside wall element width",
+            "unit": "Point3d",
+            "affectsOutput": "Defines the right boundary of the sheathing run."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dSheetThickness changes",
+            "effect": "Adjusts the position of the battens relative to the wall face to ensure the sheet sits flush against the battens.",
+            "cascade": [
+              "Batten Position"
+            ]
+          },
+          {
+            "trigger": "dOffset changes",
+            "effect": "Moves the bounding box of the sheets vertically, changing which studs or openings are intersected.",
+            "cascade": [
+              "Sheet Geometry",
+              "Batten Count",
+              "Batten Length"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Sheet",
+            "description": "3D Sheet bodies representing the sheathing material, automatically profiled to fit between studs and around wall openings within the user-defined area.",
+            "appliedTo": "Wall Element"
+          },
+          {
+            "type": "Beam",
+            "description": "Vertical timber battens created at the left and right edges of every sheet segment generated.",
+            "appliedTo": "Wall Element"
+          }
+        ]
+      },
+      "tokens_used": 7051,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User inserts script instance.",
+          "2. Script checks execution cycle. If cycle count > 1, script instance is erased (setup state).",
+          "3. If executed without a specific key, Properties Dialog is displayed.",
+          "4. User is prompted to select a target Wall Element.",
+          "5. User is prompted to pick a Start Point (inside the element).",
+          "6. User is prompted to pick an End Point (inside the element).",
+          "7. Script retrieves Element coordinate system and filters for vertical beams (studs).",
+          "8. Script attempts to find a beam in Zone 0 to determine stud width/height.",
+          "9. Script constructs a void profile combining beams and wall openings.",
+          "10. User points are projected to the wall plane and sorted Left-to-Right.",
+          "11. Script identifies the closest left and right studs to define the sheathing boundary.",
+          "12. Script generates the full sheet profile and subtracts the void profile.",
+          "13. For every resulting solid region, a 3D Sheet and two vertical Battens are created.",
+          "14. Script instance erases itself from the drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Cycle Count",
+            "path1": {
+              "name": "First Cycle",
+              "steps": [
+                "Show Dialog",
+                "Get Element",
+                "Get Points",
+                "Set Execution Mode to 0"
+              ]
+            },
+            "path2": {
+              "name": "Subsequent Cycle (>1)",
+              "steps": [
+                "Erase Instance",
+                "Return (Stop)"
+              ]
+            }
+          },
+          {
+            "condition": "Zone 0 Beam Search",
+            "path1": {
+              "name": "Found",
+              "steps": [
+                "Calculate Beam Width/Height from Zone 0 stud",
+                "Continue to Sheathing Generation"
+              ]
+            },
+            "path2": {
+              "name": "Not Found",
+              "steps": [
+                "Report Error Message",
+                "Erase Instance",
+                "Return (Stop)"
+              ]
+            }
+          },
+          {
+            "condition": "Board Location Property (Front vs Back)",
+            "path1": {
+              "name": "Front",
+              "steps": [
+                "Set Normal Vector to -vz",
+                "Offset Sheets/Battens to Front face"
+              ]
+            },
+            "path2": {
+              "name": "Back",
+              "steps": [
+                "Set Normal Vector to vz",
+                "Offset Sheets/Battens to Back face"
+              ]
+            }
+          },
+          {
+            "condition": "Start/End Point Orientation",
+            "path1": {
+              "name": "Left to Right",
+              "steps": [
+                "Use Start Point as Left Boundary",
+                "Use End Point as Right Boundary"
+              ]
+            },
+            "path2": {
+              "name": "Right to Left",
+              "steps": [
+                "Swap Points",
+                "Use Original End as Left Boundary",
+                "Use Original Start as Right Boundary"
+              ]
+            }
+          },
+          {
+            "condition": "Boundary Stud Detection",
+            "path1": {
+              "name": "Valid Studs Found",
+              "steps": [
+                "Calculate sheathing area between studs",
+                "Generate geometry"
+              ]
+            },
+            "path2": {
+              "name": "No Studs Intersected",
+              "steps": [
+                "Erase Instance",
+                "Return (Stop)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Validity",
+            "errorMessage": "Implicit (Script erases self)",
+            "recovery": "Select a valid hsbCAD Wall Element"
+          },
+          {
+            "check": "Vertical Beams Exist",
+            "errorMessage": "Implicit (Script erases self)",
+            "recovery": "Ensure the selected element has vertical studs/beams"
+          },
+          {
+            "check": "Zone 0 Beam Presence",
+            "errorMessage": "scriptName |unexpected, no beam for zone 0 found|",
+            "recovery": "Ensure the wall element has a stud at the base (Zone 0) height"
+          },
+          {
+            "check": "Boundary Studs Intersected",
+            "errorMessage": "Implicit (Script erases self)",
+            "recovery": "Ensure Start/End points are picked between two studs inside the wall width"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "No Parametric Modification",
+            "how": "None",
+            "effect": "The script instance calls 'eraseInstance()' at the end of execution. The generated Sheets and Beams are static entities in the model and are not linked back to the script parameters. To change dimensions, the user must delete the boards and run the script again."
+          }
+        ]
+      },
+      "tokens_used": 8700,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_CreateBoardsBetweenStuds.mcr\n\n## Overview\nThis script generates sheathing boards (such as OSB or plywood) between wall studs within a specified area of a wall element. It automatically cuts the boards around wall openings and adds vertical timber battens at every cut edge for structural support.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script must be run in 3D Model Space. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | This is a modeling script, not a detailing tool. |\n\n## Prerequisites\n- **Required Entities**: An existing hsbCAD Wall Element.\n- **Minimum Beams**: The wall must contain vertical beams (studs). Specifically, there must be a stud located at the base (Zone 0) for the script to calculate dimensions correctly.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse and select `hsb_CreateBoardsBetweenStuds.mcr`.\n\n### Step 2: Select Wall Element\n```\nCommand Line: Please select an Element\nAction: Click on the desired wall element in the drawing.\n```\n\n### Step 3: Define Start Point\n```\nCommand Line: Pick Starting Point, must be inside of the element\nAction: Click a point inside the wall width to define the left boundary of the sheathing area.\n```\n\n### Step 4: Define End Point\n```\nCommand Line: Pick Ending Point\nAction: Click a point inside the wall width to define the right boundary of the sheathing area.\n```\n*Note: The order of points (Left-to-Right or Right-to-Left) does not matter; the script will automatically sort them.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sLocation | String | Front | Side of the wall to apply sheathing (Front or Back). |\n| dOffset | Double | 300 | Vertical distance from the bottom of the wall to the bottom edge of the sheathing (mm). |\n| dSheetHeight | Double | 1200 | Vertical height of the sheathing board (mm). |\n| dSheetThickness | Double | 15 | Thickness of the sheet material (mm). |\n| sSheetMaterial | String | OSB3 | Commercial name/code for the sheet material. |\n| dBattenWidth | Double | 50 | Horizontal width (thickness) of the vertical battens (mm). |\n| dBattenHeight | Double | 50 | Depth of the vertical battens perpendicular to the wall (mm). |\n| sName | String | Battens | Name assigned to the batten beams. |\n| sMaterial | String | CLS | Material grade/species of the timber battens. |\n| sGrade | String | C16 | Structural strength grade of the timber battens. |\n\n## Right-Click Menu Options\n| Menu Item | Description |\n|-----------|-------------|\n| None | The script instance erases itself automatically after execution. Standard properties can be modified via the Properties Palette *before* the geometry is generated. |\n\n## Settings Files\nNone. This script does not rely on external XML settings files.\n\n## Tips\n- **Zone 0 Requirement**: Ensure your wall element has a stud at the very bottom (Zone 0). If the script reports \"no beam for zone 0 found,\" check your wall construction.\n- **Point Selection**: You do not need to click exactly on a stud. Clicking anywhere between two studs allows the script to calculate the boundaries automatically.\n- **Static Geometry**: Once the boards and battens are created, they are standard 3D objects. To change dimensions, you must delete the generated objects and run the script again.\n\n## FAQ\n- **Q: Can I modify the boards after they are created?**\n  A: No. The script creates static geometry and removes itself. You must delete the boards and re-run the script with new parameters to make changes.\n- **Q: Why did the script fail to find the wall?**\n  A: Ensure you are selecting a valid hsbCAD Element that contains vertical beams. Empty elements or elements without vertical structure cannot be processed.\n- **Q: What happens if I pick points outside the wall width?**\n  A: The script requires points to be inside the element width to project the geometry correctly. If points are outside, the script may fail or produce unexpected results."
+      },
+      "tokens_used": 6221,
+      "error": null
+    }
+  }
+}

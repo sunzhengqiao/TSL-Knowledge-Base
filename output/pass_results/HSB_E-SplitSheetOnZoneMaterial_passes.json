@@ -1,0 +1,232 @@
+{
+  "filename": "HSB_E-SplitSheetOnZoneMaterial.mcr",
+  "status": "completed",
+  "total_tokens": 31513,
+  "processing_time": 313.0195896625519,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5914,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses _kModelSpace explicitly in dbCreate() during insertion. It manipulates Sheet and Element 3D geometry (PlaneProfile operations, dbCreate of Sheets). It does not use _Viewport, _kPaperSpace, sd_ prefixes, or drawing generation logic."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing a valid Element with sheets in the specified zone index",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3517,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "_bOnInsert",
+            "title": null,
+            "dataSource": "Internal Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sequenceNumber",
+            "type": "PropInt",
+            "displayName": "|Sequence number|",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "|The sequence number is used to sort the list of tsl's during generate construction|"
+          },
+          {
+            "index": 1,
+            "variable": "propZnIndex",
+            "type": "PropInt",
+            "displayName": "|Zone index|",
+            "defaultValue": 1,
+            "inputType": "dropdown",
+            "options": [
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "10"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 2,
+            "variable": "propSheetColor",
+            "type": "PropInt",
+            "displayName": "|Sheet color|",
+            "defaultValue": -1,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "sheetMaterial",
+            "type": "PropString",
+            "displayName": "|Sheet material|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "gap",
+            "type": "PropDouble",
+            "displayName": "|Gap|",
+            "defaultValue": 1,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "|The gap with other sheets in this zone|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5256,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Splits sheathing sheets (like OSB) within a specific wall/floor zone by cutting them around other sheets to create gaps, effectively isolating structural sheathing from other sheet materials.",
+          "category": "Construction/Sheet Processing",
+          "typicalUseCase": "When detailing external walls where structural sheathing needs to be separated from insulation layers or other sheet materials by a specific gap to prevent moisture transfer or accommodate expansion."
+        },
+        "parameters": [
+          {
+            "name": "sequenceNumber",
+            "technicalDefault": "0",
+            "businessMeaning": "Controls the execution order during the automatic generation of the construction. Ensures this script runs after sheets are created.",
+            "validRange": "0 - 9999",
+            "unit": "integer",
+            "affectsOutput": "Incorrect timing (too low) may fail if sheets don't exist yet; (too high) might miss dependencies if other scripts modify sheets afterwards."
+          },
+          {
+            "name": "propZnIndex",
+            "technicalDefault": "1",
+            "businessMeaning": "Selects the specific construction layer (zone) within the element to process.",
+            "validRange": "1 - 10 (based on list), though script logic handles specific index mapping.",
+            "unit": "index",
+            "affectsOutput": "Defines which set of sheets are targeted for splitting (if OSB) and which sheets in that zone act as cut-out obstacles."
+          },
+          {
+            "name": "propSheetColor",
+            "technicalDefault": "-1",
+            "businessMeaning": "Visual display color for the newly split pieces. -1 means keep the original color.",
+            "validRange": "-1 (Original) or 0-255 (AutoCAD Color Index)",
+            "unit": "index",
+            "affectsOutput": "Only affects the visual representation in the model/drawings, not physical geometry."
+          },
+          {
+            "name": "sheetMaterial",
+            "technicalDefault": "empty string",
+            "businessMeaning": "Material name assigned to the resulting split sheets. If empty, inherits default behavior or original (depending on dbCreate specifics, but here effectively assigns new or empty).",
+            "validRange": "Any string matching a catalog material name (e.g., 'OSB 18mm').",
+            "unit": "string",
+            "affectsOutput": "Updates material properties for reporting, listing (BOM), and weight calculations."
+          },
+          {
+            "name": "gap",
+            "technicalDefault": "1",
+            "businessMeaning": "The clearance distance maintained between the target sheathing and adjacent obstacle sheets.",
+            "validRange": "0 - 50 mm",
+            "unit": "mm",
+            "affectsOutput": "Directly reduces the size of the target sheets. Larger gaps result in smaller sheet pieces and larger openings."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "propZnIndex selection",
+            "effect": "Filters which sheets are available for the script to process. Only sheets in this zone are affected.",
+            "cascade": [
+              "gap",
+              "sheetMaterial",
+              "propSheetColor"
+            ]
+          },
+          {
+            "trigger": "propSheetColor set to -1",
+            "effect": "Script logic reads the color from the source sheet being split and applies it to the new pieces.",
+            "cascade": [
+              "propSheetColor"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Sheet",
+            "description": "New sheet entities representing the split geometry. Original sheets in the zone are deleted and replaced.",
+            "appliedTo": "Element within the specified Zone Index."
+          }
+        ]
+      },
+      "tokens_used": 4228,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"Script execution begins (triggered by Insert or Generate Construction)\",\n    \"Check Insert Cycle Count: If > 1, immediately terminate (prevent duplicates)\",\n    \"Check Execution Key: If empty or invalid, display Properties Dialog for user input\",\n    \"Command Line Prompt: User selects one or more Elements (Walls/Floors)\",\n    \"Script loops through selected Elements and creates a linked script instance on each\",\n    \"Original 'Launcher' instance erases itself\",\n    \"[Linked Instance] Check if valid Element is attached; if not, report warning and erase\",\n    \"Process Zone Index: Apply mapping logic if index > 5\",\n    \"Retrieve all Sheets located in the specified Zone Index\",\n    \"Categorize Sheets: Iterate through sheets and separate 'Target' (OSB) from 'Obstacles' (Other)\",\n    \"Build Obstacle Profile: Create a combined profile of all non-OSB sheets\",\n    \"Apply Gap Logic: Expand the combined obstacle profile by the user-defined 'gap' distance\",\n    \"Split Target Sheets: For each OSB sheet, subtract the expanded obstacle profile\",\n    \"Generate New Geometry: Create new Sheet entities for the resulting split fragments\",\n    \"Apply Attributes: Assign Material and Color to the new sheets\",\n    \"Cleanup: Erase original OSB sheets and the script instance itself\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Zone Index value (propZnIndex)\",\n      \"path1\": {\n        \"name\": \"Standard Index\",\n        \"steps\": [\n          \"Index is <= 5\",\n          \"Use value as-is\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Mapped Index\",\n        \"steps\": [\n          \"Index is > 5\",\n          \"Calculate new index: 5 - znIndex (e.g., 6 becomes -1, 7 becomes -2)\",\n          \"Use calculated value\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Sheet Material Name\",\n      \"path1\": {\n        \"name\": \"Target Sheet (OSB)\",\n        \"steps\": [\n          \"Material matches 'OSB', 'OSB-KLEMLEKT', etc.\",\n          \"Sheet is marked for splitting\",\n          \"Geometry is subtracted by obstacle profile\",\n          \"Original sheet is deleted and replaced\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Obstacle Sheet (Other)\",\n        \"steps\": [\n          \"Material does not match OSB list\",\n          \"Sheet geometry is added to the 'Obstacle Profile'\",\n          \"Sheet remains untouched in the model\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Sheet Color Property (propSheetColor)\",\n      \"path1\": {\n        \"name\": \"Custom Color\",\n        \"steps\": [\n          \"Property is set to a value >="
+      },
+      "tokens_used": 7506,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-SplitSheetOnZoneMaterial.mcr\n\n## Overview\nThis script automatically splits structural sheathing sheets (such as OSB) within a specific construction zone of an Element. It cuts the sheathing around other sheet materials in the same zone to create a defined gap, effectively isolating the structural layer from other layers.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script operates on Elements in the 3D model. |\n| Paper Space | No | Not for use in layout views or 2D drawings. |\n| Shop Drawing | No | This is a model generation script, not a detailing script. |\n\n## Prerequisites\n- **Required Entities**: An Element (Wall or Floor) must exist in the model.\n- **Minimum Sheets**: The selected Element must have sheets assigned to the construction layers.\n- **Construction State**: The Element should have its construction generated (with sheets) before running this script, or the Sequence Number should be set to ensure this runs after sheets are created.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Browse and select `HSB_E-SplitSheetOnZoneMaterial.mcr`\n\n### Step 2: Configure Properties\nUpon insertion, if required, the Properties Palette will open.\nAction: Set the **Zone index** to the layer you wish to process (e.g., the layer containing OSB) and define the **Gap** size.\n\n### Step 3: Select Elements\n```\nCommand Line: |Select elements|\nAction: Click on the Wall or Floor elements you wish to process. Press Enter to confirm selection.\n```\n*Note: The script will attach itself to the selected elements and process the sheets based on the properties defined.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Sequence number | Integer | 0 | Determines the execution order during automatic construction generation. Set a higher number to ensure this runs after sheets are created. |\n| Zone index | Dropdown | 1 | Selects the construction layer (zone) to process. (Options 1-10). The script looks for sheets in this specific layer. |\n| Sheet color | Integer | -1 | Sets the color for the newly created split sheets. Use -1 to keep the original sheet color. |\n| Sheet material | String | (Empty) | Enter a material name (e.g., \"OSB 18mm\") to assign to the resulting split sheets. If left empty, it may use default or original properties. |\n| Gap | Double | 1 | The distance (in mm) of the gap to create between the target sheathing and other sheet materials in the zone. |\n\n## Right-Click Menu Options\nNone. This script does not add specific options to the entity context menu.\n\n## Settings Files\nNone. This script operates using internal logic and standard hsbCAD catalogs.\n\n## Tips\n- **Execution Order**: Ensure the **Sequence number** is higher than the scripts that generate the initial sheets. If it runs too early, there will be no sheets to split.\n- **Target Identification**: The script specifically identifies \"OSB\" materials (based on internal naming conventions like \"OSB\", \"OSB-KLEMLEKT\") as the targets to cut. Other materials in the same zone are treated as obstacles.\n- **Visualizing Results**: If you want to clearly see the new split pieces, change the **Sheet color** to a distinct color (e.g., Red) temporarily.\n\n## FAQ\n- **Q: Why did my sheets disappear?**\n  A: The script deletes the original target sheets (OSB) and replaces them with the newly split geometry. If the calculation resulted in zero geometry (e.g., the gap was too large for the sheet), the sheet will be removed.\n- **Q: What happens if I set the Zone Index to a layer with no sheets?**\n  A: The script will report a warning and skip processing that element, leaving it unchanged.\n- **Q: How does the Gap parameter work?**\n  A: The script takes the profile of \"obstacle\" sheets, expands it by the Gap amount, and subtracts that area from the \"OSB\" sheets. A larger gap means the OSB sheets will be cut back further from the obstacles."
+      },
+      "tokens_used": 5092,
+      "error": null
+    }
+  }
+}

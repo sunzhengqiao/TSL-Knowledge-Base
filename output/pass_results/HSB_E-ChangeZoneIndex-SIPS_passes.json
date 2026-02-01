@@ -1,0 +1,285 @@
+{
+  "filename": "HSB_E-ChangeZoneIndex-SIPS.mcr",
+  "status": "completed",
+  "total_tokens": 25067,
+  "processing_time": 385.6855688095093,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "19.05.2017",
+            "author": "DR",
+            "changes": "Pilot version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3648,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Explicit use of _kModelSpace in dbCreate call. Script interacts with Element and Sip classes to modify 3D model data properties (Zone index). No references to Viewport, Sheet, _kPaperSpace, or sd_ prefixes."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2723,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "StandardPropertyDialog",
+            "trigger": "_bOnInsert && (_kExecuteKey == \"\" || sCatalogNames.find(_kExecuteKey) == -1)",
+            "title": null,
+            "dataSource": "nZone",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "nZone",
+            "type": "PropInt",
+            "displayName": "|Zone index|",
+            "defaultValue": -5,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5732,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A utility script to batch update the 'Zone Index' attribute for Structural Insulated Panels (SIPs) associated with selected Elements.",
+          "category": "Utility/Debug",
+          "typicalUseCase": "Used when specific SIPs need to be reassigned to different manufacturing or logical zones (e.g., for filtering, scheduling, or production grouping) without regenerating the entire element."
+        },
+        "parameters": [
+          {
+            "name": "nZone",
+            "technicalDefault": -5,
+            "businessMeaning": "The numerical identifier representing the specific zone (grouping category) to which the SIPs should be assigned. Zones are often used to separate elements by floor, wall face, production phase, or transport group.",
+            "validRange": "-5 to 10 (Integer). Note: Inputs 6 through 10 are internally converted to negative values -1 through -5 respectively.",
+            "unit": "Index (Integer)",
+            "affectsOutput": "Updates the 'Zone' property (Element Group 'Z') for all SIP objects contained within the selected Element. This changes data categorization for reports and filters but does not alter physical geometry."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Sip (Structural Insulated Panel)",
+            "description": "Updates the Element Group assignment for the existing SIPs.",
+            "appliedTo": "Sip entities found within the single selected Element."
+          }
+        ]
+      },
+      "tokens_used": 4207,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched",
+          "Check if Insertion Cycle > 1 (Prevent duplicates)",
+          "Check Execute Key/Catalog status",
+          "[Condition] If no execute key, show Property Dialog for 'Zone index'",
+          "Save properties to '_LastInserted' catalog",
+          "Prompt user to select Elements",
+          "Loop through selected Elements",
+          "Clone script instance for each Element (passing Element as Entity)",
+          "Erase original master instance",
+          "[Child Instance] Retrieve properties from catalog/map",
+          "Resolve 'Zone index' integer (Apply logic: 6->-1, 10->-5)",
+          "Validate Zone range (-5 to 10)",
+          "[Condition] Validate Linked Element count (must be 1)",
+          "[Condition] Validate Element validity",
+          "Extract Sip entities from Element",
+          "Loop through Sips and update Element Group 'Z'",
+          "Erase instance"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle Count > 1",
+            "path1": {
+              "name": "Duplicate Detected",
+              "steps": [
+                "Erase instance",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "First Run",
+              "steps": [
+                "Proceed with insertion logic"
+              ]
+            }
+          },
+          {
+            "condition": "Execute Key usage",
+            "path1": {
+              "name": "No Execute Key",
+              "steps": [
+                "Show Dialog (Properties Palette)",
+                "Input Zone Index"
+              ]
+            },
+            "path2": {
+              "name": "Execute Key Found",
+              "steps": [
+                "Load properties from catalog",
+                "Skip Dialog"
+              ]
+            }
+          },
+          {
+            "condition": "Zone Index (nZone) Value",
+            "path1": {
+              "name": "Range 6 to 10",
+              "steps": [
+                "Transform value: newZone = -nZone + 5",
+                "Continue"
+              ]
+            },
+            "path2": {
+              "name": "Invalid (< -5 or > 10)",
+              "steps": [
+                "Report Error: 'Invalid zone'",
+                "Erase instance",
+                "Return"
+              ]
+            },
+            "path3": {
+              "name": "Valid (-5 to 5)",
+              "steps": [
+                "Use value directly",
+                "Continue"
+              ]
+            }
+          },
+          {
+            "condition": "Linked Element Count",
+            "path1": {
+              "name": "Count != 1",
+              "steps": [
+                "Report Error: 'No element selected'",
+                "Erase instance",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "Count == 1",
+              "steps": [
+                "Validate Element object"
+              ]
+            }
+          },
+          {
+            "condition": "Element Validity",
+            "path1": {
+              "name": "Invalid Element",
+              "steps": [
+                "Report Error: 'Selected element is invalid'",
+                "Erase instance",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "Valid Element",
+              "steps": [
+                "Process Sips"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Zone Index (nZone) falls within -5 to 10",
+            "errorMessage": "\\n<ScriptName>: |Invalid zone|",
+            "recovery": "User must input an integer between -5 and 10. Values 6-10 are inverted internally but accepted as inputs."
+          },
+          {
+            "check": "Exactly one Element is linked to the instance (_Element.length() == 1)",
+            "errorMessage": "\\n<ScriptName>: |No element selected, TSL will be erased|",
+            "recovery": "Ensure elements are selected during the initial PrEntity prompt. The script creates one instance per element, so a missing link indicates a selection failure."
+          },
+          {
+            "check": "Linked Element object is valid (bIsValid)",
+            "errorMessage": "\\n<ScriptName>: |Selected element is invalid, TSL will be erased|",
+            "recovery": "The selected Element may have been deleted or is corrupt. Select a valid Element."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Zone Index",
+            "how": "Properties Palette (OPM) / Re-insertion",
+            "effect": "Since the script instance self-erases immediately after updating the SIPs, post-insertion modification via OPM is not possible on the specific instance. To change the zone again, the user must re-run the script and select the elements again with the new Zone Index value."
+          }
+        ]
+      },
+      "tokens_used": 4166,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-ChangeZoneIndex-SIPS\n\n## Overview\nA utility script to batch update the 'Zone Index' attribute for Structural Insulated Panels (SIPs) contained within selected Elements. It allows you to reassign SIPs to different manufacturing or logical zones (e.g., for scheduling or grouping) without needing to regenerate the entire element.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D Elements and their associated SIPs. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | Not applicable for 2D detailing. |\n\n## Prerequisites\n- **Required entities**: Element (containing Sip entities).\n- **Minimum beam count**: 0\n- **Required settings files**: None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_E-ChangeZoneIndex-SIPS.mcr`\n\n### Step 2: Set Zone Index\n```\nCommand Line: (Properties Palette opens)\nAction: Locate the 'Zone index' field in the Properties Palette (OPM) and enter the desired numerical value.\n```\n\n### Step 3: Select Elements\n```\nCommand Line: |Select elements|\nAction: Click on the Element(s) in the model that contain the SIPs you wish to update. Press Enter to confirm selection.\n```\n\n### Step 4: Execution\nThe script automatically processes the selected Elements, updates the Zone Index for all found SIPs, and then erases itself from the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Zone index | Number | -5 | The numerical identifier for the zone grouping. Valid range is -5 to 10. Note: Inputs 6 through 10 are automatically converted to -1 through -5 respectively. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not add specific context menu options. |\n\n## Settings Files\nNo specific settings files are required for this script.\n\n## Tips\n- **Zone Index Logic**: If you need to set a negative zone index (e.g., -1) but your input method or preference is positive, you can input `6`. The script automatically converts inputs 6-10 to negative values (-1 to -5).\n- **Re-running the Script**: This script erases itself immediately after running to keep the drawing clean. If you need to change the zone again, simply re-run the script and select the elements again.\n- **Selection**: Ensure you select the parent **Element**, not the individual Sips manually. The script finds the Sips inside the Element for you.\n\n## FAQ\n- **Q: Why did the script disappear after I pressed Enter?**\n  - A: This is a \"run-once\" utility script. It updates the data in the background and then automatically removes its instance from the drawing to prevent clutter.\n- **Q: I entered '7' as the zone, but it looks different in the report.**\n  - A: The script logic converts any input from 6 to 10 into negative numbers. An input of 7 becomes -2.\n- **Q: What happens if I select multiple elements?**\n  - A: The script will create a temporary instance for each selected element and update the SIPs within all of them sequentially."
+      },
+      "tokens_used": 4591,
+      "error": null
+    }
+  }
+}

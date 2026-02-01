@@ -1,0 +1,339 @@
+{
+  "filename": "hsb_AssignElementToMultiwall.mcr",
+  "status": "completed",
+  "total_tokens": 28378,
+  "processing_time": 194.2962474822998,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "14.03.2012",
+            "author": "Chirag Sawjani(csawjani@itw-industry.com)",
+            "changes": "Release version"
+          },
+          {
+            "version": "1.1",
+            "date": "21.03.2012",
+            "author": "Chirag Sawjani(csawjani@itw-industry.com)",
+            "changes": "Re-instated export to the bill of materials checkbox as it is not allowing mapx to be written"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3753,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select ElementWall objects (model interaction), employs _kModel during tsl.dbCreate calls to place instances in the model, and uses Display dp(-1) to draw text in 3D space. No sd_ prefixes, _Viewport handling, or Paper Space constants are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3671,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Please select Walls",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "_bOnInsert && _kExecuteKey==\"\"",
+            "title": null,
+            "dataSource": "Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "strPrefix",
+            "type": "PropString",
+            "displayName": "Enter the prefix number",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sDimStyle",
+            "type": "PropString",
+            "displayName": "Dim style",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "nSequence",
+            "type": "PropInt",
+            "displayName": "Sequence Number",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3323,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Assigns multiple wall elements to a logical group (Multiwall) and labels them with a prefix and sequence number (e.g., 'A-1') for production tracking.",
+          "category": "Project Management",
+          "typicalUseCase": "Used when multiple wall panels need to be grouped together (e.g., walls for a specific house or transport unit) so they can be filtered, sorted, and labeled together in the model and BOM."
+        },
+        "parameters": [
+          {
+            "name": "strPrefix",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The alphanumeric identifier for the group of walls (e.g., 'HOUSE1' or 'MW').",
+            "validRange": "Any text string (typically project codes or building identifiers).",
+            "unit": "text",
+            "affectsOutput": "Updates the text label in the model (e.g., changes 'MW-1' to 'B-1') and the group identifier in the element's MapX data."
+          },
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "\"\" (Inherits from catalog or current)",
+            "businessMeaning": "Defines the visual style (height, font, layer) of the 3D label text drawn on the wall.",
+            "validRange": "Any valid Dimension Style name defined in the hsbCAD drawing/standard.",
+            "unit": "enum",
+            "affectsOutput": "Changes the size and appearance of the multiwall label in the 3D model view."
+          },
+          {
+            "name": "nSequence",
+            "technicalDefault": "0",
+            "businessMeaning": "The sequential index of the specific wall within the selected group.",
+            "validRange": "1 to 100 (or total number of walls in the group).",
+            "unit": "count",
+            "affectsOutput": "Appends the specific number to the label (e.g., 'MW-1', 'MW-2') and updates the sequence data in MapX."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects multiple walls on insert",
+            "effect": "The script automatically clones itself onto each selected wall and calculates the 'nSequence' incrementally (1, 2, 3...) based on the selection order.",
+            "cascade": [
+              "nSequence"
+            ]
+          },
+          {
+            "trigger": "strPrefix update",
+            "effect": "Updates the MapX 'hsb_Multiwall' record attached to the element, changing the 'Number' field.",
+            "cascade": [
+              "MapX data"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "3D Text Label",
+            "description": "A text string drawn on the wall surface displaying the Prefix-Sequence combination (e.g., 'BLK1-2').",
+            "appliedTo": "Selected ElementWall entities."
+          },
+          {
+            "type": "MapX Data",
+            "description": "An attribute map named 'hsb_Multiwall' attached to the element containing 'Number' and 'Sequence' data for BOM and export purposes.",
+            "appliedTo": "Selected ElementWall entities."
+          },
+          {
+            "type": "Element Grouping",
+            "description": "Assigns the wall to an internal element group via assignToElementGroup for logical organization.",
+            "appliedTo": "Selected ElementWall entities."
+          },
+          {
+            "type": "TSL Instance",
+            "description": "A persistent script instance attached to the wall to store properties and handle redrawing/updating of the label.",
+            "appliedTo": "Selected ElementWall entities."
+          }
+        ]
+      },
+      "tokens_used": 4120,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script execution initiated",
+          "2. Check insertCycleCount; if > 1, erase instance and exit (prevents duplicate execution on reload)",
+          "3. Display properties dialog (Prompt for Prefix and Dim Style) via showDialogOnce",
+          "4. Prompt user to select Wall entities (ElementWall) using PrEntity",
+          "5. Validate selection: iterate entities, filter for valid Elements",
+          "6. [Conditional] If no valid elements found, report error and erase instance",
+          "7. Loop through each selected element:",
+          "   a. Check for existing script instances attached to the element",
+          "   b. If an existing instance of this script is found, erase it (overwrite logic)",
+          "   c. Prepare parameters: set execution mode to 1 (Enable Edit), calculate Sequence Number (Loop Index + 1)",
+          "   d. Clone script instance onto the specific wall (dbCreate)",
+          "8. Erase the original 'master' script instance",
+          "9. [New Instance Execution] Each cloned instance runs logic:",
+          "   a. Set nSequence to Read-Only (FALSE) based on Execution Mode",
+          "   b. Calculate 3D text position (offset from wall origin)",
+          "   c. Draw Text Label (Prefix-Sequence)",
+          "   d. Write MapX data ('hsb_Multiwall') to element",
+          "   e. Assign element to Element Group"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle Count",
+            "path1": {
+              "name": "Initial Insert",
+              "steps": [
+                "Proceed to Dialog and Selection"
+              ]
+            },
+            "path2": {
+              "name": "Reload / Update",
+              "steps": [
+                "Erase Instance",
+                "Return (Exit)"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Selection Validity",
+            "path1": {
+              "name": "Valid Walls Selected",
+              "steps": [
+                "Process Loop (Clone TSL)"
+              ]
+            },
+            "path2": {
+              "name": "No Valid Selection",
+              "steps": [
+                "Report 'No valid object selected'",
+                "Erase Instance",
+                "Return"
+              ]
+            }
+          },
+          {
+            "condition": "Existing Script Attachment",
+            "path1": {
+              "name": "Script Already Exists",
+              "steps": [
+                "Erase Old Instance",
+                "Create New Instance (Refresh)"
+              ]
+            },
+            "path2": {
+              "name": "Clean Element",
+              "steps": [
+                "Create New Instance directly"
+              ]
+            }
+          },
+          {
+            "condition": "Execution Mode (Map Flag)",
+            "path1": {
+              "name": "Master Script (Mode 0)",
+              "steps": [
+                "nSequence is Read-Only",
+                "Self-destructs after cloning"
+              ]
+            },
+            "path2": {
+              "name": "Cloned Script (Mode 1)",
+              "steps": [
+                "nSequence becomes Editable",
+                "Persists on wall"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Selected entities must be of type ElementWall and valid",
+            "errorMessage": "No valid object selected",
+            "recovery": "User must re-run script and select valid wall elements."
+          },
+          {
+            "check": "Script prevents multiple attachments to the same element",
+            "errorMessage": "None (Silent cleanup)",
+            "recovery": "Script automatically deletes previous instances of itself on the selected wall before attaching the new one."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Edit Multiwall Properties",
+            "how": "Object Properties Palette (OPM)",
+            "effect": "Changing 'strPrefix' updates the label prefix and MapX 'Number'. Changing 'nSequence' updates the label suffix and MapX 'Sequence'. Changing 'sDimStyle' updates the text size/font. The 3D text and MapX data update immediately."
+          },
+          {
+            "action": "Move/Rotate Wall",
+            "how": "CAD Grips / Move Command",
+            "effect": "The label position recalculates relative to the wall's coordinate system (projected onto the wall plane) and moves with the wall."
+          },
+          {
+            "action": "Delete Wall",
+            "how": "CAD Erase Command",
+            "effect": "The script instance and its data are deleted along with the wall element."
+          }
+        ]
+      },
+      "tokens_used": 7356,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_AssignElementToMultiwall.mcr\n\n## Overview\nThis script groups multiple wall elements into a logical \"Multiwall\" assembly and labels them with a specific prefix and sequence number (e.g., \"HOUSE1-1\", \"HOUSE1-2\"). This aids in production tracking, filtering, and Bill of Materials (BOM) export.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in the 3D model. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | This is not a detailing script. |\n\n## Prerequisites\n- **Required entities**: ElementWall entities (Timber walls).\n- **Minimum beam count**: N/A (Script operates on Wall Elements, not beams).\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse and select `hsb_AssignElementToMultiwall.mcr`.\n\n### Step 2: Configure Group Properties\n```\nDialog: Script Properties\nAction: Enter the 'Prefix' (e.g., A, B, MW) and select a 'Dim style' for the text label.\n```\n*Note: This dialog appears immediately upon insertion.*\n\n### Step 3: Select Walls\n```\nCommand Line: Please select Walls\nAction: Click to select one or multiple wall elements in the model, then press Enter.\n```\n*Note: The script will automatically number the walls in the order you select them (1, 2, 3...).*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| strPrefix | Text | [Empty] | The alphanumeric identifier for the group (e.g., \"UNIT1\"). This appears as the first part of the label. |\n| nSequence | Number | 0 | The index number of the specific wall within the group (e.g., 1, 2). This forms the second part of the label. |\n| sDimStyle | Dropdown | [Current] | The text style used to display the 3D label on the wall. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not add custom context menu options. Use the Properties Palette to edit settings. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Bulk Numbering**: You can select all walls for a specific house or unit in one go. The script will automatically assign sequence numbers 1, 2, 3, etc., based on the selection order.\n- **Updating Labels**: To change the prefix or fix a number, simply select the wall, open the Properties palette (Ctrl+1), and modify the `strPrefix` or `nSequence` fields. The 3D label will update instantly.\n- **Overwriting**: If you run the script on walls that already have this assignment, it will automatically remove the old assignment and apply the new one.\n\n## FAQ\n- **Q: Can I use this on beams or roof elements?**\n  - A: No, this script is designed specifically for `ElementWall` entities.\n- **Q: How do I change the text size of the label?**\n  - A: Modify the `sDimStyle` property in the Properties Palette to a different dimension style defined in your CAD standard.\n- **Q: What happens if I move the wall?**\n  - A: The label is calculated relative to the wall's position and will move with it automatically."
+      },
+      "tokens_used": 6155,
+      "error": null
+    }
+  }
+}

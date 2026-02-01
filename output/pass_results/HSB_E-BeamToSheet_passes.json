@@ -1,0 +1,361 @@
+{
+  "filename": "HSB_E-BeamToSheet.mcr",
+  "status": "completed",
+  "total_tokens": 47154,
+  "processing_time": 474.2511270046234,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8727,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Uses _kModelSpace explicitly in tsl.dbCreate() calls. Manipulates 3D geometric entities (Beam, Sheet, Body, PlaneProfile). Uses assignToElementGroup to link sheets to construction elements. No ShopDrawing specific APIs (e.g., sdSheetSet, addShopDrawingHeader) or Viewport handling present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "HSB-BeamToSheetCatalogue.xml (located in hsbCompany\\Abbund folder) required when selecting Elements",
+            "hsbCompany path variable must be configured correctly"
+          ]
+        }
+      },
+      "tokens_used": 6493,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select one or more elements| <|Right click to select beams|>",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select beams|",
+              "condition": "_bOnInsert && (element selection count == 0)",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "During insertion if no elements are selected initially and no Execute Key is active",
+            "title": null,
+            "dataSource": "OPM Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "assignSheetToZone",
+            "type": "PropInt",
+            "displayName": "|Assign to zone|",
+            "defaultValue": 1,
+            "inputType": "dropdown",
+            "options": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "colorOfSheet",
+            "type": "PropInt",
+            "displayName": "|Color|",
+            "defaultValue": -1,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "materialOfSheet",
+            "type": "PropString",
+            "displayName": "|Material|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": [
+          {
+            "filename": "HSB-BeamToSheetCatalogue.xml",
+            "searchPaths": [
+              "_kPathHsbCompany\\Abbund"
+            ],
+            "purpose": "Maps beam codes to Zone, Color, and Material settings when selecting Elements.",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 8504,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Converts structural timber Beams into Sheet entities (panels), preserving geometry and tooling while updating material and zone properties.",
+          "category": "Conversion / Framing",
+          "typicalUseCase": "Converting a structural timber frame design into sheet material (e.g., CLT panels, sheeting layers) or generating roof underlay/lining sheets from the structural geometry."
+        },
+        "parameters": [
+          {
+            "name": "assignSheetToZone",
+            "technicalDefault": 1,
+            "businessMeaning": "Assigns the generated sheet to a specific construction layer (Zone) within the element for reporting and layer management.",
+            "validRange": "0-10",
+            "unit": "count (Zone Index)",
+            "affectsOutput": "Determines the layer/group the sheet belongs to in lists and drawings. Also triggers specific material overrides for Roof elements in zones 4 and 5 if material is unspecified."
+          },
+          {
+            "name": "colorOfSheet",
+            "technicalDefault": -1,
+            "businessMeaning": "The display color of the generated sheet in the CAD model.",
+            "validRange": "AutoCAD Color Index (0-255) or -1",
+            "unit": "index",
+            "affectsOutput": "Visual appearance of the sheet in ModelSpace. A value of -1 inherits the color from the original beam being converted."
+          },
+          {
+            "name": "materialOfSheet",
+            "technicalDefault": "",
+            "businessMeaning": "The stock material name assigned to the sheet (e.g., 'OSB', 'PLYWOOD', 'CLT').",
+            "validRange": "String (valid material name from database)",
+            "unit": "text",
+            "affectsOutput": "Defines the physical material properties for the sheet. If left blank and the zone is 4 or 5 on a roof element, it is overridden by 'TENGEL' or 'PANLAT'. Otherwise, defaults to the source beam's material."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects Elements instead of Beams",
+            "effect": "OPM Properties (Zone, Color, Material) are ignored; settings are derived from HSB-BeamToSheetCatalogue.xml based on the Beam Code.",
+            "cascade": [
+              "assignSheetToZone",
+              "colorOfSheet",
+              "materialOfSheet"
+            ]
+          },
+          {
+            "trigger": "Target Element is a Roof and assignSheetToZone is 4 or 5",
+            "effect": "If materialOfSheet is empty, it is forced to 'TENGEL' (Zone 4) or 'PANLAT' (Zone 5), ignoring the beam's original material.",
+            "cascade": [
+              "materialOfSheet"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Sheet",
+            "description": "A planar panel entity created from the shadow profile of the selected beam, with thickness matching the beam's dimension. It inherits the beam's label, name, and tooling (cuts/drills).",
+            "appliedTo": "Selected Beams or all Beams within selected Elements."
+          }
+        ]
+      },
+      "tokens_used": 7797,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script starts; initializes properties (assignSheetToZone, colorOfSheet, materialOfSheet).",
+          "If '_bOnInsert' (script execution initiation):",
+          "  Check 'insertCycleCount'. If > 1, erase instance and exit (prevents duplicate runs).",
+          "  Prompt user: 'Select one or more elements |<Right click to select beams>|'.",
+          "  [Branch] User selects Elements:",
+          "    Loop through selected Elements.",
+          "    Remove any existing instances of 'HSB_E-BeamToSheet' from those Elements.",
+          "    Collect OPM Property values into a Catalog named 'MasterToSatellite'.",
+          "    Create a new instance of the script on each Element in 'Satellite' mode (linked to Element).",
+          "    Erase the master 'insertion' instance and report count.",
+          "  [Branch] User Right-Clicks (selects nothing):",
+          "    If no Execute Key is active, show OPM Property Dialog (showDialog).",
+          "    Prompt user: 'Select beams'.",
+          "    Attach script instance to selected Beams.",
+          "  Return.",
+          "If '_bOnDbCreated' (Satellite instance or manual insert):",
+          "  Check for 'MasterToSatellite' flag. If true, load properties from the map sent by the master.",
+          "  Validate selection: If no Element and no Beam selected, report 'Invalid selection', erase instance, and exit.",
+          "  [Condition] If Element exists (Satellite/Element Mode):",
+          "    Load Beam Codes mapping from 'HSB-BeamToSheetCatalogue.xml'.",
+          "    If Catalog missing, report Notice, erase instance, and exit.",
+          "    Parse Catalog arrays (BeamCode, Zone, Color, Material).",
+          "    Get all Beams belonging to the Element.",
+          "  [Condition] If Beam exists (Manual/Beam Mode):",
+          "    Use selected Beams directly.",
+          "  Loop through each Beam found:",
+          "    [Branch] Element Mode:",
+          "      Find Beam Code in Catalog.",
+          "      If Code not found, skip this beam.",
+          "      Set Zone, Color, and Material from Catalog.",
+          "    [Branch] Beam Mode:",
+          "      Set Zone, Color, and Material from OPM Properties.",
+          "    Calculate Sheet Thickness and Geometry (ShadowProfile).",
+          "    Create initial Sheet entity.",
+          "    Inherit attributes (Name, Label, Information, Grade) from Source Beam.",
+          "    Apply Material (if blank in Beam Mode, inherit from Beam).",
+          "    [Special Logic] If Element is Roof AND Zone is 4 or 5 AND Material string is empty:",
+          "      Force Material to 'TENGEL' (Zone 4) or 'PANLAT' (Zone 5).",
+          "    Perform Coordinate System optimization (Align Sheet axes to longest edge/ortho).",
+          "    Recreate Sheet 'shNew' with corrected orientation.",
+          "    Transfer all attributes to 'shNew'.",
+          "    [Tooling Transfer] Analyze Tools on original Beam:",
+          "      For Cuts: Check validity. Reject cuts coincident with outline (StretchCuts).",
+          "      For BeamCuts: Check volumetric intersection with new Sheet.",
+          "      Apply valid tools to 'shNew'.",
+          "    Erase original Beam and temporary Sheet 'sh'.",
+          "  Erase script instance after processing all beams."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Input Selection Type at Insertion",
+            "path1": {
+              "name": "Element Selection (Satellite Mode)",
+              "steps": [
+                "User selects Element(s).",
+                "Script creates child instances on Element.",
+                "Settings (Zone/Mat/Color) read from HSB-BeamToSheetCatalogue.xml based on Beam Code.",
+                "All beams in Element are converted."
+              ]
+            },
+            "path2": {
+              "name": "Beam Selection (Manual Mode)",
+              "steps": [
+                "User Right-Clicks at first prompt.",
+                "OPM Dialog appears (unless Execute Key used).",
+                "User selects specific Beam(s).",
+                "Settings (Zone/Mat/Color) read from OPM Properties.",
+                "Only selected beams are converted."
+              ]
+            }
+          },
+          {
+            "condition": "Target Element Type and Zone (Element Mode)",
+            "path1": {
+              "name": "Roof Element + Zone 4 or 5",
+              "steps": [
+                "Element Type detected as Roof.",
+                "Zone index is 4 or 5.",
+                "Catalog Material is ignored (or OPM Material is empty).",
+                "Sheet Material forced to 'TENGEL' (Zone 4) or 'PANLAT' (Zone 5)."
+              ]
+            },
+            "path2": {
+              "name": "Other Element / Zones",
+              "steps": [
+                "Standard Material logic applies (Catalog or OPM or Beam Inheritance)."
+              ]
+            }
+          },
+          {
+            "condition": "Tooling Validation (Cuts)",
+            "path1": {
+              "name": "Valid Cut",
+              "steps": [
+                "Cut plane is not coincident with sheet outline normal.",
+                "Cut is applied to new Sheet."
+              ]
+            },
+            "path2": {
+              "name": "Invalid Cut (Stretch Cut)",
+              "steps": [
+                "Cut normal aligns with sheet outline (within tolerance).",
+                "Cut is ignored/skipped."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Catalog File Existence",
+            "errorMessage": "No catalog found! Please make sure the hsbCompany is set. NOTE: The catalogue can be created, edited and visualized with the tsl HSB_G-BeamToSheetCatalogue",
+            "recovery": "Ensure HSB-BeamToSheetCatalogue.xml exists in _kPathHsbCompany\\Abbund folder or use Beam selection mode (Manual)."
+          },
+          {
+            "check": "Beam Code Existence in Catalog",
+            "errorMessage": "None (Silent skip)",
+            "recovery": "Beams with codes not listed in the XML are skipped without conversion. Add code to XML or use Beam selection mode."
+          },
+          {
+            "check": "Input Entity Selection",
+            "errorMessage": "Invalid selection!",
+            "recovery": "User must select at least one Element or Beam."
+          },
+          {
+            "check": "Cut Volumetric Intersection",
+            "errorMessage": "None (Internal Logic)",
+            "recovery": "BeamCuts are only applied if the cutting body physically intersects the new Sheet geometry."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Zone/Color/Material (Beam Mode Only)",
+            "how": "OPM Properties Palette",
+            "effect": "Updating OPM values does not automatically update existing sheets because the instance erases itself after running. However, if re-run on new beams, these values apply."
+          },
+          {
+            "action": "Update Catalog (Element Mode)",
+            "how": "Edit HSB-BeamToSheetCatalogue.xml",
+            "effect": "Re-running the script on elements will pick up new Zone/Color/Material mappings for specific beam codes."
+          },
+          {
+            "action": "Modify Generated Sheet",
+            "how": "Direct CAD Edit / Grips",
+            "effect": "The resulting Sheet entities are standard hsbCAD Sheets. They can be modified, joints added, or dimensions changed manually after the script finishes."
+          }
+        ]
+      },
+      "tokens_used": 9441,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-BeamToSheet\n\n## Overview\nConverts structural timber Beams into Sheet entities (panels), preserving geometry and tooling while updating material and zone properties. It is typically used to generate sheeting layers or CLT panels from structural frame designs.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Primary environment for generating 3D sheet entities. |\n| Paper Space | No | Not applicable for this script. |\n| Shop Drawing | No | This script operates on model entities, not drawing views. |\n\n## Prerequisites\n- **Required Entities**: At least one Element or Beam must exist in the model.\n- **Minimum Beams**: 1.\n- **Required Settings**: `HSB-BeamToSheetCatalogue.xml` (located in the `hsbCompany\\Abbund` folder) is required when selecting Elements to map Beam Codes to properties.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_E-BeamToSheet.mcr`\n\n### Step 2: Selection Method\n```\nCommand Line: Select one or more elements |<Right click to select beams>|\nAction: \n- Click on an Element (Wall/Roof) to process all beams inside it based on the Catalog.\n- OR Right-click to switch to manual beam selection mode.\n```\n\n### Step 3: Configure (Optional - Manual Mode)\n```\nCommand Line: Select beams\nAction: Select the specific beams you wish to convert.\nNote: If properties (Zone/Color/Material) need to be set manually, ensure they are configured in the Properties Palette before selection or via the dialog if prompted.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Assign to zone | Number | 1 | Assigns the generated sheet to a specific construction layer (Zone) for reporting and layer management. Range: 0-10. |\n| Color | Number | -1 | Sets the display color of the sheet (AutoCAD Color Index). Use -1 to inherit the color from the original beam. |\n| Material | Text | (Empty) | Specifies the stock material name (e.g., 'OSB', 'PLYWOOD'). If left blank, it inherits the beam's material. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No specific custom context menu options are defined for this script. |\n\n## Settings Files\n- **Filename**: `HSB-BeamToSheetCatalogue.xml`\n- **Location**: `_kPathHsbCompany\\Abbund`\n- **Purpose**: Maps Beam Codes to specific Zone, Color, and Material settings when using Element selection mode. This allows for batch processing of structural elements with predefined sheeting standards.\n\n## Tips\n- **Batch Processing**: Use the Element selection method (Step 2) to convert entire walls or roofs at once using the XML catalog settings.\n- **Custom Selection**: Use the Right-click method (Step 2) to convert only specific beams. In this mode, use the Properties Palette to define the Zone, Color, and Material before running the script.\n- **Roof Logic**: When processing Roof elements in Zone 4 or 5, the script automatically overrides the material to 'TENGEL' (Zone 4) or 'PANLAT' (Zone 5) if no specific material is provided.\n- **Tooling Transfer**: The script automatically transfers valid cuts and drill holes from the original beam to the new sheet.\n\n## FAQ\n- **Q: I selected an Element, but no sheets were created.**\n  A: Check the Beam Codes of the beams within that Element. If the codes are not found in the `HSB-BeamToSheetCatalogue.xml` file, those beams will be skipped.\n- **Q: How do I change the material for specific beams?**\n  A: Use the manual beam selection mode (Right-click at the first prompt) and set the 'Material' property in the Properties Palette before confirming the selection.\n- **Q: The script reports \"No catalog found!\". What do I do?**\n  A: Ensure that your `hsbCompany` path variable is configured correctly and the `HSB-BeamToSheetCatalogue.xml` file exists in the `Abbund` subfolder. Alternatively, use manual beam selection mode which does not require the catalog."
+      },
+      "tokens_used": 6192,
+      "error": null
+    }
+  }
+}

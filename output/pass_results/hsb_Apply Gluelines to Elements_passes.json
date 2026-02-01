@@ -1,0 +1,330 @@
+{
+  "filename": "hsb_Apply Gluelines to Elements.mcr",
+  "status": "completed",
+  "total_tokens": 52688,
+  "processing_time": 244.32383823394775,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.5",
+            "date": "18.07.2025",
+            "author": "Marsel Nakuci",
+            "changes": "HSB-23589: Add support for trusses"
+          },
+          {
+            "version": "1.8",
+            "date": "",
+            "author": "",
+            "changes": "Release Version for UK Content"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 9173,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses getGenBeam() and Entity el() for 3D model manipulation. It contains no sd_* or Multipage* prefixes, does not reference _Viewport or ShopDrawing entities (#Type E), and interacts directly with geometry (GenBeam, Element, PLine) in the model context. The display logic at the end (Display dspl) draws PLines based on insertion coordinates typical of model-space scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element",
+            "Sheet"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (The script calculates interference between Beams and Sheets in 3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6073,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10412,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Calculates and generates gluing instructions (glue lines) on timber elements based on their interference with sheeting materials, organized into definable zones for manufacturing.",
+          "category": "Production / Manufacturing",
+          "typicalUseCase": "Used in wall or floor panel design to define where and how structural sheathing (like OSB or Plywood) is glued to the timber frame, providing data for CNC machines or shop drawings."
+        },
+        "parameters": [
+          {
+            "name": "sJoinSheet",
+            "technicalDefault": "No",
+            "businessMeaning": "Determines if adjacent sheets should be treated as a single continuous geometric shape for glue calculation.",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "If 'Yes', glue lines may cross sheet joints continuously. If 'No', glue lines are calculated per individual sheet, potentially stopping at sheet edges."
+          },
+          {
+            "name": "dMinimumGlueLineLength",
+            "technicalDefault": "0",
+            "businessMeaning": "Filters out glue lines shorter than this length to avoid manufacturing noise or unnecessary machine movements.",
+            "validRange": "0 - 200 mm",
+            "unit": "mm",
+            "affectsOutput": "Shorter glue lines are removed from the model and output data."
+          },
+          {
+            "name": "nNailYN[1-10]",
+            "technicalDefault": "No",
+            "businessMeaning": "Master switch to enable or disable gluing for a specific logical zone (1 through 10).",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "If 'No', no glue lines are generated for that specific zone."
+          },
+          {
+            "name": "nRefZ[1-10]",
+            "technicalDefault": "Various (e.g., {0}, {0,1})",
+            "businessMeaning": "Maps the logical gluing zone (1-10) to specific geometric zones defined in the parent element or wall script.",
+            "validRange": "Integer indices",
+            "unit": "Index",
+            "affectsOutput": "Determines which physical faces or areas of the element receive the glue lines defined in this zone block."
+          },
+          {
+            "name": "nToolingIndex[1-10]",
+            "technicalDefault": "1",
+            "businessMeaning": "Assigns a specific manufacturing process or glue gun ID to the lines in this zone.",
+            "validRange": "1 - 20 (depending on machine setup)",
+            "unit": "Integer ID",
+            "affectsOutput": "Sets the attribute/machine code for the glue line, determining which glue gun or adhesive type is used in production."
+          },
+          {
+            "name": "dDistEdge[1-10]",
+            "technicalDefault": "20",
+            "businessMeaning": "The offset distance from the end of the beam or sheet edge to the start/end of the glue line.",
+            "validRange": "0 - 100 mm",
+            "unit": "mm",
+            "affectsOutput": "Shortens the glue line at its ends to prevent over-spray or ensure clean edges."
+          },
+          {
+            "name": "strMaterialZone[1-10]",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Filters the gluing calculation to only apply to sheets with a specific material name (e.g., 'OSB').",
+            "validRange": "Any valid Material Name string",
+            "unit": "String",
+            "affectsOutput": "If set, glue lines are only generated where the element intersects with sheets of this specific material. If empty, all sheets are considered."
+          },
+          {
+            "name": "sDimLayout",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Specifies the dimension style to use for any annotations or visual representations (if applicable).",
+            "validRange": "Valid DimStyle name",
+            "unit": "String",
+            "affectsOutput": "Visual appearance of dimensions associated with the script."
+          },
+          {
+            "name": "sDispRep",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Filters the visibility of the generated glue lines to specific display representations (e.g., 'Plan', 'Elevation', 'CAM').",
+            "validRange": "Valid Display Representation name",
+            "unit": "String",
+            "affectsOutput": "Controls in which drawing views or modes the glue lines are visible."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "nNailYN[Zone] is set to 'No'",
+            "effect": "All other parameters for that specific zone (RefZ, ToolingIndex, DistEdge, Material) are ignored during calculation.",
+            "cascade": [
+              "nRefZ[Zone]",
+              "nToolingIndex[Zone]",
+              "dDistEdge[Zone]",
+              "strMaterialZone[Zone]"
+            ]
+          },
+          {
+            "trigger": "strMaterialZone[Zone] is not empty",
+            "effect": "The calculation filters sheets by material before intersecting with the element.",
+            "cascade": [
+              "Glue Line Geometry Generation"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "LineSeg (via tsl.dbCreate)",
+            "description": "Visual representation lines and CAM data paths indicating where glue is applied.",
+            "appliedTo": "The selected Element (Wall/Floor) based on interference with Sheet entities."
+          },
+          {
+            "type": "Element Map / Attributes",
+            "description": "Metadata embedded in the element for reporting or export (e.g., Zone info, Quantity).",
+            "appliedTo": "The selected Element."
+          }
+        ]
+      },
+      "tokens_used": 9461,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Launch: User executes the script from the hsbCAD menu.",
+          "2. Element Selection: User selects a parent Element (Wall, Floor, Roof, or generic Element) in the model.",
+          "3. Type Validation: Script checks if the selected entity is a valid construction element (Wall/Floor/Roof/Element). If invalid, execution stops.",
+          "4. Parameter Initialization: Script reads properties from the Object Properties Palette (OPM), including global settings (min length, sheet joining) and Zone 1-10 configurations.",
+          "5. Geometry Extraction: Script collects all Sheet entities and GenBeam entities contained within the selected Element.",
+          "6. [Conditional] Truss Integration: If the Element is linked to Trusses (Version 1.5+), script extracts internal beams from Trusses to include them in the gluing calculation.",
+          "7. [Conditional] Sheet Joining: If 'Merge sheeting to glue?' is 'Yes', script geometrically merges all sheet outlines into a single boundary shape. If 'No', sheets are treated individually.",
+          "8. Zone Processing Loop (1-10): For each logical zone:",
+          "9.   8a. Zone Active Check: Script verifies if the specific Zone is enabled ('Yes'). If 'No', skips to next zone.",
+          "10.  8b. Material Filtering: If a 'Zone Material' is specified, script filters the list of sheets to only include those matching the material name.",
+          "11.  8c. Reference Mapping: Script identifies which physical beams belong to the 'Gluing Reference Zone' index assigned to this logical zone.",
+          "12.  8d. Interference Calculation: Script calculates the 3D interference volume between the filtered Sheets and the mapped Beams.",
+          "13.  8e. Geometry Generation: Script calculates the centerline of the interference to define the glue path.",
+          "14.  8f. Edge Offset: Script shortens the glue line start and end points by the specified 'Edge Offset' distance.",
+          "15.  8g. Length Validation: Script checks if the resulting glue line length meets the 'Minimum glue line length' requirement.",
+          "16.  8h. Entity Creation: If valid, script creates a Glue Line entity (via tsl.dbCreate) with attributes for Tooling Index and Zone number.",
+          "17. Cleanup: If Truss beams were temporarily added, they are erased from the database.",
+          "18. Visualization: Script draws a local coordinate crosshair at the element origin to indicate script anchor point.",
+          "19. Finalization: Script anchors itself to the Element group to ensure updates on model changes."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "sJoinSheet Property Value",
+            "path1": {
+              "name": "Merge Sheets",
+              "steps": [
+                "Sheet outlines are combined into a single large PLine.",
+                "Interference is calculated against this merged shape.",
+                "Glue lines may continue across adjacent sheet boundaries."
+              ]
+            },
+            "path2": {
+              "name": "Individual Sheets",
+              "steps": [
+                "Each sheet is processed independently.",
+                "Interference is calculated per sheet entity.",
+                "Glue lines stop at sheet edges."
+              ]
+            }
+          },
+          {
+            "condition": "Trusses Linked to Element",
+            "path1": {
+              "name": "Include Trusses",
+              "steps": [
+                "Script identifies linked Truss elements.",
+                "Extracts internal beams from Trusses.",
+                "Adds these beams to the calculation list for gluing."
+              ]
+            },
+            "path2": {
+              "name": "Standard Beams Only",
+              "steps": [
+                "Script uses only GenBeams directly belonging to the Element.",
+                "Trusses are ignored for gluing purposes."
+              ]
+            }
+          },
+          {
+            "condition": "strMaterialZone Property Content",
+            "path1": {
+              "name": "Material Filter Active",
+              "steps": [
+                "Script compares Sheet material names to the property string.",
+                "Sheets with non-matching materials are ignored for this zone."
+              ]
+            },
+            "path2": {
+              "name": "No Material Filter",
+              "steps": [
+                "Script accepts all sheet materials for interference calculation."
+              ]
+            }
+          },
+          {
+            "condition": "Calculated Glue Line Length vs dMinimumGlueLineLength",
+            "path1": {
+              "name": "Valid Length",
+              "steps": [
+                "Glue line entity is created.",
+                "Attributes (Tooling, Zone) are applied."
+              ]
+            },
+            "path2": {
+              "name": "Too Short",
+              "steps": [
+                "Calculation loop continues to next segment.",
+                "No entity is created."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Type",
+            "errorMessage": "Implicit (Script exits silently or fails to anchor)",
+            "recovery": "User must select a valid Wall, Floor, Roof, or generic Element entity."
+          },
+          {
+            "check": "Minimum Glue Line Length",
+            "errorMessage": "None (Visual feedback)",
+            "recovery": "If lines are missing, user should lower the 'Minimum length of glue line' property or check geometry overlap."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Gluing Zones",
+            "how": "Object Properties Palette (OPM)",
+            "effect": "Disabling a zone (Yes->No) removes all glue lines for that zone. Changing Reference Zones or Tooling updates existing lines immediately upon recalculation."
+          },
+          {
+            "action": "Adjust Dimensions",
+            "how": "Object Properties Palette (OPM) - Edge Offset",
+            "effect": "Glue lines shorten or lengthen relative to beam ends."
+          },
+          {
+            "action": "Filter Material",
+            "how": "Object Properties Palette (OPM) - Zone Material",
+            "effect": "Glue lines appear/disappear based on whether the sheeting material matches the new string."
+          },
+          {
+            "action": "Model Geometry Updates",
+            "how": "Grip editing the Element or moving Sheets/Beams",
+            "effect": "The script detects geometry changes and recalculates glue lines to match the new interference paths."
+          }
+        ]
+      },
+      "tokens_used": 11179,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_Apply Gluelines to Elements\n\n## Overview\nThis script automatically calculates and generates glue lines on timber construction elements (such as walls or floors) based on the interference between structural beams and sheeting materials. It allows for complex zoning and tooling assignments to facilitate CNC manufacturing and shop drawings.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be used in the 3D model to calculate geometric interference between beams and sheets. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | Calculates 3D model data only. |\n\n## Prerequisites\n- **Required Entities**: A parent Element (Wall, Floor, Roof, or generic Element) containing both GenBeams (studs/joists) and Sheets (sheathing).\n- **Minimum Beam Count**: 1 (The parent element must contain structural members).\n- **Required Settings**: None specific (uses standard hsbCAD entities).\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the AutoCAD command line.\n2.  Browse and select `hsb_Apply Gluelines to Elements.mcr`.\n\n### Step 2: Select Element\n```\nCommand Line: Select Element:\nAction: Click on the Wall, Floor, Roof, or Element group in the model you wish to process.\n```\n\n### Step 3: Configuration and Calculation\n1.  Once selected, the script anchors to the element and calculates the interference.\n2.  Use the **Properties Palette** (Ctrl+1) to adjust settings if the initial result needs refinement (e.g., changing minimum line length or adjusting zones).\n3.  The script updates automatically when properties are changed or the model geometry is modified.\n\n## Properties Panel Parameters\n\n### Global Settings\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Merge sheeting to glue? (sJoinSheet) | Yes/No | No | If 'Yes', treats adjacent sheets as one continuous shape, allowing glue lines to cross sheet joints. |\n| Minimum length of glue line (dMinimumGlueLineLength) | Number | 0 | Filters out glue lines shorter than this value (in mm) to reduce manufacturing noise. |\n| Dim Layout (sDimLayout) | String | (Empty) | Specifies the dimension style for annotations (if used). |\n| Display Representation (sDispRep) | String | (Empty) | Filters visibility of glue lines to specific display representations (e.g., Plan, Model). |\n\n### Zone Settings (Repeated for Zones 1 through 10)\nThe script uses 10 independent logical zones to define different gluing areas or machine instructions.\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Nail Y/N (nNailYN) | Yes/No | No | Master switch for the zone. Set to 'Yes' to enable glue line calculation for this zone. |\n| RefZ (nRefZ) | Index | 0 | Maps this logical zone to a specific geometric zone defined in the parent element (e.g., Zone 0 = Main Area, Zone 1 = Left Gable). |\n| Tooling Index (nToolingIndex) | Integer | 1 | Assigns a specific manufacturing ID or Glue Gun number to the lines in this zone. |\n| DistEdge (dDistEdge) | Number | 20 | The offset distance (in mm) from the beam or sheet edge where the glue line starts and ends. |\n| Material Zone (strMaterialZone) | String | (Empty) | Filters glue generation to only occur on sheets matching this material name (e.g., \"OSB\"). Leave empty to use all sheets. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Forces the script to re-run the interference calculation based on current geometry and properties. |\n| Delete | Removes the script and all generated glue lines from the element. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script relies entirely on the geometry of the selected Element and the properties set in the palette. No external XML or INI files are required.\n\n## Tips\n- **Truss Support**: If your element contains Trusses (Version 1.5+), the script will automatically include the internal beams of the truss in the gluing calculation.\n- **Continuous Lines**: If you want glue lines to run seamlessly across multiple sheets (e.g., for a long wall), set `Merge sheeting to glue?` to **Yes**.\n- **Material Specificity**: To glue only specific layers (e.g., glue the OSB but not the Plywood), enter \"OSB\" in the `Material Zone` parameter for the desired zone number.\n- **Troubleshooting Missing Lines**: If you expect glue lines but don't see them, check the `Minimum length of glue line` setting. Small overlaps might be filtered out if this value is too high.\n\n## FAQ\n- **Q: Why are glue lines not appearing on my gable ends?**\n  A: Check the `RefZ` setting for your active zones. The script only applies glue to beams that belong to the geometric zone index specified in `RefZ`. Ensure your parent element has zones defined at the gables and that your script zone matches that index.\n- **Q: Can I assign different glue guns to different parts of the wall?**\n  A: Yes. Use Zone 1 for the main wall with `Tooling Index` 1, and enable Zone 2 for a specific area (like a gable) with `Tooling Index` 2, ensuring the `RefZ` for Zone 2 points to the gable geometry zone.\n- **Q: Does this work with curved walls?**\n  A: The script calculates interference based on geometry. As long as the sheets and beams overlap correctly in 3D space, the glue lines will be generated."
+      },
+      "tokens_used": 6390,
+      "error": null
+    }
+  }
+}

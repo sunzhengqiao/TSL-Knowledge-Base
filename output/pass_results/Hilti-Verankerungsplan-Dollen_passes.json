@@ -1,0 +1,272 @@
+{
+  "filename": "Hilti-Verankerungsplan-Dollen.mcr",
+  "status": "completed",
+  "total_tokens": 48289,
+  "processing_time": 295.717246055603,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9642,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script collects entities using Group().collectEntities(..., _kModelSpace) and inserts instances using dbCreate(..., _kModelSpace). It does not use 'sd_' prefixes, '#Type E' declarations, or Viewports typical of Paper Space/Shop Drawing environments."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "TslInst (Hilti-Verankerung)",
+            "TslInst (hsbCLT-Hilti)",
+            "Group (Floor structure)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing a Floor group structure and the specified anchor/connect TSL instances.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7374,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "Insertion (_bOnInsert)",
+            "title": null,
+            "dataSource": "Internal properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sFloor",
+            "type": "PropString",
+            "displayName": "Floor name",
+            "defaultValue": "|_Default|",
+            "inputType": "dropdown",
+            "options": [
+              "Dynamically populated list of floor names found in ModelSpace containing Hilti-Verankerung or hsbCLT-Hilti instances",
+              "Possible combination: EG_GARAGE"
+            ],
+            "category": "General",
+            "description": "Defines the floor group"
+          },
+          {
+            "index": 1,
+            "variable": "nNrConnectors",
+            "type": "PropInt",
+            "displayName": "Nr Connectors",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": "General",
+            "description": "Defines/shows the Nr. of Connectors",
+            "readOnly": true
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "Create Dwg File",
+            "handler": "../Create Dwg File",
+            "action": "Exports the anchor plan geometry (circles and polylines) to a DWG file in the current drawing folder, applying a scale transformation.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 7048,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Aggregates and visualizes Hilti anchor and CLT connection points for a specific floor, creating a visual plan and exporting a scaled DWG manufacturing layout.",
+          "category": "Planning/Export",
+          "typicalUseCase": "Generating a 2D layout or production file (DWG) showing the precise positions of wall hold-downs and shear anchors for a specific floor level to be used on site or for CNC preparation."
+        },
+        "parameters": [
+          {
+            "name": "sFloor",
+            "technicalDefault": "|_Default|",
+            "businessMeaning": "Selects the specific building level (floor) to generate the plan for. The script filters all 'Hilti-Verankerung' or 'hsbCLT-Hilti' instances in the model to find those belonging to this specific group name.",
+            "validRange": "List of existing floor group names found in the ModelSpace (e.g., 'EG', 'OG1', 'GARAGE', or combined 'EG_GARAGE')",
+            "unit": "Text (Group Name)",
+            "affectsOutput": "Filters which anchor instances are included in the visualization and the DWG export. It also determines the folder structure and filename prefix for the exported file."
+          },
+          {
+            "name": "nNrConnectors",
+            "technicalDefault": "0",
+            "businessMeaning": "Displays the total count of valid anchors found on the selected floor. This serves as a quantity take-off for logistics or material ordering.",
+            "validRange": "0 to N (Integer)",
+            "unit": "Count",
+            "affectsOutput": "Does not change geometry. It is a calculated read-only value that updates when the floor selection changes or anchors are added/removed in the model."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection change in 'sFloor'",
+            "effect": "The script re-scans the model to find instances associated with the new floor name.",
+            "cascade": [
+              "nNrConnectors",
+              "Visual Geometry (Crosses/Polylines)",
+              "Export Filename"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "PLine / Construction Geometry",
+            "description": "Draws visual representations (crosses) of anchor positions and wall outlines in the CAD model to verify layout.",
+            "appliedTo": "ModelSpace (Group: 'DXF Dollen')"
+          },
+          {
+            "type": "DWG File",
+            "description": "Exports a separate DWG file containing circles (representing drilling points/anchors) and polylines (wall outlines), scaled to 1:1000 (factor 0.001) for manufacturing or layout use.",
+            "appliedTo": "File System (Project Folder)"
+          }
+        ]
+      },
+      "tokens_used": 8796,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initialization: Collect all 'Hilti-Verankerung' and 'hsbCLT-Hilti' instances from ModelSpace.",
+          "2. Parse Group hierarchy to extract available floor names (e.g., EG, OG1).",
+          "3. Detect if Project is 'Baufritz' to adjust logic for EG/Garage combinations and export formatting.",
+          "4. User inserts script: Dialog displays list of available floors.",
+          "5. User selects a floor and confirms insertion.",
+          "6. Script Instance Created: Erases temporary launcher script and places persistent instance.",
+          "7. Instance Recalculation: Parses selected floor name (handles combined names like 'EG_GARAGE').",
+          "8. Group Resolution: Locates the actual Group entity corresponding to the selected floor name.",
+          "9. Validation: Checks if resolved group is valid.",
+          "10. Subgroup Creation: Creates/Ensures 'DXF Dollen' subgroup exists within the floor group.",
+          "11. Entity Collection: Filters entities within the floor group for relevant TSLs and Polylines.",
+          "12. Visualization: Draws Crosses (PLine) at anchor locations projected to the insertion plane.",
+          "13. Coloring: Applies Reference Color if anchor Z > 0, otherwise standard Color.",
+          "14. Property Update: Sets 'Nr Connectors' property to the total count of found anchors.",
+          "15. (Optional) User triggers 'Create Dwg File' from context menu.",
+          "16. Export Process: Creates temporary Block, transforms geometry to scale 1:1000, and writes DWG file to project path.",
+          "17. Cleanup: Erases temporary entities and resets transformation."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Project Special configuration (Standard vs Baufritz)",
+            "path1": {
+              "name": "Standard Workflow",
+              "steps": [
+                "Detects 'EG' and 'GARAGE' strictly.",
+                "Combines floors if both exist.",
+                "Filename format: '<Folder>_<Floor>-Verankerungsplan_<Count> Stück.dwg'",
+                "Standard export geometry."
+              ]
+            },
+            "path2": {
+              "name": "Baufritz Workflow",
+              "steps": [
+                "Detects 'EG' or strings ending in 'EG' (e.g., '01EG').",
+                "Detects 'GARAGE' or strings ending in 'GARAGE'.",
+                "Filename format: '<Folder>_<Floor>-Verankerungsplan_<MainCount>+<SpecialCount> Stück.dwg'",
+                "Adds extra inner circle for 'HCWL+K' version anchors."
+              ]
+            }
+          },
+          {
+            "condition": "Anchor Script Type",
+            "path1": {
+              "name": "Hilti-Verankerung",
+              "steps": [
+                "Collected directly.",
+                "Export: Draws single circle based on propDouble(0) radius."
+              ]
+            },
+            "path2": {
+              "name": "hsbCLT-Hilti",
+              "steps": [
+                "Validated via 'checkHiltiClt' (single panel, vecUp aligned to World Z).",
+                "If valid: Export: Draws circles for each point in 'ptsDis' map array with fixed radius U(42).",
+                "If invalid: Skipped silently."
+              ]
+            }
+          },
+          {
+            "condition": "Group Resolution Result",
+            "path1": {
+              "name": "Valid Group Found",
+              "steps": [
+                "Proceeds to entity collection.",
+                "Sets 'DXF Dollen' subgroup parent."
+              ]
+            },
+            "path2": {
+              "name": "Invalid Group",
+              "steps": [
+                "Reports error: 'definierte Gruppe ungültig. Tool will be deleted.'",
+                "Script returns without drawing (instance remains but inactive)."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Floor Group Existence",
+            "errorMessage": "definierte Gruppe ungültig. Tool will be deleted.",
+            "recovery": "Ensure the selected floor name corresponds to an existing Group in the ModelSpace structure."
+          },
+          {
+            "check": "hsbCLT-Hilti Orientation",
+            "errorMessage": "(Silent failure)",
+            "recovery": "Ensure hsbCLT-Hilti instances are inserted on a single panel and oriented upwards (aligned with Z-axis) to be included in the plan."
+          },
+          {
+            "check": "Insertion Cycle",
+            "errorMessage": "(Internal Erase)",
+            "recovery": "None. Script automatically erases itself if insertion cycle count > 1 to prevent duplicates."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Floor",
+            "how": "Properties Palette (OPM) -> 'Floor name' dropdown",
+            "effect": "Script recalculates. Finds new floor group, updates visual geometry and 'Nr Connectors' count."
+          },
+          {
+            "action": "Export Manufacturing File",
+            "how": "Right-click Context Menu -> 'Create Dwg File'",
+            "effect": "Generates a scaled DWG file in the current project folder containing circles (anchors) and polylines (walls). Filename includes floor name and quantity."
+          }
+        ]
+      },
+      "tokens_used": 10200,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Hilti-Verankerungsplan-Dollen\n\n## Overview\nThis script aggregates all Hilti anchors and CLT connections for a specific floor, visualizes their positions in the model, and exports a scaled DWG file for manufacturing or site layout planning.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script collects entities and creates geometry within the active Model Space structure. |\n| Paper Space | No | This script does not generate viewports or 2D shop drawings. |\n| Shop Drawing | No | This is a planning and export tool, not a detailing script. |\n\n## Prerequisites\n- **Required Entities:** A grouped floor structure in ModelSpace containing TSL instances of `Hilti-Verankerung` or `hsbCLT-Hilti`.\n- **Minimum Beams:** 0\n- **Required Settings:** None. The script automatically detects available floor names from the model structure.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command:** `TSLINSERT` (or insert via hsbCAD Ribbon)\n**Action:** Browse and select `Hilti-Verankerungsplan-Dollen.mcr`.\n\n### Step 2: Select Floor\n**Dialog:** A dynamic list appears showing all available floor names found in the current model (e.g., EG, OG1, GARAGE).\n**Action:** Select the desired floor level from the dropdown list and click **OK**.\n\n### Step 3: Visualization\n**Action:** The script instance is created in the drawing. It will automatically draw visual markers (crosses/polylines) representing the anchor positions within a subgroup named `DXF Dollen` under the selected floor group.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Floor name | Dropdown | `|_Default|` | Selects the building level to generate the plan for. Changing this updates the visualization and the export data. |\n| Nr Connectors | Number (Read-Only) | 0 | Displays the total count of anchors found on the selected floor. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Create Dwg File | Exports the anchor plan geometry to a separate DWG file in the current project folder. The geometry is scaled to 1:1000 for manufacturing purposes. |\n\n## Settings Files\n- **Filename:** None required.\n- **Location:** N/A\n- **Purpose:** N/A\n\n## Tips\n- **Dynamic Updates:** If you modify your model (add/remove anchors), select the script instance and change the \"Floor name\" property to trigger a recalculation and update the count.\n- **Export Location:** The exported DWG file is saved directly in the folder of your current project drawing.\n- **Group Structure:** Ensure your model is properly grouped by floor. The script relies on finding entities inside specific Group entities to function correctly.\n- **hsbCLT-Hilti Orientation:** For `hsbCLT-Hilti` connectors to be included, they must be inserted on a single panel and oriented vertically (aligned with the World Z-axis).\n\n## FAQ\n- **Q: Why is the \"Nr Connectors\" count 0?**\n  A: Ensure you have selected the correct floor name in the properties palette that matches the group name containing your anchors. Also, check that your `hsbCLT-Hilti` instances are oriented vertically.\n- **Q: Where does the exported DWG file go?**\n  A: It is saved in the same directory as the current CAD drawing file you are working in.\n- **Q: What does the export file contain?**\n  A: It contains circles (representing drilling points/anchors) and polylines (wall outlines) scaled to 0.001 (1:1000).\n- **Q: Can I use this for Paper Space layouts?**\n  A: No, this script works entirely in Model Space to generate data and export files. It does not create 2D views in layouts."
+      },
+      "tokens_used": 5229,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,382 @@
+{
+  "filename": "GE_PLOT_CUT_LIST.mcr",
+  "status": "completed",
+  "total_tokens": 55164,
+  "processing_time": 1123.329463005066,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7685,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Usage of 'dpLTR' (Paper Space drawing object) to draw text labels. Usage of variable 'ms2ps' to transform line segments (ls.transformBy(ms2ps)) implies conversion from Model Space to Paper Space coordinates. The script accesses 'el' context (Element), suggesting it details a specific element within a viewport."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element (Wall/Panel)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Paper Space (Layout) with an active Viewport",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 8592,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10630,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates a formatted cut list (timber take-off) table in Paper Space and places part labels on the elevation view of a selected wall or panel.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Creating a production drawing that lists every timber piece in a wall (Studs, Plates, Headers) with dimensions and quantities, while labeling them on the 2D view for identification."
+        },
+        "parameters": [
+          {
+            "name": "strDimStyle",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The AutoCAD Dimension Style that governs the text appearance (font, height) for the table and labels if specific height overrides are not set.",
+            "validRange": "Any valid Dimension Style name in the drawing",
+            "unit": "String",
+            "affectsOutput": "Visual formatting of all text in the table and labels."
+          },
+          {
+            "name": "propHeader",
+            "technicalDefault": "\"Timber List\"",
+            "businessMeaning": "The title text displayed at the top of the cut list table.",
+            "validRange": "Any text string",
+            "unit": "String",
+            "affectsOutput": "The header row text content."
+          },
+          {
+            "name": "nColorIndex",
+            "technicalDefault": "7",
+            "businessMeaning": "The AutoCAD Color Index (ACI) used for the header text.",
+            "validRange": "0-256 (Standard ACI values, 7 is typically White/Black)",
+            "unit": "Index",
+            "affectsOutput": "Color of the header text."
+          },
+          {
+            "name": "dTH",
+            "technicalDefault": "0",
+            "businessMeaning": "The specific height for the text labels and table content. If set to 0, it uses the text height defined in 'strDimStyle'.",
+            "validRange": "1.5 mm to 10.0 mm (Paper Space height)",
+            "unit": "mm",
+            "affectsOutput": "Legibility and size of the list and label text."
+          },
+          {
+            "name": "intText",
+            "technicalDefault": "2",
+            "businessMeaning": "Controls the logic/algorithm for placing labels on the drawing to prevent overlap. Different values adjust the step size or search pattern for finding empty space.",
+            "validRange": "1, 2, 3, 4",
+            "unit": "Integer",
+            "affectsOutput": "Positioning of elevation labels relative to the timber parts."
+          },
+          {
+            "name": "strDirection",
+            "technicalDefault": "\"Horizontal\"",
+            "businessMeaning": "The orientation of the table layout.",
+            "validRange": "Horizontal, Vertical",
+            "unit": "String",
+            "affectsOutput": "Rotates the table 90 degrees if Vertical."
+          },
+          {
+            "name": "strJustify",
+            "technicalDefault": "\"Top\"",
+            "businessMeaning": "Vertical anchor point for the table relative to the insertion point.",
+            "validRange": "Top, Bottom",
+            "unit": "String",
+            "affectsOutput": "Determines if the table grows downwards or upwards from the clicked point."
+          },
+          {
+            "name": "strTranslateId",
+            "technicalDefault": "\"Yes\"",
+            "businessMeaning": "If 'Yes', converts internal hsbCAD entity codes (e.g., '114') into readable names (e.g., 'Stud') defined in the script.",
+            "validRange": "Yes, No",
+            "unit": "String",
+            "affectsOutput": "Content of the 'Timber Name' or 'Mark' column."
+          },
+          {
+            "name": "vtpIgnor",
+            "technicalDefault": "\"No\"",
+            "businessMeaning": "If 'Yes', excludes 'Very Top Plate' (VTP) entities from the cut list.",
+            "validRange": "Yes, No",
+            "unit": "String",
+            "affectsOutput": "Filters out top plates from the quantity report."
+          },
+          {
+            "name": "dmm",
+            "technicalDefault": "1",
+            "businessMeaning": "A multiplier applied to dimension output. Can be used to convert units (e.g., mm to m by setting 0.001).",
+            "validRange": "0.001 to 1000",
+            "unit": "Factor",
+            "affectsOutput": "Numerical values displayed in Width, Height, and Length columns."
+          },
+          {
+            "name": "d1 through d14",
+            "technicalDefault": "Varies (e.g., 203.2)",
+            "businessMeaning": "Defines the width of each specific column in the table (Timber Name, Size, Label, Qty, PosNum, W, H, L, Mat, Grade, Cuts/Bevels).",
+            "validRange": "10 mm to 300 mm",
+            "unit": "mm",
+            "affectsOutput": "Table formatting and column layout."
+          },
+          {
+            "name": "All, Stud, TP, BP, etc.",
+            "technicalDefault": "Various defaults",
+            "businessMeaning": "User-definable mappings for timber types. Allows the user to rename specific hsbID codes to match their company terminology (e.g., mapping ID '114' to 'Vert Stud' instead of 'Stud').",
+            "validRange": "Any text string",
+            "unit": "String",
+            "affectsOutput": "The text string displayed in the Timber Name column for specific parts."
+          },
+          {
+            "name": "nMaxRow",
+            "technicalDefault": "16",
+            "businessMeaning": "The maximum number of data rows drawn in a single table instance.",
+            "validRange": "1 to 100",
+            "unit": "Count",
+            "affectsOutput": "Height of the table; might truncate list if parts exceed this number."
+          },
+          {
+            "name": "stAddGradeToSize",
+            "technicalDefault": "\"Yes\"",
+            "businessMeaning": "If 'Yes', appends the material grade to the size description (e.g., '45x145 C24').",
+            "validRange": "Yes, No",
+            "unit": "String",
+            "affectsOutput": "Text content of the Size column."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dTH == 0",
+            "effect": "The script ignores the 'Letter size' property and attempts to use the Text Height defined in the selected 'strDimStyle'.",
+            "cascade": [
+              "dTH",
+              "strDimStyle"
+            ]
+          },
+          {
+            "trigger": "strTranslateId == \"No\"",
+            "effect": "The script outputs raw hsbIDs (numbers) instead of the readable names mapped in the properties (Stud, Plate, etc.).",
+            "cascade": [
+              "strTranslateId",
+              "All",
+              "Stud",
+              "BP",
+              "TP"
+            ]
+          },
+          {
+            "trigger": "strDirection == \"Vertical\"",
+            "effect": "The script swaps the X and Y axes vectors for the table, effectively rotating the layout 90 degrees.",
+            "cascade": [
+              "strDirection",
+              "vXTbl",
+              "vYTbl"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "PaperSpace Table",
+            "description": "A schedule of parts including Name, Dimensions, Material, Quantity, and Cut angles.",
+            "appliedTo": "Paper Space (Drawing Layout)"
+          },
+          {
+            "type": "Elevation Labels",
+            "description": "Text tags placed on the model view identifying each part, often with leader lines connecting to the part centroid.",
+            "appliedTo": "Model Space Geometry (via Viewport)"
+          }
+        ]
+      },
+      "tokens_used": 9557,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Execution: Script starts, typically triggered by selecting the script or a context menu action on an Element.",
+          "Property Initialization: Default values are set for properties (intText=2, dmm=1, etc.). Arrays for HsbID mappings and translation are populated.",
+          "Table Orientation Setup: Vectors for Table X (vXTbl) and Y (vYTbl) axes are initialized based on World X and Y. If 'strDirection' is 'Vertical', these vectors are rotated 90 degrees.",
+          "Data Collection (Implicit): The script gathers data from the Element context ('el'). This includes iterating through beams/entities within the element to determine names, sizes, quantities, and cut information.",
+          "ID Translation Logic: For each entity, the script checks the 'strTranslateId' property. If 'Yes', it maps the entity's hsbID to the string defined in the 'All', 'Stud', 'TP', etc., properties. If 'No', it uses the raw hsbID or a default name.",
+          "Filtering Logic: The script checks 'vtpIgnor'. If 'Yes', entities identified as 'Very Top Plate' (VTP, e.g., hsbID 20000) are excluded from the list.",
+          "Label Placement Calculation (Pre-Draw): The script calculates the position for labels in the viewport. It projects points to the element's plane and checks for intersections using Body objects to prevent text overlap.",
+          "Table Content Construction: Strings for the table rows are constructed. Dimensions are adjusted by 'dmm'. Material grade is appended to the size string if 'stAddGradeToSize' is 'Yes'.",
+          "Drawing Table Header: The title (propHeader) is drawn in Paper Space at the insertion point using the defined color (nColorIndex) and text height (dTH or DimStyle default).",
+          "Drawing Table Structure: Column headers (Timber, Size, Label, Qty, etc.) are drawn. The width of each column is determined by properties d1 through d14. The table grows downwards or upwards based on 'strJustify'.",
+          "Drawing Table Rows: Data rows are drawn up to the 'nMaxRow' limit. Row height is calculated based on text height.",
+          "Drawing Elevation Labels: Labels are drawn in Model Space (or projected to Paper Space via transformation) at the calculated positions. If a label was moved to avoid collision, a leader line (LineSeg) is drawn connecting the label to the original part centroid.",
+          "Completion: Script finishes. Entities are added to the drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Table Direction Property (strDirection)",
+            "path1": {
+              "name": "Horizontal",
+              "steps": [
+                "vXTbl is set to World X (_XW).",
+                "vYTbl is set to World Y (_YW).",
+                "Table layout proceeds in standard L/R orientation."
+              ]
+            },
+            "path2": {
+              "name": "Vertical",
+              "steps": [
+                "vXTbl is set to World Y (_YW).",
+                "vYTbl is set to negative World X (-_XW).",
+                "Table layout is rotated 90 degrees clockwise."
+              ]
+            }
+          },
+          {
+            "condition": "Label Text Height Property (dTH)",
+            "path1": {
+              "name": "Custom Height",
+              "steps": [
+                "User sets dTH > 0.",
+                "Script uses dTH value for text and table sizing calculations."
+              ]
+            },
+            "path2": {
+              "name": "DimStyle Height",
+              "steps": [
+                "User sets dTH = 0.",
+                "Script attempts to read text height from the AutoCAD Dimension Style specified in 'strDimStyle'.",
+                "Calculations use this derived height."
+              ]
+            }
+          },
+          {
+            "condition": "Label Collision/Overlap",
+            "path1": {
+              "name": "No Collision",
+              "steps": [
+                "Label is placed at the default centroid position.",
+                "No leader line is drawn."
+              ]
+            },
+            "path2": {
+              "name": "Collision Detected",
+              "steps": [
+                "Script creates a temporary body at the target position.",
+                "Checks intersection with 'bdAll' (collection of all previous label bodies).",
+                "Iterates through offset positions (Positive, Negative, Diagonal) defined by 'intText' increment.",
+                "Finds clear space.",
+                "Updates label position.",
+                "Draws a leader line (LineSeg) from the new position to the original centroid."
+              ]
+            }
+          },
+          {
+            "condition": "Translate hsbId (strTranslateId)",
+            "path1": {
+              "name": "Translate (Yes)",
+              "steps": [
+                "Script looks up entity hsbID in arHsbId array.",
+                "Uses the corresponding friendly name from arCode (e.g., 'Stud', 'Top Plate')."
+              ]
+            },
+            "path2": {
+              "name": "Do Not Translate (No)",
+              "steps": [
+                "Script skips the lookup.",
+                "Uses the raw hsbID string or 'Unknown'."
+              ]
+            }
+          },
+          {
+            "condition": "Very Top Plate Filter (vtpIgnor)",
+            "path1": {
+              "name": "Ignore VTP (Yes)",
+              "steps": [
+                "Entities identified as VTP are filtered out of the data arrays before drawing.",
+                "They do not appear in the table or labels."
+              ]
+            },
+            "path2": {
+              "name": "Include VTP (No)",
+              "steps": [
+                "VTP entities are processed normally.",
+                "They appear in the table with their mapped name."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Existence of valid Element ('el') context.",
+            "errorMessage": "Script fails to run or produces empty results.",
+            "recovery": "Ensure the script is run on a valid wall or panel element, not in empty space."
+          },
+          {
+            "check": "Valid Viewport and Coordinate Transformation (ms2ps).",
+            "errorMessage": "Labels or table placed in incorrect location or script crash.",
+            "recovery": "Ensure a Paper Space layout is active with a viewport looking at the model."
+          },
+          {
+            "check": "Availability of Dimension Style ('strDimStyle').",
+            "errorMessage": "Text height defaults to 0 or standard CAD default if dTH=0 and style is missing.",
+            "recovery": "Set a specific dTH value or ensure the named DimStyle exists in the drawing."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Move Table",
+            "how": "Grip Edit",
+            "effect": "The entire table (including header and rows) moves to the new location in Paper Space."
+          },
+          {
+            "action": "Edit Content/Properties",
+            "how": "OPM (Object Properties Palette)",
+            "effect": "Changing 'strDimStyle', 'dTH', or column widths (d1-d14) regenerates the table formatting. Changing name mappings (Stud, TP, etc.) updates the text in the table immediately upon recalculation."
+          },
+          {
+            "action": "Filter Entities",
+            "how": "OPM",
+            "effect": "Toggling 'vtpIgnor' or 'strTranslateId' adds/removes rows or changes names in the table."
+          }
+        ]
+      },
+      "tokens_used": 11038,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_PLOT_CUT_LIST.mcr\n\n## Overview\nGenerates a formatted cut list (timber take-off) table in Paper Space and places part labels on the elevation view of a selected wall or panel. It identifies parts by name, dimensions, and quantity while providing customizable labeling for production drawings.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Partial | Labels are placed relative to the model geometry. |\n| Paper Space | Yes | The cut list table is drawn here. An active viewport is required. |\n| Shop Drawing | Yes | Designed for creating production details and schedules. |\n\n## Prerequisites\n- **Required Entities**: An existing Element (Wall or Panel) in the drawing.\n- **Minimum Beam Count**: 0 (Works on empty elements, though output will be empty).\n- **Required Settings**: A Paper Space Layout tab with an active Viewport displaying the target element.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or select the script from the hsbCAD menu)\nAction: Select `GE_PLOT_CUT_LIST.mcr` from the file dialog.\n\n### Step 2: Select Element\n**Note**: If the script is executed via the Element context menu (Right-click on Wall), this step is skipped.\n```\nCommand Line: Select Element:\nAction: Click on the Wall or Panel in the drawing or Project Manager to generate the list for.\n```\n\n### Step 3: Specify Insertion Point\n```\nCommand Line: Insertion point:\nAction: Click in the Paper Space layout where you want the top-left (or corner based on justification) of the table to appear.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **General Settings** |\n| `strDimStyle` | String | \"\" | AutoCAD Dimension Style used to determine text font and default height. |\n| `propHeader` | String | \"Timber List\" | The title text displayed at the top of the table. |\n| `nColorIndex` | Integer | 7 | Color Index (ACI) for the header text (7 is usually White/Black). |\n| `dTH` | Double | 0 | Text height in Paper Space. If 0, uses height from `strDimStyle`. |\n| **Table Layout** |\n| `strDirection` | String | \"Horizontal\" | Orientation of the table: \"Horizontal\" or \"Vertical\". |\n| `strJustify` | String | \"Top\" | Vertical growth direction: \"Top\" (grows down) or \"Bottom\" (grows up). |\n| `nMaxRow` | Integer | 16 | Maximum number of rows to display in a single table instance. |\n| `d1` through `d14` | Double | Varied | Width of individual columns (e.g., Timber Name, Size, Label, Qty, Dimensions). |\n| **Content & Filtering** |\n| `strTranslateId` | String | \"Yes\" | If \"Yes\", converts internal codes (e.g., 114) to readable names (e.g., Stud). If \"No\", shows raw numbers. |\n| `vtpIgnor` | String | \"No\" | If \"Yes\", excludes \"Very Top Plate\" (VTP) entities from the list. |\n| `stAddGradeToSize` | String | \"Yes\" | If \"Yes\", appends material grade (e.g., C24) to the size string. |\n| `dmm` | Double | 1.0 | Multiplier for dimensions. Set to 0.001 to convert mm to meters in the list. |\n| **Name Mappings** |\n| `All` / `Stud` / `TP` / `BP` etc. | String | Various | Custom names for timber types. Allows renaming \"Stud\" to \"Vertical Stud\" etc. |\n| **Labeling** |\n| `intText` | Integer | 2 | Algorithm mode for placing labels to avoid overlap (1, 2, 3, or 4). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Regenerates the table and labels based on current geometry and property settings. |\n| Properties | Opens the Properties palette to edit script parameters. |\n| Erase | Removes the script and the generated table/labels from the drawing. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script does not use external settings files; all configuration is handled via Properties.\n\n## Tips\n- **Avoiding Label Overlap**: If labels on the elevation view overlap, try changing the `intText` property to a different value (1, 2, 3, or 4). This changes the search pattern for empty space.\n- **Unit Conversion**: If your project requires metric dimensions (meters) but the model is in millimeters, set `dmm` to `0.001` to scale the values in the table automatically.\n- **Table Sizing**: If the table looks squashed, increase the values of `d1` through `d14` corresponding to the columns that are too narrow.\n- **Text Height**: For precise control over text size, set a specific value for `dTH` (e.g., 2.5 mm) rather than relying on the Dimension Style.\n\n## FAQ\n- **Q: Why does my table show numbers like \"114\" instead of \"Stud\"?**\n  - A: Check the `strTranslateId` property. Ensure it is set to \"Yes\". If it is already \"Yes\", check the `Stud` property to ensure the mapping text hasn't been deleted.\n- **Q: The text in my table is tiny or huge.**\n  - A: Check `dTH`. If it is 0, the script uses the text height from the `strDimStyle` DimStyle. Either set `dTH` to your desired paper space height (e.g., 2.5) or change the text height in the AutoCAD DimStyle.\n- **Q: Why is the table not appearing?**\n  - A: Ensure you are on a Paper Space Layout tab and that you have an active Viewport. The script needs to transform coordinates from Model Space to Paper Space.\n- **Q: How do I exclude the top plates from the count?**\n  - A: Set the `vtpIgnor` property to \"Yes\"."
+      },
+      "tokens_used": 7662,
+      "error": null
+    }
+  }
+}

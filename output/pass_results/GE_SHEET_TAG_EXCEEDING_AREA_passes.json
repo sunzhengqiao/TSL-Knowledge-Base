@@ -1,0 +1,311 @@
+{
+  "filename": "GE_SHEET_TAG_EXCEEDING_AREA.mcr",
+  "status": "completed",
+  "total_tokens": 34318,
+  "processing_time": 399.9189193248749,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6451,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses `PrEntity` to select `Sheet()` objects, sets units to inches (`U(1, \"inch\")`), and performs geometric calculations (sorting, area checking) on sheet bodies (`sh.envelopeBody()`). It modifies the `sh.setLabel()` and draws text using a `Display` object. There are no ShopDrawing prefixes (sd_), no Viewport handling, and no references to Paper Space entities."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sheet"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2796,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\n|Select sheeting|(s)",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dArea",
+            "type": "PropDouble",
+            "displayName": "Limit area (sq ft)",
+            "defaultValue": "35",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "nStartNum",
+            "type": "PropInt",
+            "displayName": "Start count on",
+            "defaultValue": "1",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "sPrefix",
+            "type": "PropString",
+            "displayName": "Prefix",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "nColor",
+            "type": "PropInt",
+            "displayName": "Color",
+            "defaultValue": "1",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sDimstyle",
+            "type": "PropString",
+            "displayName": "Dimstyle",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": [
+              "_DimStyles"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6447,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically identifies and labels sheeting materials (e.g., OSB, Plywood) that exceed a specific maximum area, typically to flag panels that require special handling, crane lifting, or are non-standard.",
+          "category": "Annotation/Labeling",
+          "typicalUseCase": "Identifying 'Heavy' or 'XL' roof/floor panels on a model that exceed 35 sq ft for production planning or safety marking."
+        },
+        "parameters": [
+          {
+            "name": "dArea",
+            "technicalDefault": 35,
+            "businessMeaning": "The maximum allowable area (in square feet) for a standard sheet. Any sheet with an area larger than this value will be tagged.",
+            "validRange": "10 - 200 (Commonly 32 for 4x8 sheets, up to 48-64 for capacity limits)",
+            "unit": "square feet (sq ft)",
+            "affectsOutput": "Determines which sheets are selected for tagging. Decreasing this value adds tags to more sheets; increasing it removes tags."
+          },
+          {
+            "name": "nStartNum",
+            "technicalDefault": 1,
+            "businessMeaning": "The starting integer for the numbering sequence of the exceeding sheets.",
+            "validRange": "1 - 9999",
+            "unit": "count",
+            "affectsOutput": "Sets the first number in the label sequence (e.g., set to 10 to label the first heavy sheet as 'H-10')."
+          },
+          {
+            "name": "sPrefix",
+            "technicalDefault": "",
+            "businessMeaning": "A text string prepended to the number to categorize the tag (e.g., 'H-', 'HEAVY-', 'XL-').",
+            "validRange": "Any alphanumeric string",
+            "unit": "text",
+            "affectsOutput": "Modifies the text of the label and visual marker (e.g., turns '1' into 'XL-1')."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": 1,
+            "businessMeaning": "The AutoCAD color index used to draw the text tag in the 3D model.",
+            "validRange": "1 - 255",
+            "unit": "color index",
+            "affectsOutput": "Changes the visual color of the text marker (e.g., Red for high visibility)."
+          },
+          {
+            "name": "sDimstyle",
+            "technicalDefault": "_DimStyles",
+            "businessMeaning": "The dimension style defining the font, height, and appearance of the text tag.",
+            "validRange": "List of available dimension styles in the drawing",
+            "unit": "style name",
+            "affectsOutput": "Controls the size and font of the visual text marker."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dArea is modified",
+            "effect": "The script re-evaluates which sheets exceed the limit. The count and assignment of numbers to subsequent sheets may shift if the sort order changes.",
+            "cascade": [
+              "nStartNum",
+              "sPrefix"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Display Text",
+            "description": "A visual 3D text label placed near the center of the sheet, offset by its Y-vector.",
+            "appliedTo": "Model Space (relative to the Sheet)"
+          },
+          {
+            "type": "Entity Attribute",
+            "description": "The 'Label' property of the Sheet entity is updated with the generated code (Prefix + Number).",
+            "appliedTo": "Selected Sheet Entities"
+          }
+        ]
+      },
+      "tokens_used": 6171,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched via command line; check for multi-insert cycle (auto-erase if detected).",
+          "Prompt user to select Sheeting entities via 'Select sheeting' dialog.",
+          "User selects sheets (allows nested selection).",
+          "Sheets are stored in internal array and script pauses for initial insertion.",
+          "On recalculation: Script checks if properties were modified or if it's a forced recalc.",
+          "Script executes spatial sorting algorithm to arrange selected sheets by rows and columns.",
+          "Loop through sorted sheets:",
+          "Calculate area of the sheet (Polyline area converted from sq inches to sq ft).",
+          "Compare calculated area against the 'Limit area' property (with tolerance).",
+          "If area > limit: Generate Label (Prefix + StartNum + Index), assign to Sheet Entity, and store coordinate for text.",
+          "Check if any sheets actually exceeded the limit (valid points generated).",
+          "If valid points exist: Create 3D Display text at calculated offsets using specified Color and Dimstyle.",
+          "If NO valid points: Display report message and delete script instance."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User completes 'PrEntity' selection",
+            "path1": {
+              "name": "Valid Selection",
+              "steps": [
+                "Selected sheets appended to _Sheet array",
+                "ExecutionMode set to 0",
+                "Proceed to calculation logic"
+              ]
+            },
+            "path2": {
+              "name": "Empty/Cancelled Selection",
+              "steps": [
+                "_Sheet array remains empty",
+                "Script hits _Sheet.length() <= 0 check",
+                "eraseInstance() executes immediately"
+              ]
+            }
+          },
+          {
+            "condition": "Individual Sheet Area vs Limit Area",
+            "path1": {
+              "name": "Exceeds Limit",
+              "steps": [
+                "Calculate unique number (StartNum + CurrentIndex)",
+                "Format string (Prefix + Number)",
+                "sh.setLabel(String)",
+                "Append display point to _PtG"
+              ]
+            },
+            "path2": {
+              "name": "Within Limit",
+              "steps": [
+                "Sheet is ignored for tagging",
+                "Continue loop to next sheet"
+              ]
+            }
+          },
+          {
+            "condition": "Result of Area Check (Global)",
+            "path1": {
+              "name": "Tags Created",
+              "steps": [
+                "_PtG.length > 0",
+                "Display object draws text markers",
+                "Script instance persists in model"
+              ]
+            },
+            "path2": {
+              "name": "No Tags Created",
+              "steps": [
+                "_PtG.length == 0",
+                "Report message: 'No sheets exceeding [Area] SQ FT. Tsl will be deleted'",
+                "eraseInstance() executes"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Empty selection during insertion",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script deletes itself automatically. User must re-run script and select entities."
+          },
+          {
+            "check": "Result yields no exceeding sheets",
+            "errorMessage": "Reported via command line: 'No sheets exceeding [Value] SQ FT. Tsl will be deleted'",
+            "recovery": "Increase the 'Limit area' property or select larger sheet entities. Script will vanish and must be re-inserted or area adjusted before recalc if it persisted."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Area Threshold",
+            "how": "Select the TSL instance, change 'Limit area (sq ft)' in OPM",
+            "effect": "Triggers recalculation (ExecutionMode reset). Script re-evaluates all sheets. Tags may appear or disappear."
+          },
+          {
+            "action": "Modify Numbering",
+            "how": "Select TSL instance, change 'Start count on' or 'Prefix' in OPM",
+            "effect": "Updates the text label on the Sheet entities and the 3D display text immediately."
+          },
+          {
+            "action": "Modify Appearance",
+            "how": "Select TSL instance, change 'Color' or 'Dimstyle' in OPM",
+            "effect": "Updates the visual style of the 3D text markers without recalculating geometry."
+          }
+        ]
+      },
+      "tokens_used": 7250,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_SHEET_TAG_EXCEEDING_AREA\n\n## Overview\nThis script identifies sheeting materials (such as OSB or Plywood) that exceed a specific maximum area. It automatically assigns a label to these sheets and places a 3D text marker in the model to flag them for special handling or production planning.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for selecting Sheet entities. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required Entities**: Sheet entities (e.g., roof or floor sheathing).\n- **Minimum Beam Count**: 1 (Must select at least one sheet during insertion).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command:** `TSLINSERT`\n**Action:** Browse and select `GE_SHEET_TAG_EXCEEDING_AREA.mcr` from the file list.\n\n### Step 2: Select Sheeting\n```\nCommand Line: |Select sheeting|(s)\nAction: Click on the sheeting entities in the model.\n```\n- You can select multiple sheets.\n- Press **Enter** or **Space** to confirm your selection.\n\n### Step 3: Review Results\n- The script calculates the area of the selected sheets in square feet.\n- If a sheet's area is larger than the limit, a tag is created.\n- **Note:** If no sheets exceed the limit, the script will automatically delete itself and display a message in the command line.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Limit area (sq ft) | Number | 35 | The maximum allowable area. Sheets larger than this will be tagged. |\n| Start count on | Number | 1 | The starting number for the sequence (e.g., set to 10 to start numbering at 10). |\n| Prefix | Text | | Text added before the number (e.g., type \"HEAVY-\" to generate \"HEAVY-1\"). |\n| Color | Number | 1 | The AutoCAD color index used for the 3D text marker (1 = Red). |\n| Dimstyle | Dropdown | | The dimension style that controls the font and size of the text marker. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| *None* | This script does not add custom context menu items. Use the Properties palette to modify settings. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Auto-Adjustment:** If the script disappears immediately after insertion, check the command line. It likely means no sheets met the area criteria. Select the script (if it persists) or re-insert it and increase the \"Limit area (sq ft)\" value.\n- **Visibility:** Use the \"Color\" property to set the text marker to a highly visible color (like Red or Yellow) to easily identify large panels in the 3D model.\n- **Filtering:** You can adjust the area threshold at any time by selecting the script instance and changing the properties. The tags will update automatically.\n\n## FAQ\n- **Q: Why did the script disappear after I selected sheets?**\n  **A:** The script automatically deletes itself if none of the selected sheets exceed the \"Limit area.\" Increase the limit value or select larger sheets.\n  \n- **Q: Can I change the labels after they are created?**\n  **A:** Yes. Select the script instance in the model and modify the \"Prefix\" or \"Start count on\" in the Properties palette. The labels and text markers will update immediately.\n\n- **Q: How is the area calculated?**\n  **A:** The script calculates the physical area of the sheet body and converts it to square feet (sq ft) for comparison against your limit."
+      },
+      "tokens_used": 5203,
+      "error": null
+    }
+  }
+}

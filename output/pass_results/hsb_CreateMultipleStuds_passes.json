@@ -1,0 +1,344 @@
+{
+  "filename": "hsb_CreateMultipleStuds.mcr",
+  "status": "completed",
+  "total_tokens": 39010,
+  "processing_time": 214.54692125320435,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "2.1",
+            "date": "11.01.2022",
+            "author": "Thorsten Huck",
+            "changes": "HSB-14018 instance remains in drawing, property changes only applied when reconstructing element"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6278,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses ElementWall() and el.beam() to manipulate 3D structural elements. There are no references to sd_*, Multipage*, or _Viewport. The geometric operations (CoordSys, Beam.dbCreate, Plane, PlaneProfile) are characteristic of 3D model generation, not 2D layout/drafting."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element (Wall)"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing a Wall Element with existing beams (studs/jacks). The script expects to interact with 3D wall geometry.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4509,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "AutoPropDialog",
+            "trigger": "Script Insert (_bOnInsert && _kExecuteKey==\"\")",
+            "title": "Properties",
+            "dataSource": "PropInt nNumberOfStuds, PropInt nColorStuds, PropString sCreateModule",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "nNumberOfStuds",
+            "type": "PropInt",
+            "displayName": "Number of studs",
+            "defaultValue": 2,
+            "inputType": "number",
+            "options": [],
+            "category": "General",
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "nColorStuds",
+            "type": "PropInt",
+            "displayName": "Color of studs",
+            "defaultValue": 32,
+            "inputType": "number",
+            "options": [],
+            "category": "General",
+            "description": "0 = byBeam"
+          },
+          {
+            "index": 0,
+            "variable": "sCreateModule",
+            "type": "PropString",
+            "displayName": "Create Beams as Modules",
+            "defaultValue": "No",
+            "inputType": "dropdown",
+            "options": [
+              "No",
+              "Yes"
+            ],
+            "category": "General",
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 7840,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Replaces single structural studs (or jack studs) in a wall with a specific number of multiple studs to handle higher loads or specific framing conditions, while adjusting surrounding blocking.",
+          "category": "Framing",
+          "typicalUseCase": "Used when a default stud configuration is insufficient for load-bearing requirements (e.g., under a point load, header support, or wall intersections) and requires doubling or tripling the studs."
+        },
+        "parameters": [
+          {
+            "name": "nNumberOfStuds",
+            "technicalDefault": 2,
+            "businessMeaning": "The quantity of studs to generate in the location of a single selected stud. The script takes the position of an existing stud and creates an array of this many studs side-by-side along the wall's X-axis.",
+            "validRange": "2 - 10",
+            "unit": "count",
+            "affectsOutput": "Directly determines how many new physical beams are created. If the number is too high for the available space, extra studs are automatically skipped to avoid collisions."
+          },
+          {
+            "name": "nColorStuds",
+            "technicalDefault": 32,
+            "businessMeaning": "The visual display color (AutoCAD Color Index) assigned to the newly created studs. This allows for visual differentiation between standard framing and these specialized reinforcements.",
+            "validRange": "0 - 255 (ACI), where 0 inherits the color of the original beam being replaced.",
+            "unit": "index",
+            "affectsOutput": "Changes the graphical representation of the new studs in the 3D model and drawings. Does not affect geometry or CNC."
+          },
+          {
+            "name": "sCreateModule",
+            "technicalDefault": "No",
+            "businessMeaning": "Determines if the group of new studs should be treated as a single manufacturing module (sub-assembly) or remain individual loose studs.",
+            "validRange": "No, Yes",
+            "unit": "enum",
+            "affectsOutput": "If 'Yes', the new studs share a module name, affecting how they are grouped in production lists, CAM, and on-site assembly. If 'No', they are treated as individual members."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sCreateModule is set to 'Yes'",
+            "effect": "The module grouping is only applied if nNumberOfStuds is greater than 1.",
+            "cascade": [
+              "nNumberOfStuds"
+            ]
+          },
+          {
+            "trigger": "nNumberOfStuds is increased",
+            "effect": "Reduces available space between studs. If the studs become too crowded, the script's collision detection will automatically omit studs that intersect with 'No Touch' elements like King Studs or Supporting Beams.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam (Stud/Jack)",
+            "description": "New studs created based on the properties (size, material, grade) of the original stud being replaced. They are stretched to fit between wall plates or surrounding elements.",
+            "appliedTo": "The selected Wall Element, replacing original Stud, SFJackOverOpening, or SFJackUnderOpening beams."
+          },
+          {
+            "type": "Blocking",
+            "description": "Existing blocking beams within the wall are either stretched to accommodate the new stud array or erased if the new studs fully occupy their space.",
+            "appliedTo": "Existing blocking beams found in the path of the new studs."
+          }
+        ]
+      },
+      "tokens_used": 7121,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Initialization",
+          "Check for Catalog or Insertion context (_bOnInsert)",
+          "[Insertion Cycle Check] If insertCycleCount > 1, erase instance and exit immediately.",
+          "[Execute Key Check] If _kExecuteKey is empty, display Properties Dialog.",
+          "Prompt User to select Wall Elements (PrEntity).",
+          "Process Selected Elements: Create TSL instances for each selected wall element.",
+          "Erase the temporary script instance.",
+          "[Child Instance Execution] Load default values from catalog.",
+          "Validate Element: If _Element.length() == 0, erase instance and exit.",
+          "Wait for Wall Element construction (verify beam count > 0 and no panels).",
+          "Initialize geometry (Coordinate System, Vectors).",
+          "Filter Wall Beams for Zone 0.",
+          "[Execution Mode Check] If ExecutionMode != 0, skip to display and wait.",
+          "Enter Modify Logic (ExecutionMode == 0):",
+          "Collect 'NoTouch' bodies from King Studs and Supporting Beams.",
+          "Iterate through existing Beams in Wall:",
+          "Skip if beam is part of a module.",
+          "Check if beam is valid type (Stud, SFJackOver, SFJackUnder) and valid HSB ID.",
+          "Skip if beam has a specific beam code.",
+          "Calculate start position for new stud array centered on original beam.",
+          "Loop 'Number of studs' times:",
+          "Calculate candidate position along Wall X-axis.",
+          "Check for intersection with 'NoTouch' body.",
+          "If collision, skip this stud index.",
+          "If clear, create new Stud beam.",
+          "Copy attributes (Material, Grade, Name, Type, HSB ID) from original beam.",
+          "Apply Color settings (0 = original color, else specified).",
+          "[Module Check] If 'Create Beams as Modules' is Yes, assign Module name.",
+          "Add new beam to processing lists.",
+          "Mark original stud for erasure.",
+          "Erase original single studs.",
+          "Process Blocking Beams:",
+          "Identify all Blocking beams in the wall.",
+          "Stretch new studs to intersect with surrounding non-blocking beams (Top/Bottom plates).",
+          "Evaluate Blocking Interactions:",
+          "Calculate shadow profile of all new studs.",
+          "Check intersection area with Blocking beams.",
+          "If Blocking is mostly covered by new studs, Erase Blocking.",
+          "Else, stretch existing Blocking to fit around new beams.",
+          "Set ExecutionMode to 1 (Complete).",
+          "Draw script symbol at wall origin."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script Invocation Context",
+            "path1": {
+              "name": "Initial Insert (_bOnInsert)",
+              "steps": [
+                "Show dialog",
+                "Select Elements",
+                "Create child instances",
+                "Erase self"
+              ]
+            },
+            "path2": {
+              "name": "Child Instance (Recalc/Update)",
+              "steps": [
+                "Wait for wall data",
+                "Execute modification logic",
+                "Create/Erase studs",
+                "Stretch blocking"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Collision Detection",
+            "path1": {
+              "name": "Space Available",
+              "steps": [
+                "New stud beam created at calculated offset",
+                "Added to processing lists"
+              ]
+            },
+            "path2": {
+              "name": "Collision (No Touch)",
+              "steps": [
+                "Offset skipped",
+                "Loop continues to next stud count"
+              ]
+            }
+          },
+          {
+            "condition": "Blocking Coverage Analysis",
+            "path1": {
+              "name": "Fully Covered",
+              "steps": [
+                "Original blocking beam erased"
+              ]
+            },
+            "path2": {
+              "name": "Partially Covered",
+              "steps": [
+                "Original blocking stretched to fit new layout"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "None (Silent return if selection fails or invalid)",
+            "recovery": "User must re-run command and select a valid Wall Element."
+          },
+          {
+            "check": "Wall Construction Status",
+            "errorMessage": "None",
+            "recovery": "Script returns (waits) automatically if wall beam count is 0 or panelling exists. User must ensure wall is fully generated."
+          },
+          {
+            "check": "Valid Stud Types",
+            "errorMessage": "None",
+            "recovery": "Script only processes Studs, SFJackOverOpening, and SFJackUnderOpening. Other types are ignored during processing."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Update Number of Studs",
+            "how": "OPM Properties Palette (PropInt nNumberOfStuds)",
+            "effect": "Triggers regeneration. The array of studs is recreated. Note: The script calculates the array center based on the geometry, so increasing the number expands symmetrically."
+          },
+          {
+            "action": "Update Color",
+            "how": "OPM Properties Palette (PropInt nColorStuds)",
+            "effect": "Updates color of all generated studs immediately."
+          },
+          {
+            "action": "Toggle Module Creation",
+            "how": "OPM Properties Palette (PropString sCreateModule)",
+            "effect": "Groups or ungroups the studs into a manufacturing module on next update."
+          },
+          {
+            "action": "Erasure of Parent Element",
+            "how": "AutoCAD Erase",
+            "effect": "All generated studs created by this instance are erased (as they are assigned to the element group)."
+          }
+        ]
+      },
+      "tokens_used": 7850,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_CreateMultipleStuds\n\n## Overview\nReplaces single structural studs (or jack studs) in a wall with a specified number of multiple studs to handle higher loads. The script automatically adjusts surrounding blocking and avoids collisions with existing king studs or supporting beams.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script only functions in the 3D model environment. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | Not applicable for drawings. |\n\n## Prerequisites\n- **Required Entities**: A Wall Element (`ElementWall`) already inserted in the model.\n- **Minimum Beam Count**: The wall must contain at least one existing stud, jack stud (SFJackOverOpening), or cripple stud (SFJackUnderOpening).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or `TSL` depending on system configuration)\nAction: Browse to and select `hsb_CreateMultipleStuds.mcr`.\n\n### Step 2: Configure Parameters (Optional)\nAction: Before selecting the wall, you can adjust the settings in the **Properties Palette** (OPM) if it opens automatically. If not, proceed to selection and change properties later.\n\n### Step 3: Select Wall Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the Wall Element(s) you wish to modify. Press Enter to confirm selection.\n```\n*Note: The script will automatically find valid studs (Stud, Jack Studs) within the selected wall and replace them.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Number of studs | Number | 2 | The quantity of studs to generate at each location (Range: 2-10). |\n| Color of studs | Number | 32 | The AutoCAD color index for the new studs. Enter `0` to use the original beam's color. |\n| Create Beams as Modules | Dropdown | No | Determines if the group of new studs is treated as a single manufacturing module (\"Yes\") or individual members (\"No\"). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Refresh/Recalculate | Re-runs the script logic to update studs based on current property values or wall geometry changes. |\n\n## Settings Files\nNo external settings files are required for this script.\n\n## Tips\n- **Collision Handling**: If you request a high number of studs (e.g., 4 or 5) and there is a King Stud or supporting beam in the way, the script will automatically skip any new studs that would collide, rather than creating an error.\n- **Blocking Management**: You do not need to manually fix blocking after running this script. It automatically calculates whether to stretch existing blocking around the new studs or erase it if the studs fully occupy the space.\n- **Visual Verification**: Change the \"Color of studs\" to a bright color (e.g., Red) initially to easily verify which studs were generated by the script.\n\n## FAQ\n- **Q: Why didn't it create the exact number of studs I requested?**\n  A: The script includes collision detection. If the calculated position of a stud overlaps with a \"No Touch\" element (like a King Stud or Supporting Beam), that specific stud is skipped to prevent geometry errors.\n\n- **Q: Can I use this on any beam in the wall?**\n  A: No, the script specifically targets beams classified as \"Stud\", \"SFJackOverOpening\" (Jack Stud), or \"SFJackUnderOpening\" (Cripple Stud). Other beam types are ignored.\n\n- **Q: How do I undo the changes?**\n  A: You can use the standard AutoCAD `UNDO` command. Alternatively, erasing the TSL instance (the script symbol at the wall origin) will remove the generated studs. Note that erasing the instance usually removes the generated elements associated with it."
+      },
+      "tokens_used": 5412,
+      "error": null
+    }
+  }
+}

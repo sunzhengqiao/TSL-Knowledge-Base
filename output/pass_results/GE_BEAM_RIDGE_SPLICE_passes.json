@@ -1,0 +1,292 @@
+{
+  "filename": "GE_BEAM_RIDGE_SPLICE.mcr",
+  "status": "completed",
+  "total_tokens": 29363,
+  "processing_time": 234.86131477355957,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "v1.4",
+            "date": "15-may--2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Thumbnail added"
+          },
+          {
+            "version": "v1.3",
+            "date": "04-Apr--2011",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Small change on prompt message, indicating default value to use if user don't set any"
+          },
+          {
+            "version": "v1.2",
+            "date": "04-Apr--2011",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Enhanced to allow blank (or non-numeric) value when overlap distance is needed, then a default value will be set"
+          },
+          {
+            "version": "v1.1",
+            "date": "01-Apr--2011",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Bugfix"
+          },
+          {
+            "version": "v1.0",
+            "date": "01-Apr--2011",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4651,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script interacts directly with 3D geometry using PrEntity to select Beams, performs calculations using Point3d/Vector3d/Plane/Body (e.g., bm.realBody()), and modifies entities via addToolStatic() and transformBy(). It does not use Shop Drawing APIs (sd_*) or viewports."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3744,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\n|Select beam(s) to splice|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "|Select splice midpoint|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "getString",
+              "promptOriginal": "|Set splice overlap <2'-0''>|",
+              "condition": "_bOnInsert",
+              "required": false
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5154,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6949,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Start Script Insertion",
+          "2. Check Insert Cycle Count (erase if > 1)",
+          "3. Prompt user to Select beam(s) to splice (PrEntity)",
+          "4. Store selected beams in internal list",
+          "5. Prompt user to Select splice midpoint (getPoint)",
+          "6. Prompt user to Set splice overlap (getString)",
+          "7. Validate and Parse overlap distance (apply default 2'-0\" if blank/non-numeric)",
+          "8. Validate selection list and overlap length (erase if invalid)",
+          "9. Loop through each selected beam",
+          "10. Calculate beam geometry (Center, Vectors X/Y/Z)",
+          "11. Project splice midpoint onto beam axis to get Cut Center",
+          "12. Calculate Start and End points of the splice cut along beam axis",
+          "13. Determine Start vs End point based on World Z height (High vs Low)",
+          "14. Validate Splice fit within beam physical length (extremeVertices check)",
+          "15. Create 'Extension' beam (dbCopy) to represent the overlapping side",
+          "16. Apply Volume Cut to Original beam to remove splice volume",
+          "17. Apply Volume Cut to Extension beam to keep only splice volume",
+          "18. Create two Side beams (dbCopy) for reinforcement/flanges",
+          "19. Offset Side beams by +1 Height and -1 Height relative to beam width",
+          "20. Cut Side beams to match the splice length (Start and End points)",
+          "21. End Loop",
+          "22. Erase Script Instance",
+          "23. Finish"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Check Insert Cycle Count",
+            "path1": {
+              "name": "Subsequent Cycle",
+              "steps": [
+                "Erase Instance",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "First Cycle",
+              "steps": [
+                "Proceed to User Input"
+              ]
+            }
+          },
+          {
+            "condition": "Parse Overlap Distance Input",
+            "path1": {
+              "name": "Valid Numeric Input",
+              "steps": [
+                "Use User Value"
+              ]
+            },
+            "path2": {
+              "name": "Blank/Non-Numeric/Zero",
+              "steps": [
+                "Use Default Value (610mm / 24\")"
+              ]
+            }
+          },
+          {
+            "condition": "Validate Selection List",
+            "path1": {
+              "name": "No Beams Selected",
+              "steps": [
+                "Report Message",
+                "Erase Instance",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "Beams Selected",
+              "steps": [
+                "Proceed to Length Validation"
+              ]
+            }
+          },
+          {
+            "condition": "Validate Overlap Length",
+            "path1": {
+              "name": "Length <= 0",
+              "steps": [
+                "Report Error: Length must be positive",
+                "Erase Instance",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "Length > 0",
+              "steps": [
+                "Start Beam Processing Loop"
+              ]
+            }
+          },
+          {
+            "condition": "Compare Z-Coordinates of Splice Ends",
+            "path1": {
+              "name": "Z Equal (Flat Beam)",
+              "steps": [
+                "Set Start = pt1",
+                "Set End = pt2"
+              ]
+            },
+            "path2": {
+              "name": "Z Unequal (Sloped Beam)",
+              "steps": [
+                "Assign Start to Highest Z",
+                "Assign End to Lowest Z"
+              ]
+            }
+          },
+          {
+            "condition": "Check Splice Fit in Beam Body",
+            "path1": {
+              "name": "Splice Outside Beam Length",
+              "steps": [
+                "Report Error: No room for splicing",
+                "Skip to Next Beam (Continue Loop)"
+              ]
+            },
+            "path2": {
+              "name": "Splice Inside Beam Length",
+              "steps": [
+                "Execute Cuts and Generations"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count > 1",
+            "errorMessage": "None (Silent)",
+            "recovery": "N/A (Script erases self)"
+          },
+          {
+            "check": "User Input Overlap Distance",
+            "errorMessage": "None",
+            "recovery": "Defaults to 2'-0\" if input is blank or invalid"
+          },
+          {
+            "check": "Beam Selection Count <= 0",
+            "errorMessage": "None (Silent)",
+            "recovery": "Select beams before running script"
+          },
+          {
+            "check": "Overlap Distance <= 0",
+            "errorMessage": "Length must be positive value",
+            "recovery": "Provide a positive number for overlap distance"
+          },
+          {
+            "check": "Splice Location vs Beam Extremes",
+            "errorMessage": "ERROR: There is no room for splicing beam on selected point",
+            "recovery": "Select a splice point closer to the center of the beam"
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 4991,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_BEAM_RIDGE_SPLICE.mcr\n\n## Overview\nThis script automates the creation of ridge splices for timber beams. It cuts selected beams at a specified midpoint to create an overlapping joint and adds reinforcement flanges (side beams) to the splice area.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for 3D beam geometry |\n| Paper Space | No | Not applicable |\n| Shop Drawing | No | Not applicable |\n\n## Prerequisites\n- **Required Entities**: At least one Timber Beam (GenBeam) in the model.\n- **Minimum Beam Count**: 1.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Run the command `TSLINSERT`.\n2. Browse to and select `GE_BEAM_RIDGE_SPLICE.mcr`.\n3. Click **Open**.\n\n### Step 2: Select Beams\n```\nCommand Line: Select beam(s) to splice\nAction: Click on the beam(s) you wish to modify. You can select multiple beams.\n```\n*Press Enter to confirm selection.*\n\n### Step 3: Define Splice Location\n```\nCommand Line: Select splice midpoint\nAction: Click in the drawing to specify the center point of the splice along the beam.\n```\n*Ensure the point is located sufficiently far from the beam ends to allow for the overlap.*\n\n### Step 4: Set Overlap Distance\n```\nCommand Line: Set splice overlap <2'-0\">\nAction: Type a numeric value for the overlap length and press Enter.\n```\n*If you leave this blank or enter a non-numeric value, the script defaults to **2'-0\" (610mm)**.*\n\n## Properties Panel Parameters\nThere are no editable properties in the AutoCAD Properties Palette for this script. All inputs are collected via the command line during insertion.\n\n## Right-Click Menu Options\nNo specific right-click menu options are provided by this script instance. The script runs once and erases itself upon completion.\n\n## Settings Files\nNo external settings files are used by this script.\n\n## Tips\n- **Default Overlap**: If you frequently use the same overlap length, you can simply press Enter at the prompt to accept the default (2'-0\").\n- **Beam Length**: Ensure the beam is long enough to accommodate the splice. If the selected midpoint is too close to the end of the beam, the script will report an error: \"There is no room for splicing beam on selected point.\"\n- **Multiple Beams**: You can select multiple beams in Step 2 to apply the same splice configuration to all of them simultaneously.\n- **Z-Aware**: The script correctly handles sloped (ridge) beams by determining the high and low points based on World Z coordinates.\n\n## FAQ\n- **Q: What happens if I enter a negative number for the overlap?**\n  - A: The script will detect this, report \"Length must be positive value,\" and erase the instance without making changes.\n\n- **Q: Can I undo the splice?**\n  - A: Yes, use the standard AutoCAD `UNDO` command immediately after running the script to revert the beam changes.\n\n- **Q: Why did my beam not get spliced?**\n  - A: Check the command line for errors. The most common reason is that the selected midpoint was too close to the end of the beam, leaving no room for the overlap."
+      },
+      "tokens_used": 3874,
+      "error": null
+    }
+  }
+}

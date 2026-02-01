@@ -1,0 +1,359 @@
+{
+  "filename": "DimAngular.mcr",
+  "status": "completed",
+  "total_tokens": 47860,
+  "processing_time": 240.44664406776428,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9236,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": true,
+          "isMultipageScript": true,
+          "detectionEvidence": "History logs explicitly mention 'multipage', 'viewport', 'isometric view', and 'shopdrawing'. Code logic includes checks for 'bHasViewport', 'bHasPage', and 'bHasSection'. Specific viewport setup jigs ('kJigSetupLocation', 'kJigViewport') interact with 'PlaneProfile ppLayout' and 'ppViewport'. The script uses 'page.regenerate()' and handles 'vecViewportOrg'. dbCreate uses _kModelSpace."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Sheet",
+            "Element",
+            "MetalPartCollectionEnt"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "ModelSpace (for script instance); PaperSpace access for viewport dimensioning features.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7892,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "PrPoint",
+            "trigger": "Context Menu: Add Similar",
+            "title": null,
+            "dataSource": "User Input via Jig",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          },
+          {
+            "type": "PrPoint",
+            "trigger": "Context Menu: Pick Viewport Setup Location",
+            "title": null,
+            "dataSource": "User Input via Jig",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "|Adjacent Angles|",
+            "handler": "|Full Complementary Angle|",
+            "action": "Switches the dimension angle mode between 'Adjacent Angles' and 'Full Complementary Angle'.",
+            "alsoTriggeredBy": "TslDoubleClick"
+          },
+          {
+            "menuItem": "|Full Complementary Angle|",
+            "handler": "|Adjacent Angles|",
+            "action": "Switches the dimension angle mode between 'Full Complementary Angle' and 'Adjacent Angles'.",
+            "alsoTriggeredBy": "TslDoubleClick"
+          },
+          {
+            "menuItem": "|Add Similar|",
+            "handler": "|Add Similar|",
+            "action": "Invokes a jig to select a new location and insert a copy of the current angular dimension.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Regenerate Shopdrawing|",
+            "handler": "|Regenerate Shopdrawing|",
+            "action": "Regenerates the shopdrawing page.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Pick Viewport Setup Location|",
+            "handler": "|Pick Viewport Setup Location|",
+            "action": "Invokes a jig to pick a new location for the viewport setup.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 6802,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates and manages angular dimensions on timber elements, supporting standard angles, adjacent angles, and full complementary angles within both ModelSpace and PaperSpace viewports.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Annotating shop drawings with precise angular measurements between beam segments or reference lines, including automated placement in viewports and handling of multipage layouts."
+        },
+        "parameters": [
+          {
+            "name": "sAngleMode",
+            "technicalDefault": "|Adjacent Angles|",
+            "businessMeaning": "Determines how the angle is calculated and displayed. 'Adjacent Angles' measures the angle between the two selected segments directly, while 'Full Complementary Angle' measures the total angle around the vertex.",
+            "validRange": "Adjacent Angles, Full Complementary Angle",
+            "unit": "enum",
+            "affectsOutput": "Changes the numerical value displayed in the dimension text and the visual arc extent of the dimension."
+          },
+          {
+            "name": "dDimScale",
+            "technicalDefault": "1.0",
+            "businessMeaning": "Global scale factor applied to the dimension entity to control its size relative to the drawing viewport or model space.",
+            "validRange": "0.1 to 10.0",
+            "unit": "ratio",
+            "affectsOutput": "Scales the size of the text, arrows, and arc lines of the angular dimension."
+          },
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "Standard",
+            "businessMeaning": "The CAD dimension style used to define the visual appearance of the dimension (font, arrowheads, precision, etc.).",
+            "validRange": "Any valid DimStyle name in the current drawing",
+            "unit": "string",
+            "affectsOutput": "Visual representation of the dimension text, arrowheads, and line weights."
+          },
+          {
+            "name": "textHeight",
+            "technicalDefault": "Based on DimStyle",
+            "businessMeaning": "Explicit height for the dimension text, overriding the dim style's default setting if specified.",
+            "validRange": "1.5mm to 10.0mm (typically)",
+            "unit": "mm",
+            "affectsOutput": "Size of the dimension text numbers."
+          },
+          {
+            "name": "sMode",
+            "technicalDefault": "Segment",
+            "businessMeaning": "Defines the reference method for calculating the angle (e.g., relative to a specific beam segment, horizontal, or vertical reference).",
+            "validRange": "Segment, Vertex, Horizontal Reference, Vertical Reference, Smallest Angle, Largest Angle",
+            "unit": "enum",
+            "affectsOutput": "Determines which geometric vectors are used to derive the angle measurement."
+          },
+          {
+            "name": "_Pt0 (Insertion Point)",
+            "technicalDefault": "User Selected",
+            "businessMeaning": "The base point in the drawing where the dimension is anchored, often the vertex of the angle.",
+            "validRange": "Any valid 3D coordinate",
+            "unit": "coordinates",
+            "affectsOutput": "Origin of the dimension lines and text."
+          },
+          {
+            "name": "arcRadius",
+            "technicalDefault": "Calculated based on text height",
+            "businessMeaning": "The distance from the vertex to the arc line representing the angle.",
+            "validRange": "U(10) to U(500)",
+            "unit": "mm",
+            "affectsOutput": "Radial distance of the dimension arc from the center point."
+          },
+          {
+            "name": "vecViewportOrg",
+            "technicalDefault": "0,0,0",
+            "businessMeaning": "Offset vector locating the dimension instance relative to the viewport setup origin in PaperSpace.",
+            "validRange": "Any Vector3d",
+            "unit": "vector",
+            "affectsOutput": "Position of the dimension within a PaperSpace viewport."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing 'sAngleMode'",
+            "effect": "Switches between measuring the acute/obtuse angle between beams versus the full 360-degree complement.",
+            "cascade": [
+              "Text Value",
+              "Arc Extent"
+            ]
+          },
+          {
+            "trigger": "Changing 'textHeight'",
+            "effect": "May trigger a recalculation of the 'arcRadius' to ensure the text fits inside the arc if auto-sizing is enabled.",
+            "cascade": [
+              "arcRadius"
+            ]
+          },
+          {
+            "trigger": "Moving 'Insertion Point' (_Pt0)",
+            "effect": "Updates the 'vecViewportOrg' if the dimension is linked to a PaperSpace viewport, maintaining relative position.",
+            "cascade": [
+              "vecViewportOrg"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "DimAngular",
+            "description": "A standard CAD angular dimension object displaying the angle between two lines or planes.",
+            "appliedTo": "ModelSpace or PaperSpace (Viewports)."
+          },
+          {
+            "type": "TslInst",
+            "description": "The script instance itself, storing the configuration for the dimension.",
+            "appliedTo": "Attached to a specific GenBeam, Sheet, or drawing layout."
+          }
+        ]
+      },
+      "tokens_used": 8190,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched via command or insert.",
+          "Wait for user input or automatic processing based on context (Insert vs. Shopdrawing generation).",
+          "Calculate geometric properties (vectors, angles) based on selected entities (GenBeam, Sheet, etc.) and reference mode (Segment, Vertex, etc.).",
+          "Determine dimension mode (Adjacent Angles vs. Full Complementary Angle) based on property settings.",
+          "Generate dimension graphics: Calculate arc radius, text location, and arc segments.",
+          "Apply visual properties: Color, DimStyle, text height, and layer.",
+          "Draw dimension preview during Jig operations (TextLocation, Viewport selection).",
+          "Finalize geometry: Create DimAngular entity in ModelSpace or PaperSpace.",
+          "Update instance data: Store vectors (vecViewportOrg, vecOrg) for multipage/viewport support.",
+          "Finish execution: Display final dimension."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User triggers 'Adjacent Angles' or 'Full Complementary Angle' (or Double Click).",
+            "path1": {
+              "name": "Toggle to Adjacent Angles",
+              "steps": [
+                "Script receives trigger key.",
+                "If currently in Full Complementary mode, set sAngleMode to 'Adjacent Angles'.",
+                "Recalculate geometry based on acute/obtuse angle.",
+                "Redraw dimension."
+              ]
+            },
+            "path2": {
+              "name": "Toggle to Full Complementary Angle",
+              "steps": [
+                "Script receives trigger key.",
+                "If currently in Adjacent mode, set sAngleMode to 'Full Complementary Angle'.",
+                "Recalculate geometry based on total 360-degree complement.",
+                "Redraw dimension."
+              ]
+            }
+          },
+          {
+            "condition": "User triggers 'Add Similar'.",
+            "path1": {
+              "name": "Execute Add Similar Jig",
+              "steps": [
+                "Invoke 'kJigSelectAngle' Jig.",
+                "User picks new location.",
+                "Create new TSL instance using current properties and new location points.",
+                "Append new instance to appropriate entity (Page, Section, or ModelSpace entity).",
+                "Copy color and properties from current instance."
+              ]
+            }
+          },
+          {
+            "condition": "User triggers 'Pick Viewport Setup Location' (Only if bHasViewport is true).",
+            "path1": {
+              "name": "Relocate Viewport Setup",
+              "steps": [
+                "Invoke 'kJigSetupLocation' Jig.",
+                "User picks new point inside or outside viewport.",
+                "Update 'vecViewportOrg' relative to _PtW.",
+                "If 'bIsViewportSetup' is true, transform all grip points (_Pt0, _PtG) by the calculated delta.",
+                "Redraw."
+              ]
+            }
+          },
+          {
+            "condition": "Entity Type / Environment context (GenBeam, Sheet, Multipage).",
+            "path1": {
+              "name": "Single GenBeam/Element in ModelSpace",
+              "steps": [
+                "Process geometry relative to the beam coordinate system.",
+                "Draw dimension directly in ModelSpace."
+              ]
+            },
+            "path2": {
+              "name": "Shopdrawing / PaperSpace / Multipage",
+              "steps": [
+                "Detect Page or Section presence (bHasPage, bHasSection).",
+                "Calculate relative offset (vecOrg) to Page origin.",
+                "Handle viewport transformations (vecViewportOrg).",
+                "Draw dimension relative to the viewport or layout."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Viewport insertion location.",
+            "errorMessage": "Visual feedback provided via Jig colors (darkyellow vs lightblue) indicating valid placement.",
+            "recovery": "User moves cursor to valid area (inside viewport for local instance, outside for element setup)."
+          },
+          {
+            "check": "Angle calculation (90-degree tolerance).",
+            "errorMessage": "None explicitly shown, but logic (HSB-17977) implies handling of tolerances when ignoring 90°.",
+            "recovery": "Automatic handling by script logic based on 'sSuppress90' property."
+          },
+          {
+            "check": "Valid Entity Selection during generation.",
+            "errorMessage": "History indicates default warning 'invalid selection' was disabled (v2.6).",
+            "recovery": "Script silently fails or ignores invalid selections rather than alerting user."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Dimension Text/Properties",
+            "how": "Properties Palette (OPM)",
+            "effect": "Updates text content, format, height, or angle mode immediately upon regeneration."
+          },
+          {
+            "action": "Grip Edit",
+            "how": "Grip Points on dimension",
+            "effect": "Drag '_Pt0' or '_PtG' points to move dimension or adjust arc radius/text position."
+          },
+          {
+            "action": "Context Menu: Regenerate Shopdrawing",
+            "how": "Right-click context menu",
+            "effect": "Forces the page to regenerate, useful if the underlying geometry changed."
+          },
+          {
+            "action": "Context Menu: Switch Angle Mode",
+            "how": "Right-click context menu or Double Click",
+            "effect": "Toggles between 'Adjacent Angles' and 'Full Complementary Angle'."
+          },
+          {
+            "action": "Context Menu: Add Similar",
+            "how": "Right-click context menu",
+            "effect": "Copies the current dimension style and settings to a new location selected by the user."
+          }
+        ]
+      },
+      "tokens_used": 9463,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# DimAngular.mcr\n\n## Overview\nThis script creates and manages angular dimensions on timber elements, beams, and shop drawings. It supports various measurement modes, including adjacent angles and full complementary angles, and functions within both Model Space and Paper Space viewports.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Primary environment for 3D elements. |\n| Paper Space | Yes | Supports dimensions within viewports and layout setups. |\n| Shop Drawing | Yes | Fully supports multipage and section view contexts. |\n\n## Prerequisites\n- **Required Entities**: GenBeam, Sheet, Element, or MetalPartCollectionEnt.\n- **Minimum Beam Count**: 1 (The script must be associated with a valid structural element).\n- **Required Settings**: Standard CAD DimStyles must exist in the drawing for the script to reference.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Select `DimAngular.mcr` from the file list.\n\n### Step 2: Select Reference Entity\nAction: Select a GenBeam, Sheet, or Element in the drawing to attach the dimension.\n\n### Step 3: Configure Dimension\nAction:\n- The script will attempt to generate the dimension automatically based on the element's geometry.\n- Use the **Properties Palette** to adjust the angle mode, text height, or style if the initial placement is not as desired.\n\n### Step 4: Interactive Adjustment (Optional)\nAction:\n- Right-click the script instance and select **Add Similar** to start the jig.\n- Click in the drawing to place a copy of the dimension with the same properties at the new location.\n- Or, select **Pick Viewport Setup Location** to redefine the origin point for viewport-based dimensions.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sAngleMode | String | Adjacent Angles | Determines how the angle is calculated. Options: 'Adjacent Angles' (measures the angle directly between segments) or 'Full Complementary Angle' (measures the total angle around the vertex). |\n| sMode | String | Segment | Defines the reference method for the angle (e.g., Segment, Vertex, Horizontal Reference, Vertical Reference). |\n| sDimStyle | String | Standard | The CAD dimension style name used to control fonts, arrowheads, and precision. |\n| dDimScale | Double | 1.0 | Global scale factor for the dimension size (text, arrows, lines). |\n| textHeight | Double | Based on DimStyle | Height of the dimension text in millimeters. Overrides the DimStyle setting if specified. |\n| arcRadius | Double | Calculated | Distance from the vertex point to the dimension arc line. |\n| _Pt0 | Point | User Selected | The base anchor point of the dimension (often the vertex). |\n| vecViewportOrg | Vector | 0,0,0 | Offset vector locating the dimension relative to the PaperSpace viewport origin. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Adjacent Angles / Full Complementary Angle** | Toggles the dimension mode. Switches between measuring the specific angle between beams and the full 360-degree complement. Can also be triggered by double-clicking the script. |\n| **Add Similar** | Prompts you to pick a new location in the drawing. Inserts a new instance of the dimension with the current settings at the selected point. |\n| **Regenerate Shopdrawing** | Forces a regeneration of the current shopdrawing page. Useful if underlying geometry has changed. |\n| **Pick Viewport Setup Location** | Allows you to interactively pick a new setup location for the viewport dimension. Useful for repositioning the dimension in PaperSpace layouts. |\n\n## Settings Files\nNo external settings files (XML) are explicitly required for this script. It utilizes standard CAD DimStyles present in the current drawing.\n\n## Tips\n- **Double-Click**: Quickly switch between 'Adjacent Angles' and 'Full Complementary Angle' by double-clicking the script instance in the drawing.\n- **Grip Editing**: You can drag the grip points (`_Pt0`) in the drawing to move the dimension vertex location dynamically.\n- **Viewport Setup**: When working in PaperSpace, use the \"Pick Viewport Setup Location\" option to fine-tune the position of dimensions within viewports without breaking the link to the model.\n- **Scaling**: If the dimension text or arrows appear too small or large in a viewport, adjust the `dDimScale` property rather than manually scaling the entity.\n\n## FAQ\n- **Q: How do I measure the larger angle instead of the smaller acute angle?**\n  A: Right-click the dimension and select \"Full Complementary Angle\", or simply double-click the dimension to toggle the mode.\n- **Q: Can I use this script in a 2D layout view?**\n  A: Yes, the script supports PaperSpace and handles viewports. Ensure you attach it to a valid Sheet or element that is visible in the layout.\n- **Q: Why does my dimension text look different from my standard dimensions?**\n  A: Check the `sDimStyle` property in the Properties Palette. It must match the name of a valid Dimension Style defined in your AutoCAD template."
+      },
+      "tokens_used": 6277,
+      "error": null
+    }
+  }
+}

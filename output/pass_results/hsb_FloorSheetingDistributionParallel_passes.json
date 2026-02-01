@@ -1,0 +1,304 @@
+{
+  "filename": "hsb_FloorSheetingDistributionParallel.mcr",
+  "status": "completed",
+  "total_tokens": 47548,
+  "processing_time": 780.5125775337219,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6420,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script manipulates 3D Sheet entities (Sheet.dbCreate, dbErase, dbSplit) and queries Element geometry (beams, coordSys) to calculate distribution. It attaches to Elements via dbCreate and does not use sd_ prefix, Viewport logic, or drawing output functions."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space attached to a valid Element",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6738,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity.go",
+              "promptOriginal": "Select one, or more elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "On insert if _kExecuteKey is empty",
+            "title": null,
+            "dataSource": "showDialogOnce()",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sLocation",
+            "type": "PropString",
+            "displayName": "Distribution location",
+            "defaultValue": "Top left",
+            "inputType": "dropdown",
+            "options": [
+              "Top left",
+              "Top Right",
+              "Bottom left",
+              "Bottom right"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "nZones",
+            "type": "PropInt",
+            "displayName": "Zone to Redistribute the Sheets",
+            "defaultValue": 1,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "dSheetWidth",
+            "type": "PropDouble",
+            "displayName": "Sheeting Width",
+            "defaultValue": 600,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 2,
+            "variable": "dSheetLength",
+            "type": "PropDouble",
+            "displayName": "Sheeting Length",
+            "defaultValue": 2400,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 3,
+            "variable": "dSheetThickness",
+            "type": "PropDouble",
+            "displayName": "Sheeting Thickness",
+            "defaultValue": 22,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 4,
+            "variable": "dMinimumLength",
+            "type": "PropDouble",
+            "displayName": "Minimum sheet length",
+            "defaultValue": 100,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 5,
+            "variable": "dMinimumWidth",
+            "type": "PropDouble",
+            "displayName": "Mininum sheet width",
+            "defaultValue": 150,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 6,
+            "variable": "dTrimWasteLength",
+            "type": "PropDouble",
+            "displayName": "Trim waste length by",
+            "defaultValue": 4,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "Redistribute Sheets",
+            "handler": "Redistribute Sheets",
+            "action": "Resets ExecutionMode to 0 and recalculates distribution",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 7221,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically distributes floor or roof sheathing boards (e.g., OSB, Plywood) in a parallel pattern across a selected element, optimizing layout to minimize small waste cuts.",
+          "category": "Framing",
+          "typicalUseCase": "Applying structural sheeting to a floor platform or roof deck where the user wants a running bond or parallel pattern starting from a specific corner, ensuring offcuts are reused where possible."
+        },
+        "parameters": [
+          {
+            "name": "sLocation",
+            "technicalDefault": "\"Top left\"",
+            "businessMeaning": "Sets the origin corner for the sheathing layout and determines the primary direction of the board run (e.g., Top-Left means boards run towards Bottom-Right).",
+            "validRange": "\"Top left\", \"Top Right\", \"Bottom left\", \"Bottom right\"",
+            "unit": "enum",
+            "affectsOutput": "Changes the anchor point of the first sheet and inverts the horizontal/vertical distribution vectors, flipping the entire layout pattern."
+          },
+          {
+            "name": "nZones",
+            "technicalDefault": "1",
+            "businessMeaning": "Specifies which construction layer (Zone) within the element the sheets should be assigned to or replaced.",
+            "validRange": "1 - 10 (Positive), -1 - -5 (Negative/Shop)",
+            "unit": "count",
+            "affectsOutput": "Determines which existing sheets are deleted and replaced, and sets the assignment group for the newly generated sheets."
+          },
+          {
+            "name": "dSheetWidth",
+            "technicalDefault": "600",
+            "businessMeaning": "The standard width of the raw board material (e.g., 600mm for standard OSB/plywood).",
+            "validRange": "400 - 1200",
+            "unit": "mm",
+            "affectsOutput": "Defines the spacing of vertical cut lines (columns). Increasing this reduces the number of rows but increases the width of the last cut board."
+          },
+          {
+            "name": "dSheetLength",
+            "technicalDefault": "2400",
+            "businessMeaning": "The standard length of the raw board material (e.g., 2400mm).",
+            "validRange": "1200 - 6000",
+            "unit": "mm",
+            "affectsOutput": "Defines the target length for full sheets before a horizontal butt joint is created. Directly affects the pattern of seams."
+          },
+          {
+            "name": "dSheetThickness",
+            "technicalDefault": "22",
+            "businessMeaning": "The thickness of the sheathing material.",
+            "validRange": "12 - 45",
+            "unit": "mm",
+            "affectsOutput": "Sets the geometric thickness (Z-height) of the generated 3D Sheet entities."
+          },
+          {
+            "name": "dMinimumLength",
+            "technicalDefault": "100",
+            "businessMeaning": "The smallest permissible length for a usable cut piece.",
+            "validRange": "150 - 400",
+            "unit": "mm",
+            "affectsOutput": "If the remaining length at the end of a column is smaller than this, the script shortens the previous full sheet to avoid creating a too-small piece."
+          },
+          {
+            "name": "dMinimumWidth",
+            "technicalDefault": "150",
+            "businessMeaning": "The smallest permissible width for the last board in a row.",
+            "validRange": "100 - 300",
+            "unit": "mm",
+            "affectsOutput": "If the remaining width of the floor is smaller than this, the script adjusts the previous column's width to accommodate a full-width board, preventing narrow strips."
+          },
+          {
+            "name": "dTrimWasteLength",
+            "technicalDefault": "4",
+            "businessMeaning": "A tolerance used to decide if a leftover piece is 'full length' (and thus reused in the next column) or 'waste'.",
+            "validRange": "0 - 10",
+            "unit": "mm",
+            "affectsOutput": "If a leftover board length is within this tolerance of the full sheet length, it is treated as a full board to start the next column, effectively staggering the joints."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dSheetWidth change",
+            "effect": "Recalculates column boundaries. If the new width doesn't fit evenly, dMinimumWidth logic triggers to adjust the last column.",
+            "cascade": [
+              "dMinimumWidth",
+              "sLocation"
+            ]
+          },
+          {
+            "trigger": "dSheetLength change",
+            "effect": "Recalculates horizontal splits. The dTrimWasteLength logic determines if offcuts are carried over.",
+            "cascade": [
+              "dMinimumLength",
+              "dTrimWasteLength"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Sheet",
+            "description": "3D bodies representing the sheathing boards. They are created as large strips and then split into individual boards based on the calculated grid.",
+            "appliedTo": "The selected Element (Floor or Roof), assigned to the specific Zone defined by nZones."
+          }
+        ]
+      },
+      "tokens_used": 8331,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"Script Insertion starts\",\n    \"[Check] Is insertCycleCount > 1?\",\n    \"[If Yes] Erase instance and return (Prevent duplicate execution)\",\n    \"[If No] Check if _kExecuteKey is empty\",\n    \"[If Yes] Show Dynamic Dialog (showDialogOnce)\",\n    \"Prompt user to Select one or more Elements (PrEntity.go)\",\n    \"[Check] Did user select elements?\",\n    \"[If No] Script ends (Implicit return)\",\n    \"[If Yes] Extract Properties from script (Widths, Lengths, Location, etc.)\",\n    \"Loop through each selected Element\",\n    \"Create TslInst instance attached to Element via dbCreate\",\n    \"Set 'ExecutionMode' in Map to 0 (Force Recalculation)\",\n    \"Erase the temporary command instance\",\n    \"[Recalculation Event - Instance created on Element]\",\n    \"Check if _bOnElementConstructed or 'Redistribute Sheets' triggered\",\n    \"Reset 'ExecutionMode' to 0 if Trigger detected\",\n    \"Retrieve 'ExecutionMode' from Map\",\n    \"[Check] Is ExecutionMode == 0 (Initial Run or Redistribute)?\",\n    \"[If No (Mode 1)] Skip Calculation, Draw Arrows, Update Map to Mode 1\",\n    \"[If Yes (Mode 0)] Start Calculation Logic\",\n    \"Get Element CoordinateSystem and Beams\",\n    \"Get existing Sheets from specified nZones\",\n    \"[Check] Are there existing sheets in the zone?\",\n    \"[If No] Return (Nothing to distribute)\",\n    \"If Yes, Union profiles of existing sheets into ppSheets\",\n    \"Erase all existing sheets in the zone\",\n    \"Calculate bounding corners (BL, BR, TL, TR) of the profile\",\n    \"Set Start and End points (ptDistStart, ptDistEnd) based on sLocation\",\n    \"Determine Distribution Directions (Horizontal/Vertical) based on sLocation\",\n    \"Calculate Vertical Splits (Column boundaries)\",\n    \"[Loop] Create columns until distribution end is reached\",\n    \"[Branch inside Loop] Check for intersecting beams/jacks to snap split lines\",\n    \"[Branch at End] Check if last column width < dMinimumWidth\",\n    \"[If Too Small] Attempt to shift previous split point to absorb width\",\n    \"Store Column Start and End points\",\n    \"Calculate Horizontal Splits (Board rows) for each Column\",\n    \"[Loop] Iterate through columns\",\n    \"[Check] Is there wasteBoardLength from previous column?\",\n    \"[If Yes] Place waste board at start of current column\",\n    \"[Check] Is bUsePreviousColumnLastBoardLength TRUE?\",\n    \"[If Yes] Place specific board length at start (Running bond/stagger)\",\n    \"Calculate number of full dSLength boards fitting in column\",\n    \"Calculate remaining length for last board\",\n    \"[Check] Is last board < dMinimumLength?\",\n    \"[If Yes] Extend previous board downwards, remove last board split\",\n    \"[Check] Is last board 'full length' (within dTrimWasteLength)?\",\n    \"[If Yes] Reset wasteBoardLength\",\n    \"[Else If] Is last board < dMinimumLength (after trim check)?\",\n    \"[If Yes] Set flag to use this length for next column start (bUsePreviousColumnLastBoardLength)\",\n    \"[Else] Save remaining length as wasteBoardLength for next column\",\n    \"Store all Horizontal Split points and Column indices\",\n    \"Create Sheet Geometry\",\n    \"Create large Sheet body for each Column Profile\",\n    \"Split Sheets vertically using Horizontal Split points\",\n    \"Apply Material and Color from original sheets\",\n    \"Assign new Sheets to Element Zone (nZone)\",\n    \"End of Calculation\",\n    \"Draw Display Arrows indicating start point\",\n    \"Set ExecutionMode to 1 (Cached state)\",\n    \"Assign Script Instance to Element Group\",\n    \"End\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Initial Insertion Cycle Check\",\n      \"path1\": {\n        \"name\": \"Duplicate Cycle\",\n        \"steps\": [\n          \"Detect insertCycleCount() > 1\",\n          \"Execute eraseInstance()\",\n          \"Exit Script\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"First Cycle\",\n        \"steps\": [\n          \"Proceed with User Selection\",\n          \"Show Dialog if needed\",\n          \"Create attached instances\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"User Selection (PrEntity)\",\n      \"path1\": {\n        \"name\": \"Selection Made\",\n        \"steps\": [\n          \"User picks Element(s)\",\n          \"Loop elements and create dbCreate instances\",\n          \"Self-destruct temporary instance\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Selection Cancelled/Empty\",\n        \"steps\": [\n          \"ssE.go() returns false\",\n          \"Instance remains (ghost) or erased depending on subsequent execution context (usually requires manual Esc)\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Execution Mode (Map State)\",\n      \"path1\": {\n        \"name\": \"Calculate/Redistribute (Mode 0)\",\n        \"steps\": [\n          \"ExecutionMode is 0 or explicitly reset\",\n          \"Fetch geometry\",\n          \"Delete old sheets\",\n          \"Calculate splits\",\n          \"Generate new sheets\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Display Only (Mode 1)\",\n        \"steps\": [\n          \"ExecutionMode is 1\",\n          \"Skip calculation loops\",\n          \"Draw visualization graphics\",\n          \"Update Map to ensure it stays 1\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Existing Sheets in Zone\",\n      \"path1\": {\n        \"name\": \"Sheets Found\",\n        \"steps\": [\n          \"shAll.length > 0\",\n          \"Proceed to union profiles and replace distribution\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"No Sheets\",\n        \"steps\": [\n          \"shAll.length == 0\",\n          \"Return immediately (Distribution aborted)\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Last Column Width Optimization\",\n      \"path1\": {\n        \"name\": \"Width Too Small\",\n        \"steps\": [\n          \"Last remaining width < dMinimumWidth\",\n          \"Attempt to move previous split point back\",\n          \"Check if previous column remains >= dMinimumWidth\",\n          \"Update split point if valid\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Width Acceptable\",\n        \"steps\": [\n          \"Last remaining width >= dMinimumWidth\",\n          \"Accept current column boundary\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Last Board Length & Waste Handling (Optimization)\",\n      \"path1\": {\n        \"name\": \"Full Board / Negligible Waste\",\n        \"steps\": [\n          \"Remainder length approx Full Sheet Length (within dTrimWasteLength)\",\n          \"Treat as full board\",\n          \"Reset wasteBoardLength to -1\",\n          \"Next column starts with full sheet\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Small Waste (Carry Over)\",\n        \"steps\": [\n          \"Remainder length >= dMinimumLength\",\n          \"Set wasteBoardLength = Remainder\",\n          \"Next column starts with this waste length\"\n        ]\n      },\n      \"path3\": {\n        \"name\": \"Tiny Waste (Too small to use)\",\n        \"steps\": [\n          \"Remainder length < dMinimumLength\",\n          \"Set bUsePreviousColumnLastBoardLength = TRUE\",\n          \"Next column starts with a full sheet, but shifts stagger based on this small cut\",\n          \"Effectively cuts the next column's first board shorter\"\n        ]\n      }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"Element Selection\",\n      \"errorMessage\": \"None (Script fails silently or prompts again via restart)\",\n      \"recovery\": \"Select a valid Element during command line prompt.\"\n    },\n    {\n      \"check\": \"Existing Sheets in Zone\",\n      \"errorMessage\": \"None (Silent return)\",\n      \"recovery\": \"Ensure the selected Element has construction sheets generated in the Zone specified by 'nZones' before running this script.\"\n    },\n    {\n      \"check\": \"Minimum Length Constraints\",\n      \"errorMessage\": \"None (Handled by logic, not explicit error)\",\n      \"recovery\": \"If 'dMinimumLength' is too high for the geometry, previous sheets are shortened. Adjust 'dMinimumLength' or 'dSheetLength' properties if layout fails.\"\n    },\n    {\n      \"check\": \"Minimum Width Constraints\",\n      \"errorMessage\": \"None (Handled by logic)\",\n      \"recovery\": \"Script attempts to adjust column widths. If 'dMinimumWidth' is too large relative to total floor width, distribution may fail or produce no sheets. Adjust 'dSheetWidth' or 'dMinimumWidth'.\"\n    }\n  ],\n  \"postInsertionActions\": [\n    {\n      \"action\": \"Redistribute Sheets\",\n      \"how\": \"Right-click context menu\",\n      \"effect\": \"Resets 'ExecutionMode' to 0, triggers deletion of all current sheets in the zone, and recalculates the layout from scratch using current property values.\"\n    },\n    {\n      \"action\": \"Modify Properties\",\n      \"how\": \"Object Properties Palette (OPM)\",\n      \"effect\":"
+      },
+      "tokens_used": 11196,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_FloorSheetingDistributionParallel.mcr\n\n## Overview\nThis script automatically redistributes floor or roof sheathing boards (e.g., OSB or Plywood) in a parallel pattern across a selected element. It optimizes the layout to minimize waste by calculating the most efficient cut positions and reusing offcuts in adjacent columns.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in 3D Model Space. |\n| Paper Space | No | Not supported for drawing views. |\n| Shop Drawing | No | Not supported for shop drawing generation. |\n\n## Prerequisites\n- **Required Entities**: An existing Element (Floor or Roof).\n- **Existing Data**: The selected Element **must already have construction sheets generated** in the Zone specified by the `nZones` parameter (default is Zone 1). This script replaces/reorganizes existing sheets rather than creating them from scratch.\n- **Minimum Beam Count**: 0 (This script manipulates sheet entities, not beams).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_FloorSheetingDistributionParallel.mcr`\n\n### Step 2: Configure Settings (Dialog)\n```\nDialog: Dynamic Configuration Dialog\nAction: A dialog window may appear upon insertion. Adjust the Sheathing Width, Length, Thickness, and Distribution Location as needed. Click OK to proceed.\n```\n\n### Step 3: Select Elements\n```\nCommand Line: Select one, or more elements\nAction: Click on the Floor or Roof elements in the model that you wish to apply the sheathing distribution to. Press Enter to confirm selection.\n```\n\n### Step 4: Automatic Calculation\n```\nAction: The script attaches to the selected elements and automatically recalculates the sheet layout based on the properties. Existing sheets in the target zone are erased and replaced by the new optimized distribution.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Distribution location | dropdown | Top left | Sets the origin corner for the sheathing layout and the direction of the run (e.g., Top-Left runs towards Bottom-Right). |\n| Zone to Redistribute the Sheets | number | 1 | Specifies which construction layer (Zone) to replace. Ensure the element has sheets in this zone before running. |\n| Sheathing Width | number | 600 | The standard width of the raw board material (e.g., 600mm). |\n| Sheathing Length | number | 2400 | The standard length of the raw board material (e.g., 2400mm). |\n| Sheathing Thickness | number | 22 | The thickness of the sheathing material. |\n| Minimum sheet length | number | 100 | The smallest permissible length for a usable cut piece. Shorter leftovers are trimmed or handled differently. |\n| Mininum sheet width | number | 150 | The smallest permissible width for the last board in a row. Prevents narrow strips. |\n| Trim waste length by | number | 4 | Tolerance used to decide if a leftover piece is effectively \"full length\" and can be reused as a new board. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Redistribute Sheets | Deletes the current sheathing layout in the assigned zone and recalculates it from scratch using the current Property values. |\n\n## Settings Files\nNone. This script relies on Properties and user input.\n\n## Tips\n- **Existing Sheets Required**: If the script seems to do nothing, check the `nZones` property. The element must already have sheets generated in that specific zone (often done via the \"Generate Construction\" tool) for this script to redistribute them.\n- **Optimization**: The script automatically attempts to use offcuts from the end of one row to start the next, creating a staggered (running bond) effect where possible.\n- **Corner Logic**: Use the `Distribution location` property to flip the entire pattern. For example, switch from \"Top left\" to \"Bottom right\" if you want the full sheets to start at the opposite end of the floor.\n\n## FAQ\n- **Q: Why did the script not create any sheets?**\n  A: This script redistributes *existing* sheets. You must first generate construction sheets on the element (e.g., using the standard Floor or Roof generation tools) into the Zone defined in the properties (default Zone 1).\n  \n- **Q: How do I change the board size?**\n  A: Select the element, open the Properties Palette (Ctrl+1), find the script instance, and modify the `Sheathing Width` or `Sheathing Length`. Then right-click and select \"Redistribute Sheets\".\n\n- **Q: The last row is very narrow. How do I fix that?**\n  A: Increase the `Mininum sheet width` property. The script will then adjust the previous columns to ensure the last column meets this minimum width requirement."
+      },
+      "tokens_used": 7642,
+      "error": null
+    }
+  }
+}

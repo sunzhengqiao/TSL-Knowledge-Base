@@ -1,0 +1,202 @@
+{
+  "filename": "GE_WALL_SET_EXPOSURE_TO_BEAMS.mcr",
+  "status": "completed",
+  "total_tokens": 17280,
+  "processing_time": 263.5986123085022,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "v1.0",
+            "date": "22.apr.2014",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3147,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses `PrEntity` to select `Element()` objects and operates directly on `ElementWall` and `Beam` entities. It contains no `sd_` prefixes, no `_Viewport` usage, and no ShopDrawing-specific drawing generation logic. The script calls `eraseInstance()` immediately after execution, characteristic of a utility script running in the model environment to update entity properties."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "ElementWall",
+            "Beam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing Wall Elements",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1362,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\n|Select element(s)|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 1826,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Synchronizes the 'Exposure' property (Interior/Exterior) of Wall Elements to the 'SubLabel' of all individual beams contained within those walls.",
+          "category": "Data Management / Batch Attribute Update",
+          "typicalUseCase": "Tagging beams in exterior walls for export filters, reports, or manufacturing requirements without manually selecting each beam."
+        },
+        "parameters": [
+          {
+            "name": "_Element (via PrEntity ssE)",
+            "technicalDefault": "User Prompt",
+            "businessMeaning": "The selection of Wall Elements to be processed. The script reads the exposure setting of these walls and applies the corresponding text label to every beam inside them.",
+            "validRange": "One or more valid ElementWall entities in ModelSpace",
+            "unit": "Selection (Count)",
+            "affectsOutput": "Determines the scope of beams whose 'SubLabel' property will be overwritten."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Beam (Attribute Update)",
+            "description": "The 'SubLabel' attribute is updated to 'Interior' or 'Exterior'. No geometry is created or modified.",
+            "appliedTo": "All Beam entities found within the ElementWall composition of the selected elements."
+          }
+        ]
+      },
+      "tokens_used": 3420,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script triggered (Manual Insert or Event Construction)",
+          "Check Insert Cycle Count",
+          "[Manual Mode] Prompt user to select Wall Elements",
+          "Iterate through selected Elements (or attached Element in Event Mode)",
+          "Verify Element is valid and cast to ElementWall",
+          "Read Wall 'exposed' property (0 or 1)",
+          "Map exposure value to String ('Interior' or 'Exterior')",
+          "Retrieve all Beam entities contained within the Wall",
+          "Loop through Beams and set 'SubLabel' property to mapped String",
+          "Erase script instance from memory (Clean up)",
+          "Execution Complete"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count (Re-run prevention)",
+            "path1": {
+              "name": "Cycle > 1",
+              "steps": [
+                "Erase script instance",
+                "Return (Exit)"
+              ]
+            },
+            "path2": {
+              "name": "Cycle <= 1",
+              "steps": [
+                "Proceed to selection/processing logic"
+              ]
+            }
+          },
+          {
+            "condition": "Wall Exposure Property",
+            "path1": {
+              "name": "Exposure = 0 (Interior)",
+              "steps": [
+                "Set Beam SubLabel to 'Interior'"
+              ]
+            },
+            "path2": {
+              "name": "Exposure = 1 (Exterior)",
+              "steps": [
+                "Set Beam SubLabel to 'Exterior'"
+              ]
+            }
+          },
+          {
+            "condition": "Element Validity Check",
+            "path1": {
+              "name": "Element is Invalid/Corrupt",
+              "steps": [
+                "Skip to next Element",
+                "Continue Loop"
+              ]
+            },
+            "path2": {
+              "name": "Element is Valid Wall",
+              "steps": [
+                "Process Beams"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Silent exit)",
+            "recovery": "N/A - Script prevents redundant execution automatically."
+          },
+          {
+            "check": "Selected Entity Validity",
+            "errorMessage": "None (Silent skip)",
+            "recovery": "If an entity in the selection set is invalid or not a Wall, it is skipped automatically. User does not need to intervene, but they should verify selection if expected walls were not updated."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 4075,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_WALL_SET_EXPOSURE_TO_BEAMS.mcr\n\n## Overview\nThis utility script synchronizes the exposure setting (Interior/Exterior) of selected Wall Elements to the SubLabel of all beams contained within those walls. It is designed to quickly tag beams for reports or export filters without needing to edit each beam individually.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on Wall Elements and their beams in the 3D model. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | Does not generate drawing views. |\n\n## Prerequisites\n- **Required Entities**: Wall Elements that contain beams.\n- **Minimum Beam Count**: 0 (The script processes walls regardless of beam count, though it updates beams if present).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_WALL_SET_EXPOSURE_TO_BEAMS.mcr` from the file dialog.\n\n### Step 2: Select Wall Elements\n```\nCommand Line: |Select element(s)|\nAction: Click on one or more Wall Elements in the drawing area. Press Enter to confirm selection.\n```\n\n*Note: The script will automatically process the selection, update the beam properties, and then remove itself from the drawing.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not expose any user-editable properties in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | This script does not add specific options to the entity context menu. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Verify Wall Settings**: Ensure your Wall Elements have the correct \"Exposure\" (or \"Exposed\") property set (0 for Interior, 1 for Exterior) before running the script, as this determines what text is written to the beams.\n- **Batch Processing**: You can select multiple walls at once to speed up the tagging process for an entire floor or project.\n- **Data Export**: Use this script to prepare your model for data export. The \"Interior\" and \"Exterior\" labels applied to beam SubLabels can be used to filter lists or CNC exports.\n\n## FAQ\n- **Q: What text does the script write to the beams?**\n  - **A**: It writes \"Interior\" if the wall exposure is 0, or \"Exterior\" if the wall exposure is 1.\n- **Q: Do I need to delete the script instance after running it?**\n  - **A**: No, the script automatically cleans up and erases itself from the drawing immediately after processing.\n- **Q: Can I use this on single beams?**\n  - **A**: No, this script is designed specifically to read Wall Elements and update the beams inside them. It does not work on single beams selected outside of a wall composition."
+      },
+      "tokens_used": 3450,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,238 @@
+{
+  "filename": "BlockDisplay.mcr",
+  "status": "completed",
+  "total_tokens": 18242,
+  "processing_time": 214.4260880947113,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3777,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses getPoint() for interactive insertion in model space. It uses Display().draw() to render a Block object. It lacks ShopDrawing patterns (sd_*, Multipage*), does not reference _Viewport, and does not use #Type E entity logic."
+        },
+        "prerequisites": {
+          "requiredEntities": [],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "C:\\Temp\\Blocks (Directory containing DWG block files)"
+          ]
+        }
+      },
+      "tokens_used": 1231,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getPoint",
+              "promptOriginal": "|Select insertion point|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "_bOnInsert",
+            "title": null,
+            "dataSource": "TSL Properties (OPM)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "blockName",
+            "type": "PropString",
+            "displayName": "|Block names|",
+            "defaultValue": null,
+            "inputType": "dropdown",
+            "options": "Populated from _BlockNames and C:\\Temp\\Blocks",
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": [
+          {
+            "filename": "*.dwg",
+            "searchPaths": [
+              "C:\\Temp\\Blocks"
+            ],
+            "purpose": "Provides the list of available blocks to insert",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 2095,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "This script allows the user to select and insert a graphical block (DWG) from a predefined list or a specific folder directory into the model.",
+          "category": "Utility/Annotation",
+          "typicalUseCase": "Adding standard details, graphical symbols, or non-parametric reference geometry to a timber model at a specific coordinate."
+        },
+        "parameters": [
+          {
+            "name": "blockName",
+            "technicalDefault": "First entry found in _BlockNames or 'C:\\Temp\\Blocks'",
+            "businessMeaning": "Identifies the specific symbol or detail block to be displayed. It serves as a selector for the graphical content to be inserted.",
+            "validRange": "Must exactly match a filename (without extension) found in 'C:\\Temp\\Blocks' or a name registered in _BlockNames.",
+            "unit": "String",
+            "affectsOutput": "Determines which DWG file is loaded and drawn at the insertion point. Changing this swaps the visible geometry entirely."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of blockName",
+            "effect": "The script maps the selected string to the corresponding file path in the internal 'blockLoadNames' array to locate the source DWG file.",
+            "cascade": [
+              "blockLoadName"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Block",
+            "description": "A graphical reference containing the geometry defined in the selected external DWG file.",
+            "appliedTo": "Model Space (at coordinate _Pt0)"
+          }
+        ]
+      },
+      "tokens_used": 3179,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initialization: Scan internal CAD definitions and 'C:\\Temp\\Blocks' directory for .dwg files.",
+          "2. Combine found blocks into a single list, ensuring internal definitions take precedence over file system duplicates.",
+          "3. Insertion Trigger: User launches script (_bOnInsert = true).",
+          "4. Cycle Check: Verify if this is a repeated insertion cycle.",
+          "5. [If Cycle > 1] Erase current instance and terminate execution.",
+          "6. [If Cycle == 1] Open OPM Properties Dialog via showDialog().",
+          "7. User Input: Select a block name from the populated dropdown list.",
+          "8. User Input: Select the insertion point in Model Space via getPoint().",
+          "9. Execution: Resolve the selected block name to its source file path.",
+          "10. Rendering: Create the Block entity and draw it at the selected coordinates."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Duplicate Block Name Detected",
+            "path1": {
+              "name": "Internal Priority",
+              "steps": [
+                "Check if blockName exists in internal _BlockNames.",
+                "If found, skip the file system file with the same name."
+              ]
+            },
+            "path2": {
+              "name": "File System Added",
+              "steps": [
+                "Verify blockName is not in internal list.",
+                "Add blockName and its full path to the selection arrays."
+              ]
+            }
+          },
+          {
+            "condition": "Insertion Cycle Count",
+            "path1": {
+              "name": "Secondary Cycle",
+              "steps": [
+                "Detect insertCycleCount() > 1.",
+                "Execute eraseInstance().",
+                "Return (Stop script)."
+              ]
+            },
+            "path2": {
+              "name": "Primary Cycle",
+              "steps": [
+                "Detect insertCycleCount() == 1.",
+                "Execute showDialog().",
+                "Execute getPoint().",
+                "Proceed to generation."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "File Extension",
+            "errorMessage": "None (Silent)",
+            "recovery": "Files in 'C:\\Temp\\Blocks' without the '.dwg' extension are ignored by the loop logic."
+          },
+          {
+            "check": "Directory Existence",
+            "errorMessage": "None (Silent)",
+            "recovery": "If 'C:\\Temp\\Blocks' is missing or inaccessible, getFilesInFolder returns empty, and only internal CAD blocks remain available in the list."
+          },
+          {
+            "check": "Property Selection Constraint",
+            "errorMessage": "None",
+            "recovery": "The PropString is strictly bound to the 'blockNames' array, preventing users from typing invalid names that cannot be mapped to a file path."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Block Type",
+            "how": "OPM (Object Properties Manager)",
+            "effect": "Modifying the 'Block names' property triggers a recalculation. The script looks up the new file path and draws the new block geometry at the existing _Pt0."
+          },
+          {
+            "action": "Move Block",
+            "how": "Grip Edit (Point)",
+            "effect": "Dragging the insertion point grip updates _Pt0 and re-draws the block at the new coordinate."
+          }
+        ]
+      },
+      "tokens_used": 4118,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# BlockDisplay.mcr\n\n## Overview\nThis script allows you to insert graphical blocks (DWG details or symbols) into your model. It dynamically lists blocks found in the `C:\\Temp\\Blocks` folder and internal CAD definitions, letting you place them at a specific point in Model Space.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Blocks are inserted at coordinates selected by the user. |\n| Paper Space | No | This script is not designed for layout views. |\n| Shop Drawing | No | This script does not generate manufacturing views. |\n\n## Prerequisites\n- **Directory:** A folder named `Blocks` must exist at `C:\\Temp\\Blocks`.\n- **Content:** The folder must contain `.dwg` files you wish to use as blocks.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Select `BlockDisplay.mcr` from the file list.\n\n### Step 2: Select Block Type\n```\nInterface: Properties Palette (OPM)\nAction: Locate the \"Block names\" parameter. Click the dropdown menu and select the desired block from the list.\n```\n*Note: The list is generated from files found in `C:\\Temp\\Blocks` and internal CAD definitions.*\n\n### Step 3: Place Block\n```\nCommand Line: Select insertion point\nAction: Click in the Model Space to set the location for the block's origin.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Block names | Dropdown | (First available) | Selects the specific DWG file or definition to display. Changing this swaps the geometry at the current location. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom options are added to the context menu. |\n\n## Settings Files\n- **Filename**: `*.dwg` (Any DWG file)\n- **Location**: `C:\\Temp\\Blocks`\n- **Purpose**: Provides the list of available graphical blocks to insert. Ensure your library files are stored here.\n\n## Tips\n- **Swapping Blocks:** You can change the displayed block after insertion by selecting the object, opening the Properties palette, and choosing a different name from the \"Block names\" dropdown.\n- **Internal Blocks:** If a block name exists both inside the drawing and in the `C:\\Temp\\Blocks` folder, the script prioritizes the internal drawing definition.\n- **Moving:** Use the grip point at the insertion location to move the block around the model.\n\n## FAQ\n- **Q: I don't see my blocks in the list.**\n- **A:** Ensure the folder `C:\\Temp\\Blocks` exists on your computer and contains valid `.dwg` files. If the folder is missing, only internal definitions will appear.\n- **Q: Can I type a custom block name?**\n- **A:** No. You must select from the dropdown list to ensure the script can find the corresponding file path.\n- **Q: How do I rotate the block?**\n- **A:** Use standard AutoCAD rotation commands (e.g., `ROTATE`) on the inserted object, or rotate your UCS (User Coordinate System) before insertion."
+      },
+      "tokens_used": 3842,
+      "error": null
+    }
+  }
+}

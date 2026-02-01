@@ -1,0 +1,269 @@
+{
+  "filename": "bomLinkSettings.mcr",
+  "status": "completed",
+  "total_tokens": 26535,
+  "processing_time": 251.74152421951294,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "23oct2019",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "HSB-5806 initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5416,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No usage of sd_* or Multipage* prefixes, no #Type E with _Entity[], no _Viewport references. Script calls eraseInstance() immediately after execution and performs project configuration data storage, indicating a utility script for model space project setup."
+        },
+        "prerequisites": {
+          "requiredEntities": [],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "BOMLink\\hsbSoft.BomLink.Tsl.dll",
+            "Project definitions (either via subMapX or BOMLink catalog)"
+          ]
+        }
+      },
+      "tokens_used": 2283,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sProject",
+            "type": "PropString",
+            "displayName": "|Project|",
+            "defaultValue": null,
+            "inputType": "dropdown",
+            "options": [
+              "<Dynamic list from hsbSoft.BomLink.Tsl.dll>",
+              "<|Remove bomLink Settings|>"
+            ],
+            "category": "|General|",
+            "description": "|Defines the current bomLink Project|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4991,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Configures and assigns the specific BOMLink project settings to the current CAD model, acting as a bridge between the drawing and the external Bill of Materials system.",
+          "category": "ProjectConfiguration",
+          "typicalUseCase": "Initializing a new drawing with the correct BOMLink context or switching the BOM export configuration for an existing project without modifying geometry."
+        },
+        "parameters": [
+          {
+            "name": "sProject",
+            "technicalDefault": "First available project from hsbSoft.BomLink.Tsl.dll or previously saved project",
+            "businessMeaning": "Selects the active BOMLink project configuration. This determines how data is mapped and exported for the current job, linking the drawing to specific manufacturing or reporting standards defined in the external BOMLink system.",
+            "validRange": "Restricted to the list of projects defined in the BOMLink catalog/DLL, plus a specific option to remove settings.",
+            "unit": "Text (Selection List)",
+            "affectsOutput": "Does not affect physical geometry. It updates the project's internal data storage (subMapX) with the configuration variables required for BOM generation and exports."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sProject is set to a valid project name",
+            "effect": "The script queries the external DLL for specific project variables and saves them to the drawing's project map.",
+            "cascade": [
+              "subMapXProject(HSB_PROJECTSETTINGS)"
+            ]
+          },
+          {
+            "trigger": "sProject is set to '<|Remove bomLink Settings|>'",
+            "effect": "The script deletes the existing BOMLink configuration from the drawing's memory.",
+            "cascade": [
+              "subMapXProject(HSB_PROJECTSETTINGS)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "None",
+            "description": "No physical geometry (beams/cuts) is created. The script's output is purely data storage within the AutoCAD drawing properties (subMapX).",
+            "appliedTo": "ModelSpace / Project Data"
+          }
+        ]
+      },
+      "tokens_used": 4342,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Initialization",
+          "Load Constants and Debug Settings",
+          "Retrieve BOMLink Project List from DLL (hsbSoft.BomLink.Tsl.dll)",
+          "Append 'Remove bomLink Settings' option to project list",
+          "Validate availability of projects or existing settings (Check if sProjects length >= 2 or subMapXKey exists)",
+          "Property Population (sProject dropdown populated with list)",
+          "Check Insertion Context (_bOnInsert)",
+          "Determine Execution Mode (Catalog/Silent vs. Dialog)",
+          "User Interaction/Selection of Project",
+          "Process Selection (Apply Settings vs. Remove Settings)",
+          "Update Project Map (subMapXProject)",
+          "Report Result to User",
+          "Erase Instance and Exit"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Check for available projects or existing configuration",
+            "path1": {
+              "name": "Valid Configuration Found",
+              "steps": [
+                "Continue to Property Definition",
+                "Enter _bOnInsert logic"
+              ]
+            },
+            "path2": {
+              "name": "No Projects and No Existing Settings",
+              "steps": [
+                "Display Error Message: 'Could not find any project definitions...'",
+                "Delete Script Instance (eraseInstance)",
+                "Exit Script"
+              ]
+            }
+          },
+          {
+            "condition": "Current Project Settings Status during _bOnInsert",
+            "path1": {
+              "name": "Single Project Available & No Existing Settings",
+              "steps": [
+                "Auto-select the single project found (sProjects.first())",
+                "Skip Dialog",
+                "Proceed to Apply Settings logic"
+              ]
+            },
+            "path2": {
+              "name": "Multiple Projects or Existing Settings Found",
+              "steps": [
+                "Determine if Insertion Key (_kExecuteKey) exists",
+                "If Key exists: Load from Catalog or Last Inserted",
+                "If Key missing: Check existing subMapX for current project to preset dropdown",
+                "Show Dialog (showDialog)",
+                "Wait for User Selection"
+              ]
+            }
+          },
+          {
+            "condition": "User Selection in Properties/Dialog",
+            "path1": {
+              "name": "Specific Project Selected",
+              "steps": [
+                "Call AssignVariables function in DLL",
+                "Retrieve Configuration Map (_Map)",
+                "Check for Errors in returned Map",
+                "Update subMapXProject with new data",
+                "Confirm Success Message"
+              ]
+            },
+            "path2": {
+              "name": "Remove Option Selected",
+              "steps": [
+                "Identify current project from map",
+                "Remove SubMapXProject entry",
+                "Report Removal Message",
+                "Exit"
+              ]
+            }
+          },
+          {
+            "condition": "DLL Configuration Retrieval",
+            "path1": {
+              "name": "Success",
+              "steps": [
+                "Populate _Map with variables",
+                "Set 'BOMLINKPROJECT' key",
+                "Save to Project Map"
+              ]
+            },
+            "path2": {
+              "name": "Error Returned",
+              "steps": [
+                "Extract Error Message from Map",
+                "Report Error Message to User",
+                "Continue to attempt save (or exit depending on error severity, code implies report then continue/save)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Availability of BOMLink definitions via DLL or existing subMapX",
+            "errorMessage": "bomLinkSettings: Could not find any project definitions, please run configuration first. Tool will be deleted.",
+            "recovery": "Run BOMLink configuration tool to ensure projects are defined in hsbSoft.BomLink.Tsl.dll before running this script."
+          },
+          {
+            "check": "DLL Execution Response",
+            "errorMessage": "Message content from _Map('Errors')",
+            "recovery": "Check BOMLink configuration and DLL connection. The specific error message from the DLL indicates the failure reason."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify the assigned BOMLink Project",
+            "how": "Properties Palette (OPM) - Change 'Project' dropdown value",
+            "effect": "Re-triggers the script logic to fetch new variables from the DLL and updates the project map (subMapX) with the new configuration."
+          },
+          {
+            "action": "Remove BOMLink Settings",
+            "how": "Properties Palette (OPM) - Select '<|Remove bomLink Settings|>' from dropdown",
+            "effect": "Deletes the BOMLink configuration data (subMapXProject) from the current drawing."
+          }
+        ]
+      },
+      "tokens_used": 4717,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# bomLinkSettings.mcr\n\n## Overview\nAssigns a specific BOMLink project configuration to the current CAD model. This script acts as a bridge between the drawing and the external Bill of Materials system, ensuring data export follows the correct manufacturing or reporting standards.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script runs in the model to configure project data. |\n| Paper Space | No | Not designed for layout views. |\n| Shop Drawing | No | Not for detailing views. |\n\n## Prerequisites\n- **Required Entities**: None.\n- **Minimum Beam Count**: 0.\n- **Required Settings**:\n  - `hsbSoft.BomLink.Tsl.dll` must be installed and accessible.\n  - At least one BOMLink project must be defined in the external configuration/catalog.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `bomLinkSettings.mcr` from the list.\n\n### Step 2: Automatic Configuration Check\nThe script will automatically check for available BOMLink projects.\n- **Scenario A (Single Project)**: If only one project exists and no settings are currently applied, the script will automatically select it and finish. You may not see a dialog.\n- **Scenario B (Multiple Projects)**: If multiple projects exist, or if settings are already applied, the Properties Palette will display the options.\n\n### Step 3: Select Project\n```\nProperties Palette:\n1. Locate the 'Project' dropdown.\n2. Select the desired BOMLink project name.\nOR\nSelect '<|Remove bomLink Settings|>' to clear current data.\n```\n*Note: Upon selection, the script updates the project data and immediately erases itself from the drawing.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Project | dropdown | First available project | Selects the active BOMLink project configuration. Options are populated dynamically from the DLL. Includes an option to remove settings. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | This script erases itself immediately after running. There is no persistent element to right-click. To modify settings, re-insert the script. |\n\n## Settings Files\n- **Filename**: `hsbSoft.BomLink.Tsl.dll`\n- **Location**: hsbCAD Application Directory / Plugins folder\n- **Purpose**: Provides the list of available BOMLink projects and the specific configuration variables for each project.\n\n## Tips\n- **Disappearing Act**: It is normal for the script instance to disappear from the drawing immediately after you select a project. It has successfully saved the settings to the project's internal memory; you do not need to keep a visible element in the model.\n- **Re-running**: To change the project later, simply run `TSLINSERT` and select this script again. It will overwrite the existing settings with your new selection.\n- **Error Handling**: If you see a message stating \"Could not find any project definitions,\" check that your BOMLink software is correctly installed and configured before running this script.\n\n## FAQ\n- **Q: Why did the script delete itself after I ran it?**\n  A: This is a configuration utility script. Its sole purpose is to write data to the project map. Once the data is written, the physical script instance is no longer needed and is removed automatically.\n- **Q: How do I know which project is currently active?**\n  A: You can re-insert the script. The dropdown will default to the currently active project defined in the drawing's settings. Alternatively, check your BOMLink export settings.\n- **Q: What happens if I select \"<|Remove bomLink Settings|>\"?**\n  A: The script will clear all BOMLink configuration data from the current drawing, effectively unlinking it from the external BOM system."
+      },
+      "tokens_used": 4786,
+      "error": null
+    }
+  }
+}

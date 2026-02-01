@@ -1,0 +1,386 @@
+{
+  "filename": "DimRadial.mcr",
+  "status": "completed",
+  "total_tokens": 45872,
+  "processing_time": 277.77352023124695,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"header\": {\n    \"type\": null,\n    \"numBeamsReq\": null,\n    \"keywords\": [],\n    \"majorVersion\": null,\n    \"minorVersion\": null,\n    \"dxaOut\": null,\n    \"implInsert\": null\n  },\n  \"description\": \"The tsl creates an radial or diametric dimension\",\n  \"versionHistory\": [\n    {\n      \"version\": \"3.4\",\n      \"date\": \"02.12.2024\",\n      \"author\": \"Thorsten Huck\",\n      \"changes\": \"HSB-23092 supporting metalparts of xref drawings\"\n    },\n    {\n      \"version\": \"3.3\",\n      \"date\": \"14.02.2024\",\n      \"author\": \"Thorsten Huck\",\n      \"changes\": \"HSB-21240 mortise detection improved\"\n    },\n    {\n      \"version\": \"3.2\",\n      \"date\": \"13.02.2024\",\n      \"author\": \"Thorsten Huck\",\n      \"changes\": \"HSB-21240 curvedStyle added, tool/contour overlay enhanced, various enhancements on detecting arcs\"\n    },\n    {\n      \"version\": \"3.1\",\n      \"date\": \"12.02.2024\",\n      \"author\": \"Thorsten Huck\",\n      \"changes\": \"HSB-21240 perpendicular drills supressed, leader added\"\n    },\n    {\n      \"version\": \"3.0\",\n"
+      },
+      "tokens_used": 9079,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": true,
+          "isMultipageScript": true,
+          "detectionEvidence": "Script contains references to 'ShopDrawView sdv', 'MultiPageView mpvs[]', and functions 'getPlaneProfileShopdrawViewport' and 'getModelView'. Version history mentions 'supports pages which use scale to fit' and 'insert in block space'. It processes AssemblyDefinitions and generates dimensions within views."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element",
+            "AssemblyDefinitions",
+            "Shape",
+            "Drills"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Shopdrawing environment (Paper Space with MultiPageView or ShopDrawView contexts)",
+          "requiredSettings": [
+            "TslUtilities.dll (DialogService)",
+            "hsbCAD DimStyle definitions"
+          ]
+        }
+      },
+      "tokens_used": 5877,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": [
+            {
+              "prompt": "Are you sure to overwrite existing settings? [No/Yes]",
+              "options": [
+                "No",
+                "Yes"
+              ]
+            }
+          ]
+        },
+        "dialogs": [
+          {
+            "type": "SelectOption",
+            "trigger": "Right-click context menu -> 'Painter Management'",
+            "title": "Painter Management",
+            "dataSource": "Hardcoded options array",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "Painter Management",
+            "handler": "|Painter Management|",
+            "action": "Opens a dialog to specify automatic painter creation and usage options (Only in folder, For this dimension, For any dimension).",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Import Settings",
+            "handler": "|Import Settings|",
+            "action": "Imports settings from an XML file located at a specific path (variable sFullPath) into the MaterialObject.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Export Settings",
+            "handler": "|Export Settings|",
+            "action": "Exports current settings from the MaterialObject to an XML file located at a specific path (variable sFullPath). Asks for confirmation if file exists.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "DimRadial.xml",
+            "searchPaths": [
+              "_kPathHsbCompany\\Tsl\\DimRadial",
+              "_kPathHsbCompany\\Tsl"
+            ],
+            "purpose": "Stores and retrieves configuration settings for the DimRadial tool.",
+            "required": false
+          }
+        ]
+      },
+      "tokens_used": 6898,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the creation of radial, diametric, and arc length dimensions for curved timber contours, drilled holes, and mortises within shop drawings, supporting various drafting styles and automatic painter integration.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Used during detailing to annotate curved beams, rounded drill holes, or arched openings in 2D manufacturing drawings, ensuring dimensions are accurate and update with model changes."
+        },
+        "parameters": [
+          {
+            "name": "nDimMode",
+            "technicalDefault": "0",
+            "businessMeaning": "Selects the type of dimension: Radial (Radius), Diametric (Diameter), Arc Length, or Automatic (based on selected geometry).",
+            "validRange": "0: Radial, 1: Diametric, 2: Automatic, 3: Arc Length",
+            "unit": "Index",
+            "affectsOutput": "Changes the dimension geometry (single line vs double line), text prefix (R, Ø), and calculation logic (distance vs angle)."
+          },
+          {
+            "name": "sToolTypeFilter",
+            "technicalDefault": "_kContour",
+            "businessMeaning": "Filters which construction feature to dimension: Beam Contour, Openings, Drills, or Mortises.",
+            "validRange": "_kContour, _kOpenings, _kADPerpendicular, _kADRotated, _kAMPerpendicular, etc.",
+            "unit": "String",
+            "affectsOutput": "Restricts the dimension tool to only snap to and measure specific types of geometry (e.g., ignoring the beam edge and only measuring a drill hole)."
+          },
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "System Default",
+            "businessMeaning": "Selects the hsbCAD DimStyle definition that governs the visual appearance of the dimension (text height, arrow size, color, layers).",
+            "validRange": "Any DimStyle name defined in the project catalog",
+            "unit": "String",
+            "affectsOutput": "Updates the graphic properties of the dimension entity to match company drafting standards."
+          },
+          {
+            "name": "bConvex",
+            "technicalDefault": "true",
+            "businessMeaning": "Determines if the dimension refers to the outer (convex) or inner (concave) radius of a curved element.",
+            "validRange": "true (Convex/Outer), false (Concave/Inner)",
+            "unit": "Boolean",
+            "affectsOutput": "Flips the dimension line to the opposite side of the curve and adjusts the measured radius value."
+          },
+          {
+            "name": "dLeaderLength",
+            "technicalDefault": "0 (Auto/Disabled)",
+            "businessMeaning": "Defines the length of the leader line used to pull the dimension text away from the curve for clarity.",
+            "validRange": "0 (Off) to 1000+ mm",
+            "unit": "mm",
+            "affectsOutput": "Draws a leader line from the dimension arc to the text location when the text is moved far from the curve."
+          },
+          {
+            "name": "nPainterManagementMode",
+            "technicalDefault": "0",
+            "businessMeaning": "Controls how 'Painter' (visibility filter) definitions are handled for automatic dimensioning workflows.",
+            "validRange": "0: Only specific folder painters, 1: Any painter for this dim, 2: Any painter globally",
+            "unit": "Index",
+            "affectsOutput": "Influences how the script searches for valid geometry in the background, potentially affecting performance and detection in complex assemblies."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "nDimMode set to 3 (Arc Length)",
+            "effect": "Switches calculation logic to angular measurement and enables the Arc Length symbol.",
+            "cascade": [
+              "Geometry detection (Arc vs Circle)",
+              "Text formatting (Arc Length symbol)"
+            ]
+          },
+          {
+            "trigger": "sToolTypeFilter changed to Drill/Mortise types",
+            "effect": "Disables functionality that only applies to beam contours (e.g., overall beam dimensions).",
+            "cascade": [
+              "Target entity selection",
+              "Measurement origin points"
+            ]
+          },
+          {
+            "trigger": "bConvex is toggled",
+            "effect": "Recalculates the dimension offset direction relative to the center of curvature.",
+            "cascade": [
+              "Dimension line position",
+              "Text justification"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Dimension Object (Radial/Diametric/Angular)",
+            "description": "Associative drafting objects displaying radius, diameter, or arc length measurements.",
+            "appliedTo": "GenBeam contours, Drill operations, or Mortise slots visible in PaperSpace."
+          }
+        ]
+      },
+      "tokens_used": 8111,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launch via command or regeneration.",
+          "Determine execution context: Insertion (_bOnInsert) or Recalculation.",
+          "If Insertion: Prompt user for entity selection or location input.",
+          "If Recalculation: Retrieve cached entity references and property settings.",
+          "Load relevant DimStyles based on current nDimMode (Radial, Diametric, or Arc).",
+          "Identify target geometry using sToolTypeFilter (Contour, Drills, Mortises).",
+          "Detect arcs or circles within the selected geometry for the current view.",
+          "Calculate dimension data (Center point, Radius, Start/End angles).",
+          "Generate dimension entity via drawDim (Radial/Diametric) or drawDimAngular (Arc Length).",
+          "Apply visual styles (DimStyle, Color, Layer) and position control grips.",
+          "Finalize execution."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User selects 'Painter Management' from context menu",
+            "path1": {
+              "name": "Update Painter Settings",
+              "steps": [
+                "Open SelectOption dialog for management modes.",
+                "User selects mode (Folder specific, This dimension, Any dimension).",
+                "Update nPainterManagementMode property.",
+                "Save to MaterialObject/Map.",
+                "Set execution loops to 2 to refresh."
+              ]
+            }
+          },
+          {
+            "condition": "User selects 'Import Settings' from context menu",
+            "path1": {
+              "name": "Import XML Configuration",
+              "steps": [
+                "Check existence of DimRadial.xml.",
+                "Read settings from XML into Map.",
+                "Update MaterialObject with imported Map.",
+                "Display success message.",
+                "Trigger script refresh."
+              ]
+            }
+          },
+          {
+            "condition": "User selects 'Export Settings' from context menu",
+            "path1": {
+              "name": "Export XML Configuration",
+              "steps": [
+                "Check if DimRadial.xml already exists.",
+                "If exists, prompt user for overwrite confirmation.",
+                "If confirmed, write current Map to XML.",
+                "Display success/failure message.",
+                "Trigger script refresh."
+              ]
+            }
+          },
+          {
+            "condition": "Evaluation of nDimMode property",
+            "path1": {
+              "name": "Radial (0)",
+              "steps": [
+                "Filter DimStyles for Radial type.",
+                "Calculate radius value.",
+                "Prefix 'R' to text.",
+                "Execute drawDim()."
+              ]
+            },
+            "path2": {
+              "name": "Diametric (1)",
+              "steps": [
+                "Filter DimStyles for Diametric type.",
+                "Calculate diameter (2x radius).",
+                "Prefix 'Ø' to text.",
+                "Execute drawDim()."
+              ]
+            },
+            "path3": {
+              "name": "Automatic (2)",
+              "steps": [
+                "Analyze geometry to decide between Radius/Diameter.",
+                "Apply appropriate logic.",
+                "Execute drawDim()."
+              ]
+            },
+            "path4": {
+              "name": "Arc Length (3)",
+              "steps": [
+                "Filter DimStyles for Angular type.",
+                "Calculate start/end angles.",
+                "Compute arc length.",
+                "Add Arc Length symbol.",
+                "Execute drawDimAngular()."
+              ]
+            }
+          },
+          {
+            "condition": "sToolTypeFilter selection",
+            "path1": {
+              "name": "Beam Contour/Openings",
+              "steps": [
+                "Analyze GenBeam body or opening polygons.",
+                "Extract segmented profiles.",
+                "Reconstruct arcs from segments."
+              ]
+            },
+            "path2": {
+              "name": "Drills/Mortises",
+              "steps": [
+                "Iterate tool list on element.",
+                "Filter by tool subtype (e.g., Perpendicular, 5-Axis).",
+                "Check tool axis alignment to view.",
+                "Extract circular profile."
+              ]
+            }
+          },
+          {
+            "condition": "Geometry Scan Result",
+            "path1": {
+              "name": "Arc Detected",
+              "steps": [
+                "Compute center and radius.",
+                "Proceed to draw dimension."
+              ]
+            },
+            "path2": {
+              "name": "No Arc Detected",
+              "steps": [
+                "Stop execution without creating entity."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Overwriting existing settings file",
+            "errorMessage": "Are you sure to overwrite existing settings? [No/Yes]",
+            "recovery": "User confirms 'Yes' to proceed or cancels."
+          },
+          {
+            "check": "File system write permissions",
+            "errorMessage": "Failed to write to [Path]",
+            "recovery": "User verifies folder permissions and disk space."
+          },
+          {
+            "check": "Existence of arc geometry",
+            "errorMessage": "Implicit (No output if no arc found)",
+            "recovery": "User selects a different curved entity or changes the view."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Dimension Mode",
+            "how": "OPM Property 'nDimMode'",
+            "effect": "Switches between Radius, Diameter, and Arc Length modes."
+          },
+          {
+            "action": "Adjust Text Position",
+            "how": "Grip Edit",
+            "effect": "Moves dimension text and updates leader line length."
+          },
+          {
+            "action": "Toggle Convexity",
+            "how": "OPM Property 'bConvex'",
+            "effect": "Flips dimension measurement from inner to outer radius."
+          },
+          {
+            "action": "Change Filter Type",
+            "how": "OPM Property 'sToolTypeFilter'",
+            "effect": "Retargets the dimension to different feature types (e.g., from Contour to Drill)."
+          }
+        ]
+      },
+      "tokens_used": 9682,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# DimRadial.mcr\n\n## Overview\nThis script automates the creation of radial, diametric, and arc length dimensions for curved timber contours, drill holes, and mortises within hsbCAD shop drawings.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script is designed for detailing views. |\n| Paper Space | Yes | Intended for use in Shop Drawing layouts. |\n| Shop Drawing | Yes | Requires an active ShopDrawView or MultiPageView. |\n\n## Prerequisites\n- **Required Entities**: Curved GenBeams, Elements with round drill holes, or Mortises.\n- **Minimum Beam Count**: 0 (Can annotate a single element or void).\n- **Required Settings Files**: \n  - `TslUtilities.dll` (for dialogs).\n  - hsbCAD DimStyle definitions (must exist in the project).\n\n## Usage Steps\n\n### Step 1: Launch Script\n```\nCommand: TSLINSERT\nAction: Browse and select DimRadial.mcr\n```\n\n### Step 2: Select Location or Entity\n```\nCommand Line: Select Entity or [Position]:\nAction: Click on the curved beam, drill hole, or mortise you wish to dimension in the drawing view.\n```\n*Note: The script will automatically detect arcs or circles based on the active filter settings.*\n\n### Step 3: Adjust Settings (Optional)\n```\nAction: Select the inserted script instance. Open the Properties palette (Ctrl+1) to change the dimension mode (Radius/Diameter) or filter type if the wrong curve was detected.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| nDimMode | Index | 0 | Selects the dimension type: 0=Radial, 1=Diametric, 2=Automatic, 3=Arc Length. |\n| sToolTypeFilter | String | _kContour | Filters what to measure (e.g., Beam Contour, Openings, Drills, Mortises). |\n| sDimStyle | String | System Default | Selects the visual style (color, text size, arrows) from the hsbCAD DimStyle catalog. |\n| bConvex | Boolean | True | Toggles between measuring the Outer (Convex) or Inner (Concave) radius of a curve. |\n| dLeaderLength | Double | 0 | Sets the length of the leader line pulling text away from the curve (0 = disabled). |\n| nPainterManagementMode | Index | 0 | Controls how automatic painter/visibility filters are handled. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Painter Management | Opens a dialog to configure how the script applies \"Painter\" filters (visibility settings) to automatic dimensions. |\n| Import Settings | Loads configuration settings from a `DimRadial.xml` file. Useful for applying company standards quickly. |\n| Export Settings | Saves the current configuration settings to a `DimRadial.xml` file to share with other users or projects. |\n\n## Settings Files\n- **Filename**: `DimRadial.xml`\n- **Location**: `..\\Tsl\\DimRadial\\` (Company or Project path)\n- **Purpose**: Stores script properties (DimMode, Filters, etc.) so they can be reused or imported into other drawings.\n\n## Tips\n- **Drill Holes**: If the script dimensions the beam edge instead of a drill hole, change the **sToolTypeFilter** property to the specific Drill type (e.g., `_kADPerpendicular`).\n- **Switching Types**: You can instantly switch a Radius dimension to a Diameter by changing the **nDimMode** property in the Properties palette; no need to delete and re-insert.\n- **Cluttered Views**: Use the **Painter Management** option to ensure dimensions only appear in specific drawing views or scales.\n\n## FAQ\n- **Q: Why does the dimension not appear after insertion?**\n  - **A:** Ensure you are in a Shop Drawing view (Paper Space) and that the selected entity actually contains a circular or radial arc. Check the **sToolTypeFilter** to ensure it matches the geometry you clicked.\n- **Q: How do I dimension the inside of a curved beam?**\n  - **A:** Select the dimension and toggle the **bConvex** property to `False`.\n- **Q: Can I use this for arc lengths?**\n  - **A:** Yes. Set **nDimMode** to `3` (Arc Length) to display the measured length along the curve."
+      },
+      "tokens_used": 6225,
+      "error": null
+    }
+  }
+}

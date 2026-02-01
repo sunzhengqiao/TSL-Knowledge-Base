@@ -1,0 +1,235 @@
+{
+  "filename": "GE_WDET_SEARCH_ANGLED_CONNECTIONS.mcr",
+  "status": "completed",
+  "total_tokens": 26120,
+  "processing_time": 386.2551939487457,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "v1.1",
+            "date": "21.jul.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Description updated Thumbnail added"
+          },
+          {
+            "version": "v1.0",
+            "date": "08-Dic-2010",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4557,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses Element and ElementWall objects, and calls methods like plOutlineWall() and getConnectedElements() which operate on 3D model geometry. There is no usage of 'sd_' prefixes, '_Viewport' or 'Sheet' entities, nor '#Type E' declarations typically found in ShopDrawing scripts. The script analyzes wall intersections in the model."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "ElementWall"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing at least one valid Wall element that has connections.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2985,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getElement",
+              "promptOriginal": "|Select element|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3456,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the detection and detailing of non-orthogonal (angled) wall connections by analyzing the geometry of wall intersections and launching specific detailing sub-scripts.",
+          "category": "Automation/Framing",
+          "typicalUseCase": "Used when designing complex wall layouts (e.g., bay windows, polygonal structures) to automatically identify and apply the correct joinery logic (mitered corners vs. skewed T-junctions) without manually selecting the connection type for every intersection."
+        },
+        "parameters": [
+          {
+            "name": "_Element[0]",
+            "technicalDefault": "None",
+            "businessMeaning": "The primary wall element selected by the user to serve as the anchor for searching connections.",
+            "validRange": "Any valid ElementWall in the current model",
+            "unit": "Entity",
+            "affectsOutput": "Defines the origin of the search; only connections directly involving this specific wall and its adjacent neighbors are analyzed and processed."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Geometric Intersection Analysis (Vertex coincidence and intersection count)",
+            "effect": "Determines which specific connection detailing script (Miter vs. Skewed) is instantiated on the walls.",
+            "cascade": [
+              "Geometry Type (Mitered Corner vs. Skewed T-Junction)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "TslInst (Script Instance)",
+            "description": "Creates instances of 'GE_WALLS_MITER_TO_MITER_ANGLED' for mitered corners (both walls end at the intersection) or 'GE_WALLS_SKEWED_TEE_CONNECTION' for skewed T-junctions (one wall passes through, the other ends).",
+            "appliedTo": "The pair of connected walls (Selected Element and Connected Element)."
+          }
+        ]
+      },
+      "tokens_used": 5653,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution begins",
+          "Check if _bOnInsert is true (Insertion Mode)",
+          "[Insertion Mode] Prompt user 'Select element' via command line",
+          "Store selected element in _Element[0] and exit script",
+          "[Execution Mode] Verify if an element is stored in _Element array",
+          "Validate if stored element is of type 'Wall'",
+          "Cast Element to ElementWall and extract geometry (CoordSys, PLine outline)",
+          "Retrieve all elements connected to the selected wall",
+          "Iterate through each connected element",
+          "Filter: Skip if walls are parallel or perpendicular (Orthogonal check)",
+          "Calculate intersection points between the two wall outlines",
+          "Validate intersection count (must be 1 or 2 points)",
+          "Analyze vertex coincidence to determine connection type (if 2 points)",
+          "[Branch] If Miter configuration: Instantiate 'GE_WALLS_MITER_TO_MITER_ANGLED'",
+          "[Branch] If Skewed configuration: Instantiate 'GE_WALLS_SKEWED_TEE_CONNECTION'",
+          "[Branch] If Unrecognized configuration: Report warning and skip",
+          "Erase current script instance (cleanup utility script)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Intersection Count (Geometric analysis of PLine overlaps)",
+            "path1": {
+              "name": "Invalid / Single Point",
+              "steps": [
+                "If count < 1 or > 2: Report warning 'Connection cannot be established. Check proper clean up'",
+                "If count == 1: Code block exists but contains no logic (Action: None)",
+                "Loop continues to next neighbor"
+              ]
+            },
+            "path2": {
+              "name": "Two Intersection Points",
+              "steps": [
+                "Compare intersection points to wall vertices",
+                "Proceed to Vertex Coincence Branching"
+              ]
+            }
+          },
+          {
+            "condition": "Vertex Coincidence (Topology analysis)",
+            "path1": {
+              "name": "Mitered Corner",
+              "steps": [
+                "Condition: Both Wall 1 AND Wall 2 have vertices at both intersection points",
+                "Action: Instantiate 'GE_WALLS_MITER_TO_MITER_ANGLED'",
+                "Pass both wall entities to the new script"
+              ]
+            },
+            "path2": {
+              "name": "Skewed T-Junction",
+              "steps": [
+                "Condition: Wall 1 has both vertices AND Wall 2 has none, OR vice versa",
+                "Action: Instantiate 'GE_WALLS_SKEWED_TEE_CONNECTION'",
+                "Pass both wall entities to the new script"
+              ]
+            },
+            "path3": {
+              "name": "Undefined Connection",
+              "steps": [
+                "Condition: Neither Miter nor Skewed topology matches",
+                "Action: Report warning 'Connection cannot be established'",
+                "Loop continues to next neighbor"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Selection Validity",
+            "errorMessage": "No element selected",
+            "recovery": "Script execution aborts. User must re-invoke the command."
+          },
+          {
+            "check": "Entity Type",
+            "errorMessage": "No valid wall selected",
+            "recovery": "Script execution aborts. User must select a valid ElementWall."
+          },
+          {
+            "check": "Connectivity",
+            "errorMessage": "(Silent failure)",
+            "recovery": "If no connected elements are found, the script erases itself."
+          },
+          {
+            "check": "Geometry Cleanliness",
+            "errorMessage": "Warning: Connection between wall X and wall Y cannot be established. Check proper clean up.",
+            "recovery": "User must adjust wall geometry in the model so outlines intersect correctly (1 or 2 points)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Delete Utility Script",
+            "how": "Automatic (Script calls eraseInstance() at the end of execution)",
+            "effect": "The search script instance is removed from the model, leaving only the generated connection detail instances."
+          }
+        ]
+      },
+      "tokens_used": 5126,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_WDET_SEARCH_ANGLED_CONNECTIONS\n\n## Overview\nThis script automates the detection and detailing of non-orthogonal (angled) wall connections. It analyzes the intersection geometry of a selected wall and its neighbors to determine if the connection is a \"Miter\" or a \"Skewed Tee\" junction, then automatically launches the appropriate detailing sub-scripts.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D wall elements and their outlines. |\n| Paper Space | No | Not designed for 2D drawings or viewports. |\n| Shop Drawing | Yes/No | This is a model detailing tool, not a layout tool. |\n\n## Prerequisites\n- **Required Entities**: At least one valid Wall (`ElementWall`) in the model that intersects with other walls.\n- **Geometry Requirements**: Wall outlines must physically touch or intersect correctly. Gaps or significant overlaps may prevent detection.\n- **Dependent Scripts**: The script requires the following TSL files to be present in your search path to function correctly:\n  - `GE_WALLS_MITER_TO_MITER_ANGLED.mcr`\n  - `GE_WALLS_SKEWED_TEE_CONNECTION.mcr`\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or select from the hsbCAD TSL Browser) → Select `GE_WDET_SEARCH_ANGLED_CONNECTIONS.mcr`\n\n### Step 2: Select Wall Element\n```\nCommand Line: |Select element|\nAction: Click on the primary wall element that contains the angled connection you wish to resolve.\n```\n\n### Step 3: Automatic Processing\n```\nAction: The script automatically analyzes all walls connected to your selection.\n```\n- The script filters out orthogonal (90°) connections.\n- For angled connections, it calculates the intersection points to determine the connection type.\n- It instantiates the correct connection detail (Miter or Skewed Tee) on the walls.\n- The script instance deletes itself automatically upon completion.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| *None* | *N/A* | *N/A* | This script has no user-editable properties in the Properties Palette. It is a \"fire-and-forget\" utility. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| *None* | This script does not add specific items to the entity context menu. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script does not use external XML settings files.\n\n## Tips\n- **Clean Geometry**: Ensure your wall outlines are clean and meet precisely at corners. If the script reports \"Connection cannot be established,\" use the \"Clean Up\" tools to ensure vertexes coincide.\n- **Orthogonal Walls**: This script intentionally ignores 90-degree corners. Use standard wall end-configuration tools for right angles.\n- **Batch Processing**: If you have many angled connections, run this script on one wall at a time to ensure each specific geometry is handled correctly.\n\n## FAQ\n- **Q: Why did the script disappear after I ran it?**\n  - A: This is a utility script designed to run once, apply the specific detailing scripts, and then remove itself from the model to prevent clutter.\n- **Q: I get a warning \"Connection between wall X and wall Y cannot be established.\"**\n  - A: The script could not determine a valid Miter or Skewed Tee configuration based on the outline intersection. Check if the walls overlap purely or if there is a gap in the intersection.\n- **Q: Does this work for T-junctions that are 90 degrees?**\n  - A: No. This script is specifically designed for *angled* (non-orthogonal) connections. Standard T-junctions are typically handled by default wall properties or other tools."
+      },
+      "tokens_used": 4343,
+      "error": null
+    }
+  }
+}

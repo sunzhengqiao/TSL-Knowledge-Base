@@ -1,0 +1,322 @@
+{
+  "filename": "GE_WALL_FRAMING_LOCK_PANHANDLED_ONLY.mcr",
+  "status": "completed",
+  "total_tokens": 33224,
+  "processing_time": 512.4162998199463,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "31.oct.2013",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5104,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script prompts for a 'Wall' entity using `PrEntity`, which is a 3D Model Space object. It utilizes the `_bOnElementConstructed` event, which is specific to the regeneration of Elements in the 3D model. It directly manipulates Beam entities via `dbErase()` and `setColor()` based on 3D geometry properties (`panhand`). It lacks `sd_` prefixes, viewport references, or 2D view generation logic typical of Paper Space or Shop Drawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Wall",
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D environment where Walls and Elements exist)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4772,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select wall(s) to lock",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowNotice",
+            "trigger": "Error condition: Wall must be framed prior to operation.",
+            "title": null,
+            "dataSource": "Script generated message (reportNotice)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sUnlock",
+            "type": "PropString",
+            "displayName": "Unlock framing",
+            "defaultValue": "No",
+            "inputType": "dropdown",
+            "options": [
+              "No",
+              "Unlock"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "Erase locked beams and TSL",
+            "handler": "_kExecuteKey check against 'strDelete'",
+            "action": "Erases all beams in the script instance and erases the script instance.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Unlock framing",
+            "handler": "PropString 'sUnlock' set to 'Unlock'",
+            "action": "Erases all beams in the script instance and erases the script instance (effectively same as the context menu item).",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 4309,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A framing lock that restricts a wall element to only retain beams which have valid panhandle (cutting) data, automatically deleting all other non-panhandled studs.",
+          "category": "Framing/Logic",
+          "typicalUseCase": "Used when a wall section must consist solely of specific pre-cut or engineered members (panhandled beams) and standard automatic framing (studs, cripples) needs to be removed or prevented."
+        },
+        "parameters": [
+          {
+            "name": "sUnlock",
+            "technicalDefault": "No",
+            "businessMeaning": "A safety switch to remove the lock. When set to 'Unlock', it triggers the deletion of the script instance and any beams currently managed by it, effectively allowing the wall to revert to an unframed or default-framed state (depending on other scripts).",
+            "validRange": "\"No\", \"Unlock\"",
+            "unit": "N/A (Enumeration)",
+            "affectsOutput": "If set to 'Unlock', the script instance and all beams it references are erased from the model. If 'No', the script continues to filter and protect panhandled beams."
+          },
+          {
+            "name": "Erase locked beams and TSL (Context Menu)",
+            "technicalDefault": "N/A (Action Trigger)",
+            "businessMeaning": "A command to manually dismantle the lock and its managed geometry. It acts as a 'hard reset' for this specific framing constraint.",
+            "validRange": "User Action (Right-click)",
+            "unit": "N/A",
+            "affectsOutput": "Immediately erases the script instance and all beams currently associated with it, cleaning the Element of this specific framing configuration."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User sets 'sUnlock' to 'Unlock' OR clicks 'Erase locked beams and TSL'",
+            "effect": "The script executes a termination routine that loops through all beams in the instance, erases them, and then erases the script instance itself.",
+            "cascade": [
+              "_Beam[] (Erased)",
+              "_ThisInst (Erased)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Display (Symbol)",
+            "description": "Draws a 2D padlock icon in the model view to indicate that the wall framing is locked and constrained.",
+            "appliedTo": "Wall Element (at a calculated offset near the wall arrow or opening center)"
+          },
+          {
+            "type": "Beam (Modified/Erased)",
+            "description": "Erases beams that do not have a valid panhandle property. Sets the color of remaining panhandled beams to Cyan (Color 4).",
+            "appliedTo": "All beams within the selected Wall Element"
+          }
+        ]
+      },
+      "tokens_used": 7050,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch/Properties Change",
+          "Check for Unlock or Delete Trigger",
+          "[Conditional] If Unlock/Delete Triggered -> Erase Beams and Instance",
+          "If No Trigger -> Check Insertion State",
+          "[Conditional] If First Insertion Cycle -> Prompt User for Wall(s)",
+          "Process User Selections (Filter valid Walls)",
+          "Clone TSL Instance to each selected Wall",
+          "Erase Original Insertion Instance",
+          "New Instance Starts -> Check ExecutionMode",
+          "[Conditional] If ExecutionMode == 0 (Initial Run) -> Manage Element & Beams",
+          "Remove Duplicate TSL Instances on same Element",
+          "Check for Existing Beams",
+          "[Conditional] If No Beams -> Report Error & Erase Instance",
+          "Iterate Beams: Erase non-panhandled, Color panhandled Cyan",
+          "Set ExecutionMode to 1",
+          "Wait for Element Construct/Update Event",
+          "[Conditional] If Element Constructed -> Clean Up Extraneous Beams",
+          "Calculate Intersections to identify beams not near openings",
+          "Erase beams intersecting 'Locked' beams but not marked as 'Locked'",
+          "Ensure 'Locked' beams are visible",
+          "Update Display Text (Clear)",
+          "[Conditional] If Element Deleted -> Hide Beams",
+          "Draw Lock Symbol (Padlock) & Text",
+          "Finish"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User sets 'sUnlock' to 'Unlock' OR selects Context Menu 'Erase locked beams and TSL'",
+            "terminate": {
+              "name": "Terminate Script",
+              "steps": [
+                "Loop through all beams in _Beam[] and erase them",
+                "Erase the script instance (_ThisInst)",
+                "Return immediately"
+              ]
+            }
+          },
+          {
+            "condition": "_bOnInsert is true",
+            "insertion": {
+              "name": "Distribute Clones",
+              "steps": [
+                "Check insertCycleCount; if >1, erase instance",
+                "Prompt user to select Wall(s)",
+                "Append valid Wall entities to list",
+                "Loop through walls and create a clone of this TSL on each",
+                "Erase the original 'seed' instance",
+                "Return"
+              ]
+            }
+          },
+          {
+            "condition": "_bOnInsert is false AND ExecutionMode map key is 0",
+            "lockAndFilter": {
+              "name": "Lock and Filter Beams",
+              "steps": [
+                "Retrieve Element from _Entity[0]",
+                "Erase any other TSLs with same name on this Element (clean duplicates)",
+                "Get all Beams from Element",
+                "Check if Beam count is 0",
+                "[Error Branch] If 0 beams -> Report notice 'Must be framed prior', Erase instance",
+                "Loop through Beams",
+                "If beam.panhand() is valid -> Set Color to Cyan",
+                "Else -> Erase beam",
+                "Set ExecutionMode map key to 1"
+              ]
+            }
+          },
+          {
+            "condition": "_bOnElementConstructed is true",
+            "refineGeometry": {
+              "name": "Refine Geometry on Rebuild",
+              "steps": [
+                "Get all beams from Element",
+                "Loop through all Element beams (candidates for deletion)",
+                "Check intersection with 'Locked' beams (those in _Beam array)",
+                "If intersection exists AND beam is not in _Beam array AND beam is not marked 'Locked' in subMap",
+                "Erase the intersecting beam",
+                "Set visibility of _Beam[] to true",
+                "Clear display text string"
+              ]
+            }
+          },
+          {
+            "condition": "_bOnElementDeleted is true",
+            "hideVisuals": {
+              "name": "Hide Visuals",
+              "steps": [
+                "Set visibility of all _Beam[] to false",
+                "Update display text to indicate beams are hidden"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insertion Cycle Count",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Script erases self if insertCycleCount > 1 to prevent recursion issues during cloning."
+          },
+          {
+            "check": "Entity Selection on Insert",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "If no entities selected or no valid Walls found, script erases instance."
+          },
+          {
+            "check": "Element Framing Status (ExecutionMode 0)",
+            "errorMessage": "Message from [ScriptName] TSL : Wall [Number] must be framed prior this operation.",
+            "recovery": "User must frame the wall (generate beams) before running this locking script. Script erases itself."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Unlock Framing",
+            "how": "OPM Property Palette (Change 'sUnlock' to 'Unlock')",
+            "effect": "Script erases all managed beams and the script instance itself."
+          },
+          {
+            "action": "Erase Lock and Beams",
+            "how": "Right-click Context Menu -> 'Erase locked beams and TSL'",
+            "effect": "Script erases all managed beams and the script instance itself."
+          },
+          {
+            "action": "Wall Regeneration / Update",
+            "how": "Modify wall geometry or trigger rebuild",
+            "effect": "Triggers `_bOnElementConstructed`, causing script to re-evaluate beam intersections and erase any new non-panhandled beams added during the regeneration."
+          },
+          {
+            "action": "Delete Element",
+            "how": "Delete the host Wall/Element in CAD",
+            "effect": "Triggers `_bOnElementDeleted`, script hides managed beams and updates status text."
+          }
+        ]
+      },
+      "tokens_used": 6622,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_WALL_FRAMING_LOCK_PANHANDLED_ONLY\n\n## Overview\nThis script enforces a strict framing configuration on a wall by acting as a \"lock.\" It automatically scans the selected wall and deletes all standard framing members (studs), retaining **only** the beams that have specific cutting data (\"panhandled\" beams). It ensures that only engineered or special pre-cut members remain in the model.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D Wall elements and their beams. |\n| Paper Space | No | Not designed for 2D view generation or shop drawings. |\n| Shop Drawing | No | Not applicable. |\n\n## Prerequisites\n- **Required Entities**: A Wall Element that has **already been framed** (generated beams).\n- **Minimum beam count**: The wall must contain beams before running the script.\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nSelect `GE_WALL_FRAMING_LOCK_PANHANDLED_ONLY.mcr` from the file dialog.\n\n### Step 2: Select Wall\n```\nCommand Line: Select wall(s) to lock\nAction: Click on the wall(s) you wish to filter and press Enter.\n```\n*Note: If the wall is empty (no beams), the script will display an error \"Wall must be framed prior this operation\" and delete itself.*\n\n### Step 3: Automatic Processing\nOnce inserted, the script automatically:\n1.  Scans all beams in the wall.\n2.  **Keeps** beams that are \"panhandled\" (special cuts/engineered members).\n3.  **Deletes** all other beams (standard studs).\n4.  Changes the color of the remaining beams to **Cyan**.\n5.  Draws a **Padlock icon** in the model to indicate the wall is locked.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Unlock framing | dropdown | No | A safety switch to remove the lock. **Set to \"Unlock\"** to erase the script instance and all beams currently managed by it. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Erase locked beams and TSL | Immediately deletes the script instance and all beams it manages, effectively removing the lock and the associated geometry from the model. |\n\n## Settings Files\nNone.\n\n## Tips\n- **Frame First**: Always ensure your wall is fully framed and generated before running this script. If you run it on an empty wall, it will fail.\n- **Visual Indicator**: The script draws a padlock icon near the wall to visually confirm that the framing logic is active.\n- **Cyan Beams**: Beams that survive the filter will turn Cyan (Color 4). This helps you visually verify which members are considered \"engineered\" or \"locked.\"\n- **Regeneration**: If you manually modify the wall or force a regeneration, the script will reactivate and delete any new standard framing that might have been added, ensuring only the panhandled beams remain.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I selected the wall?**\n  A: The wall likely had no beams in it. This script requires the wall to be framed (generated) prior to execution.\n- **Q: How do I get my standard framing back?**\n  A: You cannot simply \"unlock\" and keep the current geometry because the script deletes the standard studs during the locking process. To revert, use the \"Erase locked beams and TSL\" right-click option or set the property to \"Unlock,\" and then re-frame the wall normally.\n- **Q: What does \"Panhandled\" mean?**\n  A: In this context, it refers to beams that have specific cutting data or end treatments (often used for jammers, cripples, or engineered members around openings), as opposed to standard rectangular studs."
+      },
+      "tokens_used": 5367,
+      "error": null
+    }
+  }
+}

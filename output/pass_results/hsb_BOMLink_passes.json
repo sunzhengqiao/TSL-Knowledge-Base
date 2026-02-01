@@ -1,0 +1,220 @@
+{
+  "filename": "hsb_BOMLink.mcr",
+  "status": "completed",
+  "total_tokens": 38953,
+  "processing_time": 239.11427783966064,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "01.11.2012",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6262,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly collects entities from Model Space using `Group gr.collectEntities(..., Entity(), _kModelSpace);`. It lacks Paper Space/ShopDrawing indicators such as _kPaperSpace, _Viewport, or sd_ prefixes. The script acts as a utility tool that gathers data, executes a .NET export function, and then erases itself (`eraseInstance()`), rather than generating a persistent graphical element."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Entity"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "HSB_PROJECTSETTINGS (Project Map)",
+            "BOMLINKPROJECT (String property within Project Settings)",
+            "_kPathHsbInstall\\\\BOMLink\\\\hsbSoft.BomLink.Tsl.dll"
+          ]
+        }
+      },
+      "tokens_used": 5475,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select entities to be exported|",
+              "condition": "_bOnInsert && strExportOp == 'Select entities in drawing'",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "Default Properties Dialog",
+            "trigger": "On Insert (if catalog key not found)",
+            "title": "Properties",
+            "dataSource": "Internal Property Definitions",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "strExportOp",
+            "type": "PropString",
+            "displayName": "Entities to export",
+            "defaultValue": "Select all entities in drawing",
+            "inputType": "dropdown",
+            "options": [
+              "Select all entities in drawing",
+              "Select entities in drawing"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 2,
+            "variable": "sSelectedOutput",
+            "type": "PropString",
+            "displayName": "BOMLink Outputs",
+            "defaultValue": null,
+            "inputType": "dropdown",
+            "options": [
+              "Dynamic from hsbSoft.BomLink.Tsl.dll"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "Recalculate Results",
+            "handler": "strChangeEntity",
+            "action": "Sets ExecutionMode to 1 to re-run the BOMLink export.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 7680,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A utility script that exports timber construction model data to an external Bill of Materials (BOM) system via .NET integration, rather than creating physical geometry.",
+          "category": "DataExport/Utility",
+          "typicalUseCase": "Used at the end of a design phase to send material lists, machining data, and project details to an ERP or production management system (e.g., hsbSoft BOMLink)."
+        },
+        "parameters": [
+          {
+            "name": "strExportOp",
+            "technicalDefault": "Select all entities in drawing",
+            "businessMeaning": "Determines the scope of the data export. Allows the user to export the entire active drawing model or manually select specific beams/elements for partial exports.",
+            "validRange": "2 discrete options",
+            "unit": "SelectionMode",
+            "affectsOutput": "Controls which entities are included in the generated ModelMap passed to the BOMLink .NET module. Does not affect CAD geometry."
+          },
+          {
+            "name": "sSelectedOutput",
+            "technicalDefault": "null",
+            "businessMeaning": "Selects the specific destination or report format within the BOMLink system to generate (e.g., Material List, Cutting List, Production Data). The options are dynamically populated from the external BOMLink configuration.",
+            "validRange": "Dynamic list (Populated by hsbSoft.BomLink.Tsl.dll)",
+            "unit": "ReportType",
+            "affectsOutput": "Determines the format and content of the data file/report generated by the external application."
+          },
+          {
+            "name": "ExecutionMode",
+            "technicalDefault": "0",
+            "businessMeaning": "Internal state flag used to control the script flow. It triggers the actual export process only when explicitly set (1) by user interaction, preventing premature data processing during script loading.",
+            "validRange": "0 (Idle/Reset), 1 (Run Export)",
+            "unit": "BooleanState",
+            "affectsOutput": "When set to 1, it initiates the .NET export routine and generates the BOM report. When 0, the script remains idle."
+          },
+          {
+            "name": "BOMLINKPROJECT",
+            "technicalDefault": "",
+            "businessMeaning": "The identifier or name of the project within the external BOM/ERP system. This ensures the exported data is associated with the correct job in the management database.",
+            "validRange": "String (Project Name or ID)",
+            "unit": "String",
+            "affectsOutput": "If missing, the script aborts. If present, it tags the exported data with this project ID in the destination system."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Project Settings Loaded",
+            "effect": "The script validates the existence of 'BOMLINKPROJECT'. If missing, the script stops and erases itself.",
+            "cascade": [
+              "Script Execution"
+            ]
+          },
+          {
+            "trigger": "sSelectedOutput",
+            "effect": "The value is passed directly to the .NET assembly as the 'DESTINATION' map key.",
+            "cascade": [
+              "Map Generation"
+            ]
+          },
+          {
+            "trigger": "strExportOp",
+            "effect": "Determines the input source for the ModelMap (either all ModelSpace entities or a user-defined selection set).",
+            "cascade": [
+              "_Entity Array"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Data File / Report",
+            "description": "Generates a data file or report via the external hsbSoft.BomLink.Tsl.dll based on the selected entities and output format. The specific file type depends on the 'sSelectedOutput' configuration.",
+            "appliedTo": "External BOM/ERP System"
+          }
+        ]
+      },
+      "tokens_used": 5951,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9180,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_BOMLink.mcr\n\n## Overview\nThis script serves as a utility tool to export timber construction model data from the drawing to an external Bill of Materials (BOM) or ERP system via the hsbSoft BOMLink interface. It facilitates the transfer of project data, such as material lists and production details, without creating physical geometry in the CAD model.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script operates on the 3D model entities. |\n| Paper Space | No | This script does not process layouts or viewports. |\n| Shop Drawing | No | This is for model data export, not detailing annotations. |\n\n## Prerequisites\n- **Required Entities:** Beams or Elements to export.\n- **Minimum Beam Count:** 0 (Can run with no entities, though export may be empty).\n- **Required Settings:**\n  - `BOMLINKPROJECT` property must exist in the **Project Map** (HSB_PROJECTSETTINGS). The script will abort if this Project ID is missing.\n  - External .NET dependency: `hsbSoft.BomLink.Tsl.dll` must be present in the hsbCAD installation path.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_BOMLink.mcr`\n\n### Step 2: Configure Export Options\nOnce inserted, the script instance is selected. Open the **Properties Palette** (Ctrl+1) to configure the export parameters:\n1. **Entities to export:** Choose whether to export the whole model or select specific items.\n2. **BOMLink Outputs:** Select the specific destination or report format (e.g., Material List) from the list.\n\n### Step 3: Execute Export\n*   **Scenario A (Select entities in drawing):** If you chose this option in the properties, the command line will prompt:\n    ```\n    Command Line: Select entities to be exported\n    Action: Click the beams or elements you wish to include in the export, then press Enter.\n    ```\n*   **Scenario B (Select all entities in drawing):** The script is ready to run immediately.\n\n### Step 4: Trigger Processing\nSince this script is a utility, it often needs a trigger to communicate with the external system.\n1. Right-click on the script instance in the drawing.\n2. Select **Recalculate Results** from the context menu.\n3. The script will gather the data, send it to the external BOM system, and then remove itself from the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Entities to export | Dropdown | Select all entities in drawing | Determines the scope. Choose to process the entire active model or manually select specific beams/elements. |\n| BOMLink Outputs | Dropdown | (Dynamic) | Selects the specific report type or destination in the external system. Options are loaded dynamically from your BOMLink configuration. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate Results | Triggers the export process. Sends the collected data to the BOMLink module based on the current property settings. |\n\n## Settings Files\n- **Filename:** N/A (Relies on Project Settings)\n- **Location:** Project Map (HSB_PROJECTSETTINGS)\n- **Purpose:** The script looks for the string property `BOMLINKPROJECT` within your project settings to tag the export with the correct Job ID.\n\n## Tips\n- **Project ID:** Ensure `BOMLINKPROJECT` is correctly defined in your Project Settings before running this script; otherwise, it will fail silently or stop execution.\n- **Single Use:** This script is designed to erase itself (`eraseInstance`) after successfully exporting data. You do not need to delete it manually.\n- **External App:** If the \"BOMLink Outputs\" dropdown is empty, check with your system administrator to ensure `hsbSoft.BomLink.Tsl.dll` is correctly installed and configured.\n\n## FAQ\n- **Q: Why did the script disappear after I right-clicked it?**\n- **A:** This is normal behavior. The script is designed as a \"trigger\" tool that erases itself from the drawing once it has successfully handed the data over to the external BOM system.\n\n- **Q: I get an error or nothing happens when I click \"Recalculate\".**\n- **A:** Check that the `BOMLINKPROJECT` property is filled in your Project Settings. This is a mandatory identifier for the export to work."
+      },
+      "tokens_used": 4405,
+      "error": null
+    }
+  }
+}

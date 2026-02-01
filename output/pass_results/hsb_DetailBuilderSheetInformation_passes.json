@@ -1,0 +1,373 @@
+{
+  "filename": "hsb_DetailBuilderSheetInformation.mcr",
+  "status": "completed",
+  "total_tokens": 24314,
+  "processing_time": 145.41647267341614,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "08.12.2021",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3094,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No _Viewport usage, no sd_ prefix, no #Type E declaration. Uses PrEntity to select Elements in the model."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall",
+            "Sheet"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing ElementWall entities with Sheets.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1867,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2387,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Batch updates material attributes and regenerates the standardized 'BeamCode' for sheeting/cladding materials within selected wall elements by parsing a condensed material string.",
+          "category": "DataManagement / Batching",
+          "typicalUseCase": "Correcting or standardizing sheet information (Name, Material, Grade, Code) and the resulting export code across multiple wall elements simultaneously, typically after data import or library updates."
+        },
+        "parameters": [
+          {
+            "name": "ssE",
+            "technicalDefault": "Empty Selection Set",
+            "businessMeaning": "The set of wall elements selected by the user to be processed and updated.",
+            "validRange": "1 or more ElementWall entities in the current Model Space",
+            "unit": "SelectionSet",
+            "affectsOutput": "Determines which Wall elements and their associated Sheets will have their properties and BeamCodes updated."
+          },
+          {
+            "name": "sFullmaterial",
+            "technicalDefault": "Existing Entity Value",
+            "businessMeaning": "The raw material string currently assigned to a sheet, expected to contain a delimited list of properties (Name, Material, Grade, Info, Labels, Code, Nailing).",
+            "validRange": "String containing '; ' delimiters separating 9 distinct data points.",
+            "unit": "String",
+            "affectsOutput": "Serves as the source data. If incorrectly formatted, the script skips the sheet without updating it."
+          },
+          {
+            "name": "sName",
+            "technicalDefault": "Token 0 of sFullmaterial",
+            "businessMeaning": "The commercial name or short description of the sheet (e.g., 'OSB', 'Gypsum Board').",
+            "validRange": "Standard material names defined in the company library.",
+            "unit": "Text",
+            "affectsOutput": "Updates the 'Name' property of the Sheet entity and is appended to the new BeamCode."
+          },
+          {
+            "name": "sMaterial",
+            "technicalDefault": "Token 1 of sFullmaterial",
+            "businessMeaning": "The specific material type or specification.",
+            "validRange": "Text values (e.g., 'Structural Softwood').",
+            "unit": "Text",
+            "affectsOutput": "Updates the 'Material' property of the Sheet entity and is placed at index 1 of the new BeamCode."
+          },
+          {
+            "name": "sGrade",
+            "technicalDefault": "Token 2 of sFullmaterial",
+            "businessMeaning": "The structural quality or grade of the sheet material.",
+            "validRange": "Text values (e.g., 'C24', 'CE2+'). Converted to Uppercase.",
+            "unit": "Text",
+            "affectsOutput": "Updates the 'Grade' property and is placed at index 9 of the new BeamCode."
+          },
+          {
+            "name": "sInformation",
+            "technicalDefault": "Token 3 of sFullmaterial",
+            "businessMeaning": "Supplementary information, often used for fire ratings or finishing details.",
+            "validRange": "Text values (e.g., 'Fire Rated 30min'). Converted to Uppercase.",
+            "unit": "Text",
+            "affectsOutput": "Updates the 'Information' property and is placed at index 10 of the new BeamCode."
+          },
+          {
+            "name": "sCode",
+            "technicalDefault": "Token 7 of sFullmaterial",
+            "businessMeaning": "A generic identifier code used for referencing the material in databases.",
+            "validRange": "Alphanumeric code.",
+            "unit": "Text",
+            "affectsOutput": "Placed at the very beginning (index 0) of the new BeamCode."
+          },
+          {
+            "name": "sNailing",
+            "technicalDefault": "Token 8 of sFullmaterial",
+            "businessMeaning": "Instructions or parameters regarding nailing patterns allowed for the sheet.",
+            "validRange": "Text values (e.g., '150/300'). Converted to Uppercase.",
+            "unit": "Text",
+            "affectsOutput": "Placed at index 8 of the new BeamCode."
+          },
+          {
+            "name": "sNewBeamCode",
+            "technicalDefault": "Constructed String",
+            "businessMeaning": "The final standardized code string used for production reports, exports, and machining logic.",
+            "validRange": "Semicolon-delimited string of length 13.",
+            "unit": "String",
+            "affectsOutput": "Overwrites the existing 'BeamCode' property of the Sheet entity."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Parsing of sFullmaterial",
+            "effect": "Tokens 0, 1, 2, 3, 7, and 8 are extracted to populate specific properties and parts of the BeamCode.",
+            "cascade": [
+              "sName",
+              "sMaterial",
+              "sGrade",
+              "sInformation",
+              "sCode",
+              "sNailing"
+            ]
+          },
+          {
+            "trigger": "Construction of sNewBeamCode",
+            "effect": "Combines sCode, sMaterial, sNailing, sGrade, sInformation, and sName into a specific fixed format (Indices 0, 1, 8, 9, 10, 11) separated by semicolons.",
+            "cascade": [
+              "sh.setBeamCode()"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Sheet (Cladding/Boarding)",
+            "description": "Updates the metadata properties (Name, Material, Grade, Information, Labels) and the BeamCode string for existing sheet entities.",
+            "appliedTo": "Sheets belonging to the ElementWall entities selected by the user."
+          }
+        ]
+      },
+      "tokens_used": 5517,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution begins (Insertion or Recalculation)",
+          "Check execution state (_bOnInsert flag)",
+          "If inserting: Check for recursive insertion cycle (insertCycleCount > 1)",
+          "If inserting: Prompt user to select a set of elements (PrEntity)",
+          "If inserting: Store selected elements in internal list and pause execution",
+          "If recalculating: Verify internal element list contains data",
+          "Loop through each stored Element in the list",
+          "Validate element is a valid ElementWall; skip if invalid",
+          "Retrieve collection of all Sheets (Cladding) from the ElementWall",
+          "Check if Sheets collection is empty; stop current element processing if so",
+          "Loop through each Sheet in the collection",
+          "Extract the 'material' string property from the Sheet",
+          "Validate string format by checking for '; ' delimiter",
+          "If valid: Parse 9 tokens (Name, Material, Grade, Info, Code, etc.) from string",
+          "Construct new BeamCode string using tokens mapped to fixed indices (0, 1, 8, 9, 10, 11)",
+          "Apply text transformations (Trim, Uppercase) to specific data",
+          "Write parsed values back to Sheet properties (Name, Material, Grade, etc.)",
+          "Overwrite Sheet BeamCode with the newly constructed string",
+          "Loop ends: Move to next Sheet/Element",
+          "Processing complete: Erase script instance from model"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Check for recursive insertion loop",
+            "path1": {
+              "name": "Recursive Detected",
+              "steps": [
+                "insertCycleCount > 1",
+                "Erase script instance",
+                "Return (Stop)"
+              ]
+            },
+            "path2": {
+              "name": "First Run",
+              "steps": [
+                "insertCycleCount <= 1",
+                "Proceed to User Selection Prompt"
+              ]
+            }
+          },
+          {
+            "condition": "User Selection Input",
+            "path1": {
+              "name": "Selection Made",
+              "steps": [
+                "PrEntity returns true",
+                "Save elements to list",
+                "Return/Pause script"
+              ]
+            },
+            "path2": {
+              "name": "Selection Cancelled",
+              "steps": [
+                "PrEntity returns false",
+                "Return (Stop without saving data)"
+              ]
+            }
+          },
+          {
+            "condition": "Data Availability on Recalculation",
+            "path1": {
+              "name": "Data Present",
+              "steps": [
+                "_Element.length > 0",
+                "Begin processing loop"
+              ]
+            },
+            "path2": {
+              "name": "No Data",
+              "steps": [
+                "_Element.length == 0",
+                "Erase script instance",
+                "Return (Stop)"
+              ]
+            }
+          },
+          {
+            "condition": "Element Type Validation",
+            "path1": {
+              "name": "Valid Wall",
+              "steps": [
+                "Cast to ElementWall successful & bIsValid() true",
+                "Proceed to Sheet extraction"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Entity",
+              "steps": [
+                "Cast fails or bIsValid() false",
+                "Continue to next element (Skip)"
+              ]
+            }
+          },
+          {
+            "condition": "Sheet Existence",
+            "path1": {
+              "name": "Sheets Found",
+              "steps": [
+                "shAll.length > 0",
+                "Enter Sheet processing loop"
+              ]
+            },
+            "path2": {
+              "name": "No Sheets",
+              "steps": [
+                "shAll.length == 0",
+                "Return (Exit element loop early)"
+              ]
+            }
+          },
+          {
+            "condition": "Material String Format",
+            "path1": {
+              "name": "Valid Delimiter",
+              "steps": [
+                "sFullmaterial contains '; '",
+                "Parse tokens and update Sheet"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Format",
+              "steps": [
+                "Delimiter not found",
+                "Skip Sheet (No update)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Recursive Execution Prevention",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Script detects re-insertion and erases itself automatically."
+          },
+          {
+            "check": "Element Selection",
+            "errorMessage": "None (User cancels)",
+            "recovery": "User must re-run the command and select elements."
+          },
+          {
+            "check": "Element Validity (ElementWall)",
+            "errorMessage": "None (Silent skip)",
+            "recovery": "Non-Wall elements in selection are ignored."
+          },
+          {
+            "check": "Material String Syntax",
+            "errorMessage": "None (Silent skip)",
+            "recovery": "Script only processes sheets with material strings containing the '; ' separator."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Recalculate Script",
+            "how": "Context menu 'Calculate' or Global hsbCalc",
+            "effect": "Executes the batch update of Sheet properties and BeamCodes based on the parsed material strings."
+          },
+          {
+            "action": "Automatic Cleanup",
+            "how": "System logic",
+            "effect": "The script instance removes itself from the drawing immediately after processing completes or fails."
+          }
+        ]
+      },
+      "tokens_used": 5517,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_DetailBuilderSheetInformation.mcr\n\n## Overview\nThis script performs a batch update of material attributes (Name, Material, Grade, Information, and Labels) and regenerates the standardized 'BeamCode' for sheeting or cladding materials within selected wall elements. It parses a condensed material string from existing sheet entities and redistributes the data into the correct properties for production and export.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be run in the Model Space where ElementWall entities are located. |\n| Paper Space | No | This script does not support layout or viewport operations. |\n| Shop Drawing | No | This is not a shop drawing script (does not use `sd_` prefixes). |\n\n## Prerequisites\n- **Required Entities**: `ElementWall` entities that contain `Sheet` (cladding/boarding) entities.\n- **Minimum Beam Count**: 0 (It processes sheets attached to walls, not standalone beams).\n- **Required Data**: The Sheet entities must contain a 'material' string property formatted with specific delimiters (`; `) to be parsed correctly.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_DetailBuilderSheetInformation.mcr`\nThe script will load into the drawing environment.\n\n### Step 2: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click to select one or more Wall elements in the model. Press Enter to confirm selection.\n```\n*Note: The script will save your selection and pause. It will not process immediately.*\n\n### Step 3: Trigger Processing\n```\nCommand Line: (Right-click or Calculate)\nAction: Right-click on the script instance (or the drawing background) and select \"Calculate\" (or run `hsbCalc`).\n```\n*This step triggers the parsing logic. The script will loop through the selected walls and update their sheets.*\n\n### Step 4: Completion\nThe script processes the data and automatically erases itself from the model once finished. No further cleanup is required.\n\n## Properties Panel Parameters\n\nThis script does not expose any user-editable properties in the AutoCAD Properties Palette.\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Calculate | Executes the batch update of Sheet properties and BeamCodes based on the parsed material strings. |\n\n*(Note: No custom context menu items are added by this script; it relies on the system default calculation trigger.)*\n\n## Settings Files\nNone used. This script operates purely on the geometry and string data present in the selected entities.\n\n## Tips\n- **Delimiter Matters**: Ensure the material string in your sheets uses the separator `; ` (semicolon followed by a space). Sheets without this format will be skipped.\n- **Batch Processing**: You can select multiple walls at once during Step 2 to update an entire floor or section quickly.\n- **Auto-Cleanup**: The script is designed to delete itself automatically after processing. Do not be alarmed if it disappears from the model after the calculation is complete.\n\n## FAQ\n- **Q: Why didn't my sheets update?**\n  - A: Check the 'material' property of your sheets. They must contain the `; ` delimiter for the script to recognize and parse the data.\n- **Q: Can I use this on Roof elements?**\n  - A: The script is designed specifically for `ElementWall` entities. While it may work if roofs share the exact same structure, it is intended for walls.\n- **Q: Where is the script after I run it?**\n  - A: The script automatically erases itself from the drawing immediately after finishing the update to keep your project clean.\n- **Q: What exactly happens to the BeamCode?**\n  - A: The script constructs a new BeamCode string in a fixed format (13 indices long) using the data extracted from the material string, replacing the previous code."
+      },
+      "tokens_used": 5932,
+      "error": null
+    }
+  }
+}

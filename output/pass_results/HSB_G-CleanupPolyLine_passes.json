@@ -1,0 +1,165 @@
+{
+  "filename": "HSB_G-CleanupPolyLine.mcr",
+  "status": "completed",
+  "total_tokens": 24512,
+  "processing_time": 495.6197326183319,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 1,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "23.11.2017",
+            "author": "AS",
+            "changes": "First revision."
+          },
+          {
+            "version": "1.01",
+            "date": "05.04.2018",
+            "author": "AS",
+            "changes": "Add option to close resulting pline"
+          },
+          {
+            "version": "1.02",
+            "date": "02.11.2018",
+            "author": "AS",
+            "changes": "Add second vertice to list of vertices"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5116,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script filename 'HSB_G-CleanupPolyLine.mcr' lacks 'sd_' or 'Multipage' prefixes. No usage of '_Viewport' or '#Type E' entity arrays. Uses generic 'getEntPLine' and 'PLine' classes without ShopDrawing-specific context."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "PLine"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (Standard 3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2932,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getEntPLine",
+              "promptOriginal": "|Select a poly line|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "_bOnInsert",
+            "title": "Properties",
+            "dataSource": "TSL Properties (Default)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2490,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "This script cleans up a selected polyline by removing redundant vertices (collinear points) and short segments, with an option to close the polyline.",
+          "category": "Geometry Utilities",
+          "typicalUseCase": "Used to simplify 2D or 3D polylines imported from CAD files or created via manual tracing, ensuring they are optimized for further processing (e.g., wall outlines, floor plates)."
+        },
+        "parameters": [
+          {
+            "name": "CloseResult",
+            "technicalDefault": "0 (false)",
+            "businessMeaning": "Determines whether the resulting cleaned polyline is closed (connecting the last point back to the first) or left open.",
+            "validRange": "0 (Open), 1 (Closed)",
+            "unit": "Boolean",
+            "affectsOutput": "If set to 1, the script modifies the geometry to ensure the start and end points are connected, creating a continuous loop (e.g., for a wall contour). If 0, the polyline remains a linear segment chain."
+          },
+          {
+            "name": "vectorTolerance",
+            "technicalDefault": "Unit(0.01, 'mm')",
+            "businessMeaning": "Sets the sensitivity for detecting collinearity. Vertices are removed if the angle between incoming and outgoing segments is within this tolerance of being a straight line.",
+            "validRange": "0.0 to 5.0 degrees (approx)",
+            "unit": "Angle (derived from cosine tolerance)",
+            "affectsOutput": "Higher tolerance values might retain vertices that are slightly off-angle; lower values strictly remove vertices only on perfectly straight segments, resulting in a smoother but less forgiving polyline."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects 'CloseResult' via OPM",
+            "effect": "Modifies the final geometry generation step during the calculation cycle.",
+            "cascade": [
+              "cleanedupPLine.close()"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "PLine",
+            "description": "A new polyline object with reduced vertex count (cleaned up). The original polyline is used as input reference but is not modified directly; the result is usually a visual preview or a replacement entity.",
+            "appliedTo": "Model Space (General Geometry)"
+          }
+        ]
+      },
+      "tokens_used": 2925,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. Script execution triggered (Insert or Execute Key).\",\n    \"2. Check for duplicate insertion cycle; if count > 1, erase instance and exit.\",\n    \"3. Determine if executed via Catalog Key or Manual Insert.\",\n    \"4. If Manual, display Dynamic Dialog for property configuration (CloseResult).\",\n    \"5. Prompt user on command line to select a single Polyline entity.\",\n    \"6. Store selected Polyline coordinates in the internal Map.\",\n    \"7. Enter Calculation Phase (_bOnMapIO / _bOnDebug).\",\n    \"8. Retrieve Polyline and extract vertex points.\",\n    \"9. Iterate through vertices to analyze segments and angles.\",\n    \"10. Filter geometry: Remove vertices if segment length < 0.5mm or if collinear (within vectorTolerance).\",\n    \"11. Construct new 'cleanedup' Polyline from remaining valid vertices.\",\n    \"12. Check 'CloseResult' property; if true, connect the last point to the first.\",\n    \"13. Generate/Report the resulting Polyline to the Model Space.\",\n    \"14. Erase script instance.\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Insert Cycle Count\",\n      \"path1\": {\n        \"name\": \"Cycle > 1\",\n        \"steps\": [\"Erase Instance\", \"Exit Script\"]\n      },\n      \"path2\": {\n        \"name\": \"Cycle = 1\",\n        \"steps\": [\"Continue to Input Logic\"]\n      }\n    },\n    {\n      \"condition\": \"Execution Source (Catalog vs Manual)\",\n      \"path1\": {\n        \"name\": \"Catalog Key Valid\",\n        \"steps\": [\"Load properties from catalog\", \"Skip Dialog\"]\n      },\n      \"path2\": {\n        \"name\": \"Manual Insert\",\n        \"steps\": [\"Show Properties Dialog\", \"User confirms settings\"]\n      }\n    },\n    {\n      \"condition\": \"Segment Length Analysis\",\n      \"path1\": {\n        \"name\": \"Length < 0.5mm\",\n        \"steps\": [\"Classify as noise/error\", \"Skip Vertex (Continue)\"]\n      },\n      \"path2\": {\n        \"name\": \"Length >= 0.5mm\",\n        \"steps\": [\"Normalize vector\", \"Proceed to Collinearity Check\"]\n      }\n    },\n    {\n      \"condition\": \"Collinearity Check\",\n      \"path1\": {\n        \"name\": \"Angle Deviation < Tolerance\",\n        \"steps\": [\"Classify as redundant/straight\", \"Skip Vertex (Continue)\"]\n      },\n      \"path2\": {\n        \"name\": \"Angle Deviation >= Tolerance\",\n        \"steps\": [\"Classify as valid corner\", \"Add Vertex to new Polyline\"]\n      }\n    },\n    {\n      \"condition\": \"CloseResult Property\",\n      \"path1\": {\n        \"name\": \"CloseResult == 1\",\n        \"steps\": [\"Execute cleanedupPLine.close()\", \"Generate closed loop geometry\"]\n      },\n      \"path2\": {\n        \"name\": \"CloseResult == 0\",\n        \"steps\": [\"Keep Polyline open\", \"Generate linear chain geometry\"]\n      }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"Polyline Selection\",\n      \"errorMessage\": \"Implicit user cancellation or selection of non-pline entity.\",\n      \"recovery\": \"Script terminates if no valid entity is selected via getEntPLine.\"\n    },\n    {\n"
+      },
+      "tokens_used": 6476,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_G-CleanupPolyLine.mcr\n\n## Overview\nThis script cleans up selected polylines by removing redundant vertices (collinear points) and very short segments. It is ideal for simplifying complex geometry imported from other CAD files or created via tracing, with an option to automatically close the loop.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This is the primary working environment. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Entities:** A single Polyline (PLine) must exist in the drawing.\n- **Minimum Beam Count:** 0\n- **Required Settings:** None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse to the script location and select `HSB_G-CleanupPolyLine.mcr`.\n\n### Step 2: Configure Properties (Dialog)\nWhen the script starts, a Properties dialog may appear depending on your hsbCAD configuration.\nAction: Set the desired cleanup tolerance and whether the result should be closed. Click **OK** to proceed.\n\n### Step 3: Select Polyline\n```\nCommand Line: |Select a poly line|\nAction: Click on the polyline in the drawing that you wish to simplify.\n```\n\n### Step 4: Review Result\nAction: The script will generate a new, simplified polyline based on your settings and erase the temporary script instance. You may need to delete the original \"messy\" polyline manually if the script was set to preview rather than replace.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| CloseResult | Boolean (0/1) | 0 | Determines if the resulting polyline is closed (connecting the last point to the first). Set to **1** to close the loop (e.g., for a wall contour), or **0** to keep it open. |\n| vectorTolerance | Number | Unit(0.01, 'mm') | Sets the sensitivity for detecting collinearity. Vertices lying on a straight line within this tolerance are removed. |\n\n## Right-Click Menu Options\nThis script does not add specific items to the right-click context menu.\n\n## Settings Files\nNone required.\n\n## Tips\n- **Imported Geometry:** This tool is excellent for cleaning up polylines imported from DXF/DWG files that often contain unnecessary break points.\n- **Short Segments:** The script automatically ignores segments shorter than 0.5mm to prevent noise in the geometry.\n- **Closing Walls:** If you are tracing a wall outline, enable **CloseResult** to ensure the final geometry is a closed loop, which is often required for generating wall panels.\n\n## FAQ\n- **Q: Does this script modify the original polyline?**\n  A: No, it typically creates a new \"cleaned up\" polyline entity. You should delete the original polyline after verifying the result is correct.\n- **Q: Why are some corners not removed even though they look straight?**\n  A: The corner might deviate slightly outside the `vectorTolerance`. Try increasing the `vectorTolerance` value slightly to allow for more aggressive smoothing.\n- **Q: What happens if I select nothing?**\n  A: The script will terminate gracefully without creating geometry."
+      },
+      "tokens_used": 4573,
+      "error": null
+    }
+  }
+}

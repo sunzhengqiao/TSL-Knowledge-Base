@@ -1,0 +1,326 @@
+{
+  "filename": "DrillDistribution.mcr",
+  "status": "completed",
+  "total_tokens": 48704,
+  "processing_time": 237.00724339485168,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9083,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly operates on GenBeam entities and 3D geometry (drills, slots, cones). Uses _kModelSpace in TslInst.dbCreate(). Context involves selecting beams and polylines for drilling. No 'sd_' prefix, _Viewport usage, or PaperSpace entities detected."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space within hsbCAD",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6627,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [],\n    \"keywordOptions\": [\n      {\n        \"prompt\": \"Are you sure to overwrite existing settings?\",\n        \"options\": [\n          \"No\",\n          \"Yes\"\n        ]\n      }\n    ]\n  },\n  \"dialogs\": [\n    {\n      \"type\": \"ShowDynamicDialog\",\n      \"trigger\": \""
+      },
+      "tokens_used": 9770,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the creation and distribution of holes (drills), slots, and cone holes along a path defined by intersections, polylines, or grip points on structural timber beams.",
+          "category": "Machining/Hardware",
+          "typicalUseCase": "A user needs to create a row of bolt holes or connection slots along a beam where it meets another beam, or follows a specific curve (e.g., facade connection)."
+        },
+        "parameters": [
+          {
+            "name": "sDistributionFormat",
+            "technicalDefault": "\"@(Quantity-2)x @(Diameter)\"",
+            "businessMeaning": "Defines the text format string used to label or dimension the tool set in shop drawings (e.g., '10x 20mm').",
+            "validRange": "String containing placeholders like @(Quantity), @(Diameter), @(Depth)",
+            "unit": "String",
+            "affectsOutput": "Text labels and dimension strings in production drawings; no effect on physical geometry."
+          },
+          {
+            "name": "sDisplayStyle",
+            "technicalDefault": "tDefaultEntry (System Default)",
+            "businessMeaning": "Controls the graphical representation of the tool preview in the 3D model, such as showing the drill path, the tool contour, or the axis line.",
+            "validRange": "Enum: 'Distribution Path', 'Tool Contour', 'Tool Axis', or combinations.",
+            "unit": "Enum",
+            "affectsOutput": "Visibility and display style of the drill distribution within the CAD view."
+          },
+          {
+            "name": "nc (Color)",
+            "technicalDefault": "Dynamic (based on background, e.g., grey/blue)",
+            "businessMeaning": "Specifies the display color of the tool entity in the model space.",
+            "validRange": "RGB values (0-16777215) or hsbCAD color index",
+            "unit": "Color Index/RGB",
+            "affectsOutput": "Visual color of the tool graphics in 3D and plan views."
+          },
+          {
+            "name": "nt (Transparency)",
+            "technicalDefault": "Set via dialog (often 0 or specific opacity)",
+            "businessMeaning": "Sets the transparency level of the tool visualization to differentiate it from solid geometry.",
+            "validRange": "0 (Opaque) to 90 (Transparent), typically.",
+            "unit": "Integer (Percentage)",
+            "affectsOutput": "Visual transparency of the tool preview."
+          },
+          {
+            "name": "sTool (Tool Definition)",
+            "technicalDefault": "tDefaultEntry",
+            "businessMeaning": "Selects a named preset for the drilling parameters (Diameter, Depth, Sink, Cone Angle) to ensure consistency across connections.",
+            "validRange": "List of user-defined or default tool names (e.g., 'M12 Bolt', 'Slot 20x100').",
+            "unit": "String",
+            "affectsOutput": "Determines the physical geometry of the drill (hole size, shape, countersink)."
+          },
+          {
+            "name": "mapTools (Tool Definitions Array)",
+            "technicalDefault": "Empty Array",
+            "businessMeaning": "A library of saved tool configurations containing detailed machining parameters (diameter, depth, sinking, etc.).",
+            "validRange": "Array of Maps containing geometry data.",
+            "unit": "Map Array",
+            "affectsOutput": "Provides the source data for the 'sTool' selection; underlying definition of the physical hole."
+          },
+          {
+            "name": "sFullPath / sFolder",
+            "technicalDefault": "hsbCAD temporary or project directory",
+            "businessMeaning": "File system path used to save (Export) or load (Import) the tool configuration settings to an XML file.",
+            "validRange": "Valid Windows file path string",
+            "unit": "String",
+            "affectsOutput": "Persistence of settings; does not change geometry directly, but allows transferring configurations."
+          },
+          {
+            "name": "mapSetting",
+            "technicalDefault": "Empty Map",
+            "businessMeaning": "The central data structure storing all instance settings (tools, display prefs) for the script.",
+            "validRange": "Key-Value Map structure",
+            "unit": "Map",
+            "affectsOutput": "Storage of all user preferences affecting script behavior."
+          },
+          {
+            "name": "kStereotype",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Assigns a classification or stereotype to the tool entity for filtering or reporting in BIM/CAD workflows.",
+            "validRange": "Standard or custom string stereotypes.",
+            "unit": "String",
+            "affectsOutput": "Classification and data filtering in the CAD model."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects a different 'sTool' from the list",
+            "effect": "The script retrieves the corresponding map from 'mapTools' and applies those parameters (Diameter, Depth, etc.) to the drill generation logic.",
+            "cascade": [
+              "Drill Diameter",
+              "Drill Depth",
+              "Sink Dimensions",
+              "Cone Angle",
+              "Fastener Assignment"
+            ]
+          },
+          {
+            "trigger": "User changes 'sDisplayStyle' via Display Settings dialog",
+            "effect": "The graphical preview in the model updates to show or hide the path, contour, or axis.",
+            "cascade": [
+              "Graphical Preview"
+            ]
+          },
+          {
+            "trigger": "User executes 'Import Settings' or 'Export Settings'",
+            "effect": "The 'mapSetting' object is populated from or written to the XML file at 'sFullPath', overwriting current values or saving them.",
+            "cascade": [
+              "All internal parameters",
+              "mapTools",
+              "nc",
+              "nt",
+              "sDisplayStyle"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Drill / Slot / Cone Drill",
+            "description": "Material removal operations. Includes simple cylindrical holes, slotted holes (mortises), and holes with conical countersinks.",
+            "appliedTo": "The GenBeam selected by the user during script insertion."
+          },
+          {
+            "type": "Fastener Assembly",
+            "description": "Logical representation of hardware (bolts, screws) placed within the generated holes if a fastener style is defined.",
+            "appliedTo": "Inside the Drill entities."
+          },
+          {
+            "type": "Dimension Request",
+            "description": "Annotation definitions controlling how the hole pattern is dimensioned in shop drawings (e.g., '5x @ 600mm').",
+            "appliedTo": "Shop Drawing layouts."
+          }
+        ]
+      },
+      "tokens_used": 8033,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch Script: User runs the script via command line or toolbar.",
+          "2. Select Host Beams: Script prompts 'Select genbeams to be drilled'. User selects one or more GenBeams.",
+          "3. Select Path Definition: Script prompts for additional GenBeams or Polylines defining the drill path.",
+          "4. Determine Strategy: Based on selection, script sets distribution strategy (Intersection, Polyline, or Free/Grip).",
+          "5. Create Instance: The TSL instance is created in ModelSpace.",
+          "6. Load/Initialize Settings: Default properties are loaded or imported from XML if path exists.",
+          "7. Generate Geometry: Drills, slots, and fasteners are calculated and generated on the host beams.",
+          "8. Render Preview: Graphics are drawn based on Display Settings (Color, Transparency, Style).",
+          "9. User Modification: User adjusts parameters via OPM, Grips, or Context Menus to refine the result."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Path Element Selection",
+            "path1": {
+              "name": "Elements Selected",
+              "steps": [
+                "User selects GenBeams or Polylines.",
+                "Script calculates path based on intersections.",
+                "Distribution mode set to 'Even', 'Vertex', or specific strategy (e.g., 'Facade')."
+              ]
+            },
+            "path2": {
+              "name": "Selection Empty",
+              "steps": [
+                "User presses Enter without selecting path elements.",
+                "Script defaults to 'Grip Point' based definition.",
+                "User uses grips to define start, end, and interdistance manually."
+              ]
+            }
+          },
+          {
+            "condition": "Export Settings Trigger",
+            "path1": {
+              "name": "File Exists",
+              "steps": [
+                "Detects existing file at sFullPath.",
+                "Prompts user: 'Are you sure to overwrite existing settings? [No/Yes]'.",
+                "If 'Yes', overwrites file. If 'No', cancels operation."
+              ]
+            },
+            "path2": {
+              "name": "New File",
+              "steps": [
+                "No existing file found.",
+                "Creates folder structure if necessary.",
+                "Writes current settings to new XML file."
+              ]
+            }
+          },
+          {
+            "condition": "Tool Selection (sTool property)",
+            "path1": {
+              "name": "Default Entry",
+              "steps": [
+                "sTool is '<Default>'.",
+                "User inputs specific geometry parameters manually (Diameter, Depth, etc.)."
+              ]
+            },
+            "path2": {
+              "name": "Named Tool",
+              "steps": [
+                "User selects a named tool (e.g., 'M12 Bolt').",
+                "Script loads parameters from 'mapTools' array.",
+                "Geometry updates to match tool definition."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Host Beam Selection",
+            "errorMessage": "Script fails to insert if no GenBeam is selected.",
+            "recovery": "Select a valid GenBeam in ModelSpace and retry."
+          },
+          {
+            "check": "XML Overwrite",
+            "errorMessage": "Command line prompt prevents accidental overwrite.",
+            "recovery": "Type 'Y' to confirm overwrite or 'N' to cancel."
+          },
+          {
+            "check": "Settings File Import",
+            "errorMessage": "'Settings successfully imported' (Success) or silent failure (if file empty).",
+            "recovery": "Ensure the XML file at sFullPath is valid and not empty."
+          },
+          {
+            "check": "Tool Definition",
+            "errorMessage": "If a named tool is missing parameters, the drill may generate with zero size.",
+            "recovery": "Edit tool definition via Context Menu or select 'Default' to enter values manually."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Geometry (Diameter/Depth)",
+            "how": "Properties Palette (OPM)",
+            "effect": "Updates physical size of drills/slots. Triggers regeneration."
+          },
+          {
+            "action": "Edit Distribution Path",
+            "how": "3D Grips",
+            "effect": "Drag start/end grips to resize the distribution row. Drag distance grip to change spacing."
+          },
+          {
+            "action": "Add/Remove Path Elements",
+            "how": "Right-click Context Menu: 'Add Genbeams' / 'Remove Genbeams'",
+            "effect": "Modifies the set of beams/polylines driving the drill location logic."
+          },
+          {
+            "action": "Convert Definition",
+            "how": "Context Menu: 'Convert To Polyline' or 'Convert To Grip Points'",
+            "effect": "Converts the logical path to a static polyline or explicit grip points, breaking the link to the original beams."
+          },
+          {
+            "action": "Manage Tools",
+            "how": "Context Menu: 'New Tool Definition' / 'Erase Tool Definition'",
+            "effect": "Saves current settings as a named preset or deletes a saved preset."
+          },
+          {
+            "action": "Import/Export Settings",
+            "how": "Context Menu: 'Import Settings' / 'Export Settings'",
+            "effect": "Loads all properties from an XML file or saves current properties to XML."
+          },
+          {
+            "action": "Change Visuals",
+            "how": "Context Menu: 'Display Settings'",
+            "effect": "Opens dialog to adjust Color, Transparency, and Display Style (Path/Contour/Axis)."
+          },
+          {
+            "action": "Configure Shopdrawing",
+            "how": "Context Menu: 'Configure Shopdrawing'",
+            "effect": "Sets dimension formats and stereotypes for production drawings."
+          }
+        ]
+      },
+      "tokens_used": 9308,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# DrillDistribution.mcr\n\n## Overview\nThis script automates the creation and distribution of holes, slots, and countersinks along a specific path on structural timber beams. It supports distribution based on beam intersections, polylines, or manually placed grip points.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates exclusively in the 3D model. |\n| Paper Space | No | Not applicable. |\n| Shop Drawing | Yes/No | While it creates geometry for shop drawings, it is a model-space script. |\n\n## Prerequisites\n- **Required Entities:** At least one GenBeam (Structural Timber Beam).\n- **Minimum Beam Count:** 1\n- **Required Settings:** None (Defaults are used if no settings file is loaded).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `DrillDistribution.mcr`\n\n### Step 2: Select Host Beams\n```\nCommand Line: Select genbeams to be drilled\nAction: Click on the timber beam(s) you wish to machine. Press Enter to confirm selection.\n```\n\n### Step 3: Define Path\n```\nCommand Line: Select GenBeams or Polylines for path [or press Enter for Grip Points]\nAction: \n- Option A: Select intersecting beams or a polyline to define the drill line automatically.\n- Option B: Press Enter without selecting anything to use \"Grip Point\" mode for manual placement.\n```\n\n### Step 4: Configure Tool\n```\nCommand Line: (Property Palette opens automatically)\nAction: In the Properties Palette, select a Tool Definition (e.g., \"M12 Bolt\") or manually set Diameter/Depth.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sTool | Dropdown | *Default Entry* | Select a preset tool configuration (e.g., Bolt size, Slot dimensions). |\n| sDistributionFormat | String | `@(Quantity-2)x @(Diameter)` | Defines the text label format for shop drawings (e.g., \"10x 20mm\"). |\n| kStereotype | String | `\"\"` | Assigns a classification for filtering in BIM reports or schedules. |\n| sDisplayStyle | Enum | Default | Controls how the tool is visualized (Distribution Path, Tool Contour, Tool Axis). |\n| nc | Integer | Dynamic | Sets the color of the drill preview graphics. |\n| nt | Integer | 0-90 | Sets the transparency percentage of the drill preview (0 = Opaque). |\n| sFolder / sFullPath | String | Project Path | File path used to Import or Export XML settings files. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Add Genbeams | Adds additional beams to the selection set to be drilled. |\n| Remove Genbeams | Removes specific beams from the current selection set. |\n| Convert To Polyline | Converts the logical path definition into a static polyline, breaking links to source beams. |\n| Convert To Grip Points | Switches the distribution method to manual grip points for individual adjustment. |\n| New Tool Definition | Saves the current parameter set (Diameter, Depth, etc.) as a named preset in the tool list. |\n| Erase Tool Definition | Deletes the currently selected named preset from the tool list. |\n| Import Settings | Loads tool and display configurations from an external XML file. |\n| Export Settings | Saves current tool and display configurations to an external XML file. |\n| Display Settings | Opens a dialog to quickly adjust Color, Transparency, and visual Style. |\n| Configure Shopdrawing | Opens options for dimensioning and labeling the hole pattern in production drawings. |\n\n## Settings Files\n- **Filename**: `[User Defined].xml`\n- **Location**: Project folder or Company folder (as specified in script properties).\n- **Purpose**: Stores Tool Definitions (geometries) and Display Settings (colors/transparency) to ensure consistency across different projects or users.\n\n## Tips\n- **Quick Layouts:** If you need a straight row of bolts, simply draw a polyline in the model and select it during the Path Definition step.\n- **Grip Editing:** After insertion, use the 3D grips (Blue squares) to stretch the start/end of the drill row or adjust the spacing between holes without re-opening the script.\n- **Consistency:** Use \"Export Settings\" to save your standard bolt configurations and share them with your team to ensure everyone uses the same drill sizes.\n\n## FAQ\n- **Q: How do I change the hole size after inserting the script?**\n  **A:** Select the script instance in the model, open the Properties Palette (Ctrl+1), and change the `sTool` dropdown or manually enter a new Diameter.\n  \n- **Q: Can I use this for curved beams?**\n  **A:** Yes. If you select a curved polyline or a curved beam as the path element during Step 3, the drills will follow the curve.\n\n- **Q: What happens if I delete the beam used to define the path?**\n  **A:** If the script relies on a path beam (not converted to grips), deleting that beam will cause the script to lose its path reference. Use \"Convert To Grip Points\" or \"Convert To Polyline\" to make the layout independent of other beams."
+      },
+      "tokens_used": 5883,
+      "error": null
+    }
+  }
+}

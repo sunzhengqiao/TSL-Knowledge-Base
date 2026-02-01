@@ -1,0 +1,336 @@
+{
+  "filename": "GE_HDWR_WALL_ANCHOR_MULTIPLE.mcr",
+  "status": "completed",
+  "total_tokens": 44046,
+  "processing_time": 530.7057921886444,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8829,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses `getElement` to select a wall object and casts it to `ElementWallSF`. It performs 3D geometric calculations using `ptOrg`, `vecX`, and handles `opening()` objects from the element. It creates child TSL instances (`tsl.dbCreate`) attached to the 3D element. There is no interaction with `_Viewport`, `sd_` prefixes, or paper space specific drawing contexts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "ElementWallSF"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6507,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getElement",
+              "promptOriginal": "\nSelect a Wall",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getInt",
+              "promptOriginal": "\nSpecify Engineering Type:  1= 1/2 ATC; 2= 1/2 ATC+Anchor; 3= CUP;  4= 3/8 ATC; 5= Adhesive; 6= Embedded; 7= J-Bolt; 8= Screw; 9= MAS; 10= None -- [1/ 2/ 3/ 4/ 5/ 6/ 7/ 8/ 9/ 10]",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "strType",
+            "type": "PropString",
+            "displayName": "Scenario",
+            "defaultValue": "1/2\" ATC Engineering",
+            "inputType": "dropdown",
+            "options": [
+              "1/2\" ATC Engineering",
+              "1/2\" ATC & Anchor Engineering",
+              "CUP Engineering",
+              "3/8\" ATC Engineering",
+              "Adhesive Anchor",
+              "Embedded Anchor",
+              "J-Bolt Anchor",
+              "Screw Anchor",
+              "MAS Anchor",
+              "None"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "dSpacing",
+            "type": "PropDouble",
+            "displayName": "Spacing",
+            "defaultValue": 48.0,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": " Re-distribute",
+            "handler": "_kExecuteKey == \" Re-distribute\"",
+            "action": "Re-calculates and re-inserts the child anchor instances based on current spacing and type properties.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": " Remove Existing",
+            "handler": "_kExecuteKey == \" Remove Existing\"",
+            "action": "Erases all child anchor TSL instances currently attached to the wall.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 6598,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the placement and engineering of wall anchorage hardware (such as ATC rods, adhesive anchors, and screws) along a wall bottom plate, distributing them based on spacing rules while avoiding openings.",
+          "category": "Hardware",
+          "typicalUseCase": "Used during the engineering or detailing phase to apply lateral load restraint systems (hold-downs) to wall panels according to specific engineering scenarios (e.g., high wind zones)."
+        },
+        "parameters": [
+          {
+            "name": "strType",
+            "technicalDefault": "\"1/2\\\" ATC Engineering\"",
+            "businessMeaning": "Selects the specific engineering pattern or hardware type to be applied to the wall (e.g., 1/2 inch ATC rods, Adhesive Anchors, or None).",
+            "validRange": "Selection from predefined list (1/2\" ATC, 1/2\" ATC & Anchor, CUP, 3/8\" ATC, Adhesive, Embedded, J-Bolt, Screw, MAS, None).",
+            "unit": "N/A (Enumeration)",
+            "affectsOutput": "Determines which sub-script (TSL) is executed and what properties (like 'Hardware Type') are passed to the generated hardware. It also controls if intermediate anchors are placed between rods."
+          },
+          {
+            "name": "dSpacing",
+            "technicalDefault": "48.0",
+            "businessMeaning": "The maximum on-center distance between primary anchors along the wall.",
+            "validRange": "Typically 12\" to 96\", depending on engineering loads; 48\" (4') is a common standard.",
+            "unit": "inch",
+            "affectsOutput": "Directly controls the frequency and count of anchors placed along the wall. Increasing the spacing reduces the number of anchors."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Wall Elevation > 59 inches",
+            "effect": "The script automatically sets 'Scenario' to 'None' to prevent hardware from being placed on second floor walls by default.",
+            "cascade": [
+              "strType"
+            ]
+          },
+          {
+            "trigger": "Changing 'Spacing' or triggering 'Re-distribute'",
+            "effect": "Erases all existing hardware attached to the wall and recalculates positions based on the new spacing value.",
+            "cascade": [
+              "Child TSL Instances"
+            ]
+          },
+          {
+            "trigger": "Selecting '1/2\" ATC & Anchor Engineering' (Type 2)",
+            "effect": "Calculates an additional set of points at half-spacing intervals for intermediate plate anchors.",
+            "cascade": [
+              "Child TSL Instances"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "TSL Instance (Hardware)",
+            "description": "Child scripts representing specific hardware (e.g., 'GE_HDWR_WALL_ANCHOR', 'GE_HDWR_ANCHOR_ADHESIVE') are instantiated along the wall bottom plate.",
+            "appliedTo": "The selected Wall Element."
+          },
+          {
+            "type": "Visual Marker",
+            "description": "A circle and 'E' text drawn at the wall start origin to indicate the presence of the engineering control script.",
+            "appliedTo": "Model Space (Annotation)."
+          }
+        ]
+      },
+      "tokens_used": 7069,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched via command or insertion.",
+          "Checks if running in 'insert' cycle (_bOnInsert). If cycle > 1, instance is erased to prevent duplicates.",
+          "User prompted to select a Wall element.",
+          "User prompted to select Engineering Type (1-10) via command line.",
+          "Script validates Wall element exists; if not, instance is erased.",
+          "Script assigns itself to the wall element group.",
+          "Script checks Wall Elevation. If elevation > 59 inches, 'Scenario' is set to 'None' and message reported.",
+          "Script draws visual marker (Circle + 'E') at wall start origin.",
+          "Script checks for existing duplicate instances of this script or related hardware TSLs on the same wall. If duplicates found, current instance is erased.",
+          "Script listens for Context Menu triggers ('Re-distribute' or 'Remove Existing').",
+          "If 'Remove Existing' triggered, script deletes all associated hardware TSLs attached to the wall.",
+          "If _bOnInsert, 'Re-distribute' triggered, 'Spacing' property changed, or no hardware found on constructed wall: Calculation logic runs.",
+          "Calculation Logic: Retrieves Wall outline and subtracts 3 inches from effective length.",
+          "Calculation Logic: Iterates through wall openings. Points 5 inches before and after each opening are added as split points to avoid placing hardware in openings.",
+          "Calculation Logic: Calculates placement points for Rods (based on Spacing) and Plate Anchors (half spacing initially, then full spacing) between split points.",
+          "Calculation Logic: If 'Scenario' is 'None', script stops calculation.",
+          "Calculation Logic: Determines specific hardware properties (Maps) based on selected Engineering Type.",
+          "Calculation Logic: Instantiates child TSL instances (e.g., GE_HDWR_WALL_ANCHOR, GE_HDWR_ANCHOR_ADHESIVE) at calculated points.",
+          "For Engineering Type 2 (ATC+Anchor): Inserts Rods at rod points AND Plate anchors at plate points.",
+          "For Engineering Type 3 (CUP): Inserts Plate anchors at both rod and plate points.",
+          "For Types 1, 4-9: Inserts specific hardware at rod points only (with specific adjustments for types 4-9)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Duplicate Detection on Insertion",
+            "path1": {
+              "name": "Duplicate Found",
+              "steps": [
+                "Script scans attached TSLs.",
+                "Finds instance of same script or related hardware attached to same wall.",
+                "Erases current instance immediately."
+              ]
+            },
+            "path2": {
+              "name": "No Duplicate",
+              "steps": [
+                "Proceeds to Elevation Check."
+              ]
+            }
+          },
+          {
+            "condition": "Wall Elevation Check (> 59 inches)",
+            "path1": {
+              "name": "Second Floor Wall",
+              "steps": [
+                "Script calculates elevation relative to World Z.",
+                "If > 59 inches, sets 'Scenario' property to 'None'.",
+                "Reports message that no components will be added.",
+                "Skips hardware generation."
+              ]
+            },
+            "path2": {
+              "name": "First Floor Wall",
+              "steps": [
+                "Keeps selected or default 'Scenario'.",
+                "Proceeds to hardware generation."
+              ]
+            }
+          },
+          {
+            "condition": "Engineering Type (Scenario) Selection",
+            "path1": {
+              "name": "Type 1 (1/2 ATC)",
+              "steps": [
+                "Map 'Hardware Type' set to '1/2\" ATC Rod'.",
+                "Inserts Child TSL at calculated Rod points only."
+              ]
+            },
+            "path2": {
+              "name": "Type 2 (1/2 ATC + Anchor)",
+              "steps": [
+                "Map 'Hardware Type' set to '3/8\" ATC Rod' for Rods.",
+                "Map 'Hardware Type' set to '3/8\" x 6\" Screw Anchor' for Plates.",
+                "Inserts Child TSL at calculated Rod points.",
+                "Inserts Child TSL at calculated Plate points."
+              ]
+            },
+            "path3": {
+              "name": "Type 3 (CUP)",
+              "steps": [
+                "Map 'Hardware Type' set to '3/8\" x 6\" Screw Anchor'.",
+                "Inserts Child TSL at calculated Rod points.",
+                "Inserts Child TSL at calculated Plate points."
+              ]
+            },
+            "path4": {
+              "name": "Type 4-9 (3/8 ATC, Adhesive, Embedded, J-Bolt, Screw, MAS)",
+              "steps": [
+                "Map 'Hardware Type' set to '3/8\" ATC Rod'.",
+                "Inserts Child TSL at calculated Rod points.",
+                "Z-coordinate of insertion point adjusted to bottom of beam."
+              ]
+            },
+            "path5": {
+              "name": "Type 10 (None)",
+              "steps": [
+                "Script returns/stops immediately.",
+                "No hardware generated."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "None explicitly shown in code, but failure to select a valid ElementWallSF usually results in script erasure via `eraseInstance()` or `return`.",
+            "recovery": "User must select a valid Wall element during the command prompt."
+          },
+          {
+            "check": "Element Type",
+            "errorMessage": "Implicit. The script casts the element to `ElementWallSF`. If the wall is not a valid Sandwich Wall, the script erases itself.",
+            "recovery": "Select a compatible Wall element (ElementWallSF)."
+          },
+          {
+            "check": "Insertion Cycle",
+            "errorMessage": "None. Instance silently erased if `insertCycleCount() > 1`.",
+            "recovery": "Run script normally. Prevents duplicate instances on same click."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Spacing",
+            "how": "OPM Properties Palette (Edit 'Spacing')",
+            "effect": "Triggers recalculation (_kNameLastChangedProp == \"Spacing\"). Old hardware is erased and new hardware distributed at the new spacing."
+          },
+          {
+            "action": "Modify Scenario",
+            "how": "OPM Properties Palette (Edit 'Scenario')",
+            "effect": "Triggers recalculation. Old hardware is erased. New hardware type is generated based on the new selection."
+          },
+          {
+            "action": "Re-distribute",
+            "how": "Right-click Context Menu on Script Instance",
+            "effect": "Triggers recalculation. Erases existing hardware and re-generates it based on current properties (useful if wall geometry changed)."
+          },
+          {
+            "action": "Remove Existing",
+            "how": "Right-click Context Menu on Script Instance",
+            "effect": "Erases all child hardware TSLs attached to the wall. The master script instance remains."
+          }
+        ]
+      },
+      "tokens_used": 9388,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_HDWR_WALL_ANCHOR_MULTIPLE.mcr\n\n## Overview\nAutomates the placement and engineering of wall anchorage hardware (such as ATC rods, adhesive anchors, and screws) along a wall bottom plate. It distributes anchors based on specified spacing rules while automatically avoiding wall openings.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates on 3D Wall Elements. |\n| Paper Space | No | Not applicable for detailing views. |\n| Shop Drawing | No | Not applicable for 2D drawing generation. |\n\n## Prerequisites\n- **Required Entities:** A valid Wall Element (`ElementWallSF`).\n- **Minimum Beam Count:** 1 (The script acts on the selected wall element).\n- **Required Settings:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_HDWR_WALL_ANCHOR_MULTIPLE.mcr`\n\n### Step 2: Select Wall\n```\nCommand Line: Select a Wall\nAction: Click on the desired Wall element in the model.\n```\n\n### Step 3: Specify Engineering Type\n```\nCommand Line: Specify Engineering Type: 1= 1/2 ATC; 2= 1/2 ATC+Anchor; ... 10= None\nAction: Type the number corresponding to the desired hardware scenario and press Enter.\n```\n*Note: You can change this later via the Properties Palette.*\n\n### Step 4: Configuration\nOnce inserted, the script generates the hardware. You can adjust parameters via the Properties Palette (Ctrl+1) while the script instance is selected.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Scenario | Dropdown | 1/2\" ATC Engineering | Selects the engineering pattern or hardware type (e.g., ATC rods, Adhesive Anchors, J-Bolts, etc.). |\n| Spacing | Number | 48.0 | Sets the maximum on-center distance between anchors in inches. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Re-distribute | Recalculates anchor positions based on the current Spacing and Scenario settings. Use this if the wall geometry has changed. |\n| Remove Existing | Removes all child hardware instances attached to the wall but keeps the main script instance active. |\n\n## Settings Files\n- **Filename:** None\n- **Location:** N/A\n- **Purpose:** This script does not rely on external XML settings files.\n\n## Tips\n- **Second Floor Walls:** If a wall has an elevation greater than 59 inches (typically a second floor), the script automatically sets the Scenario to \"None\" to prevent unwanted hardware placement.\n- **Opening Avoidance:** The script automatically places anchors 5 inches away from any wall openings to ensure proper installation clearances.\n- **Dynamic Updates:** Changing the \"Spacing\" or \"Scenario\" in the Properties Palette immediately erases old hardware and generates new ones.\n- **Visual Marker:** A small circle with an \"E\" is drawn at the start of the wall to indicate that this engineering script is attached to it.\n\n## FAQ\n- **Q: Why did no anchors appear when I inserted the script?**\n- **A:** This likely happens if the wall elevation is higher than 59 inches (defaulting to \"None\") or if the \"Scenario\" property is set to \"None\". Check the Properties Palette to adjust the Scenario.\n- **Q: Can I use this on curved walls?**\n- **A:** The script is designed for standard linear wall elements. Complex geometries may require manual adjustment.\n- **Q: What happens if I insert the script twice on the same wall?**\n- **A:** The script detects duplicates and will automatically erase the newer instance to prevent conflicts.\n- **Q: How do I switch from ATC rods to Adhesive Anchors?**\n- **A:** Select the script instance (look for the \"E\" marker), open the Properties Palette (Ctrl+1), and change the \"Scenario\" dropdown to \"Adhesive Anchor\". The anchors will update automatically."
+      },
+      "tokens_used": 5655,
+      "error": null
+    }
+  }
+}

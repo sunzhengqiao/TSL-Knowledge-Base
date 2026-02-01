@@ -1,0 +1,282 @@
+{
+  "filename": "HSB_G-ExportElementInformation.mcr",
+  "status": "completed",
+  "total_tokens": 22349,
+  "processing_time": 329.71024560928345,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5191,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No 'sd_' or 'Multipage' prefix found. No usage of '_Viewport' or ShopDrawing specific entities (e.g., #Type E with _Entity[]). The script uses '_bOnInsert' for immediate execution and operates on 'TslInst' entities selected via PrEntity, indicating a general utility script running in the standard CAD environment."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "TslInst"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "The script expects to select TslInst entities (specifically element information TSLs) that contain a Map entry named 'Dxf'. It runs during insertion (_bOnInsert) and writes to the DWG path (_kPathDwg).",
+          "requiredSettings": [
+            "Target TSL instances must contain a map structure with 'Dxf' -> 'Text' or 'PLine' keys."
+          ]
+        }
+      },
+      "tokens_used": 1652,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select the element information tsls|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "showDialog() call on _bOnInsert",
+            "title": "Dxf output",
+            "dataSource": "Script defined properties (outputVersion, fileName)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "outputVersion",
+            "type": "PropInt",
+            "displayName": "|Dxf version|",
+            "defaultValue": 0,
+            "inputType": "dropdown",
+            "options": [
+              "_kVersionCurrent",
+              "_kVersion2000",
+              "_kVersion2004",
+              "_kVersion2007",
+              "_kVersion2010"
+            ],
+            "category": "Dxf output",
+            "description": "|Sets the format the Dxf file is saved to. Leave it to '0' if you want to save it to the current version.|"
+          },
+          {
+            "index": 0,
+            "variable": "fileName",
+            "type": "PropString",
+            "displayName": "|Filename|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": "Dxf output",
+            "description": "|Sets the filename of the dxf file.|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2631,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Extracts graphical element information (text and polylines) from specific hsbCAD instances and exports them into a standalone DXF file.",
+          "category": "Export/Utility",
+          "typicalUseCase": "Generating a DXF file containing labels, dimensions, or geometric shapes (e.g., for CNC labeling or layer plans) that are stored within 'Element Information' TSLs inside the 3D model."
+        },
+        "parameters": [
+          {
+            "name": "outputVersion",
+            "technicalDefault": "0",
+            "businessMeaning": "Specifies the target AutoCAD version compatibility for the exported DXF file to ensure it can be opened by older software or specific CNC controllers.",
+            "validRange": "0 (Current), 2000, 2004, 2007, 2010",
+            "unit": "N/A (Enumeration)",
+            "affectsOutput": "Alters the internal file format and header data of the DXF. Selecting an older version (e.g., 2000) may exclude newer CAD features but ensures broader compatibility."
+          },
+          {
+            "name": "fileName",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Defines the name of the file to be created. This identifies the data set on the disk for downstream use.",
+            "validRange": "Any valid Windows filename string (excluding invalid characters like \\ / : * ? \" < > |)",
+            "unit": "String",
+            "affectsOutput": "Determines the exact storage location and name of the file. If empty, the file save operation will likely fail or use a default fallback."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "DXF File",
+            "description": "A 2D CAD file containing the text entities and polylines extracted from the internal Map data of the selected element information instances.",
+            "appliedTo": "Saved to the drawing folder (_kPathDwg)."
+          }
+        ]
+      },
+      "tokens_used": 2704,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script is inserted into the drawing.",
+          "2. System checks insertion cycle count; if greater than 1, the instance is immediately erased (recursion guard).",
+          "3. Properties dialog (ShowDynamicDialog) opens, allowing user to set 'Filename' and 'Dxf version'.",
+          "4. Command line prompt 'Select the element information tsls' appears.",
+          "5. User selects TslInst entities from the model.",
+          "6. Script loops through the selected set.",
+          "7. For each entity, script checks internal Map for a 'Dxf' entry.",
+          "8. If 'Dxf' entry exists, script iterates through map items to find 'Text' or 'PLine' data.",
+          "9. Found geometry is drawn to an internal Display buffer.",
+          "10. After processing all entities, the buffer is written to a DXF file in the _kPathDwg folder.",
+          "11. Script verifies if the file exists on the disk.",
+          "12. Success or failure message is reported to the command line.",
+          "13. Script instance erases itself from the drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle Count",
+            "path1": {
+              "name": "Cycle > 1",
+              "steps": [
+                "Erase Instance",
+                "Return (Stop)"
+              ]
+            },
+            "path2": {
+              "name": "Cycle == 1",
+              "steps": [
+                "Show Dialog",
+                "Proceed to Selection"
+              ]
+            }
+          },
+          {
+            "condition": "User Selection (ssE.go())",
+            "path1": {
+              "name": "User cancels or selects nothing",
+              "steps": [
+                "Skip processing loop",
+                "Erase Instance"
+              ]
+            },
+            "path2": {
+              "name": "User selects entities",
+              "steps": [
+                "Iterate selected entities",
+                "Process data"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Data Validation",
+            "path1": {
+              "name": "Map 'Dxf' missing",
+              "steps": [
+                "Continue to next entity (Ignore)"
+              ]
+            },
+            "path2": {
+              "name": "Map 'Dxf' present",
+              "steps": [
+                "Read Map contents",
+                "Extract Text/PLine"
+              ]
+            }
+          },
+          {
+            "condition": "Map Entry Type",
+            "path1": {
+              "name": "Key is 'Text'",
+              "steps": [
+                "Extract text string, position, and vectors",
+                "Draw text to DXF buffer"
+              ]
+            },
+            "path2": {
+              "name": "Key is 'PLine'",
+              "steps": [
+                "Extract PLine geometry",
+                "Draw PLine to DXF buffer"
+              ]
+            }
+          },
+          {
+            "condition": "File Write Result",
+            "path1": {
+              "name": "File found on disk (Success)",
+              "steps": [
+                "Report 'File created: [path]'"
+              ]
+            },
+            "path2": {
+              "name": "File not found (Failure)",
+              "steps": [
+                "Report 'File could not be created: [path]'"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Filename property",
+            "errorMessage": "File could not be created: [path] (likely resulting in invalid path or empty string)",
+            "recovery": "User must modify script properties before execution to ensure 'Filename' is not empty."
+          },
+          {
+            "check": "Selected Entity Type",
+            "errorMessage": "Implicitly handled by PrEntity filter (only accepts TslInst)",
+            "recovery": "User must select TSL instances, not standard CAD geometry."
+          },
+          {
+            "check": "Internal Map Structure",
+            "errorMessage": "No output generated for specific entities if 'Dxf' map is missing.",
+            "recovery": "Ensure selected TSL instances are actually 'Element Information' scripts containing the 'Dxf' data."
+          },
+          {
+            "check": "Write Permissions",
+            "errorMessage": "'File could not be created' reported if folder is read-only.",
+            "recovery": "Check write permissions for the current DWG folder."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "The script executes immediately during insertion and calls eraseInstance() at the end. No persistent object remains in the drawing to edit."
+          }
+        ]
+      },
+      "tokens_used": 5411,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_G-ExportElementInformation\n\n## Overview\nExports graphical data (text and polylines) stored within specific Element Information TSL instances to a standalone DXF file.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script runs in the 3D model environment. |\n| Paper Space | No | Not intended for layout views. |\n| Shop Drawing | No | Not intended for 2D shop drawings. |\n\n## Prerequisites\n- **Required entities**: Element Information TSL instances (`TslInst`) that contain internal map data named 'Dxf'.\n- **Minimum beam count**: 0\n- **Required settings**: The target TSL instances must have been generated by a script that stores 'Text' and 'PLine' data in a map structure.\n\n## Usage Steps\n\n### Step 1: Launch Script\nExecute the command `TSLINSERT` in the command line and select `HSB_G-ExportElementInformation.mcr` from the file browser.\n\n### Step 2: Configure Export Settings\nA dialog titled \"Dxf output\" will appear immediately upon insertion.\n- **Filename**: Enter a valid name for the output file (e.g., `Labels`). **Do not leave this blank.**\n- **Dxf version**: Select the desired compatibility version (e.g., 2000, 2004, 2010, or leave as 0 for the current version).\n\n### Step 3: Select Elements\n```\nCommand Line: Select the element information tsls\nAction: Click on the TSL instances (Element Information markers) in the model that you wish to export data from. Press Enter to confirm selection.\n```\n\n### Step 4: Generate File\nThe script will process the selection, extract the graphical data, and save it as a DXF file in the same folder as your current drawing.\n- A message will appear in the command line confirming success (e.g., \"File created: [path]\") or failure.\n- The script instance will automatically erase itself from the drawing upon completion.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Dxf version | dropdown | 0 (Current) | Sets the format version of the exported DXF file. Use 0 for the current CAD version, or select a specific year (e.g., 2000, 2004) for compatibility with older systems. |\n| Filename | text | [Empty] | The name of the DXF file to be created. This field is mandatory; if left empty, the export will fail. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script runs immediately upon insertion and does not provide context menu options. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **File Location**: The exported DXF file is always saved in the folder where your current DWG is located (`_kPathDwg`).\n- **Cleaning Up**: You do not need to delete the script instance manually; it is designed to erase itself after running.\n- **Data Source**: If the export creates an empty file, ensure you selected TSLs that actually contain \"Dxf\" data (check with your administrator if the Element Information script supports this export).\n\n## FAQ\n- **Q: Why did the script disappear after I ran it?**\n  - A: This is normal behavior. The script acts as a temporary command tool and erases itself once the export process is finished to keep your drawing clean.\n  \n- **Q: I received a \"File could not be created\" error. What went wrong?**\n  - A: This usually happens if the \"Filename\" property was left empty or contained invalid characters. Check the command line for the specific path mentioned in the error.\n\n- **Q: Where can I find the exported file?**\n  - A: It is saved in the exact same directory as your current project drawing."
+      },
+      "tokens_used": 4760,
+      "error": null
+    }
+  }
+}

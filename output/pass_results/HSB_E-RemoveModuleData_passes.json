@@ -1,0 +1,226 @@
+{
+  "filename": "HSB_E-RemoveModuleData.mcr",
+  "status": "completed",
+  "total_tokens": 24309,
+  "processing_time": 289.3539779186249,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2701,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly uses _kModelSpace in dbCreate calls. It interacts directly with 3D model data (GenBeam.setModule) and Element objects selected via PrEntity. No logic involving _Viewport, sd_ prefixes, or Paper Space entities exists."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3459,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "zoneToChangeProp",
+            "type": "PropInt",
+            "displayName": "|Zone to change|",
+            "defaultValue": 0,
+            "inputType": "dropdown",
+            "options": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "category": "|Element Zone|",
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5123,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Clears the module name/assignment from beams within a selected Element, filtered by a specific manufacturing Zone.",
+          "category": "Data Management",
+          "typicalUseCase": "A user needs to dissociate a group of beams (defined by a Zone) from a specific manufacturing module or pre-assembly group without deleting the geometry."
+        },
+        "parameters": [
+          {
+            "name": "zoneToChangeProp",
+            "technicalDefault": 0,
+            "businessMeaning": "Selects the specific zone index within the Element to identify which beams should be processed. The dropdown provides 11 options (0-10), where values 0-5 correspond to standard zones, and values 6-10 are mapped internally to negative indices (-1 to -5) to access specific or alternate zone groupings.",
+            "validRange": "0 to 10",
+            "unit": "Index (Integer)",
+            "affectsOutput": "Determines which subset of beams in the element are targeted. The script retrieves beams in this zone and sets their 'Module' property to an empty string."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "GenBeam Data",
+            "description": "The 'Module' property is cleared (set to empty string) for the beams located in the specified zone.",
+            "appliedTo": "GenBeams within the selected Element that match the specified Zone index."
+          }
+        ]
+      },
+      "tokens_used": 4069,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script execution begins (Insert or Execute).",
+          "2. Script checks if an Execute Key is provided; if not, the Properties Dialog opens allowing the user to select the 'Zone to change'.",
+          "3. User is prompted to select Elements via command line (PrEntity).",
+          "4. For every selected Element, the script creates a new instance of itself attached to that specific Element.",
+          "5. The original 'launcher' instance erases itself and terminates.",
+          "6. Each spawned instance initializes and checks if exactly one Element reference exists.",
+          "7. Instance loads properties from the '_LastInserted' catalog.",
+          "8. Instance validates the referenced Element.",
+          "9. System calculates the actual Zone Index based on user input (handling negative offsets for values > 5).",
+          "10. Instance retrieves all GenBeams belonging to the calculated Zone.",
+          "11. Instance clears the 'Module' property (sets to empty string) for each retrieved GenBeam.",
+          "12. Operation completes (script instance remains in memory but inactive)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Check for valid Execute Key",
+            "path1": {
+              "name": "Interactive Mode",
+              "steps": [
+                "Show Dialog for 'Zone to change'",
+                "User selects index 0-10"
+              ]
+            },
+            "path2": {
+              "name": "Catalog/Execute Mode",
+              "steps": [
+                "Load properties from catalog",
+                "Skip dialog"
+              ]
+            }
+          },
+          {
+            "condition": "Zone Index Value",
+            "path1": {
+              "name": "Standard Zones (0-5)",
+              "steps": [
+                "Zone index remains unchanged"
+              ]
+            },
+            "path2": {
+              "name": "Extended Zones (6-10)",
+              "steps": [
+                "Calculate negative index: 5 - input (e.g., 6 becomes -1)"
+              ]
+            }
+          },
+          {
+            "condition": "Element Assignment Validation",
+            "path1": {
+              "name": "Valid",
+              "steps": [
+                "Proceed to beam processing"
+              ]
+            },
+            "path2": {
+              "name": "Invalid/None",
+              "steps": [
+                "Report warning 'No element selected!'",
+                "Erase instance",
+                "Exit"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Attachment Count",
+            "errorMessage": "|No element selected!|",
+            "recovery": "Script terminates automatically. User must initiate the script again and ensure valid Elements are selected during the PrEntity prompt."
+          },
+          {
+            "check": "Element Validity",
+            "errorMessage": "|The selected element is invalid|!",
+            "recovery": "Script terminates automatically. User must ensure the selected Element exists in the drawing database and is not deleted/corrupted."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Re-run Script",
+            "how": "Insert command or Execute key",
+            "effect": "Allows user to process additional elements or change a different Zone on the same elements."
+          }
+        ]
+      },
+      "tokens_used": 4842,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-RemoveModuleData.mcr\n\n## Overview\nThis script clears the manufacturing module name from specific timber beams within a selected hsbCAD Element, based on a chosen manufacturing Zone index. It is used to dissociate groups of beams from a module without deleting the physical geometry.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D model Elements and beams. |\n| Paper Space | No | Not designed for 2D layouts or views. |\n| Shop Drawing | No | Not intended for generating drawing views. |\n\n## Prerequisites\n- **Required Entities**: At least one valid hsbCAD `Element` existing in the model.\n- **Minimum Beam Count**: 0 (The script targets data on the Element/Beams, not specific beam counts).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the command line.\n2.  Navigate to the folder containing `HSB_E-RemoveModuleData.mcr` and select it.\n\n### Step 2: Configure Zone Settings\n1.  Before selecting elements, open your **Properties Palette** (Ctrl+1) if not already open.\n2.  Look for the parameter **|Zone to change|** under the category **|Element Zone|**.\n3.  Select the desired Zone index from the dropdown list (options 0 through 10).\n    *   *Note: Values 0-5 correspond to standard zones. Values 6-10 are used for specific alternate zones (mapped internally to negative indices).*\n\n### Step 3: Select Elements\n```\nCommand Line: |Select elements|\nAction: Click on the desired Element(s) in the drawing view and press Enter.\n```\n4.  The script will automatically process the selection, clear the module data for beams in the specified zone, and finish.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| |Zone to change| | Dropdown | 0 | Determines which manufacturing zone within the Element to process. The script will only remove module data from beams assigned to this specific zone index. |\n\n## Right-Click Menu Options\nThis script does not add specific options to the entity right-click menu.\n\n## Settings Files\nNo external settings files are required for this script.\n\n## Tips\n- **Data Loss**: This script removes data (the Module assignment). Ensure you have selected the correct Zone, as this action changes the production grouping of the beams.\n- **Zone Mapping**: If you need to target \"negative\" zones (often used for alternate groupings in hsbCAD), select options 6 through 10. These map to zones -1 through -5 respectively.\n- **Batch Processing**: You can select multiple Elements during the command prompt step. The script will apply the zone change to all selected Elements simultaneously.\n\n## FAQ\n- **Q: What exactly gets deleted?**\n  - **A**: The script clears the text string in the 'Module' property for the beams located in the specified zone. It does not delete the beams themselves.\n- **Q: I ran the script but nothing happened.**\n  - **A**: Ensure you selected a valid hsbCAD Element and that the chosen zone actually contains beams. If the zone is empty or the element is invalid, the script will terminate without making changes.\n- **Q: How do I undo this?**\n  - **A**: You can use the standard AutoCAD `UNDO` command immediately after running the script to revert the changes."
+      },
+      "tokens_used": 4115,
+      "error": null
+    }
+  }
+}

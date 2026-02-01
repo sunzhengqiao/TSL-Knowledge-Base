@@ -1,0 +1,156 @@
+{
+  "filename": "ElementBeamSplit.mcr",
+  "status": "completed",
+  "total_tokens": 48261,
+  "processing_time": 307.5364634990692,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.3",
+            "date": "23.05.2022",
+            "author": "Marsel Nakuci",
+            "changes": "HSB-15513: add option to select entities manually"
+          },
+          {
+            "version": "1.2",
+            "date": "10.05.2022",
+            "author": "Marsel Nakuci",
+            "changes": "HSB-15441: Support truss entities as male (cutting) beams"
+          },
+          {
+            "version": "1.1",
+            "date": "11.04.2022",
+            "author": "Thorsten Huck",
+            "changes": "HSB-15168 plugin mode improved ,"
+          },
+          {
+            "version": "1.0",
+            "date": "08.04.2022",
+            "author": "Thorsten Huck",
+            "changes": "HSB-15168 initail version ,"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8219,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly uses _kModelSpace in the TslInst.dbCreate method: `tslNew.dbCreate(scriptName() , el.vecX(), el.vecY(),gbsTsl, entsTsl, ptsTsl, nProps, dProps, sProps,_kModelSpace, mapTsl);`. It interacts with 3D geometry using GenBeam, Element, and TrussEntity entities via PrEntity prompts and Body operations (envelopeBody, decomposeIntoLumps), indicating a modeling environment. No shopdrawing (sd_*) prefixes or viewport/paper space logic is present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam",
+            "TrussEntity"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing Elements to process, or specific sets of Beams/Trusses for manual selection.",
+          "requiredSettings": [
+            "PainterDefinition collection 'ElementBeamSplit' (Optional, used for advanced filtering)"
+          ]
+        }
+      },
+      "tokens_used": 5937,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"Select elements or <Enter> to select beams manually\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": false,\n        \"entityTypes\": [\n          \"Element\"\n        ],\n        \"allowEnter\": true\n      },\n      {\n        \"step\": 2,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"Select splitting beams or/and trusses\",\n        \"condition\": \"No elements selected in step 1\",\n        \"required\": true,\n        \"entityTypes\": [\n          \"Beam\",\n          \"TrussEntity\"\n        ]\n      },\n      {\n        \"step\": 3,\n"
+      },
+      "tokens_used": 10227,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically splits timber beams within an element (or manual selection) based on geometric intersections with other beams or trusses, maintaining original beam attributes.",
+          "category": "Modeling/Framing",
+          "typicalUseCase": "Used when a user needs to trim beams around intersecting members (e.g., trimming studs around a plate or splitting a main beam where a truss crosses it) without generating specific joinery machinings, effectively creating a Boolean cut."
+        },
+        "parameters": [
+          {
+            "name": "sMaleSelection",
+            "technicalDefault": "Y-Parallel",
+            "businessMeaning": "Defines the filter criteria to identify the 'cutting' beams (the male entities). These are the beams that define the split lines/volumes. Defaults can be based on direction relative to the element coordinate system or specific Painter Definition queries.",
+            "validRange": "X-Parallel, Y-Parallel, or names of existing Painter Definitions",
+            "unit": "String (Selection Filter)",
+            "affectsOutput": "Determines which beams act as the tools to cut others. If no beams match this filter, the script reports an error and does nothing."
+          },
+          {
+            "name": "sFemaleSelection",
+            "technicalDefault": "<Default>",
+            "businessMeaning": "Defines the filter criteria to identify the beams that will be cut (the female entities). Default usually implies all beams in the element/selection.",
+            "validRange": "<Default> (all), or names of existing Painter Definitions",
+            "unit": "String (Selection Filter)",
+            "affectsOutput": "Determines which beams are subject to splitting. If a beam matches the male filter but not the female filter, it acts only as a cutter."
+          },
+          {
+            "name": "dGap",
+            "technicalDefault": "0",
+            "businessMeaning": "A clearance distance added to the width and height of the cutting volume. It ensures the split beams do not physically touch the cutting beams, leaving space for tolerances or insulation.",
+            "validRange": "0 mm to 20 mm (Typically 0-5mm for tight fits, larger for clearance)",
+            "unit": "mm",
+            "affectsOutput": "The resulting split beams will be shorter in the intersection area by twice this value (Gap applied to both sides of the cutting body's cross-section)."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of 'Painter Definition' in sMaleSelection or sFemaleSelection",
+            "effect": "The script searches for a specific PainterDefinition object. If the collection 'ElementBeamSplit' exists in the project, it restricts the search to that collection; otherwise, it searches globally.",
+            "cascade": [
+              "sMaleSelection",
+              "sFemaleSelection"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "GenBeam",
+            "description": "New beam segments created from the original female beams after the male body has been subtracted. Original attributes (Material, Grade, Name, Labels, etc.) are copied to the new segments.",
+            "appliedTo": "Beams identified by the 'Female' filter that intersect with beams identified by the 'Male' filter. The original beams are deleted and replaced."
+          }
+        ]
+      },
+      "tokens_used": 8158,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10694,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# ElementBeamSplit\n\n## Overview\nThis script automatically splits timber beams within a construction element or a manually selected group based on geometric intersections with other beams or trusses. It functions as a geometric cutter, dividing \"female\" beams wherever they intersect with \"male\" (cutting) beams, with options to add clearance gaps.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in the 3D model environment. |\n| Paper Space | No | Not intended for 2D layouts or drawings. |\n| Shop Drawing | No | Not intended for manufacturing views. |\n\n## Prerequisites\n- **Required Entities**: \n  - An `Element` (e.g., a wall or roof panel) containing beams, OR\n  - Specific sets of `GenBeam` (timber beams) or `TrussEntity` (trusses).\n- **Minimum Beam Count**: At least 2 beams (one to cut, and one to be cut) must exist or be selected.\n- **Required Settings**: \n  - (Optional) Painter Definition collection named `ElementBeamSplit` in the project for advanced filtering.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Browse and select `ElementBeamSplit.mcr`\n\n### Step 2: Choose Selection Method\n```\nCommand Line: Select elements or <Enter> to select beams manually\nAction: \n  Option A (Automatic): Select one or more Elements (e.g., a wall). The script will process all beams inside based on the Property Filters.\n  Option B (Manual): Press Enter.\n```\n\n### Step 3: Manual Selection (If Option B chosen)\n```\nCommand Line: Select splitting beams or/and trusses\nAction: Select the beams or trusses that will act as the \"cutters\" (Male entities). Press Enter when done.\n```\n\n### Step 4: Select Target Beams (If Option B chosen)\n```\nCommand Line: Select beams to split\nAction: Select the beams that you want to be cut/modified by the splitting beams selected in the previous step.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **sMaleSelection** | String | Y-Parallel | Determines which beams act as the \"cutting\" tools. <br>Options: <br>- `X-Parallel`: Beams parallel to Element local X-axis.<br>- `Y-Parallel`: Beams parallel to Element local Y-axis (e.g., Wall Plates).<br>- `[PainterDef Name]`: Use a specific Painter Definition name for complex filtering. |\n| **sFemaleSelection** | String | `<Default>` | Determines which beams are cut. <br>Options: <br>- `<Default>`: All other beams in the Element/Selection.<br>- `[PainterDef Name]`: Use a specific Painter Definition name to select only specific beams (e.g., only \"Studs\"). |\n| **dGap** | Double (Length) | 0 | A clearance distance applied around the cutting volume. <br>Example: `5` adds a 5mm gap on all sides between the cut beam and the cutting beam, preventing physical overlap. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Re-runs the split operation. Useful after changing Property Panel parameters (like Gap or Filters) or if geometry has changed. |\n\n## Settings Files\n- **Name**: Painter Definition collection `ElementBeamSplit`\n- **Location**: hsbCAD Project Database (Catalogue)\n- **Purpose**: Stores custom logical queries (queries) that allow you to filter beams by complex criteria (e.g., Material, Name, Layer) to define exactly which beams are \"Male\" (cutters) and which are \"Female\" (to be cut).\n\n## Tips\n- **Standard Walls**: For standard walls, keep `sMaleSelection` as `Y-Parallel` (Plates) and `sFemaleSelection` as `<Default>` (Studs). This will trim the studs to the plates.\n- **Tolerance**: If you see graphical \"flickering\" or Z-fighting where beams touch, set `dGap` to `1` or `2` mm to create a tiny visual separation.\n- **Trusses**: This script supports TrussEntities. You can use a truss to cut through a standard beam set by selecting the truss as the Male entity in Manual Mode.\n- **Manual Override**: If the automatic Element mode is too aggressive (cutting things you don't want), use the Manual Mode (Press Enter at start) to select exactly which beams interact.\n\n## FAQ\n- **Q: Why did my beams disappear?**\n  **A:** The script deletes the original beams and replaces them with the split segments. If the split results in a very small segment (smaller than your system tolerances), it might be filtered out. Check the `sFemaleSelection` filter to ensure you aren't accidentally cutting beams that shouldn't be cut.\n- **Q: Can I use this to create tenons or joinery?**\n  **A:** No. This script performs a geometric split (Boolean cut). It does not add machining operations or specific woodworking joints; it simply cuts the beam into shorter lengths.\n- **Q: What does \"Painter Definition\" mean in the properties?**\n  **A:** It refers to a saved set of selection rules. You must create these definitions in your hsbCAD Catalogue first. If you type a name that doesn't exist, the script will report an error."
+      },
+      "tokens_used": 5026,
+      "error": null
+    }
+  }
+}

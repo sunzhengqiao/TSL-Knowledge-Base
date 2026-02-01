@@ -1,0 +1,219 @@
+{
+  "filename": "HSB-ChangeSheetingInRoom.mcr",
+  "status": "completed",
+  "total_tokens": 21440,
+  "processing_time": 199.7404203414917,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "19.10.2007",
+            "author": "Anno Sportel (as@hsb-cad.com)",
+            "changes": "First revision"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3346,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses `ElementWallSF()` for selection, performs 3D `Body` operations (intersections, subtraction), and modifies `Sheet` objects directly in the model. No shop drawing (#Type E), viewport, or paper space specific functions are used."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWallSF",
+            "Sheet"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space with Walls containing Sheeting",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1775,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getPoint",
+              "promptOriginal": "|Select a position in the room|",
+              "condition": "_bOnInsert && insertCycleCount() <= 1",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select walls to apply sheeting|",
+              "condition": "_bOnInsert && insertCycleCount() <= 1",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2411,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically identifies sheathing on walls facing a specific interior point (e.g., a bathroom) and changes the material to 'Green Gypsum' (water-resistant board) and color to Green.",
+          "category": "Finishing/Modification",
+          "typicalUseCase": "When a user needs to mark wet room walls (bathrooms, kitchens) to indicate they require moisture-resistant drywall instead of standard plasterboard."
+        },
+        "parameters": [
+          {
+            "name": "_Pt0",
+            "technicalDefault": "None (User Prompt)",
+            "businessMeaning": "A reference point defining the interior space of the room. The script determines which side of the wall is the 'inside' based on this point to ensure the correct side of the wall is modified.",
+            "validRange": "Any 3D coordinate located inside the target room volume",
+            "unit": "mm (Coordinates)",
+            "affectsOutput": "Determines which side of the selected walls (Left/Right or Front/Back relative to wall normal) is processed. If the point is on the wrong side of the wall, the script will modify the exterior sheathing instead of the interior."
+          },
+          {
+            "name": "_Element",
+            "technicalDefault": "Empty Array",
+            "businessMeaning": "The set of wall elements bounding the room that require inspection and modification.",
+            "validRange": "1 or more ElementWallSF entities",
+            "unit": "Count",
+            "affectsOutput": "Defines the search scope. Only walls selected in this set will have their sheeting checked and potentially modified."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Calculation of Wall Side",
+            "effect": "The script compares the vector from the Wall Origin to _Pt0 against the Wall's local Z axis to determine if the sheet index is -2 or 2.",
+            "cascade": [
+              "Sheet Selection Index"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Sheet (Modified)",
+            "description": "Existing sheeting entities attached to the selected walls are modified. If they face the interior point, their Material property is set to 'Green Gypsum' and Color index is set to 3.",
+            "appliedTo": "Sheet entities (index -2 or 2) belonging to the selected Wall Elements that intersect the calculated room volume."
+          }
+        ]
+      },
+      "tokens_used": 4158,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Insertion Triggered",
+          "Prompt user to pick a reference point inside the room (_Pt0)",
+          "Prompt user to select walls (_Element)",
+          "Script calculates the Room Body (large volume around _Pt0)",
+          "Loop through each selected wall",
+          "Calculate vector from Wall Origin to Room Point to determine orientation",
+          "Create a body representing the wall structure extending outwards",
+          "Subtract wall body from the main Room Body",
+          "Select the Sheet index (2 or -2) facing the room point",
+          "Check if the selected Sheet's physical body intersects the remaining Room Body",
+          "If intersection is confirmed, set Sheet Material to 'Green Gypsum' and Color to 3",
+          "Script erases itself from the model"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Wall Orientation relative to Room Point (Vector Dot Product)",
+            "path1": {
+              "name": "Point is on Back Side (Positive Z)",
+              "steps": [
+                "Generate wall body on negative Z side",
+                "Subtract volume from Room Body",
+                "Select Sheet index -2 (Back side) for modification"
+              ]
+            },
+            "path2": {
+              "name": "Point is on Front Side (Negative Z/Else)",
+              "steps": [
+                "Generate wall body on positive Z side",
+                "Subtract volume from Room Body",
+                "Select Sheet index 2 (Front side) for modification"
+              ]
+            }
+          },
+          {
+            "condition": "Sheet Body Intersection with Room Body",
+            "path1": {
+              "name": "Intersection Detected",
+              "steps": [
+                "Modify Sheet Color to 3 (Green)",
+                "Modify Sheet Material to 'Green Gypsum'"
+              ]
+            },
+            "path2": {
+              "name": "No Intersection",
+              "steps": [
+                "Skip modification for this specific sheet"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Selected Entities Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "If no walls are selected (empty _Element array), the script immediately executes eraseInstance() and terminates without making changes."
+          },
+          {
+            "check": "Insertion Cycle Count",
+            "errorMessage": "None (Internal)",
+            "recovery": "If the script is triggered more than once during the initial insert cycle, it erases itself to prevent duplicate processing."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "The script functions as a utility command. It calls eraseInstance() upon completion, removing itself from the drawing database entirely. There is no persistent instance to edit afterwards."
+          }
+        ]
+      },
+      "tokens_used": 5541,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB-ChangeSheetingInRoom.mcr\n\n## Overview\nAutomatically identifies sheathing on walls facing a specific interior point (e.g., a bathroom or kitchen) and changes the material to 'Green Gypsum' (water-resistant board) with a green color indication.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D wall elements in the model. |\n| Paper Space | No | Not intended for layout views. |\n| Shop Drawing | No | This is a model modification tool, not a drawing generation script. |\n\n## Prerequisites\n- **Required Entities**: Walls (`ElementWallSF`) containing Sheeting (`Sheet` entities).\n- **Minimum Beam Count**: 0.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB-ChangeSheetingInRoom.mcr`\n\n### Step 2: Define Room Interior\n```\nCommand Line: |Select a position in the room|\nAction: Click a point inside the room volume (e.g., the center of a bathroom).\n```\n*Note: This point determines which side of the wall is considered \"interior\". The script will only modify sheets facing this point.*\n\n### Step 3: Select Walls\n```\nCommand Line: |Select walls to apply sheeting|\nAction: Select the wall elements that enclose the room. Press Enter to confirm selection.\n```\n*Note: The script will process the selected walls and automatically erase itself from the drawing upon completion.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script runs as a one-time command and erases itself. There are no persistent properties to edit via the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | No context menu options are available as the script instance is removed immediately after execution. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A.\n- **Purpose**: N/A.\n\n## Tips\n- **Point Placement**: Ensure the point selected in Step 2 is clearly inside the room. If the point is placed outside the wall or in an adjacent room, the script may modify the exterior sheathing or the wrong side of the wall.\n- **Material Name**: The script explicitly sets the material name to \"Green Gypsum\". Ensure your material catalogs or templates support this name if you intend to run reports or schedules based on material type.\n- **Visibility**: The script instance disappears from the drawing immediately after running. This is normal behavior; it does not mean the script failed.\n\n## FAQ\n- **Q: What happens if I select no walls?**\n  - A: The script will detect an empty selection and terminate immediately without making any changes.\n- **Q: Can I undo the changes?**\n  - A: Yes, you can use the standard AutoCAD `UNDO` command to revert the material changes if you made a mistake.\n- **Q: Why is the script object gone after I run it?**\n  - A: This is a utility script designed to perform a task and then clean up after itself. It does not remain in the model as an editable object.\n- **Q: Does this work on curved walls?**\n  - A: The script relies on vector calculations and body intersections; ensure the wall geometry is clean for best results."
+      },
+      "tokens_used": 4209,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,442 @@
+{
+  "filename": "GE_PLOT_DIM_SHEETING.mcr",
+  "status": "completed",
+  "total_tokens": 34067,
+  "processing_time": 1750.3057906627655,
+  "passes": {
+    "1": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "API error 429: {\"error\":{\"code\":\"1302\",\"message\":\"您当前使用该API的并发数过高，请降低并发，或联系客服增加限额。\"}}"
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly uses getViewport() for selection during _bOnInsert, calculates coordinate transformations between Model Space and Paper Space (ms2ps, ps2ms), creates a DimLine in Paper Space (lnPs), creates a Dim object in Model Space and then transforms it to Paper Space (dim.transformBy(ms2ps)), and uses Viewport specific properties like vp.dScale()."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Viewport"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "The script must be inserted in an AutoCAD layout containing a viewport with an hsbCAD element.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3984,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getViewport",
+              "promptOriginal": "Select a viewport, you can add others later on with the HSB_LINKTOOLS command.",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "strDir",
+            "type": "PropString",
+            "displayName": "Direction",
+            "defaultValue": "Horizontal",
+            "inputType": "dropdown",
+            "options": [
+              "Horizontal",
+              "Vertical"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "strSide",
+            "type": "PropString",
+            "displayName": "Side of beams/sheets",
+            "defaultValue": "Left",
+            "inputType": "dropdown",
+            "options": [
+              "Left",
+              "Center",
+              "Right",
+              "Left and right"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 2,
+            "variable": "strAllZones",
+            "type": "PropString",
+            "displayName": "Zones to use",
+            "defaultValue": "Use zone index",
+            "inputType": "dropdown",
+            "options": [
+              "Use zone index",
+              "All"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "nZone",
+            "type": "PropInt",
+            "displayName": "Zone index",
+            "defaultValue": 5,
+            "inputType": "dropdown",
+            "options": [
+              -5,
+              -4,
+              -3,
+              -2,
+              -1,
+              0,
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 3,
+            "variable": "strTextDirD",
+            "type": "PropString",
+            "displayName": "Delta text direction",
+            "defaultValue": "None",
+            "inputType": "dropdown",
+            "options": [
+              "None",
+              "Parallel",
+              "Perpendicular"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 4,
+            "variable": "strTextDirC",
+            "type": "PropString",
+            "displayName": "Cumm text direction",
+            "defaultValue": "Parallel",
+            "inputType": "dropdown",
+            "options": [
+              "None",
+              "Parallel",
+              "Perpendicular"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 5,
+            "variable": "sDim",
+            "type": "PropString",
+            "displayName": "DimStyle",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "dOff",
+            "type": "PropDouble",
+            "displayName": "Offset from Wall",
+            "defaultValue": 304.8,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 7,
+            "variable": "arIdsToShow",
+            "type": "PropString",
+            "displayName": "ID's to show 214;120;114...",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 7257,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the creation of layout dimension lines for wall elements (studs, plates, sheeting) in Paper Space shop drawings, derived from Model Space geometry.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "When generating 2D wall layouts, the user needs to place a dimension line that runs parallel to the wall to detail stud spacing, sheeting joints, or opening positions."
+        },
+        "parameters": [
+          {
+            "name": "strDir",
+            "technicalDefault": "Horizontal",
+            "businessMeaning": "Sets the orientation of the dimension line relative to the wall alignment.",
+            "validRange": "Horizontal (Parallel to wall), Vertical (Perpendicular to wall)",
+            "unit": "enum",
+            "affectsOutput": "Rotates the dimension line 90 degrees, changing the axis being measured (Length vs Width/Height)."
+          },
+          {
+            "name": "strSide",
+            "technicalDefault": "Left",
+            "businessMeaning": "Specifies which side of the structural members to use for dimension measurement points.",
+            "validRange": "Left, Center, Right, Left and right",
+            "unit": "enum",
+            "affectsOutput": "Offsets the witness lines to the left face, centerline, or right face of the members being dimensioned."
+          },
+          {
+            "name": "strAllZones",
+            "technicalDefault": "Use zone index",
+            "businessMeaning": "Selects whether to dimension the entire wall structure or a specific construction zone (e.g., a specific layer of sheathing).",
+            "validRange": "Use zone index, All",
+            "unit": "enum",
+            "affectsOutput": "Toggles between measuring all General Beams ('All') or specific Sheets/Beams defined by the Zone Index."
+          },
+          {
+            "name": "nZone",
+            "technicalDefault": "5",
+            "businessMeaning": "Identifies the specific construction layer (zone) to dimension when 'Zones to use' is active. Index 0 typically refers to the main framing.",
+            "validRange": "-5 to 5",
+            "unit": "count",
+            "affectsOutput": "Filters the entities (Sheets or Beams) that generate points on the dimension line based on their zone property."
+          },
+          {
+            "name": "strTextDirD",
+            "technicalDefault": "None",
+            "businessMeaning": "Controls the rotation orientation of the text for the individual 'delta' (segment) measurements.",
+            "validRange": "None, Parallel, Perpendicular",
+            "unit": "enum",
+            "affectsOutput": "Rotates the text displaying the distance between two adjacent dimension points."
+          },
+          {
+            "name": "strTextDirC",
+            "technicalDefault": "Parallel",
+            "businessMeaning": "Controls the rotation orientation of the text for the cumulative (total) measurements.",
+            "validRange": "None, Parallel, Perpendicular",
+            "unit": "enum",
+            "affectsOutput": "Rotates the text displaying the running total distance from the start of the dimension line."
+          },
+          {
+            "name": "sDim",
+            "technicalDefault": "",
+            "businessMeaning": "The AutoCAD Dimension Style name to apply to the generated dimension.",
+            "validRange": "Any existing DimStyle in the drawing",
+            "unit": "string",
+            "affectsOutput": "Changes the visual appearance (text size, arrow style, color) of the dimension entity."
+          },
+          {
+            "name": "dOff",
+            "technicalDefault": "304.8",
+            "businessMeaning": "The distance the dimension line is placed away from the wall origin or reference edge.",
+            "validRange": "0 to 2000 mm",
+            "unit": "mm",
+            "affectsOutput": "Moves the dimension line closer to or further from the wall geometry."
+          },
+          {
+            "name": "arIdsToShow",
+            "technicalDefault": "",
+            "businessMeaning": "A whitelist of hsbCAD entity IDs to dimension specifically, overriding standard selection logic.",
+            "validRange": "Semi-colon separated list of IDs (e.g., \"214;120;114\")",
+            "unit": "string",
+            "affectsOutput": "Restricts dimensioning to only beams matching the provided IDs and the overall extents, ignoring other wall components."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "strAllZones == 'All'",
+            "effect": "The nZone parameter is ignored; dimensions are generated for all General Beams in the element.",
+            "cascade": [
+              "nZone"
+            ]
+          },
+          {
+            "trigger": "strAllZones == 'Use zone index' AND nZone == 0",
+            "effect": "Dimensions standard framing members (excluding specific IDs) and openings (if Horizontal direction).",
+            "cascade": [
+              "strDir",
+              "nZone"
+            ]
+          },
+          {
+            "trigger": "strAllZones == 'Use zone index' AND nZone != 0",
+            "effect": "Dimensions only the Sheets belonging to the specified zone index.",
+            "cascade": [
+              "nZone"
+            ]
+          },
+          {
+            "trigger": "arIdsToShow is not empty",
+            "effect": "Overrides the logic of strAllZones and nZone, effectively ignoring them to only dimension specific IDs.",
+            "cascade": [
+              "strAllZones",
+              "nZone",
+              "strSide"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Dimension",
+            "description": "A Paper Space dimension line containing point-to-point (delta) and cumulative measurements, derived from Model Space geometry.",
+            "appliedTo": "Paper Space Viewport"
+          }
+        ]
+      },
+      "tokens_used": 7241,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User inserts script into AutoCAD layout",
+          "Command line prompts user: 'Select a viewport...'",
+          "User selects a viewport displaying an hsbCAD element",
+          "Script initializes and attaches to the selected viewport",
+          "Script parses the 'arIdsToShow' property to build a filter list (if present)",
+          "Script determines dimension orientation based on 'strDir' (Horizontal/Vertical)",
+          "Script executes entity collection logic based on 'strAllZones' and 'nZone' properties",
+          "Script calculates dimension points (Model Space) based on 'strSide' and filtered entities",
+          "Script orders points and removes points falling within 'No Dim' exclusion zones (openings/pockets/ends)",
+          "Script creates Dimension entity in Model Space and transforms it to Paper Space",
+          "Dimension is drawn in the layout"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Value of 'arIdsToShow' property",
+            "path1": {
+              "name": "Specific ID Mode",
+              "steps": [
+                "Script clears any previously calculated points",
+                "Script filters beams matching the IDs in 'arIdsToShow'",
+                "Script calculates dimension points only for these specific beams",
+                "Script adds overall extents (start/end) of the wall boundary to the dimension line"
+              ]
+            },
+            "path2": {
+              "name": "Standard Zone Mode",
+              "steps": [
+                "Script evaluates 'strAllZones' property to determine scope",
+                "Proceeds to Zone/Entity selection logic"
+              ]
+            }
+          },
+          {
+            "condition": "Value of 'strAllZones' property",
+            "path1": {
+              "name": "All Zones",
+              "steps": [
+                "Script collects all General Beams (el.genBeam()) in the element",
+                "Dimension points are generated for these beams based on 'strSide'"
+              ]
+            },
+            "path2": {
+              "name": "Use Zone Index",
+              "steps": [
+                "Script checks value of 'nZone'",
+                "If nZone == 0: Filters standard beams (excluding internal list like studs) and adds Opening points (if Horizontal)",
+                "If nZone != 0: Collects Sheets from the specified zone (el.sheet(nZone))"
+              ]
+            }
+          },
+          {
+            "condition": "Value of 'strDir' property",
+            "path1": {
+              "name": "Horizontal",
+              "steps": [
+                "Dimension line defined parallel to element X-axis",
+                "Offset applied along element Y-axis",
+                "Opening points added to pntsMs (if Zone 0)"
+              ]
+            },
+            "path2": {
+              "name": "Vertical",
+              "steps": [
+                "Dimension line defined parallel to element Y-axis",
+                "Offset applied along element X-axis",
+                "Opening points NOT added to pntsMs"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Viewport has valid hsbCAD Element",
+            "errorMessage": "(Silent failure - script returns early)",
+            "recovery": "User must select a viewport that actually contains an hsbCAD Element and regenerate the script."
+          },
+          {
+            "check": "ID String parsing loop safety",
+            "errorMessage": "More than 1000 loops",
+            "recovery": "User must check the 'arIdsToShow' property for syntax errors (e.g., missing separators or excessive length)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Dimension Direction",
+            "how": "OPM Property 'Direction'",
+            "effect": "Swaps dimension axis between Horizontal (length) and Vertical (height/width), offset direction changes accordingly."
+          },
+          {
+            "action": "Filter by Specific IDs",
+            "how": "OPM Property 'ID's to show'",
+            "effect": "Overrides zone settings to dimension only the beams listed in the string plus the wall boundaries."
+          },
+          {
+            "action": "Adjust Offset",
+            "how": "OPM Property 'Offset from Wall'",
+            "effect": "Moves the dimension line closer to or further from the wall geometry in Paper Space."
+          },
+          {
+            "action": "Change Zone/Target",
+            "how": "OPM Properties 'Zones to use' / 'Zone index'",
+            "effect": "Switches dimensioning target between All beams, Structural Framing (Zone 0), or Sheathing layers (Zone != 0)."
+          },
+          {
+            "action": "Modify Witness Line Side",
+            "how": "OPM Property 'Side of beams/sheets'",
+            "effect": "Changes whether dimensions measure to the Left, Center, or Right faces of the members."
+          }
+        ]
+      },
+      "tokens_used": 9315,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_PLOT_DIM_SHEETING.mcr\n\n## Overview\nAutomates the creation of layout dimension lines for wall elements (studs, plates, sheeting) in Paper Space shop drawings, derived from Model Space geometry.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script is designed for layouts. |\n| Paper Space | Yes | The script must be inserted into a layout tab. |\n| Shop Drawing | Yes | Intended for detailing 2D wall layouts. |\n\n## Prerequisites\n- **Required entities:** An AutoCAD Layout containing a Viewport with an hsbCAD Element (Wall) visible inside it.\n- **Minimum beam count:** 0\n- **Required settings files:** None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_PLOT_DIM_SHEETING.mcr`\n\n### Step 2: Select Viewport\n```\nCommand Line: Select a viewport, you can add others later on with the HSB_LINKTOOLS command.\nAction: Click on the viewport in your layout that displays the wall you wish to dimension.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Direction | dropdown | Horizontal | Sets the orientation of the dimension line. Choose 'Horizontal' (parallel to wall) or 'Vertical' (perpendicular to wall). |\n| Side of beams/sheets | dropdown | Left | Determines which side of the structural members to measure from (Left, Center, Right, or Left and right). |\n| Zones to use | dropdown | Use zone index | Selects whether to dimension the entire wall structure ('All') or a specific construction layer ('Use zone index'). |\n| Zone index | dropdown | 5 | Specifies the layer number to dimension (e.g., 0 for framing, other numbers for sheeting layers) when 'Zones to use' is set to 'Use zone index'. |\n| Delta text direction | dropdown | None | Controls the rotation of the text for individual segment measurements (None, Parallel, or Perpendicular to the dimension line). |\n| Cumm text direction | dropdown | Parallel | Controls the rotation of the text for cumulative (total) measurements (None, Parallel, or Perpendicular). |\n| DimStyle | dropdown | | The AutoCAD Dimension Style to apply to the generated dimension line. |\n| Offset from Wall | number | 304.8 | The distance in mm from the wall origin/reference edge to the dimension line. |\n| ID's to show 214;120;114... | text | | A list of specific hsbCAD entity IDs to dimension. If filled, this overrides other zone settings. Separate IDs with semi-colons. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None available | This script does not add specific items to the right-click context menu. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Specific Beam Dimensioning:** If you only need to dimension specific studs or plates, use the **ID's to show** property. Enter the IDs separated by semi-colons (e.g., `101;105;110`), and the script will ignore other settings to dimension just those items plus the wall boundaries.\n- **Switching Targets:** To switch between dimensioning framing members and sheathing layers, change **Zones to use** to \"Use zone index\" and set **Zone index** to `0` (for framing) or the relevant number for your sheathing layer (e.g., `5`).\n- **Viewport Scale:** The script calculates dimensions based on the viewport scale. Ensure your viewport scale is set correctly before inserting the script.\n\n## FAQ\n- **Q: My dimension line disappeared after I changed the Zone index.**\n  A: Make sure the selected Zone index actually contains entities (beams or sheets) in your model. If the zone is empty, no dimensions will be generated.\n- **Q: How do I rotate the text to be readable?**\n  A: Adjust the **Delta text direction** or **Cumm text direction** properties to \"Parallel\" or \"Perpendicular\" depending on your desired orientation relative to the wall.\n- **Q: Can I dimension both the left and right sides of the studs at once?**\n  A: Yes. Set the **Side of beams/sheets** property to \"Left and right\"."
+      },
+      "tokens_used": 6270,
+      "error": null
+    }
+  }
+}

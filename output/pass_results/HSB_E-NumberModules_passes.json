@@ -1,0 +1,312 @@
+{
+  "filename": "HSB_E-NumberModules.mcr",
+  "status": "completed",
+  "total_tokens": 35299,
+  "processing_time": 324.46613454818726,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6691,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Explicit creation of TSL instances using '_kModelSpace' in the dbCreate function. The script interacts with 3D Element entities and calculates geometry using 'envelopeBody()'. There is no usage of '_Viewport', '_kPaperSpace', or 'sd_' prefixes associated with ShopDrawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4383,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "PropertyDialog",
+            "trigger": "Insertion without ExecuteKey",
+            "title": null,
+            "dataSource": "Script Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sSeperator01",
+            "type": "PropString",
+            "displayName": "|Selection|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": "|General|",
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sShowDiagonalLine",
+            "type": "PropString",
+            "displayName": "|Show diagonal line|",
+            "defaultValue": "|Yes|",
+            "inputType": "dropdown",
+            "options": [
+              "|No|",
+              "|Yes|"
+            ],
+            "category": "|Display|",
+            "description": "|Choose if the diagonal line should be shown|"
+          },
+          {
+            "index": 2,
+            "variable": "sShowNumber",
+            "type": "PropString",
+            "displayName": "|Show module number|",
+            "defaultValue": "|Yes|",
+            "inputType": "dropdown",
+            "options": [
+              "|No|",
+              "|Yes|"
+            ],
+            "category": "|Display|",
+            "description": "|Choose if the number should be shown|"
+          },
+          {
+            "index": 0,
+            "variable": "sTextHeight",
+            "type": "PropDouble",
+            "displayName": "|Textheight|",
+            "defaultValue": "U(20)",
+            "inputType": "number",
+            "options": [],
+            "category": "|Display|",
+            "description": "|Give in the textheight|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6773,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically re-numbers modules within an Element based on their spatial position (left-to-right) and updates beam module assignments accordingly.",
+          "category": "Project Management/Organization",
+          "typicalUseCase": "Used during the detailing phase to standardize module naming (e.g., EL-101-1, EL-101-2) across an element to ensure clear identification for manufacturing and assembly."
+        },
+        "parameters": [
+          {
+            "name": "sShowDiagonalLine",
+            "technicalDefault": "|Yes|",
+            "businessMeaning": "Toggles the visibility of a diagonal line drawn across the envelope of each module to visually indicate its boundary in the 3D model.",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "Visual only. If 'Yes', a line connects the calculated lower-left and upper-right corners of the module's bounding box. If 'No', the line is hidden."
+          },
+          {
+            "name": "sShowNumber",
+            "technicalDefault": "|Yes|",
+            "businessMeaning": "Toggles the visibility of the text label displaying the new module number at the center of the module.",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "Visual only. If 'Yes', the text label is generated. If 'No', the label is suppressed. The underlying beam data is still updated regardless of this setting."
+          },
+          {
+            "name": "sTextHeight",
+            "technicalDefault": "U(20)",
+            "businessMeaning": "Sets the font size (height) for the module number text label.",
+            "validRange": "10 - 100 mm",
+            "unit": "mm",
+            "affectsOutput": "Visual only. Scales the size of the text label in the 3D view to improve legibility depending on the scale of the drawing."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sShowNumber is set to '|No|'",
+            "effect": "The sTextHeight parameter effectively becomes irrelevant as no text is rendered in the model.",
+            "cascade": [
+              "sTextHeight"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam Attribute Update",
+            "description": "Overwrites the 'Module' property of all beams within the element. The new name format is 'ElementNumber-Index' (e.g., 100-1, 100-2), sorted by the module's position along the element's X-axis.",
+            "appliedTo": "Beams belonging to the selected Element"
+          },
+          {
+            "type": "Visual TSL Geometry",
+            "description": "Generates temporary graphics (lines and text) in ModelSpace to visualize the new module layout and numbering.",
+            "appliedTo": "Model Space"
+          }
+        ]
+      },
+      "tokens_used": 4612,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script insertion (ModelSpace).",
+          "[System Check] If insertCycleCount > 1, erase instance and exit (Clean up routine).",
+          "[Conditional] Check if an Execute Key (preset) was used.",
+          "If no Execute Key, display Properties Dialog for user configuration (Text height, toggles).",
+          "[Command Line] Prompt user: 'Select a set of elements'.",
+          "User selects Element(s) and confirms (or cancels).",
+          "[Loop] Iterate through each selected Element.",
+          "Check for existing instances of this script on the Element; if found, delete them.",
+          "Create a new Satellite TSL instance attached to the Element in ModelSpace via dbCreate.",
+          "Master script reports 'N tsl(s) inserted' and erases itself.",
+          "[Satellite Execution] Instance retrieves all beams from the assigned Element.",
+          "[Loop] Iterate beams: Filter out beams with empty 'Module' property.",
+          "Group remaining beams by their existing Module name.",
+          "Calculate geometric envelope (bounding box) for each module group.",
+          "Sort modules spatially from Left to Right based on bounding box midpoints.",
+          "Generate new module names (Format: 'ElementNumber-Index').",
+          "Update all beams in the module with the new name.",
+          "Generate visualization: Draw diagonal line and text if properties allow."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script Insertion Cycle",
+            "path1": {
+              "name": "Cycle > 1",
+              "steps": [
+                "Erase current instance",
+                "Exit script immediately"
+              ]
+            },
+            "path2": {
+              "name": "Cycle 1 (Initial Insertion)",
+              "steps": [
+                "Proceed to Execute Key check",
+                "Show Dialog or Load Presets",
+                "Prompt for Element Selection"
+              ]
+            }
+          },
+          {
+            "condition": "Execute Key / Catalog Usage",
+            "path1": {
+              "name": "Valid Execute Key Found",
+              "steps": [
+                "Load properties from Catalog matching Execute Key",
+                "Skip Dialog"
+              ]
+            },
+            "path2": {
+              "name": "No Execute Key",
+              "steps": [
+                "Execute showDialog()",
+                "Wait for user input in Properties"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Module Property Content",
+            "path1": {
+              "name": "Module String is Empty",
+              "steps": [
+                "Ignore beam",
+                "Do not include in calculation or sorting"
+              ]
+            },
+            "path2": {
+              "name": "Module String has Value",
+              "steps": [
+                "Add to module list",
+                "Include in envelope calculation",
+                "Rename with new index"
+              ]
+            }
+          },
+          {
+            "condition": "Display Property Settings (Post-Calculation)",
+            "path1": {
+              "name": "Show Diagonal Line = Yes",
+              "steps": [
+                "Calculate start/end points of bounding box diagonal",
+                "Add line to Display"
+              ]
+            },
+            "path2": {
+              "name": "Show Module Number = Yes",
+              "steps": [
+                "Calculate midpoint of bounding box",
+                "Create text string",
+                "Add text to Display"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "None explicit, but if selection is cancelled, script exits without action.",
+            "recovery": "User must restart script command and ensure selection is valid."
+          },
+          {
+            "check": "Beam Module Names",
+            "errorMessage": "If no beams within the element have a 'Module' property assigned, no numbering occurs.",
+            "recovery": "User must ensure beams are grouped/assigned to modules before running the script."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Adjust Visual Settings",
+            "how": "Select the Element (or the TSL instance) and modify 'Show diagonal line', 'Show module number', or 'Textheight' in the OPM (Object Properties Palette).",
+            "effect": "The TSL recalculates immediately to update the visual representation (line visibility or text size) without re-running the numbering logic."
+          },
+          {
+            "action": "Re-Number / Update Geometry",
+            "how": "If beams are added/removed or Element geometry changes, delete the existing TSL instance from the Element and re-run the insert command.",
+            "effect": "Re-evaluates the beam list, calculates new bounding boxes, re-sorts modules, and re-assigns indices."
+          }
+        ]
+      },
+      "tokens_used": 7753,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-NumberModules.mcr\n\n## Overview\nThis script automatically renumbers modules within a selected Element based on their spatial position from left to right. It updates the 'Module' property for all beams in the element and creates visual indicators (diagonal lines and text labels) to display the new numbering.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in the 3D model environment. |\n| Paper Space | No | Not intended for 2D layout or detailing views. |\n| Shop Drawing | No | Not intended for manufacturing drawings. |\n\n## Prerequisites\n- **Required entities**: An `Element` entity containing beams.\n- **Minimum beam count**: 0 (Note: Beams must have an existing 'Module' property assigned to be processed; beams with empty module names are ignored).\n- **Required settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_E-NumberModules.mcr` from the file browser.\n\n### Step 2: Configure Options (Optional)\nIf a specific preset (Execute Key) is not selected, the Properties Palette may open, or you can adjust settings immediately after insertion.\n- Set visual preferences like **Textheight** or toggle **Show diagonal line**.\n- Press **Esc** or click in the drawing area to proceed.\n\n### Step 3: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the Element(s) you wish to process. Press Enter to confirm selection.\n```\nThe script will automatically process the selected elements, renumbering the modules and attaching a satellite instance to each element.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Show diagonal line** | dropdown | Yes | Toggles the visibility of a diagonal line drawn across the bounding box of each module. |\n| **Show module number** | dropdown | Yes | Toggles the visibility of the text label displaying the new module number at the module's center. |\n| **Textheight** | number | U(20) | Sets the font size (height) for the module number text label. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu items are added by this script. Use the Properties Palette (OPM) to modify settings. |\n\n## Settings Files\n- **Filename**: None used.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Pre-requisite Check**: Ensure your beams actually have a value in the \"Module\" property before running this script. Beams with empty module fields are ignored and will not be renumbered.\n- **Visualization**: The diagonal line connects the lower-left and upper-right corners of the module's calculated bounding box, helping you visually verify the grouping.\n- **Renaming Logic**: The script renames modules sequentially based on their position (Left to Right) using the format `ElementNumber-Index` (e.g., 100-1, 100-2).\n- **Adjusting Visuals**: You can change the text height or toggle lines after insertion by selecting the Element or the TSL instance and changing the properties in the OPM.\n\n## FAQ\n- **Q: I ran the script, but no numbers appeared.**\n  - A: Check if the **Show module number** property is set to \"Yes\". Also, ensure the beams inside the element actually had a \"Module\" name assigned prior to running the script.\n- **Q: How do I update the numbering if I add new beams to the element?**\n  - A: Delete the existing TSL instance associated with the element and re-run the insert command to recalculate positions and names.\n- **Q: What happens to beams that have no Module name?**\n  - A: They are ignored by the script. Only beams grouped under an existing module name are sorted and renumbered."
+      },
+      "tokens_used": 5087,
+      "error": null
+    }
+  }
+}

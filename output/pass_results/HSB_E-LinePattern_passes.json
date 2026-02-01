@@ -1,0 +1,320 @@
+{
+  "filename": "HSB_E-LinePattern.mcr",
+  "status": "completed",
+  "total_tokens": 32497,
+  "processing_time": 269.77228307724,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 1,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl inserts a line pattern on a specified zone.",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "22.01.2015",
+            "author": "AS",
+            "changes": "Pilot version"
+          },
+          {
+            "version": "1.01",
+            "date": "26.01.2015",
+            "author": "AS",
+            "changes": "Only swap if odd element has an element connected at the righthand side."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5122,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses dbCreate with the explicit argument _kModelSpace. The user interaction prompt (PrEntity) requests selection of Element entities. The script logic retrieves Element properties using _Element[0] and performs 3D geometric operations like el.profNetto() and intersection checks with other ElementRoof entities. There are no references to shop drawing prefixes or paper space viewports."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4307,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "showDialog",
+              "promptOriginal": null,
+              "condition": "_bOnInsert && (_kExecuteKey == \"\" || arSCatalogNames.find(_kExecuteKey) == -1)",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "Select a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "Property Dialog",
+            "trigger": "On Insert (if not called via execute key)",
+            "title": null,
+            "dataSource": "Script Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "nZoneIndex",
+            "type": "PropInt",
+            "displayName": "|Zone index|",
+            "defaultValue": 6,
+            "inputType": "dropdown",
+            "options": [
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "10"
+            ],
+            "category": "|Line pattern|",
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "dSpacing",
+            "type": "PropDouble",
+            "displayName": "|Spacing|",
+            "defaultValue": "U(122)",
+            "inputType": "number",
+            "options": [],
+            "category": "|Line pattern|",
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "nLineColor",
+            "type": "PropInt",
+            "displayName": "|Line color|",
+            "defaultValue": 1,
+            "inputType": "number",
+            "options": [],
+            "category": "|Style|",
+            "description": null
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "MasterToSatellite",
+            "handler": "MasterToSatellite",
+            "action": "Executed via catalog/execute key to set properties on generated satellite instances.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 4156,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates a visual pattern of parallel lines on a specific surface zone of a structural element to visualize layout spacing (e.g., studs or rafters) and handle end-matching logic with neighbors.",
+          "category": "Visualizer/Layout",
+          "typicalUseCase": "Drafting phase visualization to verify that framing centers fit within an element width and to check if the layout start point needs to shift based on adjacent connections."
+        },
+        "parameters": [
+          {
+            "name": "nZoneIndex",
+            "technicalDefault": "6",
+            "businessMeaning": "Selects the specific side or zone of the element (e.g., inside face, outside face, left/right edges) onto which the layout pattern is projected. Indices above 5 map to alternate or opposite internal zones.",
+            "validRange": "0 - 10",
+            "unit": "Index",
+            "affectsOutput": "Determines the 3D coordinate system used for projection and which specific width of the element is measured for the pattern calculation."
+          },
+          {
+            "name": "dSpacing",
+            "technicalDefault": "U(122)",
+            "businessMeaning": "The center-to-center distance between the layout lines (e.g., 122mm for standard modular framing or cladding spacing).",
+            "validRange": "> 0 (typically 50mm to 1200mm)",
+            "unit": "mm",
+            "affectsOutput": "Controls the number of lines and the gaps between them. If the element width is not an exact multiple of this value, the script triggers logic to check for neighbors and potentially flip the distribution direction."
+          },
+          {
+            "name": "nLineColor",
+            "technicalDefault": "1",
+            "businessMeaning": "The visual color (AutoCAD Color Index) assigned to the generated lines.",
+            "validRange": "1 - 255",
+            "unit": "ACI",
+            "affectsOutput": "Only affects the visual appearance of the lines in the CAD model; no geometric impact."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Calculation of 'Odd Element' status based on dSpacing",
+            "effect": "If the element width is not an exact multiple of dSpacing, the script checks for intersecting adjacent elements. If a neighbor is found, the distribution direction is swapped to avoid a small off-cut at the connection.",
+            "cascade": [
+              "Visual start point of the pattern",
+              "Direction of layout lines"
+            ]
+          },
+          {
+            "trigger": "nZoneIndex selection",
+            "effect": "Defines the geometric plane (CoordSys) from which the distribution width is extracted, directly influencing how many lines fit.",
+            "cascade": [
+              "dSpacing effective count",
+              "Pattern placement"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Graphic / Display Lines",
+            "description": "A series of parallel LineSeg entities drawn on the selected element zone. May include a directional arrow indicator if the layout distribution was flipped.",
+            "appliedTo": "Model Space (visualized on the selected Element)."
+          }
+        ]
+      },
+      "tokens_used": 6572,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script launch: Check for Execute Key or Catalog name.",
+          "2. [Insertion Phase] Detect if running for the first time (insertCycleCount check).",
+          "3. [Insertion Phase] If no Execute Key is found, display the Property Dialog (showDialog).",
+          "4. [Insertion Phase] Prompt user to select a set of Elements (PrEntity).",
+          "5. [Insertion Phase] Iterate through selected elements.",
+          "6. [Insertion Phase] Remove any existing instances of this script attached to the elements.",
+          "7. [Insertion Phase] Create new 'Satellite' instances attached to each element with current properties.",
+          "8. [Insertion Phase] Erase the 'Master' script instance from the drawing.",
+          "9. [Satellite Execution] Verify script is attached to a valid Element (_Element check).",
+          "10. [Satellite Execution] Calculate the local Coordinate System (CoordSys) based on the specified Zone Index.",
+          "11. [Satellite Execution] Determine the distribution width and start/end points of the zone.",
+          "12. [Satellite Execution] Calculate if the element is 'Odd' (width is not an exact multiple of spacing).",
+          "13. [Conditional - Odd Element] Search for intersecting neighbor elements in the same group.",
+          "14. [Conditional - Odd Element] If a neighbor is found on the right, swap distribution direction and draw an arrow.",
+          "15. [Satellite Execution] Draw the pattern lines based on the calculated (or swapped) start point and spacing.",
+          "16. Finish."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Trigger Mode (Execute Key vs Manual)",
+            "path1": {
+              "name": "Catalog/Execute Key Mode",
+              "steps": [
+                "Detect _kExecuteKey in script list.",
+                "Load property values from catalog entry.",
+                "Skip Property Dialog.",
+                "Proceed to element selection."
+              ]
+            },
+            "path2": {
+              "name": "Manual Insert Mode",
+              "steps": [
+                "No valid Execute Key found.",
+                "Execute showDialog().",
+                "User confirms properties.",
+                "Proceed to element selection."
+              ]
+            }
+          },
+          {
+            "condition": "Element Geometry (Odd vs Even)",
+            "path1": {
+              "name": "Even Element",
+              "steps": [
+                "Width is an exact multiple of Spacing (dSpacing).",
+                "Draw lines starting from ptStartDistribution towards ptEndDistribution."
+              ]
+            },
+            "path2": {
+              "name": "Odd Element",
+              "steps": [
+                "Width leaves a remainder.",
+                "Scan for adjacent ElementRoof entities.",
+                "Check if neighbor is connected on the 'right' side.",
+                "If yes: Swap start/end points, reverse direction, and draw directional arrow.",
+                "If no: Use standard start/end points."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Silent fail/erase)",
+            "recovery": "Script prevents multiple execution cycles automatically by erasing the instance."
+          },
+          {
+            "check": "Element Assignment",
+            "errorMessage": "None (Silent fail/erase)",
+            "recovery": "Script checks if _Element.length() > 0. If the attached element is missing or invalid, the script erases itself to prevent errors."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Layout Parameters",
+            "how": "Select the generated script instance in the model and edit 'Spacing' or 'Zone index' in the Properties Palette (OPM).",
+            "effect": "The script recalculates the line pattern immediately, changing the density of lines or switching the face they are drawn on."
+          },
+          {
+            "action": "Change Visual Style",
+            "how": "Edit 'Line color' in the Properties Palette (OPM).",
+            "effect": "The color index of the drawn lines updates to the new value."
+          }
+        ]
+      },
+      "tokens_used": 7051,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-LinePattern.mcr\n\n## Overview\nThis script inserts a visual pattern of parallel lines onto a specific zone of a structural element. It is used primarily to visualize layout spacing (such as studs or rafters) and automatically adjusts the pattern direction if the element width does not match the spacing perfectly, ensuring a clean connection with neighboring elements.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be inserted and attached to elements in the 3D model. |\n| Paper Space | No | Not designed for use in 2D layouts. |\n| Shop Drawing | No | Does not generate annotations in shop drawings. |\n\n## Prerequisites\n- **Required Entities**: Element (e.g., Wall, Roof, or Floor elements).\n- **Minimum Beam Count**: 0\n- **Required Settings Files**: None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_E-LinePattern.mcr`\n\n### Step 2: Configure Properties (Dialog)\nIf running the script manually (without a specific execute key), a properties dialog will appear first.\n```\nDialog: Property Dialog\nAction: Set the Zone Index, Spacing, and Line Color as desired. Click OK to proceed.\n```\n\n### Step 3: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the Element(s) in the model where you want the line pattern to appear. Press Enter to confirm selection.\n```\n*Note: The script will automatically attach itself to the selected elements and generate the lines immediately.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Zone index | dropdown | 6 | Selects the specific side or zone (e.g., inside face, outside face, edges) of the element where the lines are drawn. |\n| Spacing | number | 122 mm | The center-to-center distance between the layout lines. |\n| Line color | number | 1 (Red) | The AutoCAD Color Index (ACI) used for the generated lines. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| MasterToSatellite | Updates the properties on the satellite instances attached to the elements (typically triggered automatically). |\n\n## Settings Files\nNo specific settings files are required for this script.\n\n## Tips\n- **Odd Elements**: If the width of the element is not an exact multiple of the spacing, the script detects \"Odd\" elements. It will check for intersecting neighbors and automatically swap the layout direction to avoid a small off-cut at the connection.\n- **Modifying Layout**: You can change the density or position of the lines at any time by selecting the script instance in the model and adjusting the \"Spacing\" or \"Zone index\" in the Properties Palette.\n- **Visual Feedback**: If the layout direction is swapped due to a neighbor connection, a directional arrow may be drawn to indicate the change.\n\n## FAQ\n- **Q: Why are my lines appearing on the wrong face of the wall?**\n  - A: Check the **Zone index** property in the Properties Palette. Changing this number (0-10) moves the pattern to different faces or zones of the element.\n- **Q: The pattern doesn't start at the edge of the element. Why?**\n  - A: The script likely detected a neighboring element and swapped the distribution direction to ensure the spacing aligns better across the connection.\n- **Q: Can I use this to generate actual framing?**\n  - A: No, this script is for visualization purposes only (layout lines), not for generating structural beams."
+      },
+      "tokens_used": 5289,
+      "error": null
+    }
+  }
+}

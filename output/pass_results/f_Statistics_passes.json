@@ -1,0 +1,279 @@
+{
+  "filename": "f_Statistics.mcr",
+  "status": "completed",
+  "total_tokens": 32804,
+  "processing_time": 182.62493634223938,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.2",
+            "date": "17.03.2023",
+            "author": "Marsel Nakuci",
+            "changes": "HSB-18360: include massElements in the weight calculation"
+          },
+          {
+            "version": "1.1",
+            "date": "15aug2018",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "translation fixed"
+          },
+          {
+            "version": "1.0",
+            "date": "30jan2018",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6546,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No 'sd_' or 'Multipage' prefix found. No interaction with Viewports or Paper Space specific APIs. Script interacts directly with 3D entities (GenBeam, MassElement, Element) and prompts for entity selection using PrEntity, which indicates a model space context for calculating physical properties like weight and volume."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "MassElement",
+            "MassGroup",
+            "ChildPanel",
+            "Element",
+            "Sip"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing physical entities.",
+          "requiredSettings": [
+            "hsbTSL dictionary with 'f_Stacking' entry",
+            "External settings file (referenced but optional if dict entry exists)",
+            "Properties 'Weight' or 'MassElement' on entities, or 'hsbCenterOfGravity' mapIO installed for fallback weight calculation"
+          ]
+        }
+      },
+      "tokens_used": 3374,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select item(s)|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "TslDoubleClick",
+            "handler": "TslDoubleClick",
+            "action": "Variable defined but no handler logic present in code.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "hsbTSL (Dictionary Entry: f_Stacking)",
+            "searchPaths": [
+              "Drawing Dictionary"
+            ],
+            "purpose": "Stores configuration maps, specifically the 'Truck' map containing 'WeightProperty' path tokens.",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 3992,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Calculates and reports the accumulated weight and volume of selected construction elements to the command line.",
+          "category": "Estimation / Utility",
+          "typicalUseCase": "Verifying the total shipping weight of a package or wall elements to ensure compliance with transportation limits before production or delivery."
+        },
+        "parameters": [
+          {
+            "name": "Selection",
+            "technicalDefault": "Empty (User Input Required)",
+            "businessMeaning": "The specific group of timber components (beams, panels, mass elements) to be included in the statistical summation.",
+            "validRange": "1 to N entities. Supported types: GenBeam, Element, MassElement, MassGroup, ChildPanel, Sip.",
+            "unit": "Entity Count",
+            "affectsOutput": "Directly determines the total `dSumWeight` and `dSumVolume` values reported. Only items within this selection are processed."
+          },
+          {
+            "name": "WeightProperty (Configuration)",
+            "technicalDefault": "Defined in Drawing Dictionary (hsbTSL -> f_Stacking -> Truck)",
+            "businessMeaning": "The specific file path or property set location (e.g., 'Properties.Weight') where the script looks for pre-calculated weight data per element.",
+            "validRange": "Valid Property Set name and Property name pair (dot-separated).",
+            "unit": "String Path",
+            "affectsOutput": "Determines the precision of the calculation. If found, exact values are used. If missing, the script falls back to estimating weight via geometric density (hsbCenterOfGravity), which may be less accurate."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Missing or invalid 'WeightProperty' configuration on a selected entity",
+            "effect": "The script switches to a fallback calculation method using the 'hsbCenterOfGravity' mapIO to compute weight based on volume and material density.",
+            "cascade": [
+              "dSumWeight",
+              "Command Line Report"
+            ]
+          },
+          {
+            "trigger": "Project is identified as 'KLH' (Special Case)",
+            "effect": "Script prioritizes looking for the 'MassElement' property set on MassElements/Groups for weight data, overriding the standard 'WeightProperty' token lookup for those specific entity types.",
+            "cascade": [
+              "dSumWeight"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Textual Report",
+            "description": "A summary message printed to the AutoCAD command line detailing the number of items, number of child items, total weight (kg), and total volume.",
+            "appliedTo": "Command Line Interface (CLI)"
+          }
+        ]
+      },
+      "tokens_used": 6169,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script initialization: Loads constants and sets unit system to mm.",
+          "2. Configuration Load: Retrieves 'Truck' map settings from 'hsbTSL' dictionary (entry: f_Stacking).",
+          "3. Insert Check: Validates insertCycleCount. If > 1, script stops execution.",
+          "4. User Selection: Prompts user via command line to select construction entities (GenBeam, MassElement, MassGroup, ChildPanel).",
+          "5. Entity Collection: Adds selected entities to the internal processing list.",
+          "6. Entity Parsing: Iterates through selection to identify types. Expands 'Element' types to extract internal beams, and converts 'ChildPanel' to 'Sip'.",
+          "7. Weight Calculation Loop: Processes every unique entity found.",
+          "8. Weight Logic: Attempts to read weight from Property Sets. If KLH project + Mass element, uses specific path; otherwise uses config path.",
+          "9. Fallback: If Property Set weight is missing or zero, calls 'hsbCenterOfGravity' MapIO to calculate weight from geometry.",
+          "10. Reporting: Accumulates total weight/volume and prints the summary report to the command line.",
+          "11. Cleanup: Erases the script instance from the drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Project is 'KLH' AND entity is a MassElement/MassGroup",
+            "path1": {
+              "name": "KLH Specific Path",
+              "steps": [
+                "Check for PropertySet named 'MassElement'.",
+                "Read property 'Weight'."
+              ]
+            },
+            "path2": {
+              "name": "Standard Config Path",
+              "steps": [
+                "Read 'WeightProperty' tokens from settings.",
+                "Locate PropertySet and Property based on tokens.",
+                "Read value."
+              ]
+            }
+          },
+          {
+            "condition": "Weight value retrieved successfully ( > 0 )",
+            "path1": {
+              "name": "Use Property Value",
+              "steps": [
+                "Add retrieved value to dSumWeight."
+              ]
+            },
+            "path2": {
+              "name": "Fallback Calculation",
+              "steps": [
+                "Execute 'hsbCenterOfGravity' MapIO.",
+                "Get calculated 'Weight' from result.",
+                "Add to dSumWeight."
+              ]
+            }
+          },
+          {
+            "condition": "Entity Type Classification",
+            "path1": {
+              "name": "Element",
+              "steps": [
+                "Increment parent count (nQty).",
+                "Extract GenBeams.",
+                "Increment child count (nSubQty).",
+                "Process GenBeams for calculation."
+              ]
+            },
+            "path2": {
+              "name": "ChildPanel",
+              "steps": [
+                "Get linked Sip entity.",
+                "Process Sip entity."
+              ]
+            },
+            "path3": {
+              "name": "GenBeam / Sip / MassElement",
+              "steps": [
+                "Process entity directly."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None",
+            "recovery": "Script automatically erases instance if cycle count > 1 to prevent re-running."
+          },
+          {
+            "check": "Weight Calculation Success",
+            "errorMessage": "[Entity Type]: could not collect weight",
+            "recovery": "Reported to command line. User must ensure properties are correctly attached or material densities are defined."
+          },
+          {
+            "check": "Entity Supported",
+            "errorMessage": "None",
+            "recovery": "Unsupported entities are skipped silently during the iteration loop."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 7907,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# f_Statistics.mcr\n\n## Overview\nThis script calculates and reports the accumulated weight and volume of selected construction elements directly to the command line. It is designed to help verify shipping weights or material totals for groups of timber components, beams, and panels.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script operates on 3D physical entities. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | This is a model-level estimation tool. |\n\n## Prerequisites\n- **Required Entities**: At least one of the following entity types must be present in the selection: GenBeam, Element, MassElement, MassGroup, ChildPanel, or Sip.\n- **Required Settings**: The drawing dictionary `hsbTSL` must contain an entry `f_Stacking` with a `Truck` map. This map defines where the script looks for weight properties (e.g., `Properties.Weight`).\n- **Fallback**: If specific weight properties are missing, the script attempts to use the `hsbCenterOfGravity` MapIO to estimate weight based on volume and density.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `f_Statistics.mcr`\n\n### Step 2: Select Items\n```\nCommand Line: |Select item(s)|\nAction: Click on individual beams, panels, or elements in the model. You can also use a window selection to pick multiple items at once. Press Enter to confirm the selection.\n```\n\n### Step 3: View Results\n```\nAction: Look at the AutoCAD Command Line (F2 to view full history).\nOutput: The script will display a summary including:\n- Total number of items\n- Total number of child items (if Elements were selected)\n- Total Weight (in kg)\n- Total Volume\nNote: The script instance will automatically erase itself from the drawing after reporting.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not expose any user-editable properties in the Properties Palette. All configuration is handled via the drawing dictionary. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | No specific context menu actions are defined for this script. |\n\n## Settings Files\n- **Dictionary Entry**: `hsbTSL` (Key: `f_Stacking`)\n- **Location**: Drawing Dictionary (AutoCAD internal database)\n- **Purpose**: Stores configuration maps, specifically the `Truck` map. This map tells the script which property path (e.g., `Properties.Weight`) to read for mass calculations. Special support is included for \"KLH\" projects to look at `MassElement` property sets.\n\n## Tips\n- **Mixed Selections**: You can select a mix of beams, panels, and entire Elements (walls/floors) in one go. The script will automatically break down Elements to count their internal beams.\n- **Window Selection**: For large packages, using a crossing window selection is faster than picking items one by one.\n- **Accuracy**: For the most accurate results, ensure your entities have the correct \"Weight\" property assigned. If this is missing, the script estimates weight based on volume, which might differ from actual shipping weights due to hardware or finishing.\n\n## FAQ\n- **Q: Where does the weight number come from?**\n  A: The script primarily looks for a specific property defined in your project settings (usually under `Properties.Weight`). If that property is empty or zero, it calculates an estimated weight using the `hsbCenterOfGravity` tool based on the material density.\n- **Q: Why does the script disappear after I run it?**\n  A: This is a utility script designed to perform a one-time calculation and report. It automatically cleans up (erases itself) after printing the results to keep your drawing clean.\n- **Q: Can I use this to check the weight of a single wall?**\n  A: Yes, simply select the `Element` (wall/floor) entity. The script will aggregate the weight of all beams and panels within that element."
+      },
+      "tokens_used": 4816,
+      "error": null
+    }
+  }
+}

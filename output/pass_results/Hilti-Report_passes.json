@@ -1,0 +1,244 @@
+{
+  "filename": "Hilti-Report.mcr",
+  "status": "completed",
+  "total_tokens": 46108,
+  "processing_time": 350.0715687274933,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9696,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No usage of _Viewport, _kPaperSpace, or sd_ prefix. The script uses getPoint() to prompt for a location and draws geometry (lines and text) via dp.draw() into the active space, which is standard for Model Space reporting tools. The filename 'Hilti-Report.mcr' does not follow the ShopDrawing naming convention."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "TslInst (specifically script names: 'Hilti-Decke', 'Hilti-Stockschraube', 'Hilti-Verankerung')",
+            "Element or ElementRoof (associated with the selected TSLs)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7619,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select tsl(s)|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "|Pick insertion Point of the table|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "|add other TSL(s)|",
+            "handler": "sTriggeraddTSL",
+            "action": "Prompts the user to select additional TSL instances and appends them to the current report entity list.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 8642,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates a detailed table in Model Space quantifying Hilti fasteners and connectors used on selected timber elements.",
+          "category": "Reporting/Quantities",
+          "typicalUseCase": "Used to create a schedule or bill of materials for Hilti hardware (like screws, anchors, and hanger bolts) attached to specific walls or floors, often for fabrication or ordering purposes."
+        },
+        "parameters": [],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Graphical Table (Lines and Text)",
+            "description": "Draws a table at the user-selected location containing Element Numbers and the quantity of specific Hilti components per element. The table dynamically includes columns for components only if they exist in the selection (e.g., 'Decke-Oben', 'Hanger bolt HSW', 'Wood coupler HCW').",
+            "appliedTo": "Placed in Model Space at coordinates specified by the user during insertion."
+          }
+        ]
+      },
+      "tokens_used": 6620,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution begins (Insert or Recalc)",
+          "[Insert Mode] Check insertCycleCount(); if > 1, erase instance and exit",
+          "[Insert Mode] Prompt user to select TSL instances using PrEntity (filter for TslInst)",
+          "[Insert Mode] Prompt user to pick the insertion point for the table using getPoint",
+          "[Insert Mode] Filter selected entities: check if scriptName matches 'Hilti-Decke', 'Hilti-Stockschraube', or 'Hilti-Verankerung'",
+          "[Insert Mode] Append valid TSLs to internal _Entity list",
+          "[Insert Mode] Exit script (data stored in instance)",
+          "[Recalc/Validation] Verify _Entity list contains at least 1 TSL",
+          "[Recalc/Validation] If empty: report 'no TSL found', erase instance, and exit",
+          "[Recalc] Check if execution key is '|add other TSL(s)|' (Context Menu Trigger)",
+          "[Recalc/Add TSL] Prompt user to select additional TSL instances",
+          "[Recalc/Add TSL] Filter new selection and append unique TSLs to _Entity list; setExecutionLoops(2) and return",
+          "[Data Collection] Iterate through TSLs to find connected Elements (ElementRoof) or Beams",
+          "[Data Collection] Compile unique list of Element Numbers",
+          "[Validation] Check if any TSL is attached to > 1 Element; if so: report error, erase instance, exit",
+          "[Validation] Check if TSL has no geometry; if so: report warning, ignore TSL, continue",
+          "[Quantification] Loop through TSLs and increment counters (Top, Bottom, Dolle, etc.) based on Element index and TSL properties (e.g., sBottom, sType)",
+          "[Table Generation] Calculate sums for each component type",
+          "[Table Generation] Draw Table Grid: Header, Element Numbers, and dynamic columns",
+          "[Table Generation] Dynamic Columns Logic: Only draw column if Sum > 0 (e.g., 'Decke-Oben', 'Hanger bolt HSW')",
+          "[Table Generation] Special Baufritz Logic: If project is 'baufritz', check and draw 'Decke-Oben-Dollen' column if sum > 0",
+          "[Table Generation] Finish drawing horizontal lines for rows"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User right-clicks and selects '|add other TSL(s)|'",
+            "path1": {
+              "name": "Add TSLs Workflow",
+              "steps": [
+                "Prompt for entity selection",
+                "Validate script names against allowed list",
+                "Append new instances to existing list",
+                "Trigger immediate recalculation"
+              ]
+            }
+          },
+          {
+            "condition": "Project Special is 'baufritz'",
+            "path1": {
+              "name": "Baufritz Variant",
+              "steps": [
+                "Enable counting of 'Holzdolle' components",
+                "Enable display of 'Decke-Oben-Dollen' column in table"
+              ]
+            },
+            "path2": {
+              "name": "Standard Variant",
+              "steps": [
+                "Skip Dolle counting logic",
+                "Hide 'Decke-Oben-Dollen' column"
+              ]
+            }
+          },
+          {
+            "condition": "Component Sum > 0 (e.g., iSummNumbersTop > 0)",
+            "path1": {
+              "name": "Column Visible",
+              "steps": [
+                "Increment total column count",
+                "Draw vertical line separator",
+                "Write Column Header text",
+                "Write Quantity values for each element",
+                "Write Total Sum"
+              ]
+            },
+            "path2": {
+              "name": "Column Hidden",
+              "steps": [
+                "Skip drawing logic for this specific component"
+              ]
+            }
+          },
+          {
+            "condition": "Source of Element Number in TSL",
+            "path1": {
+              "name": "Direct Element",
+              "steps": [
+                "Retrieve Element from tsl.entity()",
+                "Use Element.number()"
+              ]
+            },
+            "path2": {
+              "name": "Derived from Beams",
+              "steps": [
+                "Retrieve Beams from tsl.beam()",
+                "Retrieve Element from Beam.element()",
+                "Use Element.number()"
+              ]
+            },
+            "path3": {
+              "name": "No Geometry",
+              "steps": [
+                "Report warning message",
+                "Skip TSL in calculations",
+                "Continue to next TSL"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity list count (_Entity.length)",
+            "errorMessage": "no TSL found",
+            "recovery": "Select valid TSL instances (Hilti-Decke, etc.) during insertion or use the 'add other TSL(s)' command."
+          },
+          {
+            "check": "Number of Elements attached to a single TSL instance",
+            "errorMessage": "unexpected error / TSL attached to more than one element",
+            "recovery": "Modify the model so the specific TSL connects to only one wall/floor element."
+          },
+          {
+            "check": "Presence of Elements or Beams in TSL",
+            "errorMessage": "TSL contains no element or beams / no element attached to any of the beams in the TSL",
+            "recovery": "Ensure the TSL is correctly applied to a structural member (Beam/Element). The script will skip the invalid TSL and continue."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Add TSLs to Report",
+            "how": "Right-click Context Menu -> '|add other TSL(s)|'",
+            "effect": "Updates the internal list of tracked TSLs, recalculates the quantities, and redraws the table to reflect the new data."
+          },
+          {
+            "action": "Update Report Data",
+            "how": "Context Menu -> Recalculate (or modifying underlying Hilti TSLs)",
+            "effect": "Re-runs the counting logic (e.g., if a screw was added to a wall, the count increases) and updates the table."
+          },
+          {
+            "action": "Move Report",
+            "how": "Grip Edit (Select lines/text and move)",
+            "effect": "Relocates the graphical representation of the report in Model Space."
+          }
+        ]
+      },
+      "tokens_used": 9163,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Hilti-Report.mcr\n\n## Overview\nGenerates a detailed table in Model Space that quantifies Hilti fasteners and connectors used on selected timber elements. It creates a dynamic schedule or bill of materials for hardware items like screws, anchors, and hanger bolts.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script draws the table directly into the model layout. |\n| Paper Space | No | Not designed for Paper Space or viewports. |\n| Shop Drawing | No | This is a model reporting tool, not a detailing script. |\n\n## Prerequisites\n- **Required Entities**: Existing TSL instances with script names `Hilti-Decke`, `Hilti-Stockschraube`, or `Hilti-Verankerung` must be present in the model.\n- **Associated Elements**: These TSLs must be correctly attached to an Element or Beam.\n- **Minimum Beam Count**: 0 (Relies on TSL instances, not raw beams).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `Hilti-Report.mcr` from the list.\n\n### Step 2: Select TSLs\n```\nCommand Line: Select tsl(s)\nAction: Click on the Hilti connection instances (e.g., Hilti-Decke, Hilti-Stockschraube) in the model that you want to include in the report. Press Enter when finished.\n```\n\n### Step 3: Place Table\n```\nCommand Line: Pick insertion Point of the table\nAction: Click in the Model Space to define where the top-left corner of the report table should be drawn.\n```\n\n## Properties Panel Parameters\nThis script does not expose any editable parameters in the Properties Palette. All configuration is handled via the command line and context menu.\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **add other TSL(s)** | Prompts you to select additional Hilti TSL instances from the model. These are added to the current report, and the table updates immediately to include the new quantities. |\n\n## Settings Files\nNo external settings files are required or used by this script.\n\n## Tips\n- **Dynamic Columns**: The table only creates columns for components that actually exist in your selection. If you have no \"Hanger bolt HSW\", that column will not appear.\n- **Baufritz Projects**: If your project special is set to `baufritz`, the script will automatically detect and count \"Holzdolle\" components, adding a specific \"Decke-Oben-Dollen\" column to the report.\n- **Error Handling**: If a selected TSL is attached to more than one structural element (e.g., spanning two walls), the script will report an error and delete itself to prevent incorrect data. Ensure TSLs are associated with a single element.\n\n## FAQ\n- **Q: Why did the report disappear immediately after I placed it?**\n  A: This usually happens if the selected TSLs are attached to more than one element, or if no valid TSLs were found. Check the command line for an error message like \"unexpected error / TSL attached to more than one element\".\n- **Q: Can I move the table after creating it?**\n  A: Yes. Since the output consists of standard lines and text in Model Space, you can select them and use AutoCAD's Move command or grips to reposition the table.\n- **Q: How do I update the report if I add more screws to the wall?**\n  A: Simply right-click on the script instance (the origin point) and select **Recalculate**, or use the **add other TSL(s)** option if you added new TSL instances."
+      },
+      "tokens_used": 4368,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,241 @@
+{
+  "filename": "ConvertFreeDrillToSolid.mcr",
+  "status": "completed",
+  "total_tokens": 29585,
+  "processing_time": 196.67150902748108,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "05.02.2025",
+            "author": "Thorsten Huck",
+            "changes": "HSB-23368 initial version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5541,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script operates on entities of type 'HSB_EFREE_DRILL' and creates geometry using dbCreateAsMassElement(). It uses GenBeam.analysedTools() to retrieve drilling data. There are no 'sd_' prefixes, #Type E declarations, or Viewport interactions typical of Paper Space or Shop Drawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "HSB_EFREE_DRILL",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "The script requires 'hsbcad Free Drill' entities to be selected. These drills must be linked to GenBeams for the script to detect dimensions.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4014,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select free drills|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4464,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Converts 'hsbcad Free Drill' entities into physical 3D solid bodies (cylinders) representing the drill holes and sink holes, useful for visualization or interference checking.",
+          "category": "Modeling/Utilities",
+          "typicalUseCase": "Used when a designer needs to see the physical volume of a hole (e.g., for concrete pours or clearance checks) rather than just the symbolic drill line."
+        },
+        "parameters": [],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "3D Solid",
+            "description": "Solid cylinders generated via AutoCAD's mass element and solid conversion commands representing the exact geometry of the free drills (main bore and counterbores).",
+            "appliedTo": "Model Space (positioned according to the selected Free Drill entity coordinates)"
+          }
+        ]
+      },
+      "tokens_used": 4353,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch Script (OnInsert)",
+          "2. Check insertCycleCount (prevent duplicate execution)",
+          "3. Check for catalog execution or show default dialog",
+          "4. Prompt user to select entities ('Select free drills')",
+          "5. Filter selection for entities of type 'HSB_EFREE_DRILL'",
+          "6. [Conditional] Validate valid entities were selected",
+          "7. Loop through each selected Free Drill entity",
+          "8. [Conditional] Validate entity is valid",
+          "9. Retrieve linked GenBeam(s) associated with the Free Drill",
+          "10. [Conditional] Validate GenBeam linkage exists (required for dimensions)",
+          "11. Retrieve 'AnalysedDrill' tools from GenBeam(s) matching the Free Drill",
+          "12. [Conditional] Validate drill data exists",
+          "13. Calculate Coordinate System and Main Drill Radius",
+          "14. [Conditional] Create Main Solid Cylinder (if valid radius)",
+          "15. Check for Sinkholes (Counterbores) at Start and End points",
+          "16. [Conditional] Create Sink Solid Cylinders (if larger radius detected)",
+          "17. End Loop",
+          "18. Erase Script Instance (Cleanup)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Valid entities found in selection set",
+            "path1": {
+              "name": "Success",
+              "steps": [
+                "Process entities",
+                "Create solids"
+              ]
+            },
+            "path2": {
+              "name": "Failure",
+              "steps": [
+                "Report Notice: 'could not find any entities...'",
+                "EraseInstance()",
+                "Stop"
+              ]
+            }
+          },
+          {
+            "condition": "Free Drill linked to a GenBeam",
+            "path1": {
+              "name": "Linked",
+              "steps": [
+                "Extract drill diameter/geometry from GenBeam",
+                "Proceed to geometry creation"
+              ]
+            },
+            "path2": {
+              "name": "Not Linked",
+              "steps": [
+                "Report Notice: 'cannot detect diameter from a tool which is not linked with a genbeam'",
+                "Skip to next entity"
+              ]
+            }
+          },
+          {
+            "condition": "Drill configuration (Main vs. Sink)",
+            "path1": {
+              "name": "Main Drill Only",
+              "steps": [
+                "Create single cylinder for main bore"
+              ]
+            },
+            "path2": {
+              "name": "Drill with Sinkholes",
+              "steps": [
+                "Create main cylinder",
+                "Create additional cylinders for counterbores at ends"
+              ]
+            }
+          },
+          {
+            "condition": "Debug Mode",
+            "path1": {
+              "name": "Production (!bDebug)",
+              "steps": [
+                "Create solids",
+                "EraseInstance()"
+              ]
+            },
+            "path2": {
+              "name": "Debug (bDebug)",
+              "steps": [
+                "Create solids",
+                "Keep Script Instance in model"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Selection contains 'HSB_EFREE_DRILL' entities",
+            "errorMessage": "ScriptName + 'could not find any entities of type 'hsbcad Free Drill' in the selection set.'",
+            "recovery": "Select valid Free Drill entities and run script again."
+          },
+          {
+            "check": "ToolEnt validity",
+            "errorMessage": "None (Silent skip)",
+            "recovery": "N/A"
+          },
+          {
+            "check": "Linkage to GenBeam",
+            "errorMessage": "ToolEnt Handle + ': cannot detect diameter from a tool which is not linked with a genbeam.'",
+            "recovery": "Link the Free Drill to a GenBeam or assign diameter properties if supported."
+          },
+          {
+            "check": "AnalysedTools availability",
+            "errorMessage": "ToolEnt Handle + ': cannot detect drill.'",
+            "recovery": "Ensure the GenBeam has been updated/analysed so tool information is available."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Script Self-Deletion",
+            "how": "Automatic (Internal Logic)",
+            "effect": "The TSL instance removes itself from the drawing, leaving only the generated 3D Solids. No further parameter editing via the script is possible."
+          },
+          {
+            "action": "Standard CAD Editing",
+            "how": "AutoCAD Grips/Properties",
+            "effect": "User can manipulate the resulting solid bodies (move, erase, union, subtract) using standard AutoCAD commands."
+          }
+        ]
+      },
+      "tokens_used": 6921,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# ConvertFreeDrillToSolid.mcr\n\n## Overview\nThis script converts symbolic \"hsbcad Free Drill\" entities into physical 3D solid cylinders. It is used for visualizing the exact volume of drill holes (including counterbores) for interference checking or concrete coordination.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script generates 3D solids in the model. |\n| Paper Space | No | This script is not intended for layout views. |\n| Shop Drawing | No | This script does not generate 2D drawings. |\n\n## Prerequisites\n- **Required Entities:** `HSB_EFREE_DRILL` (hsbcad Free Drill).\n- **Linked GenBeam:** The selected Free Drill entities must be linked to a GenBeam. The script requires this link to detect the correct drill diameter and depth.\n- **Minimum beam count:** 0 (The script operates on drill entities directly, not by selecting beams).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `ConvertFreeDrillToSolid.mcr`\n\n### Step 2: Select Free Drills\n```\nCommand Line: Select free drills\nAction: Select the Free Drill entities you wish to convert and press Enter.\n```\n\n### Step 3: Automatic Processing\nThe script will automatically loop through your selection.\n- If a drill is linked to a beam, it creates a 3D Solid cylinder representing the main bore.\n- If the drill has sinkholes (counterbores), additional solid cylinders are created for them.\n- If a drill is not linked to a beam, a notice is displayed on the command line, and that specific drill is skipped.\n\n### Step 4: Completion\nOnce processed, the script instance automatically deletes itself from the drawing, leaving only the newly created 3D Solids.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| *None* | | | This script does not expose parameters in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| *None* | This script does not add specific options to the right-click context menu. |\n\n## Settings Files\n- **None**: This script does not rely on external XML settings files.\n\n## Tips\n- **Interference Checking:** After creating the solids, you can use the standard AutoCAD `INTERFERE` command to check for clashes between these drill volumes and other objects (like reinforcement or ductwork).\n- **Cleanup:** The script deletes itself after running. If you need to update the holes after changing the beam or drill properties, simply insert the script again.\n- **Sinkholes:** The script automatically detects and creates separate solids for counterbores (sinkholes) if they exist in the Free Drill definition.\n\n## FAQ\n- **Q: Why did the script skip some of my selected drills?**\n  **A:** The Free Drills must be linked to a GenBeam to calculate the diameter. If a drill is floating without a link, the script cannot detect the dimensions and will skip it with a command line notice.\n- **Can I edit the resulting solids using the script?**\n  **A:** No. The script creates static standard AutoCAD 3D Solids and then removes itself. To change the geometry, modify the original Free Drill entity and run the script again."
+      },
+      "tokens_used": 4292,
+      "error": null
+    }
+  }
+}

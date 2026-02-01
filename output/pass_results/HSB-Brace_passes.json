@@ -1,0 +1,240 @@
+{
+  "filename": "HSB-Brace.mcr",
+  "status": "completed",
+  "total_tokens": 54852,
+  "processing_time": 372.6530592441559,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9592,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses _bOnInsert to prompt for Element selection using PrEntity. It generates 3D geometry (GenBeam, Sheet) using dbCreate and assigns them to the Element group. It manipulates Vector3d, Body, and CoordSys for 3D calculations. There are no calls to sd_* functions or usage of _Viewport, and no #Type declarations."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7303,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10290,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically generates structural studs and cladding sheets for knee walls or bracing within a roof element, based on existing construction beams.",
+          "category": "Framing/Cladding",
+          "typicalUseCase": "Used when a knee wall or bracing structure is required in a roof to support rafters or close off openings. It converts generic 'brace' beams into detailed framing with studs and sheathing."
+        },
+        "parameters": [
+          {
+            "name": "sBmCodeBrace",
+            "technicalDefault": "KSTL-01",
+            "businessMeaning": "The beam code used to identify the primary beams forming the brace/knee wall structure.",
+            "validRange": "Any valid BeamCode from the catalog",
+            "unit": "String",
+            "affectsOutput": "Identifies which beams will be processed to generate studs and internal sheeting. Beams with this code are effectively 'consumed' to create the detailed sub-structure."
+          },
+          {
+            "name": "sBmCodeSupportingStud",
+            "technicalDefault": "KSTL-02",
+            "businessMeaning": "The beam code assigned to the vertical studs generated to support the rafters against the brace.",
+            "validRange": "Any valid BeamCode (usually a stud/timber code)",
+            "unit": "String",
+            "affectsOutput": "Sets the material and properties of the vertical supporting members created at the intersection of the brace and rafters."
+          },
+          {
+            "name": "sBmCodeSheet",
+            "technicalDefault": "KSPL-01",
+            "businessMeaning": "The beam code assigned to the interior sheathing/sheeting attached to the face of the brace.",
+            "validRange": "Any valid BeamCode (usually a sheet/panel code)",
+            "unit": "String",
+            "affectsOutput": "Defines the panel type for the sheeting generated on the brace surface."
+          },
+          {
+            "name": "sLabelSheet",
+            "technicalDefault": "",
+            "businessMeaning": "User-defined label or identifier for the interior sheets.",
+            "validRange": "Text string",
+            "unit": "String",
+            "affectsOutput": "Assigns the Label property to the generated interior sheets."
+          },
+          {
+            "name": "sMaterialSheet",
+            "technicalDefault": "",
+            "businessMeaning": "Specifies the material name for the interior sheets. Can be a direct name or 'Zone 6'/'Zone 7' to copy material from existing zones.",
+            "validRange": "Material name or 'Zone 6', 'Zone 7'",
+            "unit": "String",
+            "affectsOutput": "Sets the physical material property of the interior sheets. If 'Zone 6' or 'Zone 7' is used, it dynamically finds and copies the material from sheets in those zones."
+          },
+          {
+            "name": "nZnSheet",
+            "technicalDefault": "6",
+            "businessMeaning": "The construction zone index to which the interior sheets are assigned.",
+            "validRange": "Positive Integer (1-10 typical, based on script array)",
+            "unit": "Index",
+            "affectsOutput": "Determines layering and potential interaction with other scripts/tools relying on zone logic."
+          },
+          {
+            "name": "sZnSheetSplit",
+            "technicalDefault": "7",
+            "businessMeaning": "Selects existing sheets in a specific zone that must be split to accommodate the new brace geometry.",
+            "validRange": "Dropdown: 'No split', or Zone indices (1-10)",
+            "unit": "Selection",
+            "affectsOutput": "If a zone is selected, the script finds sheets in that zone overlapping the brace and splits them around the brace geometry."
+          },
+          {
+            "name": "sBmCodeCoverSheet",
+            "technicalDefault": "KSPL-02",
+            "businessMeaning": "The beam code for the cover sheeting placed on the sides (gables) of the brace structure.",
+            "validRange": "Any valid BeamCode",
+            "unit": "String",
+            "affectsOutput": "Defines the panel type for the vertical/side cover sheets."
+          },
+          {
+            "name": "dThicknessCoverSheet",
+            "technicalDefault": "11",
+            "businessMeaning": "The thickness of the cover sheeting material.",
+            "validRange": "6 - 50 mm",
+            "unit": "mm",
+            "affectsOutput": "Physically defines the 3D geometry depth of the cover sheets."
+          },
+          {
+            "name": "sLblCoverSheet",
+            "technicalDefault": "",
+            "businessMeaning": "User-defined label for the cover sheets.",
+            "validRange": "Text string",
+            "unit": "String",
+            "affectsOutput": "Sets the Label property for cover sheets."
+          },
+          {
+            "name": "sMatCoverSheet",
+            "technicalDefault": "",
+            "businessMeaning": "Override material name for the cover sheets.",
+            "validRange": "Material name",
+            "unit": "String",
+            "affectsOutput": "Sets the physical material of the cover sheets."
+          },
+          {
+            "name": "sInfoCoverSheet",
+            "technicalDefault": "",
+            "businessMeaning": "Additional information field for the cover sheets.",
+            "validRange": "Text string",
+            "unit": "String",
+            "affectsOutput": "Populates the Info/Comment field in entity properties."
+          },
+          {
+            "name": "nZnCoverSheet",
+            "technicalDefault": "8",
+            "businessMeaning": "The construction zone index for the cover sheets.",
+            "validRange": "Positive Integer",
+            "unit": "Index",
+            "affectsOutput": "Assigns the cover sheets to the specified production layer/zone."
+          },
+          {
+            "name": "nColorCoverSheet",
+            "technicalDefault": "1",
+            "businessMeaning": "The display color index for the cover sheets in the CAD model.",
+            "validRange": "CAD Color Index (1-255)",
+            "unit": "Index",
+            "affectsOutput": "Visual representation in 3D/2D views."
+          },
+          {
+            "name": "beamFilterDefinition",
+            "technicalDefault": "",
+            "businessMeaning": "Links to an external TSL script to define complex logic for filtering rafters or adjacent beams.",
+            "validRange": "Catalog names of 'HSB_G-FilterGenBeams'",
+            "unit": "String",
+            "affectsOutput": "Determines which beams in the element are treated as 'rafters' to be supported by the brace."
+          },
+          {
+            "name": "sFilterBC",
+            "technicalDefault": "ZKRB-03;ZKRB-04;ZKRH-03;ZKRH-04",
+            "businessMeaning": "A semi-colon separated list of beam codes to identify rafters. Used only if 'beamFilterDefinition' is empty.",
+            "validRange": "List of BeamCodes",
+            "unit": "String",
+            "affectsOutput": "Identifies the beams (rafters) that will receive the supporting studs from the brace."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "beamFilterDefinition is left blank",
+            "effect": "The script uses the 'sFilterBC' string to identify rafters.",
+            "cascade": [
+              "sFilterBC"
+            ]
+          },
+          {
+            "trigger": "sMaterialSheet is set to 'Zone 6' or 'Zone 7'",
+            "effect": "The script ignores the text string and instead searches the Element for sheets in Zone 6 or 7 to copy their material name.",
+            "cascade": [
+              "nZnSheet"
+            ]
+          },
+          {
+            "trigger": "sZnSheetSplit is NOT set to 'No split'",
+            "effect": "The script queries the element for sheets in the selected zone and performs geometric splitting operations.",
+            "cascade": [
+              "nZnSheet"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "GenBeam (Stud)",
+            "description": "Vertical studs created at the intersection of the brace beam and the rafters to transfer load.",
+            "appliedTo": "The Element containing the brace."
+          },
+          {
+            "type": "Sheet (Inside)",
+            "description": "Sheathing attached to the main face of the brace/knee wall.",
+            "appliedTo": "The Brace beam volume."
+          },
+          {
+            "type": "Sheet (Cover)",
+            "description": "Vertical sheathing placed on the sides of the brace structure, often filling gaps to the rafters or gable ends.",
+            "appliedTo": "Sides of the Brace/Stud assembly."
+          }
+        ]
+      },
+      "tokens_used": 9548,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. Script Launch: User executes script from TSL Palette or via DSP Detail generation.\",\n    \"2. Property Initialization: Script checks for 'DspToTsl' or 'MasterToSatellite' mapping to pre-load properties.\",\n    \"3. Insertion Phase (_bOnInsert):\",\n    \"   3.1. Check if running with an Execute Key (Catalog preset).\",\n    \"   3.2. If no Execute Key, display Dialog for user configuration (Beam codes, zones, etc.).\",\n    \"   3.3. Prompt user to select target Element(s) using PrEntity.\",\n    \"   3.4. Validate Element selection.\",\n    \"   3.5. Clone script instance onto selected Element(s) via dbCreate.\",\n    \"   3.6. Erase original script instance.\",\n    \"4. Calculation Phase (Running on Element):\",\n    \"   4.1. Validate Element integrity (bIsValid).\",\n    \"   4.2. Identify Rafters: Run external filter 'HSB_G-FilterGenBeams' OR parse internal 'sFilterBC' string.\",\n    \"   4.3. Process Braces (Knee Walls):\",\n    \"       3a. Iterate beams matching 'sBmCodeBrace'.\",\n    \"       3b. Calculate envelope based on rafters.\",\n    \"       3c. Generate Supporting Studs (from 'sBmCodeSupportingStud') intersecting rafters.\",\n    \"       3d. Erase original brace beams.\",\n    \"   4.4. Process Inside Sheeting:\",\n    \"       4a. Iterate beams matching 'sBmCodeSheet'.\",\n    \"       4b. Determine Material: Check 'sMaterialSheet' for 'Zone 6', 'Zone 7', or custom string.\",\n    \"       4c. Check Split Configuration ('sZnSheetSplit').\",\n    \"       4d. If Split Zone is active: Query existing sheets in that zone, filter for 'bottom' sheets, and extract split coordinates.\",\n    \"       4e. Create new Sheets on brace face.\",\n    \"       4f. Apply splits to new sheets based on coordinates from Step 4d.\",\n    \"       4g. Erase original sheeting beams.\",\n    \"   4.5. Process Cover Sheeting (Sides):\",\n    \"       5a. Iterate beams matching 'sBmCodeCoverSheet'.\",\n    \"       5b. Create Cover Sheets with specified thickness and material.\",\n    \"       5c. Erase original cover beams.\",\n    \"5. Termination: Script erases itself, leaving only generated geometry.\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Rafter Identification Method\",\n      \"path1\": {\n        \"name\": \"External Filter\",\n        \"steps\": [\n          \"User selects a catalog name in 'beamFilterDefinition'.\",\n          \"Script instantiates 'HSB_G-FilterGenBeams.mcr'.\",\n          \"Returns beam list from external script.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Internal String List\",\n        \"steps\": [\n          \"User leaves 'beamFilterDefinition' blank.\",\n          \"Script parses 'sFilterBC' string (semicolon separated).\",\n          \"Script filters element beams based on code list.\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Inside Sheet Material Source\",\n      \"path1\": {\n        \"name\": \"Zone 6 Inheritance\",\n        \"steps\": [\n          \"User sets 'sMaterialSheet' to 'Zone 6'.\",\n          \"Script searches Element for sheets in Zone 6.\",\n          \"Applies material from found sheets to new inside sheets.\"\n        ]\n      },\n      \"path2"
+      },
+      "tokens_used": 11753,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB-Brace.mcr\n\n## Overview\nAutomatically generates structural studs and interior cladding sheets for knee walls or bracing within a roof element. It processes existing construction beams to create a detailed sub-structure, including vertical supports and sheathing, while managing material assignments and splitting adjacent sheets.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be inserted into the 3D model. |\n| Paper Space | No | Not applicable for 2D drawings. |\n| Shop Drawing | No | This is a model generation script. |\n\n## Prerequisites\n- **Required Entities**: A constructed **Element** containing the main roof structure (e.g., rafters) and draft beams indicating the brace location.\n- **Minimum Beam Count**: 0 (but requires specific brace beams to function meaningfully).\n- **Required Settings**: Valid Beam Codes in the catalog for Braces, Studs, and Sheets.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB-Brace.mcr` from the file browser.\n\n### Step 2: Configure Properties\nThe script will load and attach to your cursor. Before placing it, open the **Properties Palette** (Ctrl+1) to configure the script parameters:\n- Set the **Beam Codes** to match your catalog (e.g., `KSTL-01` for braces).\n- Define **Zones** for sheeting and splitting logic.\n- Configure **Material** settings (you can type \"Zone 6\" to copy material from existing sheets in that zone).\n\n### Step 3: Select Target Element\n```\nCommand Line: Select Element:\nAction: Click on the roof Element that contains the rafters and the draft brace beams.\n```\n\n### Step 4: Generate Geometry\nOnce the Element is selected, the script will:\n1. Identify the rafters and the brace beams.\n2. Generate vertical studs between the brace and rafters.\n3. Create interior and cover sheets.\n4. Split any existing sheets in the specified zones if required.\n5. Erase the original draft brace beams, replacing them with the detailed assembly.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sBmCodeBrace | Text | KSTL-01 | The code of the draft beams that define the brace/knee wall location. These beams will be replaced. |\n| sBmCodeSupportingStud | Text | KSTL-02 | The material code to use for the vertical studs generated against the rafters. |\n| sBmCodeSheet | Text | KSPL-01 | The material code for the interior sheathing placed on the brace face. |\n| sLabelSheet | Text | | Custom label for the interior sheets. |\n| sMaterialSheet | Text | | Material name for interior sheets. Type \"Zone 6\" or \"Zone 7\" to copy material from existing sheets in those zones. |\n| nZnSheet | Number | 6 | The construction zone index for the newly created interior sheets. |\n| sZnSheetSplit | Dropdown | 7 | Select a zone (e.g., \"7\") to split existing sheets in that zone, or \"No split\" to leave them intact. |\n| sBmCodeCoverSheet | Text | KSPL-02 | The material code for the cover sheets (gables/sides). |\n| dThicknessCoverSheet | Number | 11 | Thickness of the cover sheets (in mm). |\n| sLblCoverSheet | Text | | Custom label for the cover sheets. |\n| sMatCoverSheet | Text | | Specific material name override for cover sheets. |\n| sInfoCoverSheet | Text | | Additional comment or information field for cover sheets. |\n| nZnCoverSheet | Number | 8 | The construction zone index for the cover sheets. |\n| nColorCoverSheet | Number | 1 | The AutoCAD color index (1-255) for displaying the cover sheets. |\n| beamFilterDefinition | Text | | Catalog name of an external filter script (HSB_G-FilterGenBeams) to identify rafters. |\n| sFilterBC | Text | ZKRB-03;... | Semicolon-separated list of beam codes identifying the rafters. Used only if 'beamFilterDefinition' is empty. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Update | Re-runs the calculation based on current properties and geometry. |\n| Erase | Removes the script instance from the element. |\n| Properties | Opens the Properties Palette to edit parameters. |\n\n## Settings Files\n- **Filename**: `HSB_G-FilterGenBeams.mcr`\n- **Location**: TSL Catalog\n- **Purpose**: (Optional) Provides advanced filtering logic to identify rafters if the default string list is insufficient.\n\n## Tips\n- **Material Inheritance**: To ensure the new sheets match the rest of the roof, set `sMaterialSheet` to **\"Zone 6\"** (or the zone number your current roof sheets are in). The script will automatically find and apply the correct material.\n- **Sheet Splitting**: If your brace passes through existing floor or wall sheets, set `sZnSheetSplit` to the zone containing those sheets. The script will automatically cut holes or split them around the new brace geometry.\n- **Workflow**: Draw the generic \"Brace\" beams manually first to define the location, then run this script to convert them into the detailed framed structure.\n\n## FAQ\n- **Q: Why did my original brace beams disappear?**\n  - A: The script is designed to \"consume\" the draft beams defined in `sBmCodeBrace`. It uses them to calculate the geometry and then replaces them with the specific studs and sheets defined in the script.\n- **Q: How do I change the rafter selection?**\n  - A: If your rafters don't match the default codes in `sFilterBC`, you can either update that list with your specific codes (separated by semicolons) or select a custom filter script in `beamFilterDefinition`."
+      },
+      "tokens_used": 6366,
+      "error": null
+    }
+  }
+}

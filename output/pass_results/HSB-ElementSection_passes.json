@@ -1,0 +1,254 @@
+{
+  "filename": "HSB-ElementSection.mcr",
+  "status": "completed",
+  "total_tokens": 54852,
+  "processing_time": 288.7723593711853,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9264,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly collects Viewports via getViewport(), uses Paper Space coordinate methods (vp.ptCenPS(), vp.widthPS()), transforms geometry from Model Space to Paper Space using ms2ps/ps2ms CoordSys, and draws directly using Display objects on the Viewport."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "Element",
+            "TslInst (SectionManager)",
+            "GenBeam",
+            "Sheet",
+            "TrussEntity"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Requires two valid Viewports to be selected (one for the section, one for the Section Manager) and a valid Element associated with the primary Viewport.",
+          "requiredSettings": [
+            "HSB_G-FilterGenBeams.mcr (for filter definitions)",
+            "HSB-SectionManager.mcr (dependency)"
+          ]
+        }
+      },
+      "tokens_used": 5790,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"getViewport\",\n        \"promptOriginal\": \"|Select a viewport for this section|\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      },\n      {\n        \"step\": 2,\n        \"function\": \"getViewport\",\n        \"promptOriginal\": \"|Select the viewport of the section manager|\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [\n    {\n      \"type\": \"showDialog\",\n      \"trigger\": \"On insert (if not executed via catalog key)\",\n      \"title\": null,\n      \"dataSource\": \"Property Palette Definitions\",\n      \"features\": {\n        \"searchable\": false,\n        \"multiSelect\": false\n      }\n    }\n  ],\n  \"opmProperties\": [\n    {\n      \"index\": 0,\n      \"variable\": \"sSeperator01\",\n      \"type\": \"PropString\",\n      \"displayName\": \"Selection\",\n      \"defaultValue\": \"\",\n      \"inputType\": \"text\",\n      \"options\": [],\n      \"category\": null,\n      \"description\": null\n    },\n    {\n      \"index\": 23,\n      \"variable\": \"genBeamFilterDefinition\",\n      \"type\": \"PropString\",\n      \"displayName\": \"     Filter definition for FilterGenBeams\",\n      \"defaultValue\": \"\",\n      \"inputType\": \"dropdown\",\n      \"options\": \"Dynamic (Catalog names from HSB_G-FilterGenBeams"
+      },
+      "tokens_used": 10028,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Generates a filtered 2D cross-section view of a timber element (wall/roof/floor) directly in a PaperSpace viewport, used for creating specific manufacturing or assembly details.\",\n    \"category\": \"ShopDrawing / Detailing\",\n    \"typicalUseCase\": \"Creating a detailed section view that shows only specific structural beams (e.g., filtering out girts or cladding) or visualizing specific tooling/drills within a wall panel on a layout sheet.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"genBeamFilterDefinition\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Selects a pre-configured filter set (from HSB_G-FilterGenBeams) to automatically determine which beams to include in the section based on complex logical rules.\",\n      \"validRange\": \"Names of existing catalog entries in HSB_G-FilterGenBeams\",\n      \"unit\": \"CatalogName\",\n      \"affectsOutput\": \"Controls the visibility of beams in the 2D section; non-matching beams are not drawn.\"\n    },\n    {\n      \"name\": \"sFilterBC\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Manually filters beams to include only those matching specific Beam Codes (e.g., 'STUD', 'PLATE'). Supports a semicolon-separated list.\",\n      \"validRange\": \"String list (e.g., 'STUD;BLOCK')\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Excludes beams whose beam code does not match the list from the section.\"\n    },\n    {\n      \"name\": \"sFilterLabel\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Filters entities by their main Label identifier (e.g., Wall 1, Floor 2).\",\n      \"validRange\": \"String list\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Shows only entities belonging to the specified label(s).\"\n    },\n    {\n      \"name\": \"sFilterSubLabel\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Filters entities by the first sub-label (often used for hierarchical grouping).\",\n      \"validRange\": \"String list\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Refines visibility based on sub-label criteria.\"\n    },\n    {\n      \"name\": \"sFilterSubLabel2\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Filters entities by the second sub-label.\",\n      \"validRange\": \"String list\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Refines visibility based on secondary sub-label criteria.\"\n    },\n    {\n      \"name\": \"sFilterMaterial\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Filters entities by material name (e.g., 'C24', 'GL28h').\",\n      \"validRange\": \"String list\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Shows only elements made of the specified materials.\"\n    },\n    {\n      \"name\": \"sFilterGrade\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Filters entities by timber strength grade.\",\n      \"validRange\": \"String list\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Shows only elements of the specified grade.\"\n    },\n    {\n      \"name\": \"sFilterName\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Filters entities by their specific entity name.\",\n      \"validRange\": \"String list\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Shows only entities matching the name pattern.\"\n    },\n    {\n      \"name\": \"sFilterHsbId\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Filters entities by their unique internal hsbCAD ID.\",\n      \"validRange\": \"String list\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Shows only specific entities if their ID is known.\"\n    },\n    {\n      \"name\": \"sFilterZone\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Filters entities based on their construction zone index (0-9).\",\n      \"validRange\": \"String of numbers (e.g., '0;1')\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Shows only entities located in the specified zones.\"\n    },\n    {\n      \"name\": \"sShowOpeningInfo\",\n      \"technicalDefault\": \"No\",\n      \"businessMeaning\": \"Toggles the display of text descriptions inside openings (e.g., window/door sizes) within the section.\",\n      \"validRange\": \"Yes, No\",\n      \"unit\": \"Boolean\",\n      \"affectsOutput\": \"Adds or removes text labels within the opening cutouts.\"\n    },\n    {\n      \"name\": \"sSectionId\",\n      \"technicalDefault\": \"A\",\n      \"businessMeaning\": \"The identifier label (A, B, C...) placed in the viewport to mark this specific section cut.\",\n      \"validRange\": \"Single Character or Short String\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Updates the label text drawn on the non-plot layer in the viewport.\"\n    },\n    {\n      \"name\": \"sUseDispRep\",\n      \"technicalDefault\": \"No\",\n      \"businessMeaning\": \"Toggles the use of Display Representations (specialized CAD styles for hatching/insulation) instead of standard geometric lines.\",\n      \"validRange\": \"Yes, No\",\n      \"unit\": \"Boolean\",\n      \"affectsOutput\": \"Switches the drawing style of beams/sheets between standard outlines and stylized representation.\"\n    },\n    {\n      \"name\": \"sDispRepBeam\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Selects the specific Display Representation style to use for beams when Display Representation is enabled.\",\n      \"validRange\": \"Available Beam Display Representation Names\",\n      \"unit\": \"CatalogName\",\n      \"affectsOutput\": \"Changes the visual style (hatching, color) of the beams.\"\n    },\n    {\n      \"name\": \"sDispRepSheet\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Selects the specific Display Representation style to use for sheets/panels when Display Representation is enabled.\",\n      \"validRange\": \"Available Sheet Display Representation Names\",\n      \"unit\": \"CatalogName\",\n      \"affectsOutput\": \"Changes the visual style (hatching, color) of the sheets.\"\n    },\n    {\n      \"name\": \"sDimStyle\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Defines the dimension style used for the Section ID label text.\",\n      \"validRange\": \"Available Dimension Styles in drawing\",\n      \"unit\": \"Style\",\n      \"affectsOutput\": \"Changes font, height, and arrow style of the Section label.\"\n    },\n    {\n      \"name\": \"sLayeNoPlot\",\n      \"technicalDefault\": \"G-Anno-View\",\n      \"businessMeaning\": \"Specifies the CAD layer for the Section ID marker, typically set to a non-plotting layer so it doesn't appear on physical prints.\",\n      \"validRange\": \"Valid Layer Name\",\n      \"unit\": \"LayerName\",\n      \"affectsOutput\": \"Moves the Section ID text to the specified layer.\"\n    },\n    {\n      \"name\": \"sLineType\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Defines the line type (e.g., continuous, dashed, hidden) used for the section cut lines.\",\n      \"validRange\": \"Available Line Types in drawing\",\n      \"unit\": \"LineType\",\n      \"affectsOutput\": \"Changes the dash-dot pattern of the section lines.\"\n    },\n    {\n      \"name\": \"nZnIndexDrill\",\n      \"technicalDefault\": \"10\",\n      \"businessMeaning\": \"Determines which construction zone number dictates the color/layer logic for visualizing drill holes and tooling.\",\n      \"validRange\": \"0-10\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Changes the color assignment of drawn drill holes based on zone mapping.\"\n    },\n    {\n      \"name\": \"sZoneCharDrill\",\n      \"technicalDefault\": \"Tooling\",\n      \"businessMeaning\": \"Determines the element layer category (Zone, Info, Dimension, Tooling) for drill visualization. Tooling ('T') is standard for machining info.\",\n      \"validRange\": \"Zone, Info, Dimension, Tooling\",\n      \"unit\": \"Category\",\n      \"affectsOutput\": \"Changes the base layer prefix for drill holes (e"
+      },
+      "tokens_used": 10018,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched (On Insert)",
+          "Prompt user to select primary Viewport for the section",
+          "Prompt user to select Viewport containing the Section Manager",
+          "Verify 2 Viewports were selected; erase instance if not",
+          "Show Dialog for property configuration (if not executed via Catalog Key)",
+          "Store Viewport data and coordinate systems (ms2ps, ps2ms)",
+          "Search for Section Manager TSL instance in the drawing",
+          "Draw error 'No Section Manager Found!' and exit if search fails",
+          "Draw Section ID label (e.g., 'A') on the No-Plot layer in the Viewport",
+          "Retrieve Element linked to the primary Viewport",
+          "Exit if Element is invalid",
+          "Parse and prepare selection filter strings (BeamCodes, Labels, Materials, etc.)",
+          "Generate Filter GenBeams based on Filter Definition property if provided",
+          "Collect and filter Beams from the Element based on all criteria",
+          "Collect Sheets from the Element based on filter criteria",
+          "Define Section Body: Create 3D extrusion of the Element Profile through the Element depth",
+          "Display Representation Check: Iterate Beams and Sheets",
+          "[Display Rep ON] Draw filtered entities using assigned Display Representation styles",
+          "[Display Rep OFF] Perform Boolean Intersection of Beam/Sheet Bodies with Section Body",
+          "Draw intersected Beams and Sheets (transformed to Paper Space)",
+          "Openings Processing:",
+          "Iterate Element Openings",
+          "Intersect Opening Bodies with Section Body",
+          "Draw Opening outlines in Viewport",
+          "Determine vertical context for Opening text (find Top/Bottom beams intersecting the opening)",
+          "Calculate text rotation and position",
+          "[Opening Info ON] Draw Opening Description text at center",
+          "Roof Opening/Truss Check:",
+          "Iterate Roof Openings (RefOp)",
+          "Find intersecting Top/Bottom rafters",
+          "Draw X-marker indicating vertical height",
+          "Draw Opening Description text",
+          "Truss Entity Processing:",
+          "Collect Truss entities from Element Group",
+          "Get Truss Definition and component Bodies",
+          "Intersect Truss component Bodies with Section Body",
+          "Draw intersected Truss components preserving original colors",
+          "Store processed entities (Openings, Trusses) in the Script Map",
+          "Finish"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Source (Catalog vs Manual)",
+            "path1": {
+              "name": "Catalog Insert",
+              "steps": [
+                "Set properties from catalog key immediately",
+                "Skip property dialog"
+              ]
+            },
+            "path2": {
+              "name": "Manual Insert",
+              "steps": [
+                "Execute prompts",
+                "Show Property Dialog"
+              ]
+            }
+          },
+          {
+            "condition": "Section Manager Validity",
+            "path1": {
+              "name": "Manager Missing",
+              "steps": [
+                "Draw Error Text in Viewport",
+                "Halt script execution"
+              ]
+            },
+            "path2": {
+              "name": "Manager Found",
+              "steps": [
+                "Set dependency on Manager",
+                "Proceed to Element processing"
+              ]
+            }
+          },
+          {
+            "condition": "Display Representation (sUseDispRep)",
+            "path1": {
+              "name": "Use Display Rep (Yes)",
+              "steps": [
+                "Get specific Display Rep names for Beams and Sheets",
+                "Draw entities using Display Rep logic (bypassing geometric intersection in some contexts or altering styles)"
+              ]
+            },
+            "path2": {
+              "name": "Use Geometry (No)",
+              "steps": [
+                "Get real bodies of Beams and Sheets",
+                "Boolean Intersection with Section Body",
+                "Draw resulting geometric silhouette"
+              ]
+            }
+          },
+          {
+            "condition": "Opening Geometry Calculation",
+            "path1": {
+              "name": "Valid RealBody",
+              "steps": [
+                "Use entity.realBody() for intersection"
+              ]
+            },
+            "path2": {
+              "name": "Invalid RealBody (Volume = 0)",
+              "steps": [
+                "Use entity.envelopeBody() for intersection"
+              ]
+            }
+          },
+          {
+            "condition": "Vertical Orientation Check",
+            "path1": {
+              "name": "Vertical Section (Y-axis parallel to Viewport Z)",
+              "steps": [
+                "Use Vertical Beams (Studs/Posts) for height calculation"
+              ]
+            },
+            "path2": {
+              "name": "Horizontal Section (Y-axis perpendicular to Viewport Z)",
+              "steps": [
+                "Use Horizontal Beams (Plates/Rafters) for height calculation"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Two valid Viewports selected",
+            "errorMessage": "Script instance is silently erased.",
+            "recovery": "User must re-insert script and ensure 2 viewports are picked."
+          },
+          {
+            "check": "Section Manager TSL exists in drawing",
+            "errorMessage": "Text 'No Section Manager Found!' displayed in center of Viewport.",
+            "recovery": "Insert 'HSB-SectionManager.mcr' script into the target Viewport."
+          },
+          {
+            "check": "Element linked to Viewport",
+            "errorMessage": "Script exits without drawing (Section ID may remain).",
+            "recovery": "Ensure a valid hsbCAD Element is assigned to the primary Viewport."
+          },
+          {
+            "check": "Beam/Sheet Intersection",
+            "errorMessage": "Entity not drawn.",
+            "recovery": "Adjust filter settings or ensure entity is physically within the section cut plane."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Filter Definition",
+            "how": "OPM Property Palette (genBeamFilterDefinition)",
+            "effect": "Recalculates which beams are visible in the section immediately."
+          },
+          {
+            "action": "Toggle Display Representation",
+            "how": "OPM Property Palette (sUseDispRep)",
+            "effect": "Switches drawing style between raw geometry lines and stylized hatching/insulation."
+          },
+          {
+            "action": "Update Section ID",
+            "how": "OPM Property Palette (sSectionId)",
+            "effect": "Updates the text label drawn in the viewport (e.g., changing 'A' to 'B')."
+          },
+          {
+            "action": "Toggle Opening Info",
+            "how": "OPM Property Palette (sShowOpeningInfo)",
+            "effect": "Shows or hides text labels inside the window/door cutouts."
+          },
+          {
+            "action": "Move Viewport",
+            "how": "AutoCAD Grips / Move Command",
+            "effect": "Script recalculates content based on new viewport position (Section stays locked to Element geometry)."
+          },
+          {
+            "action": "Modify Element Geometry",
+            "how": "hsbCAD Element Edit",
+            "effect": "Section redraws automatically to reflect new beam sizes, positions, or added openings."
+          }
+        ]
+      },
+      "tokens_used": 11018,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB-ElementSection.mcr\n\n## Overview\nGenerates a filtered 2D cross-section view of a timber element (wall, roof, or floor) directly within a PaperSpace viewport. It allows for detailed filtering of structural members, visualization of tooling, and display of openings based on a linked Section Manager.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script operates exclusively in PaperSpace layouts. |\n| Paper Space | Yes | Requires two Viewports: one for the section and one for the Section Manager. |\n| Shop Drawing | Yes | Designed for creating specific manufacturing details and assembly views on layout sheets. |\n\n## Prerequisites\n- **Required Entities**:\n  - Two valid Viewports must exist in the layout.\n  - An hsbCAD Element (Wall/Roof/Floor) assigned to the primary Viewport.\n  - An instance of the `HSB-SectionManager.mcr` script loaded in the drawing.\n- **Minimum Beam Count**: 0 (Script handles empty elements gracefully).\n- **Required Settings**:\n  - `HSB_G-FilterGenBeams.mcr`: (Optional but recommended) Provides catalog entries for advanced beam filtering.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB-ElementSection.mcr` from the file dialog.\n\n### Step 2: Select Viewport for Section\n```\nCommand Line: Select a viewport for this section\nAction: Click inside the viewport where you want the 2D section cut to be drawn.\n```\n\n### Step 3: Select Section Manager Viewport\n```\nCommand Line: Select the viewport of the section manager\nAction: Click inside the viewport that contains the HSB-SectionManager instance.\n```\n*Note: If you select fewer than two viewports, the script instance will be erased automatically.*\n\n### Step 4: Configure Properties\nAfter selection, the **Properties Palette** (Ctrl+1) will activate.\n- Adjust filters (Beam Codes, Materials, Labels) to control which parts of the element are drawn.\n- Set the **Section ID** (e.g., \"A\") to label the view.\n- Toggle **Opening Info** or **Display Representation** to change visual styles.\n\n## Properties Panel Parameters\n\n### Selection & Filtering\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| genBeamFilterDefinition | Dropdown | | Select a preset filter logic from the `HSB_G-FilterGenBeams` catalog. |\n| sFilterBC | Text | | Filter by Beam Code (e.g., `STUD;PLATE`). Separate multiple codes with semicolons. |\n| sFilterLabel | Text | | Filter by the main Element Label (e.g., Wall 1). |\n| sFilterSubLabel | Text | | Filter by the first sub-label. |\n| sFilterSubLabel2 | Text | | Filter by the second sub-label. |\n| sFilterMaterial | Text | | Filter by material name (e.g., `C24;GL28h`). |\n| sFilterGrade | Text | | Filter by timber strength grade. |\n| sFilterName | Text | | Filter by the specific entity name. |\n| sFilterHsbId | Text | | Filter by the unique internal hsbCAD ID. |\n| sFilterZone | Text | | Filter by construction zone index (e.g., `0;1`). |\n\n### Visual Settings\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sSectionId | Text | A | The label text (e.g., A, B, 1) placed in the viewport to identify the cut. |\n| sShowOpeningInfo | Dropdown | No | If \"Yes\", displays text descriptions (dimensions) inside window/door openings. |\n| sUseDispRep | Dropdown | No | If \"Yes\", uses Display Representations (hatching/styles) instead of raw geometry. |\n| sDispRepBeam | Text | | The Display Representation style to use for Beams (when `sUseDispRep` is Yes). |\n| sDispRepSheet | Text | | The Display Representation style to use for Sheets (when `sUseDispRep` is Yes). |\n| sLineType | Text | | The linetype used for drawing section cut lines. |\n| sDimStyle | Text | | The dimension style used for the Section ID label text. |\n| sLayeNoPlot | Text | G-Anno-View | The layer for the Section ID marker (usually non-plotting). |\n\n### Tooling & Advanced\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| nZnIndexDrill | Number | 10 | The construction zone index used to determine drill hole color/layer. |\n| sZoneCharDrill | Text | Tooling | The layer category for drilling visualization (Zone, Info, Dimension, Tooling). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Updates the section geometry immediately if the Element model changes. |\n\n## Settings Files\n- **Filename**: `HSB_G-FilterGenBeams.mcr`\n- **Location**: TSL Catalog or Company Folder\n- **Purpose**: Defines complex filtering logic (e.g., \"Show only load-bearing studs\") that can be selected via the `genBeamFilterDefinition` property.\n\n## Tips\n- **Linking Elements**: Ensure the primary Viewport is already linked to the correct hsbCAD Element (Wall/Roof) before inserting the script, or it will exit without drawing.\n- **Cleaning Views**: Use `sFilterBC` (Beam Code) to quickly hide cladding or sheathing materials to show only the structural frame.\n- **Section Manager**: Keep the Section Manager viewport on the same layout sheet. If the Manager is deleted or moved to another tab, this script will display an error.\n- **Visualization**: For presentation plans, enable `sUseDispRep` and assign a hatching style to `sDispRepBeam` to create standard architectural hatch patterns.\n- **Move Viewports**: You can move the script's viewport using standard AutoCAD grips. The section contents will automatically update to remain aligned with the model geometry.\n\n## FAQ\n- **Q: Why do I see the text \"No Section Manager Found!\" in my viewport?**\n  - A: The script cannot locate the `HSB-SectionManager.mcr` instance in the drawing. Ensure you have inserted the Section Manager script into a viewport on this layout.\n- **Q: Why is my section view empty?**\n  - A: Your filters might be too restrictive. Check the `sFilterBC`, `sFilterMaterial`, or `genBeamFilterDefinition` properties. Alternatively, the viewport might not be cutting through the physical geometry of the element.\n- **Q: Can I dimension this section automatically?**\n  - A: This script draws the geometry. Use standard AutoCAD dimensioning tools on top of the generated lines, or check if your Section Manager has automated dimensioning features enabled.\n- **Q: How do I change the label from 'A' to 'Detail 1'?**\n  - A: Select the script instance, open the Properties Palette (Ctrl+1), and change the `sSectionId` property to \"Detail 1\"."
+      },
+      "tokens_used": 8734,
+      "error": null
+    }
+  }
+}

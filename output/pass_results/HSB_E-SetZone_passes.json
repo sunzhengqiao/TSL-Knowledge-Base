@@ -1,0 +1,276 @@
+{
+  "filename": "HSB_E-SetZone.mcr",
+  "status": "completed",
+  "total_tokens": 20828,
+  "processing_time": 222.62306952476501,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2719,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses TslInst.dbCreate with the _kModelSpace argument. It iterates through selected Element objects to modify geometric properties (zone thickness), which is a Model Space operation. It does not use ShopDrawing specific functions (sd_*), #Type E declarations, or Viewport interactions."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1525,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDialog",
+            "trigger": "_bOnInsert (if no execute key)",
+            "title": "Properties",
+            "dataSource": "OPM Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "zoneToChangeProp",
+            "type": "PropInt",
+            "displayName": "|Zone to change|",
+            "defaultValue": 0,
+            "inputType": "dropdown",
+            "options": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "category": "|Element Zone|",
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "newThickness",
+            "type": "PropDouble",
+            "displayName": "|New thickness|",
+            "defaultValue": "U(12)",
+            "inputType": "number",
+            "options": [],
+            "category": "|Element Zone|",
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2539,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Allows the user to batch modify the material thickness of a specific layer (zone) within selected hsbCAD Elements (walls/floors/roofs).",
+          "category": "ElementModification",
+          "typicalUseCase": "Updating the thickness of sheathing or cladding layers across multiple wall elements after a design change, without re-drawing the elements."
+        },
+        "parameters": [
+          {
+            "name": "zoneToChangeProp",
+            "technicalDefault": "0",
+            "businessMeaning": "Selects the specific material layer within the element construction to resize. Indices 1-5 represent layers on the primary side, while indices 6-10 represent layers on the secondary side (mapped internally as negative indices).",
+            "validRange": "1 to 10",
+            "unit": "count",
+            "affectsOutput": "Determines which geometric zone of the element will have its thickness updated."
+          },
+          {
+            "name": "newThickness",
+            "technicalDefault": "U(12)",
+            "businessMeaning": "The new material thickness (depth) to apply to the selected layer.",
+            "validRange": "Positive values (>0). Typical ranges depend on material (e.g., 12mm-22mm for sheathing, 45mm-200mm for structural layers).",
+            "unit": "mm",
+            "affectsOutput": "Directly alters the geometric depth of the specified zone, increasing or decreasing the overall element dimension."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects 'Zone to change'",
+            "effect": "The script uses this index to locate the specific layer; 'New thickness' is then applied to that specific layer.",
+            "cascade": [
+              "newThickness"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Element (Modified)",
+            "description": "The script does not create new geometry but modifies the properties of the selected Element. Specifically, it updates the 'DH' (Depth/Height) property of the target ElemZone.",
+            "appliedTo": "The Element entities selected during the PrEntity prompt."
+          }
+        ]
+      },
+      "tokens_used": 4445,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User launches script (Insertion starts).",
+          "2. Script checks for an Execute Key (Catalog preset).",
+          "3. [Conditional] If no Execute Key found, display Properties Dialog (OPM) for user input.",
+          "4. Save current property values as \"_LastInserted\" catalog defaults.",
+          "5. Prompt user to select Element(s) via command line.",
+          "6. Iterate through selected Elements.",
+          "7. For each Element, spawn a new child TSL instance (dbCreate) passing the Element and a Map flag.",
+          "8. Original Manager instance erases itself (completes insertion phase).",
+          "9. Child instance validates it is attached to exactly one Element.",
+          "10. Child instance loads properties from \"_LastInserted\" catalog.",
+          "11. Child instance calculates the Zone Index based on user selection (mapping 6-10 to negative indices).",
+          "12. Child instance applies the new thickness (DH) to the specific Element Zone.",
+          "13. Child instance erases itself."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Mode Check",
+            "path1": {
+              "name": "Catalog Mode",
+              "steps": [
+                "Script detects valid _kExecuteKey.",
+                "Properties are loaded from catalog.",
+                "Properties Dialog is skipped."
+              ]
+            },
+            "path2": {
+              "name": "Manual Mode",
+              "steps": [
+                "No valid _kExecuteKey found.",
+                "ShowDialog() executes.",
+                "User enters Zone and Thickness in OPM."
+              ]
+            }
+          },
+          {
+            "condition": "Zone Index Mapping (Visual 1-10 to API)",
+            "path1": {
+              "name": "Primary Side (Zones 1-5)",
+              "steps": [
+                "Input zoneIndex <= 5.",
+                "API Index remains positive (1-5)."
+              ]
+            },
+            "path2": {
+              "name": "Secondary Side (Zones 6-10)",
+              "steps": [
+                "Input zoneIndex > 5.",
+                "API Index converted to negative (Formula: 5 - index).",
+                "Result ranges from -1 to -5."
+              ]
+            }
+          },
+          {
+            "condition": "User Selection",
+            "path1": {
+              "name": "Valid Selection",
+              "steps": [
+                "User selects one or more Elements.",
+                "Child instances spawned.",
+                "Modification proceeds."
+              ]
+            },
+            "path2": {
+              "name": "No Selection / Cancel",
+              "steps": [
+                "User cancels PrEntity prompt.",
+                "Manager instance erases itself.",
+                "No changes made."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Recursion Guard (insertCycleCount)",
+            "errorMessage": "None (Silent exit)",
+            "recovery": "N/A - Prevents accidental infinite loops during script spawning."
+          },
+          {
+            "check": "Element Attachment (_Element.length)",
+            "errorMessage": "TN(\"|No element selected!\")",
+            "recovery": "Select a valid Element entity and run again; current instance self-destructs."
+          },
+          {
+            "check": "Element Validity (bIsValid)",
+            "errorMessage": "TN(\"|The selected element is invalid|\")",
+            "recovery": "Ensure the target Element is not deleted or corrupted; current instance self-destructs."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "The script is designed as a 'command' script. It modifies the Element data and immediately self-destructs (eraseInstance). The user interacts directly with the modified Element geometry, not a persistent TSL instance."
+          }
+        ]
+      },
+      "tokens_used": 4773,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-SetZone.mcr\n\n## Overview\nThis script allows you to batch modify the material thickness of a specific layer (zone) within selected hsbCAD Elements (walls, floors, or roofs). It is useful for updating the depth of sheathing, cladding, or structural layers across multiple elements without needing to redraw or manually edit each element's individual composition.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates directly on 3D Element entities in the model. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required entities**: Element (Wall, Floor, or Roof).\n- **Minimum beam count**: 0 (This script works on Elements, not individual Beams).\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_E-SetZone.mcr`\n\n### Step 2: Configure Properties\nUpon launching, the **Properties Palette** (OPM) will display the script parameters. Adjust the settings before proceeding to selection.\n- **Zone to change**: Select the layer number (1-10) you wish to modify.\n- **New thickness**: Enter the desired thickness for that layer.\n\n### Step 3: Select Elements\n```\nCommand Line: Select elements\nAction: Click on the Wall, Floor, or Roof elements you wish to update. You can select multiple elements at once. Press Enter to confirm selection.\n```\n\n### Step 4: Execution\nThe script will automatically apply the new thickness to the specified zone for all selected elements and then finish. No persistent object is left in the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Zone to change | Dropdown (1-10) | 0 | Selects the specific material layer to modify. **1-5** refer to layers on the primary side. **6-10** refer to layers on the secondary side. |\n| New thickness | Number | 12 mm | The new thickness (depth) to apply to the selected layer. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not add persistent context menu options to the drawing entities. |\n\n## Settings Files\n- None\n\n## Tips\n- **Zone Indexing**: If you are unsure which number corresponds to the material layer you want to change, you can check the element's standard properties to see the build-up order, or use the script on a test element first.\n- **Negative Indices**: Internally, zones 6-10 are handled as \"negative\" indices (e.g., -1 to -5), representing the secondary side of the element construction.\n- **Batch Processing**: You can select as many elements as needed in a single command to ensure consistent changes across a project.\n\n## FAQ\n- **Q: What happens if I select \"0\" for the Zone to change?**\n  A: The script may default to the first zone or fail to update depending on internal logic. Always select a value between 1 and 10.\n- **Q: Does this script create new geometry?**\n  A: No, it modifies the existing geometric properties of the selected Elements. The changes will be reflected immediately in the 3D model and subsequent drawings.\n- **Q: Why did the script disappear after running?**\n  A: This is a \"command\" script. It performs the modification and self-destructs (erases its instance) automatically. The changes remain on the Elements."
+      },
+      "tokens_used": 4827,
+      "error": null
+    }
+  }
+}

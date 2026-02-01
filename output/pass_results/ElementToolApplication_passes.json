@@ -1,0 +1,196 @@
+{
+  "filename": "ElementToolApplication.mcr",
+  "status": "completed",
+  "total_tokens": 50700,
+  "processing_time": 278.8359501361847,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "19.05.2025",
+            "author": "Thorsten Huck",
+            "changes": "Disregarding beams that are not perpendicular to the element plane and allowing for rotated truss coordinate systems"
+          },
+          {
+            "version": "1.0",
+            "date": "19.03.2025",
+            "author": "Thorsten Huck",
+            "changes": "initial version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8711,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script operates directly on 'Element', 'GenBeam', and 'Truss' entities using 3D geometric logic (Vector3d, PlaneProfile, CoordSys, Body). It creates 'ElemNail' and calls 'NailLine.dbCreate(el, enl)', which are model space fabrication actions. No 'sd_' prefixes, '#Type E' declarations, or '_Viewport' references found indicating paper space or shop drawing generation."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space with an Element and associated GenBeams/Trusses selected.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5772,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10128,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Automatically generates nail lines or glue areas (visual profiles) on an element based on contact with underlying beams or trusses, handling rotated coordinate systems and edge set-backs.\",\n    \"category\": \"Connection / Automation\",\n    \"typicalUseCase\": \"Applying nailing patterns for floor sheathing or roof boarding onto timber frames where the nail lines must follow the layout of the structural beams below.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"sToolType\",\n      \"technicalDefault\": \"tTTNail\",\n      \"businessMeaning\": \"Determines the type of connection to generate: physical nail lines (ElemNail) or visual glue areas (PlaneProfiles).\",\n      \"validRange\": \"Nail, Glue\",\n      \"unit\": \"enum\",\n      \"affectsOutput\": \"Switches between creating NailLine entities in the database and drawing rectangular profiles on screen.\"\n    },\n    {\n      \"name\": \"nZoneB\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"The construction zone (and associated color/layer) assigned to the generated nail line entity.\",\n      \"validRange\": \"0-99 (Typical hsbCAD zone range)\",\n      \"unit\": \"index\",\n      \"affectsOutput\": \"Sets the color and production properties of the resulting nail line.\"\n    },\n    {\n      \"name\": \"nToolIndex\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"The specific nail catalog index (tool number) to be used for the nailing pattern.\",\n      \"validRange\": \"Defined Nail Catalog Indices\",\n      \"unit\": \"index\",\n      \"affectsOutput\": \"Determines which nail type (diameter, length) from the catalog is referenced by the nail line.\"\n    },\n    {\n      \"name\": \"dSpacing\",\n      \"technicalDefault\": \"150.0\",\n      \"businessMeaning\": \"The pitch or spacing between individual nails along the generated line.\",\n      \"validRange\": \"50.0 - 600.0\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Controls the density of nails created along the contact segments.\"\n    },\n    {\n      \"name\": \"dToolWidth\",\n      \"technicalDefault\": \"0.0\",\n      \"businessMeaning\": \"The width of the glue application area or the visual representation of the nail line (if used for glue).\",\n      \"validRange\": \"0.0 (line) - 500.0\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"When in 'Glue' mode, determines the width of the rectangular profile drawn on the element face.\"\n    },\n    {\n      \"name\": \"dOffsetA\",\n      \"technicalDefault\": \"0.0\",\n      \"businessMeaning\": \"The start set-back distance from the beginning of the contact surface to the start of the nail/glue line.\",\n      \"validRange\": \"0.0 - 200.0\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Shortens the generated line from the starting edge to avoid nailing too close to the beam end.\"\n    },\n    {\n      \"name\": \"dOffsetB\",\n      \"technicalDefault\": \"0.0\",\n      \"businessMeaning\": \"The end set-back distance from the end of the contact surface to the end of the nail/glue line.\",\n      \"validRange\": \"0.0 - 200.0\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Shortens the generated line from the ending edge to avoid nailing too close to the beam end.\"\n    },\n    {\n      \"name\": \"dMerge\",\n      \"technicalDefault\": \"1.0\",\n      \"businessMeaning\": \"The gap tolerance used to merge fragmented contact surfaces into a single continuous nailing area.\",\n      \"validRange\": \"0.1 - 50.0\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"If contact patches are within this distance, they are treated as one continuous surface, preventing multiple short nail lines where one long one is desired.\"\n    },\n    {\n      \"name\": \"nZoneA\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"The display zone used for visualizing the calculation/preview in the CAD environment.\",\n      \"validRange\": \"0-99\",\n      \"unit\": \"index\",\n      \"affectsOutput\": \"Controls the color of the preview elements during calculation or debugging.\"\n    }\n  ],\n  \"parameterDependencies\": [\n    {\n      \"trigger\": \"sToolType == 'Glue'\",\n      \"effect\": \"Enables 'dToolWidth' usage for geometry creation and ignores 'nToolIndex' and 'dSpacing' for nail creation.\",\n      \"cascade\": [\"dToolWidth\", \"nToolIndex\", \"dSpacing\"]\n    },\n    {\n      \"trigger\": \"sToolType == 'Nail'\",\n      \"effect\": \"Disables 'dToolWidth' visual geometry and requires 'nToolIndex' and 'dSpacing' to generate nail entities.\",\n      \"cascade\": [\"nToolIndex\", \"dSpacing\", \"dToolWidth\"]\n    }\n  ],\n  \"outputEntities\": [\n    {\n      \"type\": \"NailLine\",\n      \"description\": \"Production nail lines representing fastening patterns.\",\n      \"appliedTo\": \"The selected Element (parent).\"\n    },\n    {\n      \""
+      },
+      "tokens_used": 9708,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User inserts script and selects an Element and associated GenBeams/Trusses.",
+          "2. Script initializes properties (sToolType, nZoneB, dSpacing, dOffsetA/B, dMerge, dToolWidth).",
+          "3. Script projects and filters underlying entities to find contact candidates perpendicular to the element plane.",
+          "4. Contact surfaces are grouped by Z-Plane (height level).",
+          "5. For each group, contact profiles are calculated and optionally merged based on 'dMerge' tolerance.",
+          "6. Contact segments are trimmed by 'dOffsetA' (start) and 'dOffsetB' (end).",
+          "7. Script branches based on 'sToolType' (Nail vs Glue) to generate output.",
+          "8. If 'Nail' mode: Generate ElemNail objects. If 'bCreateNail' is true, commit to database; otherwise, show preview.",
+          "9. If 'Glue' mode: Generate PlaneProfile visuals (lines or rectangles based on 'dToolWidth') and store in SubMapX."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "sToolType (Nail vs Glue)",
+            "path1": {
+              "name": "Nail Mode",
+              "steps": [
+                "Process segments as nail lines.",
+                "Apply spacing (dSpacing).",
+                "If bCreateNail is true: Write 'NailLine' entities to the database.",
+                "If bCreateNail is false: Add 'ElemNail' tools to element for preview only."
+              ]
+            },
+            "path2": {
+              "name": "Glue Mode",
+              "steps": [
+                "Process segments as glue areas.",
+                "If dToolWidth > 0: Draw rectangular profiles.",
+                "If dToolWidth = 0: Draw simple lines.",
+                "Store geometry in SubMapX('Glue[]') for persistence."
+              ]
+            }
+          },
+          {
+            "condition": "dMerge > dEps (Merge Tolerance)",
+            "path1": {
+              "name": "Merge Enabled",
+              "steps": [
+                "Perform boolean union on contact profiles within tolerance.",
+                "Shrink and expand profiles to close gaps and smooth edges.",
+                "Generate segments from merged profiles."
+              ]
+            },
+            "path2": {
+              "name": "Merge Disabled",
+              "steps": [
+                "Process raw contact profiles individually.",
+                "Generate segments directly from intersections."
+              ]
+            }
+          },
+          {
+            "condition": "Successful Contact Detection",
+            "path1": {
+              "name": "Contact Found",
+              "steps": [
+                "Proceed to generate nail/glue entities.",
+                "Set _Pt0 to the average midpoint of segments for grip point."
+              ]
+            },
+            "path2": {
+              "name": "No Contact",
+              "steps": [
+                "Report 'nothing to nail'.",
+                "Remove any existing SubMapX or tools.",
+                "Halt execution."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Contact Area",
+            "errorMessage": "nothing to nail",
+            "recovery": "Select supporting beams/trusses that actually overlap with the element, or adjust the Merge tolerance if contacts are fragmented."
+          },
+          {
+            "check": "Perpendicularity (v1.1 logic)",
+            "errorMessage": "Implicit filter (no message, entities ignored)",
+            "recovery": "Ensure beams are generally perpendicular to the element plane to be processed."
+          },
+          {
+            "check": "Segment Intersection",
+            "errorMessage": "Segment discarded silently",
+            "recovery": "Adjust dOffsetA/B or dToolWidth to ensure tool area intersects the beam contact profile."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Properties (OPM)",
+            "how": "AutoCAD Properties Palette",
+            "effect": "Changing sToolType, Spacing, Offsets, or Zones triggers an immediate recalculation of the nail/glue lines."
+          },
+          {
+            "action": "Execute Context Menu Commands",
+            "how": "Right-click context menu",
+            "effect": "Triggers like 'Create Naillines' (sets bCreateNail=true) or 'Add/Remove Entities' modify the script state and geometry selection."
+          },
+          {
+            "action": "Grip Edit",
+            "how": "Drag the script insertion point (_Pt0)",
+            "effect": "Moves the script instance (geometry is tied to Element/Beams, so this primarily moves the script origin, not the geometry itself, though TSLs may use _Pt0 for reference)."
+          }
+        ]
+      },
+      "tokens_used": 10427,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# ElementToolApplication.mcr\n\n## Overview\nThis script automates the generation of nail lines or visualizes glue areas on a timber element (such as floor sheathing or roof boarding) based on its contact with underlying beams or trusses. It handles rotated layouts, edge set-backs, and merges fragmented contact zones into continuous fastening lines.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates directly on 3D model entities (Elements, GenBeams, Trusses). |\n| Paper Space | No | Not intended for 2D drawings or shop layouts. |\n| Shop Drawing | No | This is a fabrication/modeling tool, not a detailing tool. |\n\n## Prerequisites\n- **Required Entities**: One primary Element (e.g., a CLT panel or board) and at least one GenBeam or Truss positioned underneath it.\n- **Minimum Beam Count**: 1 (the underlying structural member).\n- **Required Settings**: None specific (uses standard hsbCAD Nail Catalog).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `ElementToolApplication.mcr`\n\n### Step 2: Select Element\n```\nCommand Line: Select Element:\nAction: Click on the panel or boarding element (the parent) where you want to apply nails or glue.\n```\n\n### Step 3: Select Supporting Entities\n```\nCommand Line: Select beams/trusses (or press Enter to auto-detect):\nAction: Select the GenBeams or Trusses supporting the element. If the script supports auto-detection, you may press Enter to find beams immediately below the element.\n```\n\n### Step 4: Configure Parameters\n```\nAction: Press Esc to finish selection. The script will calculate preview lines.\nOpen the Properties Palette (Ctrl+1) to adjust parameters such as spacing, offsets, or tool type.\n```\n\n### Step 5: Commit Changes\n```\nAction: Right-click on the script instance and select \"Create Naillines\" from the context menu to finalize the generation of physical nail entities in the database.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **sToolType** | dropdown | Nail | Select **Nail** to create physical nail lines or **Glue** to create visual rectangular profiles only. |\n| **nZoneB** | index | 0 | The construction zone (color/layer) assigned to the generated nail line entity. |\n| **nToolIndex** | index | 0 | The specific nail catalog index (tool number) defining the nail type and size. |\n| **dSpacing** | double (mm) | 150.0 | The distance between individual nails along the line (pitch). |\n| **dToolWidth** | double (mm) | 0.0 | The width of the glue area (used only if ToolType is **Glue**). If 0, a simple line is drawn. |\n| **dOffsetA** | double (mm) | 0.0 | Set-back distance from the start of the contact surface. Use this to avoid nailing too close to the beam end. |\n| **dOffsetB** | double (mm) | 0.0 | Set-back distance from the end of the contact surface. Use this to avoid nailing too close to the beam end. |\n| **dMerge** | double (mm) | 1.0 | The gap tolerance. If contact surfaces are closer than this distance, they will be merged into one continuous line. |\n| **nZoneA** | index | 0 | The display zone for preview/visual calculation elements. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Create Naillines** | Commits the previewed geometry to the database as physical NailLine entities. |\n| **Add/Remove Entities** | Allows you to modify the selection of beams or trusses associated with the element without re-inserting the script. |\n| **Recalculate** | Refreshes the script based on current geometry or property changes (usually automatic, but available here). |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script relies on the standard hsbCAD Nail Catalog and does not require external XML settings files.\n\n## Tips\n- **Merging Lines**: If you see multiple short nail lines where you expect one long line, increase the **dMerge** value.\n- **Edge Safety**: Use **dOffsetA** and **dOffsetB** to prevent nails from being placed too close to the edge of the beam or the element, which might be required by engineering standards.\n- **Rotated Systems**: The script supports trusses with rotated coordinate systems; ensure the beams are generally perpendicular to the element plane for accurate detection.\n- **Visualization**: Switch **sToolType** to **Glue** temporarily to visualize the exact contact area as a solid block if you are unsure where the nails are being placed.\n\n## FAQ\n- **Q: The script reports \"nothing to nail\". Why?**\n  **A:** Ensure the beams or trusses are actually physically touching (overlapping) with the Element in 3D space. Also, ensure the beams are generally perpendicular to the element face; skewed beams may be filtered out.\n  \n- **Q: How do I switch between nailing and gluing?**\n  **A:** Change the **sToolType** property in the Properties Palette. **Glue** mode draws visuals only; **Nail** mode creates production data.\n\n- **Q: My nail lines are too short or don't cover the whole beam.**\n  **A:** Check your **dOffsetA** and **dOffsetB** values. If they are too high, they might be cutting off the nail lines. Also, check if the beam is fully underneath the element."
+      },
+      "tokens_used": 5954,
+      "error": null
+    }
+  }
+}

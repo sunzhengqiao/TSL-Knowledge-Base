@@ -1,0 +1,208 @@
+{
+  "filename": "hsb_FlipBlockingOnWalls.mcr",
+  "status": "completed",
+  "total_tokens": 16769,
+  "processing_time": 802.1242473125458,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "07.10.2009",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2535,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses getElement() and el.beam() to access 3D geometry. It performs transformations (setToRotation, transformBy) directly on Beam objects. It lacks sd_* prefixes, _Viewport calls, or references to drawing entities. The script erases itself after execution, typical of model modification tools."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam (specifically type _kSFBlocking)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing at least one Element with valid geometry",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2391,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getElement",
+              "promptOriginal": "Please select a Element",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 1972,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Reorients solid blocking members within a selected wall element, rotating them 90 degrees and shifting them in an alternating pattern.",
+          "category": "Framing/Editing",
+          "typicalUseCase": "A user needs to change the grain direction or profile orientation of wall blocking (e.g., turning flat blocking on edge) and staggering their positions."
+        },
+        "parameters": [],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Beam Transformation",
+            "description": "The script finds all blocking beams within the element. It rotates each 90 degrees around its length (X-axis). It then shifts each blocking beam half its depth along the wall's Y-axis, alternating the shift direction (left/right) for each sequential piece.",
+            "appliedTo": "Beams of type _kSFBlocking found within the selected Element."
+          }
+        ]
+      },
+      "tokens_used": 1832,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched via command or catalog",
+          "Check insert cycle count to prevent multiple executions",
+          "Prompt user to select a single Element on screen",
+          "Store selected Element in _Element array and pause for calculation",
+          "Validate that an Element was selected and that it is valid",
+          "Extract Element's local coordinate system (Origin, X, Y, Z vectors)",
+          "Retrieve all Beams contained within the Element",
+          "Filter Beams to isolate only those of type '_kSFBlocking' (Solid Blocking)",
+          "Sort the filtered blocking beams based on their distance from the Element origin along the X-axis",
+          "Iterate through the sorted list of blocking beams",
+          "For each beam: Create a rotation transformation (90 degrees around beam's local X-axis)",
+          "For each beam: Create a translation transformation (Shift along Element's Y-axis)",
+          "Calculate shift direction: Even indices shift positive Y, Odd indices shift negative Y",
+          "Calculate shift distance: 50% of the beam's depth in the Y direction",
+          "Apply transformations to the Beam geometry",
+          "Erase the script instance from the model",
+          "Exit"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count check",
+            "path1": {
+              "name": "Cycle > 1",
+              "steps": [
+                "Erase script instance",
+                "Return (Stop execution)"
+              ]
+            },
+            "path2": {
+              "name": "Cycle == 1 (First Run)",
+              "steps": [
+                "Prompt user for Element selection",
+                "Continue to processing"
+              ]
+            }
+          },
+          {
+            "condition": "Selection Validation",
+            "path1": {
+              "name": "No Element Selected or Invalid",
+              "steps": [
+                "Erase script instance",
+                "Return (Stop execution)"
+              ]
+            },
+            "path2": {
+              "name": "Valid Element Selected",
+              "steps": [
+                "Extract geometry data",
+                "Process Beams"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Processing Loop (Shift Direction)",
+            "path1": {
+              "name": "Even Index (0, 2, 4...)",
+              "steps": [
+                "Rotate beam 90 deg",
+                "Shift beam +50% depth along Element Y-axis"
+              ]
+            },
+            "path2": {
+              "name": "Odd Index (1, 3, 5...)",
+              "steps": [
+                "Rotate beam 90 deg",
+                "Shift beam -50% depth along Element Y-axis"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "No explicit error message; script silently exits via eraseInstance().",
+            "recovery": "User must ensure they select a valid hsbCAD Element when prompted."
+          },
+          {
+            "check": "Element Validity",
+            "errorMessage": "No explicit error message; script silently exits if el.bIsValid() returns false.",
+            "recovery": "User must select a valid, non-corrupted Element."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None (Script Self-Destructs)",
+            "how": "N/A",
+            "effect": "The script executes immediately upon Element selection and calls eraseInstance(). It does not remain in the drawing as an editable object. Changes must be undone via standard AutoCAD Undo (Ctrl+Z) or reapplied by running the script again."
+          }
+        ]
+      },
+      "tokens_used": 4298,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_FlipBlockingOnWalls.mcr\n\n## Overview\nThis script modifies the orientation and position of solid blocking members within a selected wall element. It rotates each piece of blocking 90 degrees and staggers their placement along the wall to create an alternating pattern.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script must be run in the 3D model. |\n| Paper Space | No | Not applicable for 2D drawings. |\n| Shop Drawing | No | Not intended for production drawings. |\n\n## Prerequisites\n- **Required Entities:** An existing Wall Element containing Solid Blocking beams (type `_kSFBlocking`).\n- **Minimum Beam Count:** At least one piece of solid blocking within the element to see a change.\n- **Required Settings:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse to the script location and select `hsb_FlipBlockingOnWalls.mcr`.\n\n### Step 2: Select Wall Element\n```\nCommand Line: Please select a Element\nAction: Click on the wall element that contains the blocking you wish to flip.\n```\n**Note:** Select the entire wall element, not the individual blocking beams.\n\n### Step 3: Automatic Processing\nOnce the element is selected, the script will automatically:\n1. Identify all solid blocking beams within the wall.\n2. Rotate every piece 90 degrees.\n3. Shift them alternately left and right (relative to the wall axis).\n\nThe script instance will disappear immediately after processing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script runs immediately and does not expose editable parameters in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | This script does not remain in the drawing and has no context menu options. |\n\n## Settings Files\n- **Filename:** None\n- **Location:** N/A\n- **Purpose:** N/A\n\n## Tips\n- **Undoing Changes:** Since the script deletes itself immediately after running, use the standard AutoCAD `Undo` command (Ctrl+Z) to revert the changes if the result is not desired.\n- **Beam Type:** Only \"Solid Blocking\" (`_kSFBlocking`) is affected. Other beam types like studs or headers will remain unchanged.\n- **Staggering:** The script automatically alternates the shift direction for each subsequent piece of blocking along the wall.\n\n## FAQ\n- **Q: I ran the script but nothing happened. Why?**\n  A: Ensure you selected an element that actually contains Solid Blocking beams. If the element contains no blocking, or only other types of framing, the script will finish without making visible changes.\n\n- **Q: How do I run the script again on the same wall?**\n  A: Simply launch the script again via `TSLINSERT` and select the element. You can re-run it as many times as needed (though running it twice effectively restores the original orientation and shifts them again).\n\n- **Q: Can I adjust the amount of rotation?**\n  A: No, the script is hardcoded to rotate exactly 90 degrees and shift by 50% of the beam depth."
+      },
+      "tokens_used": 3741,
+      "error": null
+    }
+  }
+}

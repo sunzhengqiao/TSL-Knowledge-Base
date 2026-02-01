@@ -1,0 +1,196 @@
+{
+  "filename": "hsb_AssignEntitiesToLooseGroup.mcr",
+  "status": "completed",
+  "total_tokens": 32774,
+  "processing_time": 192.2220470905304,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "25.11.2010",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.1",
+            "date": "28.11.2010",
+            "author": null,
+            "changes": "Look for the Electrical TSL that could be attach to the loose sheets and it's setting them as a NO Tool by keeping the display"
+          },
+          {
+            "version": "1.3",
+            "date": "31.03.2016",
+            "author": null,
+            "changes": "Fix issue where the naillines that were part of the sheets that were assing to loose were not removed from the element."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": [
+          "hsb_ManageLooseGroupEntities",
+          "CCG_ElectricalSockets"
+        ]
+      },
+      "tokens_used": 4708,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select GenBeam objects. It accesses Element properties (element(), coordSys()), manipulates Groups (elementGroup(), addEntity), erases NailLines (el.nailLine()), and creates TSL instances (tsl.dbCreate) attached to Elements. These are all 3D Model Space operations. No ShopDrawing or Viewport specific code found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3977,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\\nSelect beams/sheets to set loose",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sName",
+            "type": "PropString",
+            "displayName": "|New name for the entity|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": "|If the name is set, it will overwrite the current name of the entity|"
+          },
+          {
+            "index": 0,
+            "variable": "nColor",
+            "type": "PropInt",
+            "displayName": "Color to set on the entities",
+            "defaultValue": "-1",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "Set the color of the entities, (-1) will keep the existing color"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5587,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Converts selected beams or sheets into 'loose' items within an element, moving them to a specific subgroup, removing associated nailings, and handling conflicts with electrical TSLs.",
+          "category": "Data Management / Production Preparation",
+          "typicalUseCase": "When a user needs to designate specific sheathing or cladding boards as loose packs for delivery instead of nailed assemblies, while keeping them logically grouped with the main wall element."
+        },
+        "parameters": [
+          {
+            "name": "sName",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Assigns a new catalog name or production label to the selected beams/sheets. This overrides the existing name in the element's structure and Bill of Materials (BOM).",
+            "validRange": "Any text string",
+            "unit": "Text",
+            "affectsOutput": "Updates the Entity Name property in the CAD model and the production list/BOM."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "-1",
+            "businessMeaning": "Assigns a specific CAD color to the selected entities to visually distinguish them as 'loose' or 'special' items in the 3D model.",
+            "validRange": "Integers 0-255 (AutoCAD Color Index), or -1 to retain original color",
+            "unit": "Color Index",
+            "affectsOutput": "Changes the display color of the selected GenBeams in the Model Space. Does not affect CNC geometry."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Entity selection logic",
+            "effect": "Script execution only proceeds if valid GenBeams are selected during insertion.",
+            "cascade": [
+              "sName",
+              "nColor"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Group Structure",
+            "description": "Creates or adds entities to a 'Loose' sub-group within the Element's group hierarchy (e.g., ElementName\\Loose).",
+            "appliedTo": "The parent Element of the selected beams."
+          },
+          {
+            "type": "TSL Instance (Management)",
+            "description": "Inserts an instance of 'hsb_ManageLooseGroupEntities' onto the parent Element to manage the loose items.",
+            "appliedTo": "The parent Element of the selected beams."
+          },
+          {
+            "type": "Machining (Erase)",
+            "description": "Erases NailLines that fall within the projection of the selected loose items.",
+            "appliedTo": "The parent Element (specifically the NailLines associated with the selected zones)."
+          },
+          {
+            "type": "TSL Property (Modification)",
+            "description": "Modifies properties of 'CCG_ElectricalSockets' TSLs found within the loose area, setting their machining to 'No Tool' while keeping display active.",
+            "appliedTo": "Attached 'CCG_ElectricalSockets' TSLs within the relevant zone."
+          }
+        ]
+      },
+      "tokens_used": 5567,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. Script launched by user in Model Space.\",\n    \"2. System checks insertCycleCount; if > 1, script erases self to prevent loops.\",\n    \"3. Command line prompt 'Select beams/sheets to set loose' is displayed.\",\n    \"4. User selects one or more GenBeam entities and confirms.\",\n    \"5. Script validates selection and stores entities in internal _Entity array.\",\n    \"6. Script triggers a recalculation (re-inserts self with saved data).\",\n    \"7. Script iterates through each stored GenBeam.\",\n    \"8. For each beam: Parent Element and Coordinate System are retrieved.\",\n    \"9. A 'Loose' subgroup is located or created within the Element's structure.\",\n    \"10. The GenBeam is moved into the 'Loose' subgroup.\",\n    \"11. [Conditional] Entity Name is updated if sName property is set.\",\n    \"12. [Conditional] Entity Color is updated if nColor property is not -1.\",\n    \"13. [Conditional] If this is the first beam from this specific Element, the 'Loose' group is marked as deliverable and the management TSL 'hsb_ManageLooseGroupEntities' is inserted on the Element.\",\n    \"14. Script calculates a shadow profile of the beam to check for intersections.\",\n    \"15. [Conditional] Electrical TSLs (CCG_ElectricalSockets) intersecting the beam profile are found and set to 'No Tool' (machining disabled).\",\n    \"16. [Conditional] NailLines within the Element zone intersecting the beam profile are identified and erased.\",\n    \"17. After processing all beams, script checks all TSLs on affected Elements for dependencies.\",\n    \"18. TSLs dependent on the 'Loose' beams are recalculated.\",\n    \"19. Script instance is erased from the model (task complete).\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Color Property Value (nColor)\",\n      \"path1\": {\n        \"name\": \"Keep Original\",\n        \"steps\": [\n          \"Check nColor == -1\",\n          \"Skip color assignment\",\n          \"Retain GenBeam's current display color\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Apply New Color\",\n        \"steps\": [\n          \"Check nColor != -1\",\n          \"Execute gb.setColor(nColor)\",\n          \"GenBeam updates to specified color index\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Name Property Value (sName)\",\n      \"path1\": {\n        \"name\": \"Keep Original\",\n        \"steps\": [\n          \"Check sName is empty string\",\n          \"Skip name assignment\",\n          \"Retain GenBeam's current catalog name\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Rename Entity\",\n        \"steps\": [\n          \"Check sName is not empty\",\n          \"Execute gb.setName(sName)\",\n          \"GenBeam name is overwritten for production lists\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Element First Encounter\",\n      \"path1\": {\n        \"name\": \"New Element\",\n        \"steps\": [\n          \"Element handle not found in sAllHandle array\",\n          \"Add Element to elAll list\",\n          \"Mark 'Loose' group as deliverable container\",\n          \"Insert 'hsb_ManageLooseGroupEntities' TSL on Element\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Existing Element\",\n        \"steps\": [\n          \"Element handle found in sAllHandle array\",\n          \"Skip Manager TSL insertion\",\n          \"Only add current beam to the existing 'Loose' group\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Electrical Socket Intersection\",\n      \"path1\": {\n        \"name\": \"Intersection Detected\",\n        \"steps\": [\n          \"Script 'CCG_ElectricalSockets' found in same Zone\",\n          \"Socket Polyline intersects Beam Shadow Profile (Area > 4mm²)\",\n          \"Set TSL PropString(4) to 'No'\",\n          \"Transform TSL (trigger update)\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"No Intersection\",\n        \"steps\": [\n          \"Socket Polyline does not overlap or area too small\",\n          \"Leave Electrical TSL properties unchanged\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"NailLine Intersection\",\n      \"path1\": {\n        \"name\": \"NailLine Inside Profile\",\n        \"steps\": [\n          \"NailLine path vertices checked against Beam Profile\",\n          \"Vertex found inside profile (pointInProfile == true)\",\n"
+      },
+      "tokens_used": 7770,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_AssignEntitiesToLooseGroup\n\n## Overview\nThis script converts selected beams or sheets into \"loose\" items within an element, moving them to a specific subgroup for separate delivery or production. It automatically removes associated nailings and handles conflicts with electrical TSLs to ensure correct machining output.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates on 3D GenBeam entities. |\n| Paper Space | No | Not applicable for 2D views or layouts. |\n| Shop Drawing | No | Not intended for shop drawing detailing. |\n\n## Prerequisites\n- **Required Entities:** At least one GenBeam (beam or sheet) must exist in the model.\n- **Minimum Beam Count:** 1\n- **Required Settings:** None (The script relies on internal logic and dependencies like `hsb_ManageLooseGroupEntities`).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_AssignEntitiesToLooseGroup.mcr`\n\n### Step 2: Select Entities\n```\nCommand Line: Select beams/sheets to set loose\nAction: Click on the beams or sheets you wish to mark as loose, then press Enter.\n```\n\n### Step 3: Automatic Processing\nOnce selected, the script automatically:\n1. Moves the items to a \"Loose\" subgroup within the Element.\n2. Applies any Property settings (Name/Color) defined in the Properties Palette.\n3. Inserts a management TSL (`hsb_ManageLooseGroupEntities`) on the main element.\n4. Erases nail lines located under the selected sheets.\n5. Sets intersecting electrical sockets to \"No Tool\" (display only, no machining).\n6. Erases itself from the model upon completion.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| New name for the entity | Text | (Empty) | If a name is entered here, it will overwrite the current catalog name of the selected beam/sheet. This affects the production list and labels. |\n| Color to set on the entities | Integer | -1 | Changes the display color of the selected entities. Use `0-255` for specific AutoCAD colors, or leave as `-1` to keep the original color. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not add specific options to the right-click context menu. |\n\n## Settings Files\n- **Filename:** N/A\n- **Location:** N/A\n- **Purpose:** This script does not use external settings files. It interacts directly with element properties and other TSL instances.\n\n## Tips\n- **Visual Verification:** Use the \"Color to set on the entities\" property (e.g., set to Red) before running the script to visually confirm which sheets have been processed as loose.\n- **Electrical Sockets:** If you have electrical sockets embedded in the sheets being marked as loose, the script automatically disables the tooling for them (\"No Tool\") so they won't be cut, but they will remain visible for reference.\n- **Nail Removal:** You do not need to manually delete nail lines; the script calculates the projection of the loose sheets and removes any conflicting nail lines automatically.\n\n## FAQ\n- **Q: Can I use this script on parts of a wall that are already nailed?**\n  - A: Yes. The script will identify and erase the nail lines associated with the selected sheets, converting them from a nailed assembly to a loose pack.\n- **Q: Does the script delete the sheets from the model?**\n  - A: No. It moves the sheets into a logical subgroup named \"Loose\" within the element structure. They remain physically visible in the 3D model but are treated differently for production lists and machining.\n- **Q: What does the \"New name for the entity\" property do?**\n  - A: It allows you to rename the selected items (e.g., changing a standard sheathing name to \"LOOSE SHEETING\"). This name update is reflected in your Bills of Materials (BOM) and production labels."
+      },
+      "tokens_used": 5165,
+      "error": null
+    }
+  }
+}

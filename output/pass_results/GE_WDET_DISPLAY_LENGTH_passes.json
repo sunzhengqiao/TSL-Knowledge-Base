@@ -1,0 +1,309 @@
+{
+  "filename": "GE_WDET_DISPLAY_LENGTH.mcr",
+  "status": "completed",
+  "total_tokens": 29625,
+  "processing_time": 485.4327528476715,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6020,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script filename uses the 'GE_' prefix (General Element), indicating it is intended to attach to elements in the model. It selects 'Element' entities and casts them to 'ElementWall'. It utilizes 3D geometric properties of the element (el.plOutlineWall, el.vecX, el.vecZ) to calculate display positions without referencing Viewports or Sheets. There is no 'sd_' prefix or Multipage logic."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "ElementWall"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "DimStyle (Default: Brockport)"
+          ]
+        }
+      },
+      "tokens_used": 3968,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "strDim",
+            "type": "PropString",
+            "displayName": "DimStyle",
+            "defaultValue": "Brockport",
+            "inputType": "dropdown",
+            "options": [
+              "System DimStyles List"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "dText",
+            "type": "PropDouble",
+            "displayName": "Text Height. If 0 uses DimStyle",
+            "defaultValue": "0",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "dOffset",
+            "type": "PropDouble",
+            "displayName": "Offset from Wall",
+            "defaultValue": "14",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4895,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically labels the horizontal length of Wall Elements in the 3D model, primarily for verification or pre-detailing visualization.",
+          "category": "Annotation/Marking",
+          "typicalUseCase": "A user needs to quickly see the overall length of a wall element on the shop floor or during assembly planning without generating full 2D shop drawings yet."
+        },
+        "parameters": [
+          {
+            "name": "strDim",
+            "technicalDefault": "Brockport",
+            "businessMeaning": "Specifies the CAD Dimension Style (DimStyle) used to format the length text (e.g., precision, arrow style, font).",
+            "validRange": "Any valid DimStyle loaded in the drawing (e.g., Standard, Architectural, Metric).",
+            "unit": "String (Name)",
+            "affectsOutput": "Changes the visual appearance (font, units, decimals) of the length text label."
+          },
+          {
+            "name": "dText",
+            "technicalDefault": "0",
+            "businessMeaning": "Explicitly sets the text height for the length label. A value of 0 means the height is automatically inherited from the specified DimStyle.",
+            "validRange": "0 to 1000 (depending on model scale, typically 50mm-300mm for visibility in model space).",
+            "unit": "Current Drawing Length Units (inches in script default)",
+            "affectsOutput": "If > 0, overrides the text size defined in the DimStyle; if 0, uses DimStyle size."
+          },
+          {
+            "name": "dOffset",
+            "technicalDefault": "14",
+            "businessMeaning": "The distance the length label is placed away from the wall surface. Ensures the text does not overlap the wall geometry.",
+            "validRange": "10 to 500 (or sufficient clearance for wall thickness/insulation).",
+            "unit": "Current Drawing Length Units (inches in script default)",
+            "affectsOutput": "Moves the label text closer to or further from the wall surface along the wall's vertical (Z) axis."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dText is set to 0",
+            "effect": "The text height is controlled entirely by the configuration of the DimStyle selected in strDim.",
+            "cascade": [
+              "strDim"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Text/Annotation",
+            "description": "A 3D text string displaying the calculated length of the element wall.",
+            "appliedTo": "The selected Wall Element (ElementWall)."
+          }
+        ]
+      },
+      "tokens_used": 3714,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch Script (Insert command)",
+          "2. Prompt user to select a set of elements (PrEntity)",
+          "3. Filter selected entities: verify if they are Wall elements",
+          "4. Iterate through valid Walls: Clone script instance onto each selected wall using dbCreate",
+          "5. Erase the initial 'parent' script instance",
+          "6. Instance Execution (on each wall): Retrieve the attached ElementWall",
+          "7. Check if ElementWall is valid; if not, erase instance",
+          "8. Check for duplicate script instances on the same element; if found, erase current instance",
+          "9. Calculate the Centroid of the wall outline to determine relative positioning",
+          "10. Determine Label Offset Direction: Calculate if Centroid is 'above' or 'below' the arrow reference point",
+          "11. Calculate Text Rotation: Compare Wall angle to UCS to determine the quadrant and appropriate text rotation",
+          "12. Calculate Length Source: Search for Bottom Plate beams within the element",
+          "13. Conditional Length Calculation: Use Bottom Plate vertices if found, otherwise use Envelope vertices",
+          "14. Calculate final numeric length based on projected X-axis distance",
+          "15. Render 3D Text Label at calculated position with dynamic rotation"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User Selection Content",
+            "path1": {
+              "name": "Valid Walls Selected",
+              "steps": [
+                "Script instances are cloned onto each wall",
+                "Parent instance is erased",
+                "Script proceeds to execution phase on each wall"
+              ]
+            },
+            "path2": {
+              "name": "No Walls or Invalid Selection",
+              "steps": [
+                "_Element array remains empty",
+                "Loop does not execute",
+                "Parent instance is erased",
+                "Process terminates silently"
+              ]
+            }
+          },
+          {
+            "condition": "Duplicate Detection",
+            "path1": {
+              "name": "Existing Instance Found",
+              "steps": [
+                "Script identifies another instance of GE_WDET_DISPLAY_LENGTH on the element",
+                "Current instance executes eraseInstance()",
+                "Process terminates (prevents double labels)"
+              ]
+            },
+            "path2": {
+              "name": "No Existing Instance",
+              "steps": [
+                "Script continues to calculation logic",
+                "Generates and displays the label"
+              ]
+            }
+          },
+          {
+            "condition": "Geometry Source (Length Calculation)",
+            "path1": {
+              "name": "Bottom Plates Detected",
+              "steps": [
+                "Iterate through element beams",
+                "Identify beams of type _kSFBottomPlate",
+                "Extract extreme vertices from Bottom Plate realBody",
+                "Calculate length based on these vertices"
+              ]
+            },
+            "path2": {
+              "name": "No Bottom Plates",
+              "steps": [
+                "Fallback to el.plEnvelope() (Overall bounding geometry)",
+                "Extract vertices from Envelope",
+                "Calculate length based on Envelope vertices"
+              ]
+            }
+          },
+          {
+            "condition": "Wall Orientation (Quadrant Check)",
+            "path1": {
+              "name": "Top Right Quadrant (approx)",
+              "steps": [
+                "Rotate CoordSys by dAngleXP",
+                "Text reads upright relative to screen X/Y"
+              ]
+            },
+            "path2": {
+              "name": "Bottom Right Quadrant (approx)",
+              "steps": [
+                "Check angle against dSwitchAngle (58 deg)",
+                "Apply rotation to ensure text is not upside down"
+              ]
+            },
+            "path3": {
+              "name": "Top Left Quadrant (approx)",
+              "steps": [
+                "Check angle against dSwitchAngle (58 deg)",
+                "Apply rotation to ensure text is not upside down"
+              ]
+            },
+            "path4": {
+              "name": "Bottom Left Quadrant (approx)",
+              "steps": [
+                "Rotate CoordSys by dAngleXN",
+                "Text reads upright relative to screen X/Y"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Selected Entity Type",
+            "errorMessage": "No explicit error message displayed.",
+            "recovery": "User must select Wall elements (ElementWall) during the initial PrEntity prompt. Selecting other entities (Beams, generic Elements) results in them being ignored."
+          },
+          {
+            "check": "Element Validity",
+            "errorMessage": "No explicit error message displayed.",
+            "recovery": "The script calls el.bIsValid(). If false, the instance erases itself. User must ensure the target wall is valid geometry in hsbCAD."
+          },
+          {
+            "check": "Instance Uniqueness",
+            "errorMessage": "No explicit error message displayed.",
+            "recovery": "Script prevents multiple instances on the same wall. If run twice, the second run detects the first and deletes itself, leaving only the original label."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Adjust Label Appearance",
+            "how": "OPM (Object Properties Manager)",
+            "effect": "Modifying 'strDim' changes the Dimension Style (font/arrows). Modifying 'dText' overrides text height. Changes update immediately."
+          },
+          {
+            "action": "Adjust Label Position",
+            "how": "OPM or Grip Edit (Wall Geometry)",
+            "effect": "Modifying 'dOffset' moves the label closer/further from the wall. Moving the Wall itself (via grips) updates the label position and length value automatically."
+          },
+          {
+            "action": "Update Wall Geometry",
+            "how": "hsbCAD Edit Commands / Grips",
+            "effect": "If the wall length changes (e.g., extending a plate), the script recalculates the length and updates the text string on the next recalculation."
+          }
+        ]
+      },
+      "tokens_used": 6340,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_WDET_DISPLAY_LENGTH\n\n## Overview\nAutomatically labels the horizontal length of Wall Elements in the 3D model. It is primarily used for verification or pre-detailing visualization to display dimensions without generating full 2D shop drawings.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script attaches to Wall Elements in the 3D model. |\n| Paper Space | No | Not intended for layout sheets or viewports. |\n| Shop Drawing | No | This is a model annotation tool, not a generation script. |\n\n## Prerequisites\n- **Required Entities**: Wall Elements (`ElementWall`).\n- **Minimum Beam Count**: 0 (The script works on the Element itself, but searches for Bottom Plates if present).\n- **Required Settings**: A valid Dimension Style (DimStyle) loaded in the drawing (Default: \"Brockport\").\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_WDET_DISPLAY_LENGTH.mcr`\n\n### Step 2: Select Wall Elements\n```\nCommand Line: Select a set of elements\nAction: Click on one or more Wall Elements in the model view, then press Enter.\n```\n*Note: The script will filter out non-wall entities automatically.*\n\n### Step 3: Automatic Placement\nThe script will automatically clone itself onto each selected wall, calculate the length based on bottom plates or the wall envelope, and place the text label.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| DimStyle | dropdown | Brockport | Selects the CAD Dimension Style used to format the text (font, arrows, precision). Uses the list of DimStyles currently loaded in the drawing. |\n| Text Height. If 0 uses DimStyle | number | 0 | Sets the height of the text label. A value of 0 means the text height is inherited from the selected DimStyle. |\n| Offset from Wall | number | 14 | The distance the label is placed away from the wall surface to ensure it does not overlap the geometry. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| (None) | This script does not add specific custom actions to the right-click context menu. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Automatic Updates**: If you edit the wall geometry (e.g., stretch it or modify plates), the label will automatically recalculate the length and update its position.\n- **Avoiding Duplicates**: The script automatically detects if it is already attached to a wall. If you run the script on the same wall twice, it will not create duplicate labels.\n- **Visibility**: If the text seems too small, try setting the `Text Height` property to a specific value (e.g., 50 or 100) instead of 0, or increase the `Offset from Wall` if it is buried inside the wall geometry.\n- **Source Geometry**: The script prioritizes measuring \"Bottom Plates\" if they exist in the element. If no bottom plates are found, it measures the overall bounding box (Envelope) of the wall.\n\n## FAQ\n- **Q: Why did nothing happen when I ran the script?**\n  - A: You likely selected entities that are not valid Wall Elements (`ElementWall`), or the script detected an existing instance on the wall and exited to prevent duplicates.\n- **Q: How can I change the font of the label?**\n  - A: Change the `DimStyle` property in the Properties Palette to a style that uses your desired font. Alternatively, you can manually create a DimStyle in AutoCAD with the specific font you want before running the script.\n- **Q: The text is upside down.**\n  - A: The script attempts to calculate text rotation based on wall orientation. If it appears incorrect, you may need to check the coordinate system of the wall or the specific DimStyle text settings."
+      },
+      "tokens_used": 4688,
+      "error": null
+    }
+  }
+}

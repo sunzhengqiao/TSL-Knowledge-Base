@@ -1,0 +1,214 @@
+{
+  "filename": "HSB_D-Brace.mcr",
+  "status": "completed",
+  "total_tokens": 53041,
+  "processing_time": 243.02877569198608,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9439,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script prompts user to 'Select a viewport' on insert, obtains Viewport object and Element, calculates Model Space to Paper Space transform (ms2ps), and draws dimensions transformed to Paper Space. It erases itself if _Viewport.length() == 0."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "Element",
+            "GenBeam",
+            "Sheet"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Paper Space Layout containing a Viewport with a valid hsbCAD Element.",
+          "requiredSettings": [
+            "HSB_G-FilterGenBeams (Catalog entry)",
+            "Dimension Styles"
+          ]
+        }
+      },
+      "tokens_used": 7907,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10158,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Automatically creates detailed 2D shop drawings of diagonal wind bracing in Paper Space, including dimensions for the brace, intersecting beams (studs/rafters), sheets, and the brace angle.\",\n    \"category\": \"ShopDrawing\",\n    \"typicalUseCase\": \"A detailer uses this script in a layout tab to generate dimensioned details of wind bracing panels for manufacturing or installation drawings.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"sSectionName\",\n      \"technicalDefault\": \" \",\n      \"businessMeaning\": \"Selects the specific TSL script instance (section) that defines the bracing configuration to dimension.\",\n      \"validRange\": \"List of TSL names found in the viewport\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Determines which geometric section is used as the basis for dimensioning.\"\n    },\n    {\n      \"name\": \"genBeamFilterDefinition\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Applies a catalog-based filter to select specific structural beams (e.g., studs) to dimension.\",\n      \"validRange\": \"Catalog entries from 'HSB_G-FilterGenBeams'\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Filters which GenBeams are included in the output dimensions.\"\n    },\n    {\n      \"name\": \"sFilterBC\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Filters elements by their Beam Code (e.g., specific material grades or structural roles).\",\n      \"validRange\": \"Semicolon-separated list of codes (e.g., 'C24;KSTL-01')\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Narrows down the selection of beams and sheets to those matching the codes.\"\n    },\n    {\n      \"name\": \"sFilterLabel\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Filters elements by their label or material name.\",\n      \"validRange\": \"String matching labels\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Selects elements with specific labels for dimensioning.\"\n    },\n    {\n      \"name\": \"sFilterZone\",\n      \"technicalDefault\": \"1;7\",\n      \"businessMeaning\": \"Filters elements based on construction zones or phases.\",\n      \"validRange\": \"Semicolon-separated integers\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Restricts dimensioning to elements in the specified zones.\"\n    },\n    {\n      \"name\": \"sDimStartBrace\",\n      \"technicalDefault\": \"|No|\",\n      \"businessMeaning\": \"Enables or disables dimensioning of the diagonal brace itself.\",\n      \"validRange\": \"Yes/No\",\n      \"unit\": \"Boolean\",\n      \"affectsOutput\": \"Controls visibility of the brace's length and offset dimensions.\"\n    },\n    {\n      \"name\": \"sDimEndRafter\",\n      \"technicalDefault\": \"|No|\",\n      \"businessMeaning\": \"Enables or disables dimensioning of the end rafter (horizontal beam at the brace's end).\",\n     "
+      },
+      "tokens_used": 9738,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User launches script (OnInsert event triggered).",
+          "2. Script checks insert cycle; if > 1, it erases itself (cleanup).",
+          "3. User is prompted to 'Select a viewport' in Paper Space.",
+          "4. User is prompted to 'Select a position' for the label insertion point.",
+          "5. Configuration Dialog is displayed (unless executed via catalog key).",
+          "6. Script verifies a valid Viewport was selected; otherwise, erases instance.",
+          "7. Script retrieves the hsbCAD Element from the Viewport; returns if invalid.",
+          "8. Script calculates coordinate transforms (Model Space to Paper Space).",
+          "9. Script scans current space for valid TSL instances to populate 'Section Name' list.",
+          "10. Script collects Beams and Sheets from the Element.",
+          "11. Filters are applied (BeamCode, Label, Zone, Catalog Filter) to separate structural elements (Brace, Supporting Beams, Studs) and Sheets.",
+          "12. Drawing Phase: Renders Name/Description label at selected point.",
+          "13. Conditional Phase A (Start Brace): Calculates geometry. If 'Dimension start brace' is Yes, draws brace dimensions. If 'Dimension end rafter' is Yes, draws perpendicular rafter dimensions.",
+          "14. Conditional Phase B (Beams): Loops through collected beams. If 'Dimension beams' is Yes, draws dimensions (alternating offsets based on index). If 'Show position numbers' is Yes, draws leaders and posnums.",
+          "15. Conditional Phase C (Sheets): If 'Dimension sheets' is Yes, calculates sheet profile points and draws dimensions.",
+          "16. Conditional Phase D (Angle): If 'Show arc' is Yes, draws angle arc, markers, and text label."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script Insertion Cycle",
+            "path1": {
+              "name": "First Cycle",
+              "steps": [
+                "Prompt Viewport",
+                "Prompt Point",
+                "Show Dialog",
+                "Initialize Instance"
+              ]
+            },
+            "path2": {
+              "name": "Subsequent Cycle (> 1)",
+              "steps": [
+                "Erase Instance",
+                "Exit Script"
+              ]
+            }
+          },
+          {
+            "condition": "Viewport Selection Validation",
+            "path1": {
+              "name": "Valid Viewport",
+              "steps": [
+                "Get Element",
+                "Calculate Transforms",
+                "Proceed to Drawing"
+              ]
+            },
+            "path2": {
+              "name": "No Viewport Selected",
+              "steps": [
+                "Erase Instance",
+                "Exit Script"
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Trigger (Filtering)",
+            "path1": {
+              "name": "Filter this element",
+              "steps": [
+                "Activate Map Filter for current Element",
+                "Recalculate/Redraw"
+              ]
+            },
+            "path2": {
+              "name": "Remove filter",
+              "steps": [
+                "Clear Map Filter",
+                "Recalculate/Redraw"
+              ]
+            }
+          },
+          {
+            "condition": "Inside Frame Reference (sInsideFrame)",
+            "path1": {
+              "name": "Yes",
+              "steps": [
+                "Calculate brace dimensions using the inside of the frame as the reference point."
+              ]
+            },
+            "path2": {
+              "name": "No",
+              "steps": [
+                "Calculate brace dimensions using standard/default reference points."
+              ]
+            }
+          },
+          {
+            "condition": "Beam Dimensioning Layout Logic",
+            "path1": {
+              "name": "Even Beam Index",
+              "steps": [
+                "Draw dimension at standard offset (dDimBeamsOffset)."
+              ]
+            },
+            "path2": {
+              "name": "Odd Beam Index",
+              "steps": [
+                "Draw dimension at double offset (2 * dDimBeamsOffset) to prevent overlap."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Viewport Selection",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Script erases itself if no viewport is selected. User must re-run script and select a viewport."
+          },
+          {
+            "check": "hsbCAD Element Validity",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Script halts execution if the viewport does not contain a valid hsbCAD Element. User must select a viewport with model data."
+          },
+          {
+            "check": "Entity Matching (BeamCodes/Labels)",
+            "errorMessage": "Missing Dimensions/Entities",
+            "recovery": "If dimensions do not appear, user must check property filters (sBmCodeBeams, sBmCodeBrace, sFilterBC) to ensure they match the actual entities in the model."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Dimension Settings",
+            "how": "Object Properties Palette (OPM)",
+            "effect": "Toggles visibility of dimensions (Start Brace, Beams, Sheets), changes offsets, modifies text styles, or updates dimension layouts (Delta/Cumulative). Updates immediately upon change."
+          },
+          {
+            "action": "Filter Elements",
+            "how": "Right-click Context Menu (Recalc Triggers)",
+            "effect": "Selecting 'Filter this element' restricts the script to only process the current element, hiding dimensions for others. 'Remove filter' resets visibility."
+          },
+          {
+            "action": "Move Label",
+            "how": "Grip Edit",
+            "effect": "Dragging the insertion point (_Pt0) moves the Name/Description label text."
+          },
+          {
+            "action": "Change Entity Selection",
+            "how": "OPM (String Properties)",
+            "effect": "Changing BeamCodes, Labels, or Zones filters updates which beams/sheets are dimensioned in the next recalculation."
+          }
+        ]
+      },
+      "tokens_used": 10112,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_D-Brace.mcr\n\n## Overview\nAutomatically creates detailed 2D shop drawings of diagonal wind bracing in Paper Space. It generates dimensions for the brace length, intersecting beams (studs/rafters), sheet profiles, and the brace angle based on your model data.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script is intended for detailing in layouts. |\n| Paper Space | Yes | Primary usage. Requires a viewport with a model. |\n| Shop Drawing | Yes | Used for manufacturing or installation drawings. |\n\n## Prerequisites\n- **Required Entities:** A Paper Space Layout containing a Viewport with a valid hsbCAD Element. The Element must contain GenBeams and/or Sheets.\n- **Minimum Beam Count:** 0\n- **Required Settings:**\n  - `HSB_G-FilterGenBeams` Catalog entry.\n  - Standard hsbCAD Dimension Styles.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_D-Brace.mcr`\n\n### Step 2: Select Viewport\n```\nCommand Line: Select a viewport\nAction: Click inside the viewport on the layout tab that displays the wall or panel containing the diagonal bracing you wish to detail.\n```\n\n### Step 3: Select Label Position\n```\nCommand Line: Select a position\nAction: Click in Paper Space where you want the Name/Description label for the bracing detail to be placed.\n```\n\n### Step 4: Configure (Optional)\nIf not executed via a catalog key, a configuration dialog may appear allowing you to preset filters (Section Name, Beam Codes). Otherwise, use the Properties Panel to adjust settings after insertion.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sSectionName | Dropdown | (Empty) | Selects the specific TSL script instance (section) defining the bracing configuration to dimension. |\n| genBeamFilterDefinition | Text | (Empty) | Applies a catalog-based filter to select specific structural beams (e.g., studs) to dimension. |\n| sFilterBC | Text | (Empty) | Filters elements by their Beam Code (e.g., specific material grades). Use semicolons for multiple codes (e.g., \"C24;KSTL-01\"). |\n| sFilterLabel | Text | (Empty) | Filters elements by their label or material name. |\n| sFilterZone | Text | 1;7 | Filters elements based on construction zones or phases. Use semicolon-separated integers. |\n| sDimStartBrace | Yes/No | No | Enables dimensioning of the diagonal brace itself (length and offsets). |\n| sDimEndRafter | Yes/No | No | Enables dimensioning of the end rafter (horizontal beam at the brace's end). |\n| bDimBeams | Yes/No | (Varies) | Controls the visibility of dimensions for the intersecting vertical/horizontal beams. |\n| bShowPosNum | Yes/No | (Varies) | Toggles the display of position numbers with leader lines for beams. |\n| bDimSheets | Yes/No | (Varies) | Enables dimensioning of sheet profiles within the braced panel. |\n| bShowArc | Yes/No | (Varies) | Toggles the display of the angle arc and degree measurement for the brace. |\n| dDimBeamsOffset | Number | (Varies) | Sets the offset distance for beam dimensions to avoid overlap. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Filter this element | Restricts the script to only process the currently selected element, hiding dimensions for other elements. |\n| Remove filter | Clears the element filter, restoring visibility of dimensions for all valid elements in the set. |\n\n## Settings Files\n- **Filename**: `HSB_G-FilterGenBeams` (Catalog)\n- **Location**: Company or Install path\n- **Purpose**: Provides saved filter definitions to quickly select specific groups of beams for dimensioning.\n\n## Tips\n- **Moving the Label:** Click the label grip inserted in Step 3 to drag the Name/Description to a new location without affecting dimensions.\n- **Avoiding Overlap:** If beam dimensions are too crowded, the script automatically alternates offsets. You can manually increase `dDimBeamsOffset` in the properties if they still clash.\n- **Missing Dimensions:** If expected dimensions do not appear, check the `sFilterBC` (Beam Code) and `sFilterLabel` properties to ensure they match the actual properties of the beams in your model.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I ran it?**\n  **A:** This usually happens if you canceled the \"Select a viewport\" prompt or if the selected viewport does not contain a valid hsbCAD Element. Run the command again and ensure you click inside an active viewport with model data.\n- **Q: The angle dimensions are not showing up.**\n  **A:** Check the Properties Palette for the `bShowArc` (or similar \"Show arc\") parameter and ensure it is set to \"Yes\".\n- **Q: How do I dimension only specific studs?**\n  **A:** Use the `sFilterLabel` or `genBeamFilterDefinition` properties to narrow down the selection to the specific group of studs you want to dimension."
+      },
+      "tokens_used": 5687,
+      "error": null
+    }
+  }
+}

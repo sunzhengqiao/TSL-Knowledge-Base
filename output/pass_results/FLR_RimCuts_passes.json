@@ -1,0 +1,196 @@
+{
+  "filename": "FLR_RimCuts.mcr",
+  "status": "completed",
+  "total_tokens": 18580,
+  "processing_time": 164.90733647346497,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2073,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses `getBeam()` to select a beam and `Beam.dbSplit()` to modify the 3D geometry, which are Model Space database operations. The script executes `eraseInstance()` upon completion, indicating it functions as a utility tool rather than a persistent drawing object or layout processor. No `sd_` prefixes, `_Viewport` checks, or `#Type E` entities are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2287,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getBeam",
+              "promptOriginal": "\\nSelect a Beam",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "On Insert (_bOnInsert)",
+            "title": null,
+            "dataSource": "OPM Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dMaxRim",
+            "type": "PropDouble",
+            "displayName": "Max Rim Length",
+            "defaultValue": "U(144)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3849,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Splits a selected long beam into multiple shorter segments based on a user-defined maximum length.",
+          "category": "Framing/Utility",
+          "typicalUseCase": "Breaking down a continuous rim joist or band beam into manageable stock lengths (e.g., splitting a 60' rim into 12' or 16' sections) to match material availability or shipping constraints."
+        },
+        "parameters": [
+          {
+            "name": "dMaxRim",
+            "technicalDefault": "U(144)",
+            "businessMeaning": "The target maximum length for each resulting beam segment. The script calculates how many cuts are required to ensure no piece exceeds this length.",
+            "validRange": "Typical lumber stock lengths (e.g., 8' to 20' / 2400mm to 6000mm).",
+            "unit": "Length (drawing units)",
+            "affectsOutput": "Directly controls the frequency of cuts. A smaller value results in more, shorter beam segments; a larger value results in fewer, longer segments."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Beam (Split)",
+            "description": "The original beam is modified via database splits to generate multiple sequential beam entities.",
+            "appliedTo": "The single user-selected Beam."
+          }
+        ]
+      },
+      "tokens_used": 3060,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User inserts the script (FLR_RimCuts.mcr).",
+          "2. Script triggers '_bOnInsert' state.",
+          "3. Show Properties Dialog (optional, via 'showDialogOnce').",
+          "4. Prompt user: '\\nSelect a Beam'.",
+          "5. User selects a beam entity.",
+          "6. Script stores beam as 'bm' and proceeds to logic.",
+          "7. Check if beam's solid length is greater than 'dMaxRim'.",
+          "8. [Conditional] If true, calculate number of splits needed.",
+          "9. [Conditional] Iterate through splits, cutting the beam at 'dMaxRim' intervals along its local X-axis.",
+          "10. Erase the script instance from the drawing.",
+          "11. Script execution ends."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Beam solid length > 'Max Rim Length' (dMaxRim)",
+            "path1": {
+              "name": "Split Beam",
+              "steps": [
+                "Calculate integer number of splits (n = length / dMaxRim).",
+                "Set reference point to beam start.",
+                "Loop 'n' times.",
+                "Move reference point by dMaxRim.",
+                "Execute dbSplit at reference point.",
+                "Update the active beam reference to the longer resulting segment to continue splitting."
+              ]
+            },
+            "path2": {
+              "name": "No Action",
+              "steps": [
+                "Skip splitting logic.",
+                "Proceed to erase script instance."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam Selection",
+            "errorMessage": "Implicit: Script may fail or crash if no beam is selected.",
+            "recovery": "User must select a valid hsbCAD Beam entity during the command line prompt."
+          },
+          {
+            "check": "Max Rim Length (dMaxRim) Value",
+            "errorMessage": "Potential math error if dMaxRim is 0 or negative.",
+            "recovery": "User must ensure the 'Max Rim Length' property in the OPM is a positive number before running."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "The script executes 'eraseInstance()' immediately after processing, removing itself from the drawing. It acts as a one-time utility command rather than a persistent smart object. To modify the cut, the user must delete the resulting beams and run the script again or manually edit the beams."
+          }
+        ]
+      },
+      "tokens_used": 3567,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# FLR_RimCuts.mcr\n\n## Overview\nSplits a selected long beam into multiple shorter segments based on a user-defined maximum length. This utility is useful for breaking down continuous rim joists or band beams into manageable stock lengths to match material availability.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script modifies 3D beam geometry in the model. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | This is a modeling tool, not a detailing tool. |\n\n## Prerequisites\n- **Required Entities**: At least one existing `Beam` entity in the drawing.\n- **Minimum Beam Count**: 1.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `FLR_RimCuts.mcr`\n\n### Step 2: Configure Properties (If prompted)\nDepending on your configuration, a Properties dialog may appear automatically upon insertion.\n- **Action**: Verify the **Max Rim Length** value is correct. If not, type the desired value (e.g., 2400 for mm or 8' for imperial) and click OK.\n\n### Step 3: Select Beam\n```\nCommand Line: \nSelect a Beam\n```\n**Action**: Click on the beam in the drawing that you wish to split into smaller pieces.\n\n### Step 4: Execution\n- **Action**: The script will automatically calculate the number of cuts required and split the beam into segments of the specified length.\n- **Result**: The script instance will delete itself from the drawing, leaving only the modified beams.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Max Rim Length | Number | U(144) | The target maximum length for each resulting beam segment. The script will cut the beam so that no resulting piece exceeds this length. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | The script runs once upon insertion and erases itself. There are no persistent right-click menu options. |\n\n## Settings Files\n- None required.\n\n## Tips\n- **Unit Independence**: The script uses internal unit conversion functions, so the **Max Rim Length** property works correctly whether your project is set to Metric (mm) or Imperial (inches).\n- **Undoing**: Since the script erases itself after running, you can use the standard AutoCAD `UNDO` command to revert the beam to its original single-piece state immediately after execution.\n- **Zero Length Error**: Ensure the **Max Rim Length** is set to a positive number. If set to 0, the script may fail to calculate the cuts.\n\n## FAQ\n- **Q: What happens if my beam is shorter than the Max Rim Length?**\n  A: The script will detect that the beam does not need splitting, perform no action, and simply erase itself.\n- **Q: Can I use this on curved beams?**\n  A: The script splits based on the solid length along the beam's local X-axis. While it primarily targets linear rim joists, it will calculate length based on the centerline of the selected beam.\n- **Q: Why did the script disappear from my drawing?**\n  A: This is a \"utility\" script designed to perform a one-time action. It automatically removes itself (`eraseInstance`) after modifying the geometry to keep your drawing clean."
+      },
+      "tokens_used": 3744,
+      "error": null
+    }
+  }
+}

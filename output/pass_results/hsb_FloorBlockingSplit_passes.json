@@ -1,0 +1,305 @@
+{
+  "filename": "hsb_FloorBlockingSplit.mcr",
+  "status": "completed",
+  "total_tokens": 33615,
+  "processing_time": 535.5537662506104,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "10.03.2010",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.1",
+            "date": "22.03.2010",
+            "author": "",
+            "changes": "Fix the issue with the split when the Extrusion Profile was define with the real shape\n\t\t\t\tFix Issue with profile when multiple profiles are used in the same element."
+          },
+          {
+            "version": "1.2",
+            "date": "11.11.2010",
+            "author": "",
+            "changes": "Made the spliting process more robust"
+          },
+          {
+            "version": "1.5",
+            "date": "12.02.2015",
+            "author": "",
+            "changes": "Added array of planes for each beam to split to check against all vertical beams.  \nThe reason for this is extract contact face in place wall missing out smaller timbers which were a fair distance away from the top plane."
+          },
+          {
+            "version": "1.6",
+            "date": "12.02.2015",
+            "author": "",
+            "changes": "Commented out code that deletes blockings if it intersects with ppShapeBeams as it was deleting blockings that were created because a ridge beam's shadowProfile was shaddowing the new blockings."
+          },
+          {
+            "version": "2.1",
+            "date": "28.09.2017",
+            "author": "",
+            "changes": "Change the bmIntersect.realBody() with  bmIntersect.envelopeBody(true,true);"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6027,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script operates on 3D Element and Beam objects using methods like realBody(), dbSplit(), and stretchDynamicTo(). It uses PrEntity to select construction Elements. No ShopDrawing (Sd*) classes, Viewport logic, or Paper Space specific APIs detected."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing construction Elements with Beams.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4955,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Please select Elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sBeamCodes",
+            "type": "PropString",
+            "displayName": "Enter beam codes:",
+            "defaultValue": "BLOCKING;BATTEN",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5629,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically detects and splits floor blocking or batten beams at intersection points with other structural members within selected construction elements.",
+          "category": "Framing",
+          "typicalUseCase": "Used to prepare floor sub-structures (like blocking between joists) by cutting them to fit around intersecting beams, ensuring correct lengths and connections."
+        },
+        "parameters": [
+          {
+            "name": "sBeamCodes",
+            "technicalDefault": "BLOCKING;BATTEN",
+            "businessMeaning": "Defines the specific types of beams (based on their naming convention or code) that the script should identify and process. It tells the script which members are the 'blocking' that need to be cut.",
+            "validRange": "Semicolon-separated list of catalog beam codes (e.g., 'BLOCKING;STRUT;BATTEN'). Codes must match exactly (case-insensitive).",
+            "unit": "String",
+            "affectsOutput": "Determines which beams are split. If a beam code is not in this list, the beam is ignored. If no beams match the list, the script does nothing."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Split Beams",
+            "description": "Target beams are split into two or more segments at the intersection points with other beams. Ends are stretched to touch the intersecting beams, and cuts are applied if necessary.",
+            "appliedTo": "Beams matching the codes defined in 'sBeamCodes' within the user-selected Elements."
+          }
+        ]
+      },
+      "tokens_used": 4288,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script launched; check if running in Insert mode (_bOnInsert).",
+          "2. [Insert Mode] Check insertCycleCount to prevent double execution.",
+          "3. [Insert Mode] Display Properties dialog for 'sBeamCodes'.",
+          "4. [Insert Mode] Prompt user to select Construction Elements (PrEntity).",
+          "5. [Insert Mode] Store selected Elements in the global _Element array.",
+          "6. [Insert Mode] Return and pause script execution.",
+          "7. [Calc Mode] Script triggered to run calculation (Recalc).",
+          "8. [Calc Mode] Validate that elements were selected; if not, erase instance.",
+          "9. [Calc Mode] Parse 'sBeamCodes' string into an array of upper-case beam codes.",
+          "10. [Calc Mode] Iterate through each selected Element.",
+          "11. [Calc Mode] Extract Element Coordinate System and all Beams.",
+          "12. [Calc Mode] Identify beams perpendicular to Element X (bmVer).",
+          "13. [Calc Mode] If no perpendicular beams found, skip current Element.",
+          "14. [Calc Mode] Classify Element beams: Match 'sBeamCodes' to create list of 'Beams to Split' and 'Potential Intersections'.",
+          "15. [Calc Mode] Loop through each Beam in the 'To Split' list.",
+          "16. [Calc Mode] Identify which 'Potential Intersections' actually physically intersect the current beam body (ignoring parallel beams).",
+          "17. [Calc Mode] Generate 2D shadow profiles of intersecting beams and merge them.",
+          "18. [Calc Mode] Calculate resulting segments of the target beam based on the merged shadow profile.",
+          "19. [Calc Mode] Iterate through calculated segments to determine operation.",
+          "20. [Calc Mode] Conditionally execute 'Split' (if internal void) or 'Cut' (if edge overlap).",
+          "21. [Calc Mode] Stretch the ends of the resulting beams dynamically to the nearest intersecting beam.",
+          "22. [Calc Mode] Finalize modifications and erase script instance."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Phase (Insert vs Calculation)",
+            "path1": {
+              "name": "Insert Phase",
+              "steps": [
+                "Check insert cycle count",
+                "Show properties dialog",
+                "Prompt for Elements",
+                "Store Elements",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "Calculation Phase",
+              "steps": [
+                "Validate Elements exist",
+                "Parse beam codes",
+                "Process geometry",
+                "Modify beams",
+                "Erase instance"
+              ]
+            }
+          },
+          {
+            "condition": "Element Selection Validation",
+            "path1": {
+              "name": "Valid Selection",
+              "steps": [
+                "_Element array contains data",
+                "Proceed to beam processing"
+              ]
+            },
+            "path2": {
+              "name": "Empty Selection",
+              "steps": [
+                "_Element.length() == 0",
+                "eraseInstance()",
+                "Stop script"
+              ]
+            }
+          },
+          {
+            "condition": "Element Geometry Check",
+            "path1": {
+              "name": "Valid Floor Geometry",
+              "steps": [
+                "Perpendicular beams (bmVer) found",
+                "Continue processing beams"
+              ]
+            },
+            "path2": {
+              "name": "Invalid/Empty Geometry",
+              "steps": [
+                "bmVer.length() < 1",
+                "Return (skip current element)"
+              ]
+            }
+          },
+          {
+            "condition": "Modification Type (Split vs Cut)",
+            "path1": {
+              "name": "Internal Split",
+              "steps": [
+                "Calculated segment lies inside beam profile (pptS)",
+                "Execute bmS.dbSplit(ptTo, ptFrom)",
+                "Update reference beam"
+              ]
+            },
+            "path2": {
+              "name": "End Cut",
+              "steps": [
+                "Calculated segment overlaps edge (point outside profile)",
+                "Execute bmS.addToolStatic(Cut)",
+                "Apply end treatment"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "(Silent failure)",
+            "recovery": "User must re-run the script and select valid Elements."
+          },
+          {
+            "check": "Existence of Beams",
+            "errorMessage": "(Silent failure)",
+            "recovery": "Ensure selected Elements contain beams. Script requires beams perpendicular to the Element's X-axis to define the floor orientation."
+          },
+          {
+            "check": "Beam Code Matching",
+            "errorMessage": "(Silent failure)",
+            "recovery": "Ensure the 'sBeamCodes' property matches the exact codes (case-insensitive) of the blocking/batten beams intended for splitting."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Script Self-Deletion",
+            "how": "Automatic (eraseInstance)",
+            "effect": "The script instance is removed from the drawing immediately after processing. No grips or context menus remain."
+          },
+          {
+            "action": "Beam Modification",
+            "how": "Direct Database Update (dbSplit, addToolStatic)",
+            "effect": "Target beams are permanently split into separate entities or cut. Original beams are replaced by new segments."
+          },
+          {
+            "action": "Dynamic Stretching",
+            "how": "stretchDynamicTo",
+            "effect": "The newly created blocking beams maintain a dynamic link to the intersecting beams. If intersecting beams move, the blockings will stretch to fit."
+          }
+        ]
+      },
+      "tokens_used": 7812,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_FloorBlockingSplit.mcr\n\n## Overview\nThis script automatically detects and splits floor blocking or batten beams within selected construction elements. It cuts these members to fit around intersecting structural beams and dynamically stretches them to maintain contact with those intersections.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D construction elements and beams. |\n| Paper Space | No | Not designed for layout views or 2D drawings. |\n| Shop Drawing | No | Not intended for manufacturing detailing views. |\n\n## Prerequisites\n- **Required Entities**: Construction Elements containing Beams.\n- **Minimum Beam Count**: At least one beam must exist within the element. The script requires perpendicular beams within the element to define the floor orientation.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_FloorBlockingSplit.mcr`\n\n### Step 2: Configure Beam Codes\n```\nAction: Before selecting elements, check the AutoCAD Properties Palette (Ctrl+1).\n```\nLocate the property **Enter beam codes**. By default, it looks for \"BLOCKING;BATTEN\". \n- Edit this list to include the specific names (codes) of the blocking or battens you wish to split.\n- Separate multiple codes with a semicolon (`;`).\n\n### Step 3: Select Elements\n```\nCommand Line: Please select Elements\nAction: Click on the construction Elements (floors/roofs) containing the blocking to be processed. Press Enter to confirm selection.\n```\n\n### Step 4: Automatic Processing\nThe script will automatically calculate intersections, split the matching beams, and apply cuts. \n**Note:** The script instance will disappear from the drawing immediately after processing. This is normal behavior.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Enter beam codes | Text | BLOCKING;BATTEN | Defines which beams to split. Enter the exact catalog names separated by semicolons (e.g., `STUD;BLOCKING`). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | The script deletes itself automatically after execution, leaving no context menu options. |\n\n## Settings Files\n- None used.\n\n## Tips\n- **Exact Spelling**: Ensure the Beam Codes match your catalog entries exactly. If the code is \"Blk\" and you type \"Blocking\", the script will ignore that beam.\n- **Dynamic Connections**: The resulting split beams maintain a dynamic link to the intersecting beams. If you move the main structural beams later, the blocking will automatically stretch to stay connected.\n- **Undo**: If the result is not as expected, simply use the standard AutoCAD `UNDO` command to revert the changes.\n\n## FAQ\n- **Q: Why did the script disappear after I selected the elements?**\n  A: This is a \"run-once\" script. It modifies the geometry and then removes its own instance from the drawing to keep the file clean.\n  \n- **Q: The script ran, but some beams weren't split. Why?**\n  A: Check the **Enter beam codes** property. The beam you wanted to split must have its code listed there exactly as it appears in the beam properties.\n\n- **Q: Can I use this on walls?**\n  A: The script is designed for floor structures and looks for beams perpendicular to the Element's X-axis. It may not function correctly on vertical wall elements."
+      },
+      "tokens_used": 4904,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,207 @@
+{
+  "filename": "hsb_EraseNoTagBeams.mcr",
+  "status": "completed",
+  "total_tokens": 14427,
+  "processing_time": 289.84950494766235,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2054,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script interacts directly with 'Beam()' entities using 'PrEntity' and 'dbErase()'. It lacks ShopDrawing specific prefixes (sd_), Viewport handling, or #Type E declarations found in Paper/Shop Drawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing Beams",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1101,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\\nSelect beams",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2801,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A maintenance script used to batch delete selected beams from the model, specifically skipping any beams marked with a 'NoErase' attribute to protect critical elements.",
+          "category": "ModelSpace/Maintenance",
+          "typicalUseCase": "Used to clean up a project by removing temporary or obsolete structural elements, ensuring that manually protected beams (marked as 'NoErase') are not accidentally deleted."
+        },
+        "parameters": [
+          {
+            "name": "ssE",
+            "technicalDefault": "User Selection",
+            "businessMeaning": "The selection set of beams targeted for removal. This acts as the primary filter for the cleanup operation.",
+            "validRange": "1 or more GenBeam entities",
+            "unit": "Selection Set",
+            "affectsOutput": "Defines the scope of the deletion operation. Only beams within this set are evaluated for removal."
+          },
+          {
+            "name": "NoErase (Attribute check)",
+            "technicalDefault": "False (if attribute missing)",
+            "businessMeaning": "A protective flag stored within a beam's properties (subMapXKeys) that exempts the beam from being deleted by this script.",
+            "validRange": "String exists / String does not exist",
+            "unit": "Boolean (via String Presence)",
+            "affectsOutput": "If present on a beam, the beam is preserved in the model. If absent, the beam is permanently erased."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Beam Erasure",
+            "description": "Permanent deletion of the beam entity from the drawing database.",
+            "appliedTo": "Selected beams where the 'NoErase' attribute is not found."
+          }
+        ]
+      },
+      "tokens_used": 1764,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched/Insert command executed",
+          "Check if _bOnInsert is true",
+          "[Insert Cycle] Check if insertCycleCount > 1 (Repeated processing/recalculation check)",
+          "[Insert Cycle 1] Prompt user to select beams via PrEntity",
+          "[Insert Cycle 1] Populate internal _Beam list with selected entities",
+          "[Insert Cycle 1] End script execution (return)",
+          "[Post-Insert/Recalc] Iterate through internal _Beam list",
+          "Check each beam for 'NoErase' attribute in subMapXKeys",
+          "Delete beam from database if 'NoErase' is not found",
+          "Erase the script instance itself",
+          "Script execution complete"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Check (insertCycleCount > 1)",
+            "path1": {
+              "name": "Recalculation Detected",
+              "steps": [
+                "eraseInstance() is called to remove the script instance",
+                "Script terminates immediately (return)"
+              ]
+            },
+            "path2": {
+              "name": "First Insertion",
+              "steps": [
+                "User is prompted to select beams",
+                "Selection set is stored in _Beam array",
+                "Script terminates to prepare for processing cycle"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Protection Check (subMapXKeys contains 'NoErase')",
+            "path1": {
+              "name": "Beam Protected",
+              "steps": [
+                "String 'NoErase' found in beam properties",
+                "Beam is skipped, left untouched in the model"
+              ]
+            },
+            "path2": {
+              "name": "Beam Unprotected",
+              "steps": [
+                "String 'NoErase' not found in beam properties",
+                "dbErase() is called to permanently delete the beam"
+              ]
+            }
+          },
+          {
+            "condition": "User Selection (ssE.go() result)",
+            "path1": {
+              "name": "Selection Confirmed",
+              "steps": [
+                "ssE.beamSet() is appended to _Beam list",
+                "Script proceeds to return"
+              ]
+            },
+            "path2": {
+              "name": "Selection Cancelled/Empty",
+              "steps": [
+                "No beams added to _Beam list",
+                "Script returns empty (subsequent loop runs 0 times)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "User Selection Validity",
+            "errorMessage": "None explicit (Standard PrEntity prompts apply)",
+            "recovery": "User must select valid Beam entities at the command prompt. If nothing is selected, the script runs but performs no deletions."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "No Post-Insertion Interaction",
+            "how": "None",
+            "effect": "The script instance performs its task (deletion) and immediately executes eraseInstance() on itself. It does not remain in the model for further editing or manipulation."
+          }
+        ]
+      },
+      "tokens_used": 2772,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_EraseNoTagBeams.mcr\n\n## Overview\nThis script provides a safe way to batch delete beams from the model. It erases all selected beams except for those specifically marked with a 'NoErase' protection attribute, ensuring critical structural elements are not accidentally removed.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates directly on 3D beams in the model. |\n| Paper Space | No | Not designed for layout views or 2D detailing. |\n| Shop Drawing | No | Not designed for manufacturing views. |\n\n## Prerequisites\n- **Required entities**: GenBeams (Beams)\n- **Minimum beam count**: 1 or more\n- **Required settings**: None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_EraseNoTagBeams.mcr`\n\n### Step 2: Select Beams\n```\nCommand Line: Select beams\nAction: Click on the beams you wish to delete. Press Enter to confirm the selection.\n```\n\n### Step 3: Processing\nOnce the selection is confirmed, the script automatically checks every selected beam.\n- Beams **without** protection are deleted.\n- Beams **with** the 'NoErase' attribute are kept.\n- The script instance removes itself automatically from the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| *None* | N/A | N/A | This script does not use editable properties in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| *None* | This script does not add custom options to the right-click context menu. |\n\n## Settings Files\n- **Filename**: N/A\n- **Location**: N/A\n- **Purpose**: No external settings files are used by this script.\n\n## Tips\n- **Protection**: This script looks for a \"NoErase\" string inside the beam's attributes (subMapXKeys). If you find a beam is refusing to delete, check its attributes to see if it has been protected by another process.\n- **Self-Cleaning**: The script instance deletes itself automatically after running. You do not need to manually remove the script icon from the model.\n- **Undo**: If you accidentally delete the wrong beams, use the standard AutoCAD `UNDO` command immediately to restore them.\n\n## FAQ\n- **Q: Why did some of the beams I selected not get deleted?**\n  **A:** Those beams likely contain a 'NoErase' attribute. This attribute acts as a lock to prevent specific structural elements from being batch-erased.\n- **Q: Do I need to remove the script instance from the drawing after I use it?**\n  **A:** No. The script is programmed to delete itself immediately after it finishes processing the beams.\n- **Q: Can I use this to delete other elements like walls or slabs?**\n  **A:** No. This script is specifically designed to process GenBeam entities only."
+      },
+      "tokens_used": 3935,
+      "error": null
+    }
+  }
+}

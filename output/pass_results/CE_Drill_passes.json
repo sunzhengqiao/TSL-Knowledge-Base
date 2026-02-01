@@ -1,0 +1,424 @@
+{
+  "filename": "CE_Drill.mcr",
+  "status": "completed",
+  "total_tokens": 37636,
+  "processing_time": 216.36575937271118,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3919,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses PrEntity to select GenBeam objects and getPoint() to define 3D coordinates. It modifies the physical model using GenBeam.addTool() to apply drill operations. There is no usage of Viewports, Sheets, sd_ prefixes, or drawing annotation logic."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D Assembly)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5005,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect a beam or panel to tool in Assembly",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "Select Insertion Point",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "PrPoint",
+              "promptOriginal": "Select Drill Direction",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "pdDiameter",
+            "type": "PropDouble",
+            "displayName": "Internal Drill Diameter",
+            "defaultValue": "12 (mm)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "pdDrillDiameter",
+            "type": "PropDouble",
+            "displayName": "Applied Drill Diameter",
+            "defaultValue": "15 (mm)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 2,
+            "variable": "pdDrillLength",
+            "type": "PropDouble",
+            "displayName": "Overall Drill Length",
+            "defaultValue": "0",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "Reports current length between grips"
+          },
+          {
+            "index": 0,
+            "variable": "psTargetBeam",
+            "type": "PropString",
+            "displayName": "Target Beams",
+            "defaultValue": "Parent",
+            "inputType": "dropdown",
+            "options": [
+              "Parent",
+              "Children",
+              "All"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "psOperationMode",
+            "type": "PropString",
+            "displayName": "Operation Mode",
+            "defaultValue": "Anchor End 1",
+            "inputType": "dropdown",
+            "options": [
+              "Anchor End 1",
+              "Anchor End 2",
+              "Anchor Both"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 3,
+            "variable": "pdTextH",
+            "type": "PropDouble",
+            "displayName": "|Text Height|",
+            "defaultValue": "0.3 (inch)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "Add beams to be tooled",
+            "handler": "addBeams",
+            "action": "Selects GenBeam entities to add to the tooling operation",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Remove beams to be tooled",
+            "handler": "removeBeams",
+            "action": "Selects GenBeam entities to remove from the tooling operation",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 7357,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates a parametric cylindrical drill hole (through boring) for mechanical connections (dowels, rods, or bolts) with visual alignment markers.",
+          "category": "Hardware/Machining",
+          "typicalUseCase": "Drilling through beams or panels to insert threaded rods, dowels, or bolts for shear connections, ensuring the hole penetrates all selected elements."
+        },
+        "parameters": [
+          {
+            "name": "pdDiameter",
+            "technicalDefault": "12 (mm)",
+            "businessMeaning": "The internal bore diameter of the hole. This determines the actual size of the physical void cut into the wood, usually matching the diameter of the hardware (e.g., bolt or rod) being inserted.",
+            "validRange": "6mm to 100mm",
+            "unit": "mm",
+            "affectsOutput": "Modifies the size of the Drill operation added to the GenBeam (NC Data) and the inner cylinder of the visual representation."
+          },
+          {
+            "name": "pdDrillDiameter",
+            "technicalDefault": "15 (mm)",
+            "businessMeaning": "The applied or visual diameter of the drill bit/counterbore. Often used to represent a larger countersink for a nut or washer at the surface, or simply the outer diameter of the drill bit visualization.",
+            "validRange": "Equal to or greater than Internal Drill Diameter",
+            "unit": "mm",
+            "affectsOutput": "Changes the diameter of the main cylindrical Body visual (the 'shank' of the drill)."
+          },
+          {
+            "name": "pdDrillLength",
+            "technicalDefault": "0 (auto-calculated on insert)",
+            "businessMeaning": "The total depth of the drill operation calculated from the start point to the end point defined by the user grips.",
+            "validRange": "10mm to maximum beam length",
+            "unit": "mm",
+            "affectsOutput": "Determines the end point of the drill operation and updates the grip position if edited manually."
+          },
+          {
+            "name": "psTargetBeam",
+            "technicalDefault": "Parent",
+            "businessMeaning": "Defines the hierarchical scope of beams to be machined. 'Parent' applies the hole to the main beam; 'Children' or 'All' extends the operation to connected or sub-entities.",
+            "validRange": "Parent, Children, All",
+            "unit": "Enum",
+            "affectsOutput": "Stored in the Map data for upstream assemblies to determine propagation; controls which entities in the _Entity array are intended targets."
+          },
+          {
+            "name": "psOperationMode",
+            "technicalDefault": "Anchor End 1",
+            "businessMeaning": "Specifies the connection logic for assembly anchors. 'Anchor End 1' or '2' treat the drill as a one-sided reference (e.g., for a pin into a socket), while 'Anchor Both' treats it as a through-connection.",
+            "validRange": "Anchor End 1, Anchor End 2, Anchor Both",
+            "unit": "Enum",
+            "affectsOutput": "Controls the direction of visual arrows and the coordinate data exported to the 'mpDrill' Map for potential use by parent scripts."
+          },
+          {
+            "name": "pdTextH",
+            "technicalDefault": "0.3 (inch)",
+            "businessMeaning": "The height of the text labels ('1' and '2') drawn at the drill ends to identify entry and exit points on shop drawings.",
+            "validRange": "10mm to 50mm",
+            "unit": "mm",
+            "affectsOutput": "Scales the text labels drawn in the 3D model and 2D projections."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Moving Grip Points (Pt0 or Pt1)",
+            "effect": "Recalculates the drill vector and updates the 'Overall Drill Length' property.",
+            "cascade": [
+              "pdDrillLength",
+              "vDrill"
+            ]
+          },
+          {
+            "trigger": "Editing 'Overall Drill Length' property",
+            "effect": "Moves the end grip point (Pt1) along the existing drill vector to match the new length.",
+            "cascade": [
+              "ptDrillEnd"
+            ]
+          },
+          {
+            "trigger": "Changing 'Internal Drill Diameter'",
+            "effect": "Updates both the visual Body (tip) and the actual Drill machining operation.",
+            "cascade": [
+              "bdDrill",
+              "Drill operation"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Drill (Machining)",
+            "description": "A cylindrical subtractive operation applied to selected GenBeams. Includes an 'overdrill' of 0.2 inch to ensure clean penetration.",
+            "appliedTo": "Entities contained in the _Entity array (selected via context menu or insertion)."
+          },
+          {
+            "type": "Body (Visual)",
+            "description": "A parametric cylinder representing the drill bit shaft (Applied Diameter) with a smaller inner cylinder (Internal Diameter) at the tip to visualize the bore size.",
+            "appliedTo": "Script Instance (Model Space)."
+          },
+          {
+            "type": "PLine (Annotation)",
+            "description": "Directional arrows and text labels ('1', '2') indicating the start and end of the drill path.",
+            "appliedTo": "Script Instance (Model Space)."
+          }
+        ]
+      },
+      "tokens_used": 7605,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch / Insert",
+          "Prompt User: Select a beam or panel to tool (PrEntity)",
+          "[Condition] Did user select an entity?",
+          "[No] -> End/Cancel",
+          "[Yes] -> Store selected entities in _Entity array",
+          "Prompt User: Select Insertion Point (getPoint)",
+          "Prompt User: Select Drill Direction (PrPoint) with Jig visualization",
+          "[Condition] Did user complete the Jig interaction?",
+          "[No] -> Erase Instance / End",
+          "[Yes] -> Calculate Vector and Length",
+          "Store Pt0 (Insertion), Pt1 (End), and Vector in Map",
+          "Generate Visual Geometry (Drill Body)",
+          "Add Drill operation to Target Entities",
+          "Export Connection Data to Map (based on Operation Mode)",
+          "Draw Annotation (Arrows & Text)",
+          "Ready"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Initial Drill Length property value (pdDrillLength) on Insert",
+            "path1": {
+              "name": "Default/Auto Length",
+              "steps": [
+                "System detects pdDrillLength is 0",
+                "Calculates length based on distance between Insertion Point and Jig Point",
+                "Sets pdDrillLength to this calculated distance"
+              ]
+            },
+            "path2": {
+              "name": "Fixed Length",
+              "steps": [
+                "System detects pdDrillLength is non-zero",
+                "Calculates direction vector between points",
+                "Normalizes vector and scales it to existing pdDrillLength value",
+                "Sets Pt1 to match this fixed length"
+              ]
+            }
+          },
+          {
+            "condition": "Operation Mode (psOperationMode) setting",
+            "path1": {
+              "name": "Anchor End 1",
+              "steps": [
+                "Sets Map 'ptDrillEnd' to Pt1 (End)",
+                "Sets Map 'vDrill' direction towards Pt1",
+                "Draws single directional arrow at Pt1"
+              ]
+            },
+            "path2": {
+              "name": "Anchor End 2",
+              "steps": [
+                "Sets Map 'ptDrillEnd' to Pt0 (Start)",
+                "Sets Map 'vDrill' direction towards Pt0",
+                "Draws single directional arrow at Pt0"
+              ]
+            },
+            "path3": {
+              "name": "Anchor Both",
+              "steps": [
+                "Sets Map 'ptDrillEnd' to Pt1 and 'ptDrillEnd2' to Pt0",
+                "Sets Map 'vDrill' direction towards Pt1",
+                "Draws directional arrows at both Pt1 and Pt0 (mirrored)"
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Selection",
+            "path1": {
+              "name": "Add beams to be tooled",
+              "steps": [
+                "Trigger: Right-click -> 'Add beams to be tooled'",
+                "Prompt: Select beams/panels",
+                "Appends selected items to the internal _Entity array"
+              ]
+            },
+            "path2": {
+              "name": "Remove beams to be tooled",
+              "steps": [
+                "Trigger: Right-click -> 'Remove beams to be tooled'",
+                "Prompt: Select beams/panels",
+                "Finds selected items in _Entity array and removes them"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Minimum Jig Vector Length",
+            "errorMessage": "None (Silent Fail)",
+            "recovery": "During Jig phase, if calculated vector length is < 0.001 inch, the script returns immediately without updating geometry."
+          },
+          {
+            "check": "Legacy Instance Compatibility",
+            "errorMessage": "/nCE_Drill.mcr Has Changed. You will need to reinsert",
+            "recovery": "If loaded instance has fewer than 2 grip points (_PtG), the script reports a message and erases the instance. User must re-insert the tool."
+          },
+          {
+            "check": "Entity Validity",
+            "errorMessage": "None (Silent Skip)",
+            "recovery": "When iterating through _Entity array to apply drills, if an entity is invalid (gb.bIsValid() is false), the script skips that entity and continues to the next."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Relocate Drill",
+            "how": "Grip Edit (Pt0 or Pt1)",
+            "effect": "Moving Pt0 recalculates the line and updates Pt1 to maintain vector/direction. Moving Pt1 updates the length and recalculates the vector. Both update the 'Overall Drill Length' property and regenerate the Drill operation on all linked beams."
+          },
+          {
+            "action": "Adjust Drill Length",
+            "how": "OPM Property Edit (Overall Drill Length)",
+            "effect": "Modifies the distance between start and end points. Pt1 moves along the current vector to satisfy the new length. The Drill operation updates accordingly."
+          },
+          {
+            "action": "Resize Drill Diameter",
+            "how": "OPM Property Edit (Internal or Applied Diameter)",
+            "effect": "Changes the radius of the visual Body (cylinder) and the physical Drill operation radius added to the GenBeams."
+          },
+          {
+            "action": "Change Target Scope",
+            "how": "OPM Property Edit (Target Beams) OR Context Menu (Add/Remove)",
+            "effect": "Adds or removes GenBeams from the internal list. The script reapplies the drill operation to the updated list of entities."
+          },
+          {
+            "action": "Change Anchor Logic",
+            "how": "OPM Property Edit (Operation Mode)",
+            "effect": "Updates the Map data exported for downstream scripts (changing which point is treated as the anchor) and updates the visual directional arrows (1 vs 2 ends)."
+          }
+        ]
+      },
+      "tokens_used": 7499,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# CE_Drill.mcr\n\n## Overview\nCreates parametric cylindrical drill holes through beams or panels for mechanical connections like dowels, rods, or bolts. The script includes visual markers to indicate the drilling direction and allows for precise alignment across multiple elements.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Operates in 3D Assembly environment. |\n| Paper Space | No | Not designed for 2D layout or detailing views. |\n| Shop Drawing | No | Does not generate 2D drawings directly. |\n\n## Prerequisites\n- **Required Entities**: At least one GenBeam (Beam or Panel) must be selected during insertion.\n- **Minimum Beam Count**: 1 (during insertion).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `CE_Drill.mcr` from the list.\n\n### Step 2: Select Target Beam\n```\nCommand Line: Select a beam or panel to tool in Assembly\nAction: Click on the beam or panel you want to drill through.\n```\n\n### Step 3: Define Insertion Point\n```\nCommand Line: Select Insertion Point\nAction: Click in the model to set the start point of the drill hole.\n```\n\n### Step 4: Define Direction\n```\nCommand Line: Select Drill Direction\nAction: Move your mouse to orient the drill path. A visual preview (jig) will appear. Click to set the direction and length.\n```\n*Note: The length is automatically determined by the distance between Step 3 and Step 4.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Internal Drill Diameter | Number | 12 mm | The actual diameter of the hole bored into the wood (e.g., for the bolt/rod). |\n| Applied Drill Diameter | Number | 15 mm | The diameter of the visual drill bit shank. Often represents a counterbore or clearance size. |\n| Overall Drill Length | Number | Auto | The distance between the start and end grips. Editing this moves the end grip. |\n| Target Beams | Dropdown | Parent | Selects which beams are machined: \"Parent\" (selected beam), \"Children\", or \"All\". |\n| Operation Mode | Dropdown | Anchor End 1 | Defines the connection logic for anchors. Controls visual arrows (Start, End, or Both). |\n| \\|Text Height\\| | Number | 0.3 in | Height of the text labels ('1' and '2') displayed at the drill ends. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Add beams to be tooled | Allows you to select additional beams or panels to include in the current drilling operation. |\n| Remove beams to be tooled | Allows you to select specific beams or panels to remove from the current drilling operation. |\n\n## Settings Files\n- None.\n\n## Tips\n- **Grip Editing:** After insertion, you can drag the square grips (Start and End points) in the model to dynamically resize or reorient the drill hole.\n- **Quick Length Change:** Instead of dragging grips, you can type a specific value in the \"Overall Drill Length\" property to extend or shorten the hole along its current axis.\n- **Visual Confirmation:** Use the \"Operation Mode\" to toggle visual arrows if you need to communicate the insertion direction (e.g., \"Anchor End 1\" shows an arrow at the exit point).\n- **Multiple Beams:** Use the \"Add beams to be tooled\" context menu to drill through a stack of aligned beams simultaneously without creating a new script instance.\n\n## FAQ\n- **Q: What is the difference between Internal and Applied Diameter?**\n  **A:** The *Internal Drill Diameter* defines the physical hole size in the wood (NC Data). The *Applied Drill Diameter* is primarily for the 3D visual representation, allowing you to show a larger shank or counterbore visually while keeping the physical hole size smaller.\n- **Q: How do I change the drill angle after inserting?**\n  **A:** Use the \"AddRecalc\" menu (usually right-click the script instance) or simply drag the grips to the new positions. The script will recalculate the vector automatically.\n- **Q: Why did my drill disappear?**\n  **A:** This script is designed to cut into beams. If you remove the linked beam (set \"Target Beams\" to empty or delete the beam), the visual drill may remain but will have no effect until a valid beam is assigned via the \"Add beams to be tooled\" menu."
+      },
+      "tokens_used": 6251,
+      "error": null
+    }
+  }
+}

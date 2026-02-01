@@ -1,0 +1,255 @@
+{
+  "filename": "hsb_ExcelImport.mcr",
+  "status": "completed",
+  "total_tokens": 32686,
+  "processing_time": 652.7927281856537,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6971,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script generates new 3D geometry (Beam, BlockRef) using dbCreate() based on external Excel data. It does not contain ShopDrawing specific prefixes (sd_), #Type E definitions, Viewport logic, or 2D drawing generation code."
+        },
+        "prerequisites": {
+          "requiredEntities": [],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "hsbCAD installation directory with Utilities\\hsbExcelToMap\\hsbExcelToMap.exe",
+            "Excel file containing sheet data with specific keys (e.g., 'Beam', 'BlockReference') and coordinate/vector information"
+          ]
+        }
+      },
+      "tokens_used": 3316,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "On Insert (_bOnInsert)",
+            "title": null,
+            "dataSource": "Internal Properties (pLastAccessedFilePath)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 1,
+            "variable": "pLastAccessedFilePath",
+            "type": "PropString",
+            "displayName": "Last File Path",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5596,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Imports structural elements (beams and block references) from an external Excel file into the hsbCAD 3D model, parsing coordinates, dimensions, and properties to generate geometry.",
+          "category": "Data Import / Modeling",
+          "typicalUseCase": "Used to transfer design data from external structural engineering software (exported to Excel) into hsbCAD for detailing, or to batch-generate standard framing layouts from spreadsheet calculations."
+        },
+        "parameters": [
+          {
+            "name": "pLastAccessedFilePath",
+            "technicalDefault": "",
+            "businessMeaning": "The file path to the Excel source file containing the coordinate and property data for the elements to be imported. It serves as the input link between the spreadsheet and the CAD model.",
+            "validRange": "Valid Windows file system path (e.g., \"C:\\Projects\\StructuralData.xlsx\")",
+            "unit": "String (File Path)",
+            "affectsOutput": "Determines the dataset used for generation. Changing this path loads a different Excel file, resulting in completely different geometry, positions, and entity types being created in the model."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "pLastAccessedFilePath is set or changed",
+            "effect": "The script executes the external utility 'hsbExcelToMap.exe' to parse the specified Excel file. Success depends on the file containing specific Sheet keys ('Beam', 'BlockReference') and column headers.",
+            "cascade": [
+              "Generated Beams (Position/Size/Material)",
+              "Generated Block References (Position/Rotation/Scale)",
+              "Entity Grouping"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam",
+            "description": "3D structural timber elements created from Excel rows defining Origin (XYZ), Vectors (X,Y,Z), and Dimensions (L,W,H). Also handles material, grade, and naming.",
+            "appliedTo": "Model Space (New Beams)"
+          },
+          {
+            "type": "Cut (End Cuts)",
+            "description": "Static saw cuts applied to the start and end of imported beams based on angular data (Cut1N/P, Cut2N/P) provided in the Excel sheet.",
+            "appliedTo": "Imported Beams"
+          },
+          {
+            "type": "BlockRef",
+            "description": "Block references inserted at specific coordinates, allowing for the placement of hardware or custom 3D objects defined in external DWG blocks.",
+            "appliedTo": "Model Space (New Block References)"
+          },
+          {
+            "type": "Group",
+            "description": "Logical groupings applied to the imported entities based on the 'Group' column in the Excel data, facilitating organization and selection in the CAD model.",
+            "appliedTo": "Imported Beams and Block References"
+          }
+        ]
+      },
+      "tokens_used": 4572,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script execution triggered (Insert or Execute)",
+          "2. [Conditional] Check for Execute Key (_kExecuteKey) to determine property loading",
+          "3. [Conditional] If no Execute Key is found, display Dialog (showDialog) to input file path",
+          "4. Execute external utility: hsbExcelToMap.exe with pLastAccessedFilePath",
+          "5. Receive Map data (mapRet) containing parsed Excel Sheets and Rows",
+          "6. [Conditional] Validate returned filepath; update pLastAccessedFilePath if not empty",
+          "7. Save current property state to Catalog (_LastInserted)",
+          "8. Iterate through 'Sheets' in the returned Map",
+          "9. [Conditional] Analyze Sheet Key name to determine processing type (Beam vs Block)",
+          "10. For 'Beam' sheets: Extract geometry (Point3d, Vector3d), dimensions, and properties from rows",
+          "11. For 'Beam' sheets: [Conditional] Apply Extrusion Profile and Color if defined",
+          "12. For 'Beam' sheets: Calculate and apply static Cuts based on angular data (Cut1N/P, Cut2N/P)",
+          "13. For 'Beam' sheets: [Conditional] Assign to Group if 'Group' string is not empty",
+          "14. For 'BlockReference' sheets: Extract origin, scale, rotation, and name",
+          "15. For 'BlockReference' sheets: Parse file path to isolate Block Name",
+          "16. For 'BlockReference' sheets: Create BlockRef and apply transformations",
+          "17. For 'BlockReference' sheets: [Conditional] Assign to Group and Color if defined",
+          "18. Erase Script Instance (eraseInstance)",
+          "19. Exit (return)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execute Key (_kExecuteKey) presence",
+            "path1": {
+              "name": "Manual Execution",
+              "steps": [
+                "showDialog() is invoked to prompt user for pLastAccessedFilePath",
+                "User confirms or inputs path",
+                "Script proceeds to execution"
+              ]
+            },
+            "path2": {
+              "name": "Automated Execution (Catalog)",
+              "steps": [
+                "Properties loaded directly from _kExecuteKey",
+                "No dialog shown",
+                "Script proceeds immediately to hsbExcelToMap.exe call"
+              ]
+            }
+          },
+          {
+            "condition": "Sheet Key Name content",
+            "path1": {
+              "name": "Beam Generation",
+              "steps": [
+                "String contains 'beam'",
+                "Iterate rows to create Beam entities",
+                "Apply Materials, Grades, Labels",
+                "Calculate Static Cuts",
+                "Apply Extrusion Profiles if present"
+              ]
+            },
+            "path2": {
+              "name": "Block Reference Generation",
+              "steps": [
+                "String contains 'blockreference'",
+                "Iterate rows to create BlockRef entities",
+                "Parse Block Name from file path",
+                "Apply Scale and Rotation transforms"
+              ]
+            }
+          },
+          {
+            "condition": "Optional Beam Properties",
+            "path1": {
+              "name": "Custom Profile/Color",
+              "steps": [
+                "If sExtProfile is not empty string: setExtrProfile()",
+                "If nColor is not 0: setColor()"
+              ]
+            },
+            "path2": {
+              "name": "Standard Defaults",
+              "steps": [
+                "Beam uses default rectangular profile based on Width/Height",
+                "Beam uses default material color"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "External Utility Path",
+            "errorMessage": "Implicit failure (Silent or Crash)",
+            "recovery": "Ensure hsbExcelToMap.exe exists in _kPathHsbInstall\\Utilities\\hsbExcelToMap\\"
+          },
+          {
+            "check": "Excel Data Format",
+            "errorMessage": "Geometric mismatch or Missing Geometry",
+            "recovery": "Ensure Excel columns match expected headers (ptOrg.x, vecX.x, etc.) and contain valid numeric data"
+          },
+          {
+            "check": "Block Path Tokenization",
+            "errorMessage": "Block not created",
+            "recovery": "Ensure 'Name' column in Excel contains valid file path (e.g., 'C:\\Blocks\\Block.dwg')"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Script Self-Deletion",
+            "how": "Automatic (Code Command: eraseInstance())",
+            "effect": "The TSL instance is removed from the drawing immediately after generation. No remaining script link exists to update properties dynamically."
+          },
+          {
+            "action": "Geometry Modification",
+            "how": "Manual CAD Interaction (Select Beams/Blocks)",
+            "effect": "Resulting Beams and BlockReferences are native CAD entities. They can be edited manually or via other scripts, but are not controlled by this script instance."
+          }
+        ]
+      },
+      "tokens_used": 7487,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_ExcelImport.mcr\n\n## Overview\nImports structural elements (beams and block references) from an external Excel file into the hsbCAD 3D model, automatically generating geometry based on spreadsheet coordinates and properties.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Geometry is created in 3D model space. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Entities**: None (this script creates new entities).\n- **Minimum Beam Count**: 0.\n- **Required Settings**:\n  - A valid Excel file (`.xlsx`) containing specific Sheet keys (e.g., \"Beam\", \"BlockReference\") and column headers (coordinates, dimensions).\n  - The `hsbExcelToMap.exe` utility must be present in the hsbCAD installation directory (`...\\Utilities\\hsbExcelToMap\\`).\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the command line.\n2. Select `hsb_ExcelImport.mcr` from the available scripts list.\n\n### Step 2: Specify Excel File\n```\nDialog: hsbCAD Properties\nAction: A dialog appears prompting for the file path.\n```\n1. In the **Last File Path** field, enter the full path to your Excel file (e.g., `C:\\Projects\\StructureData.xlsx`) or click the browse button (\"...\") to locate it.\n2. Click **OK** to confirm.\n\n### Step 3: Process Data\nThe script will automatically run the external utility to parse the Excel file and generate the beams and blocks in the model.\n\n**Note**: Once processing is complete, the script instance will erase itself from the drawing. The resulting geometry will remain as standard hsbCAD entities.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Last File Path | Text | \"\" | The full file system path to the Excel file containing the import data. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not have custom context menu options. It erases itself after running. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A (Configuration is handled via the input Excel file format).\n\n## Tips\n- **Script Self-Deletion**: After the geometry is created, the script instance disappears. To modify the imported elements, you must manually edit the resulting beams/blocks or re-run the script to generate new ones.\n- **Excel Formatting**: Ensure your Excel file uses the specific headers required by `hsbExcelToMap.exe`. Typically, this includes columns for Origin (X, Y, Z), Vectors, Dimensions (Width, Height, Length), and Material.\n- **Coordinate System**: Verify that the coordinates in the Excel file match the current UCS/World coordinate system of your CAD model to ensure elements are placed in the correct location.\n\n## FAQ\n- **Q: Why did the script icon disappear immediately after I ran it?**\n  A: This is normal behavior. The script is designed to generate geometry and then erase itself (`eraseInstance`). The beams and blocks you see are the final results.\n- **Q: Nothing appeared in my model after running the script.**\n  A: Check that the path in `Last File Path` is correct and that the Excel file contains data in sheets named exactly as expected (e.g., \"Beam\", \"BlockReference\"). Also, ensure `hsbExcelToMap.exe` is not blocked by your firewall or antivirus.\n- **Q: Can I update the geometry by changing properties later?**\n  A: No, because the script instance is removed. To update, you must run the script again with a new or updated Excel file."
+      },
+      "tokens_used": 4744,
+      "error": null
+    }
+  }
+}

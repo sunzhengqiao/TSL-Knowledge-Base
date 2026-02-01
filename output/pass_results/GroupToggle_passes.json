@@ -1,0 +1,294 @@
+{
+  "filename": "GroupToggle.mcr",
+  "status": "completed",
+  "total_tokens": 41044,
+  "processing_time": 454.53161883354187,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "30.05.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-19045 _RegenAll added when toggling groups on"
+          },
+          {
+            "version": "1.0",
+            "date": "26.05.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-19045 initial version of GroupToggle"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6769,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly uses `_kModelSpace` in `Group().collectEntities()`. It interacts with `Group` objects and `PainterDefinition` to toggle visibility globally. No usage of `_kPaperSpace`, `_Viewport`, `Sheet`, or `sd_` prefixes/functions."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall",
+            "ElementRoof",
+            "Element",
+            "Entity"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "The script requires valid Painter Definitions located in the 'TSL\\GroupToggle' folder. It attempts to auto-create default definitions (Exterior Walls, Interior Walls, Roof Elements, Non Element) if they do not exist, but requires at least one valid definition to execute.",
+          "requiredSettings": [
+            "PainterDefinitions"
+          ]
+        }
+      },
+      "tokens_used": 6517,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "Standard Property Dialog",
+            "trigger": "On Insert",
+            "condition": "If _kExecuteKey does not match a catalog or a valid painter name",
+            "title": "GroupToggle",
+            "dataSource": "OPM Properties (Painter List)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sPainter",
+            "type": "PropString",
+            "displayName": "|Painter|",
+            "defaultValue": null,
+            "inputType": "dropdown",
+            "options": [
+              "Dynamic list of Painter Definitions found in 'TSL\\\\GroupToggle\\\\' (e.g., Exterior Walls, Interior Walls, Roof Elements, Non Element, or Custom Definitions)"
+            ],
+            "category": "|General|",
+            "description": "|Defines the painter definition which will be used to toggle matching groups|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 7074,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Toggles the visibility of specific construction groups (walls, roofs, etc.) on or off to simplify the drawing view.",
+          "category": "Utility",
+          "typicalUseCase": "Isolating specific building elements, such as hiding interior walls to focus on exterior walls or roof elements, during the design or detailing phase."
+        },
+        "parameters": [
+          {
+            "name": "sPainter",
+            "technicalDefault": "null",
+            "businessMeaning": "Selects the specific filter rule (Painter Definition) used to identify which groups to toggle. Examples include 'Exterior Walls', 'Interior Walls', or 'Roof Elements'.",
+            "validRange": "List of valid Painter Definition names located in 'TSL\\\\GroupToggle\\\\' (e.g., Exterior Walls, Interior Walls, Roof Elements, Non Element, Custom Definitions)",
+            "unit": "String",
+            "affectsOutput": "Toggles the visual visibility of matching groups between On and Off states. Does not modify geometry."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Script Insertion / Drawing Content",
+            "effect": "The available options in the 'Painter' dropdown are dynamically generated based on existing Painter Definitions or auto-generated based on the presence of ElementWalls and ElementRoofs in the drawing.",
+            "cascade": [
+              "sPainter"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Group Visibility State",
+            "description": "Modifies the visibility status (On/Off) of specific Groups within the Model Space.",
+            "appliedTo": "Element Groups (Walls, Roofs) or Entity Groups based on the selected Painter Definition."
+          }
+        ]
+      },
+      "tokens_used": 6653,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch: Initialize constants and scan for existing Painter Definitions in 'TSL\\GroupToggle\\'.",
+          "Auto-Configuration: Check for custom project tags (e.g., 'Lux') and scan ModelSpace for ElementWalls/ElementRoofs. Create missing default Painter Definitions (Exterior/Interior Walls, Roof Elements, Non Element) if required.",
+          "Validation: Verify at least one valid Painter Definition exists. If none, display error and erase script.",
+          "Property Initialization: Populate 'sPainter' PropString with the list of available painters.",
+          "Input Handling (On Insert):",
+          "   - Check if _kExecuteKey matches a Catalog or Painter Name to auto-select.",
+          "   - If no key match, show standard Properties dialog (OPM).",
+          "   - If no catalogs exist, print one-time instructions to command line for creating toolbar buttons.",
+          "Execution Phase: Load the selected Painter Definition and verify its validity.",
+          "Scope Determination:",
+          "   - Identify Current Parent Group. If valid, limit search to sub-groups.",
+          "   - If no parent and type is 'Element', search 'allElementGroups'.",
+          "   - Otherwise, search 'allExistingGroups'.",
+          "Group Filtering:",
+          "   - Isolate Level 3 groups.",
+          "   - If 'Element' type: Filter linked elements against the Painter Definition.",
+          "   - If 'Entity' type: Filter entities within groups against the Painter Definition.",
+          "State Calculation: Check visibility status of collected groups.",
+          "Toggle Action:",
+          "   - If any group is currently visible, turn ALL collected groups OFF.",
+          "   - If all collected groups are currently invisible, turn ALL collected groups ON.",
+          "Regen & Cleanup: Trigger '_RegenAll' if groups were turned ON. Erase script instance (unless Debug Mode is active)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Input Source during Insertion",
+            "path1": {
+              "name": "Catalog Key Match",
+              "steps": [
+                "_kExecuteKey matches an existing catalog name.",
+                "setPropValuesFromCatalog(_kExecuteKey) is called.",
+                "Script executes immediately without user dialog."
+              ]
+            },
+            "path2": {
+              "name": "Painter Name Match",
+              "steps": [
+                "_kExecuteKey matches a name in the sPainters list.",
+                "sPainter property is set directly to _kExecuteKey.",
+                "Script executes immediately without user dialog."
+              ]
+            },
+            "path3": {
+              "name": "Default / Manual",
+              "steps": [
+                "No _kExecuteKey match found.",
+                "showDialog() displays the properties palette.",
+                "User selects painter manually.",
+                "Script executes upon closing dialog."
+              ]
+            }
+          },
+          {
+            "condition": "Collection Scope Context",
+            "path1": {
+              "name": "Sub-Group Search",
+              "steps": [
+                "A valid parent group is determined (_kCurrentGroup has name parts).",
+                "Script collects groups using grParent.subGroups(true).",
+                "Limit search to specific hierarchy branch."
+              ]
+            },
+            "path2": {
+              "name": "Global Element Search",
+              "steps": [
+                "No valid parent group, but Painter Type contains 'Element'.",
+                "Script collects Group().allElementGroups().",
+                "Search entire drawing for element groups."
+              ]
+            },
+            "path3": {
+              "name": "Global Entity Search",
+              "steps": [
+                "No valid parent group and Painter Type is generic Entity.",
+                "Script collects Group().allExistingGroups().",
+                "Search entire drawing for all groups."
+              ]
+            }
+          },
+          {
+            "condition": "Visibility Toggle Logic",
+            "path1": {
+              "name": "Turn Groups OFF",
+              "steps": [
+                "Loop through collected groups.",
+                "If any single group is currently visible (groupVisibility != _kIsOff).",
+                "Set state to _kIsOff.",
+                "Execute turnGroupVisibilityOff(true) on all collected groups."
+              ]
+            },
+            "path2": {
+              "name": "Turn Groups ON",
+              "steps": [
+                "Loop through collected groups.",
+                "If all collected groups are currently invisible.",
+                "Set state to _kIsOn.",
+                "Execute turnGroupVisibilityOn(true) on all collected groups.",
+                "Push '_RegenAll' command to refresh view."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Painter Definition Existence",
+            "errorMessage": "This tool is based on painter definitions of groups, but this drawing does not contain any valid definition.",
+            "recovery": "Create painter definitions in the folder 'TSL\\GroupToggle\\' or ensure drawing contains ElementWalls/Roofs for auto-creation."
+          },
+          {
+            "check": "Selected Painter Validity",
+            "errorMessage": "[PainterName] is not a valid painter definition.",
+            "recovery": "Select a valid painter from the dropdown list in the properties palette."
+          },
+          {
+            "check": "Painter Definition Integrity",
+            "errorMessage": "Painter definition failed validity check (corrupt or missing internal data).",
+            "recovery": "Repair or recreate the specific Painter Definition in the catalog."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Visibility State Changed",
+            "how": "Script Execution (Fire-and-Forget)",
+            "effect": "The targeted groups are turned On or Off in the Model Space. The script instance is immediately erased."
+          },
+          {
+            "action": "Debug Visualization",
+            "how": "Setting _bOnDebug to true",
+            "effect": "The script instance is NOT erased. It draws a visual list of affected groups in 3D space and persists for debugging inspection."
+          }
+        ]
+      },
+      "tokens_used": 8886,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GroupToggle\n\n## Overview\nA utility script to quickly toggle the visibility of specific construction groups (such as walls or roofs) on or off to simplify the current drawing view.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script interacts with Group objects here. |\n| Paper Space | No | Script is not designed for Paper Space. |\n| Shop Drawing | No | Script is for the model layout, not detailing. |\n\n## Prerequisites\n- **Required Entities:** Elements (Walls/Roofs) or Entities within Groups.\n- **Required Settings:** Valid Painter Definitions located in the catalog path `TSL\\GroupToggle\\`. (Note: The script attempts to auto-create default definitions for Exterior/Interior Walls and Roofs if they do not exist).\n- **Minimum Beam Count:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GroupToggle.mcr`\n\n### Step 2: Select Filter (Painter)\n```\nProperties Palette: |Painter| Dropdown\nAction: Select the specific category to toggle (e.g., \"Exterior Walls\", \"Interior Walls\", \"Roof Elements\").\n```\n*Note: If you have created a catalog/toolbar button with a specific Execute Key (matching a Painter Name), the script will bypass this dialog and execute immediately.*\n\n### Step 3: Apply Toggle\n```\nAction: Close the Properties Palette or press Enter.\nResult: The script checks the current visibility state:\n- If ANY matching group is currently visible, it turns ALL matching groups OFF.\n- If ALL matching groups are currently invisible, it turns ALL matching groups ON.\n```\nThe script instance will automatically erase itself from the drawing after execution.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| |Painter| | Dropdown | Dynamic List | Selects the specific filter rule (Painter Definition) used to identify which groups to toggle (e.g., Exterior Walls, Interior Walls, Roof Elements). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script executes immediately upon insertion and does not have persistent right-click menu options. |\n\n## Settings Files\n- **Location**: Catalog folder `TSL\\GroupToggle\\`\n- **Purpose**: Stores the Painter Definition files that define the logic for what constitutes an \"Exterior Wall\", \"Interior Wall\", etc. The script can generate default definitions automatically if ElementWalls or ElementRoofs are present in the drawing.\n\n## Tips\n- **Toolbar Integration:** For frequent use, add this script to your toolbar. You can create separate buttons for different views (e.g., one button for \"Exterior Walls\" and one for \"Roof Elements\") by setting the Execute Key in the catalog properties to match the Painter Name.\n- **Context Sensitivity:** If you run this script while inside a specific Group in the tree structure, it will only toggle sub-groups within that parent. If run in the root, it searches the entire model.\n- **View Refresh:** The script automatically triggers a full regeneration (`_RegenAll`) if groups are turned ON to ensure the display updates correctly.\n\n## FAQ\n- **Q: I get an error saying \"This drawing does not contain any valid definition.\"**\n- **A:** The script requires Painter Definitions to function. Ensure the folder `TSL\\GroupToggle` exists in your catalog, or create Elements (Walls/Roofs) in the drawing so the script can auto-generate the necessary definitions.\n\n- **Q: Why did the script disappear immediately after I used it?**\n- **A:** This is normal behavior. It is a \"fire-and-forget\" utility designed to perform the visibility toggle and then remove itself to keep your drawing clean."
+      },
+      "tokens_used": 5145,
+      "error": null
+    }
+  }
+}

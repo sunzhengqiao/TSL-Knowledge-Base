@@ -1,0 +1,348 @@
+{
+  "filename": "hsb_CommentManagement.mcr",
+  "status": "completed",
+  "total_tokens": 49415,
+  "processing_time": 244.48375272750854,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8327,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses `Element` selection and `getPoint` to define 3D geometry. It explicitly creates `hsb_CommentDisplay` instances using `_kModelSpace`. No `_Viewport`, `_kPaperSpace`, or `sd_` prefixes found. Calculates `Vector3d` offsets relative to entity coordinate systems."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": [
+            "Utilities\\CadUtilities\\hsbCommentManagement\\hsbCommentManagementUI.dll",
+            "hsb_CommentDisplay.tsl"
+          ]
+        }
+      },
+      "tokens_used": 6081,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"Select a set of elements\",\n        \"condition\": \"executionMode == 1 (Edit) OR (executionMode == 0 (Add) AND locationGeometry == 0 (No location))\",\n        \"required\": true\n      },\n      {\n        \"step\": 2,\n        \"function\": \"getElement\",\n        \"promptOriginal\": \"Select an element\",\n        \"condition\": \"executionMode == 0 (Add) AND locationGeometry != 0\",\n        \"required\": true\n      },\n      {\n        \"step\": 3,\n        \"function\": \"getPoint\",\n        \"promptOriginal\": \"Select a position\",\n        \"condition\": \"executionMode == 0 (Add) AND locationGeometry == 1 (Point)\",\n        \"required\": true\n      },\n      {\n        \"step\": 4,\n        \"function\": \"getPoint\",\n        \"promptOriginal\": \"Select start of line segment\",\n        \"condition\": \"executionMode == 0 (Add) AND locationGeometry == 2 (Line segment)\",\n        \"required\": true\n      },\n      {\n        \"step\": 5,\n        \"function\": \"PrPoint\",\n        \"promptOriginal\": \"Select end point of line segment\",\n        \"condition\": \"executionMode == 0 (Add) AND locationGeometry == 2 (Line segment)\",\n        \"required\": true\n      },\n      {\n        \"step\": 6,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"Select a poly line, right click to select two points as a diagonal\",\n        \"condition\": \"executionMode == 0 (Add) AND locationGeometry == 3 (Area)\",\n        \"required\": false\n      },\n      {\n        \"step\": 7,\n        \"function\": \"getPoint\",\n        \"promptOriginal\": \"Select start of diagonal\",\n        \"condition\": \"executionMode == 0 (Add) AND locationGeometry == 3 (Area) AND no polyline selected\",\n        \"required\": true\n      },\n      {\n        \"step\": 8,\n        \"function\": \"PrPoint\",\n        \"promptOriginal\": \"Select end of diagonal\",\n        \"condition\": \"executionMode == 0 (Add) AND locationGeometry == 3 (Area) AND no polyline selected\",\n        \"required\": true\n      },\n      {\n        \"step\": 9,\n        \"function\": \"getPoint\",\n        \"promptOriginal\": \"Select start of leader line\",\n        \"condition\": \"executionMode == 0 (Add)"
+      },
+      "tokens_used": 9046,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A management tool for creating, editing, and organizing 3D annotations and comments attached to construction elements.",
+          "category": "Documentation / Model Communication",
+          "typicalUseCase": "Used by engineers or detailers to add notes, markups, or quality check flags (e.g., 'Check clearance', 'Fix connection') directly onto specific 3D parts, areas, or points within the model for coordination or fabrication planning."
+        },
+        "parameters": [
+          {
+            "name": "executionModeProp",
+            "technicalDefault": "0 (Add comment)",
+            "businessMeaning": "The operational mode of the tool, determining whether the user is creating new markup or modifying existing notes.",
+            "validRange": "Add comment (0), Edit comments (1)",
+            "unit": "Enum",
+            "affectsOutput": "Switches the input flow between prompting for geometry/element placement versus opening a list of existing comments to manage."
+          },
+          {
+            "name": "showEditCommentsAfterAddingProp",
+            "technicalDefault": "0 (No)",
+            "businessMeaning": "Workflow efficiency toggle that determines if the comment management list appears immediately after placing a new comment.",
+            "validRange": "No (0), Yes (1)",
+            "unit": "Enum",
+            "affectsOutput": "If 'Yes', the script triggers the Edit Comments UI immediately after the Add Comment process completes."
+          },
+          {
+            "name": "commentCatalogueEntryName",
+            "technicalDefault": "",
+            "businessMeaning": "A pre-defined text template selected from a library to standardize frequent notes (e.g., 'Missing Hardware', 'Not to Scale').",
+            "validRange": "Strings loaded from external configuration (DLL)",
+            "unit": "String",
+            "affectsOutput": "Populates the comment text without prompting the user for manual entry, standardizing communication."
+          },
+          {
+            "name": "locationGeometryProp",
+            "technicalDefault": "0 (No location)",
+            "businessMeaning": "Defines how the comment visually anchors to the model (e.g., a specific point, a line segment, a rectangular area, or a leader arrow).",
+            "validRange": "No location, Point, Line segment, Area, Leader",
+            "unit": "Enum",
+            "affectsOutput": "Drastically changes the command line prompts (Point vs. Entity selection) and the underlying geometry map stored for the comment."
+          },
+          {
+            "name": "textOrientationProp",
+            "technicalDefault": "0 (Default)",
+            "businessMeaning": "Controls the rotation of the text relative to the element or selected geometry.",
+            "validRange": "Default, Horizontal, Vertical, Perpendicular",
+            "unit": "Enum",
+            "affectsOutput": "Calculates the 'TextOrientation' vector passed to the display script. 'Default' aligns text to the element X-axis (for points) or line direction (for lines)."
+          },
+          {
+            "name": "horizontalOffset",
+            "technicalDefault": "0",
+            "businessMeaning": "The horizontal distance the text is displaced from the anchor geometry to ensure readability or avoid collision.",
+            "validRange": "0 mm to 2000 mm",
+            "unit": "mm",
+            "affectsOutput": "Shifts the text origin along the local X-axis (or geometry direction) of the selected element."
+          },
+          {
+            "name": "verticalOffset",
+            "technicalDefault": "0",
+            "businessMeaning": "The vertical distance the text is displaced from the anchor geometry.",
+            "validRange": "0 mm to 2000 mm",
+            "unit": "mm",
+            "affectsOutput": "Shifts the text origin along the local Y-axis (or geometry perpendicular) of the selected element."
+          },
+          {
+            "name": "nColour",
+            "technicalDefault": "1",
+            "businessMeaning": "The visual color used to draw the comment text and leader, often used to indicate priority or type (e.g., Red for critical).",
+            "validRange": "1, 2, 3 (mapped to CAD colors)",
+            "unit": "Index",
+            "affectsOutput": "Sets the Color property (Index 0) of the generated `hsb_CommentDisplay` instance."
+          },
+          {
+            "name": "dTextHeight",
+            "technicalDefault": "50",
+            "businessMeaning": "The physical height of the text in the model, ensuring the note is legible at the model scale.",
+            "validRange": "10 mm to 500 mm",
+            "unit": "mm",
+            "affectsOutput": "Sets the Text Height property (Index 0) of the generated `hsb_CommentDisplay` instance."
+          },
+          {
+            "name": "dLeaderSize",
+            "technicalDefault": "1",
+            "businessMeaning": "A scaling factor for the thickness and size of the leader line and arrowhead.",
+            "validRange": "0.1 to 5.0",
+            "unit": "Factor",
+            "affectsOutput": "Sets the Leader Size property (Index 3) of the generated `hsb_CommentDisplay` instance."
+          },
+          {
+            "name": "sZone",
+            "technicalDefault": "5",
+            "businessMeaning": "Assigns the comment to a specific construction zone, floor, or phase index for filtering in reports or views.",
+            "validRange": "-5 to 5",
+            "unit": "Index",
+            "affectsOutput": "Stores the Zone Index in the comment map, allowing the display script or other tools to filter comments by zone."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "executionModeProp = 'Add comment'",
+            "effect": "Enables geometry selection prompts (Point/Line/Area) based on locationGeometryProp.",
+            "cascade": [
+              "locationGeometryProp",
+              "textOrientationProp",
+              "commentCatalogueEntryName"
+            ]
+          },
+          {
+            "trigger": "locationGeometryProp = 'Line segment'",
+            "effect": "Default text orientation aligns with the direction of the selected line segment.",
+            "cascade": [
+              "textOrientationProp",
+              "horizontalOffset",
+              "verticalOffset"
+            ]
+          },
+          {
+            "trigger": "locationGeometryProp = 'Area'",
+            "effect": "Prompts user for a polyline or diagonal points to define a boundary.",
+            "cascade": [
+              "PrEntity (PLine)",
+              "getPoint (Diagonal)"
+            ]
+          },
+          {
+            "trigger": "commentCatalogueEntryName is set",
+            "effect": "Skips the text input dialog in the external UI, populating the comment directly with the catalog text.",
+            "cascade": [
+              "ShowDialog (skipped)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "TSL Instance (hsb_CommentDisplay)",
+            "description": "Visual representation of the comment (text, leader lines, area markers) in Model Space.",
+            "appliedTo": "Linked to specific Elements or placed at absolute coordinates in 3D space."
+          },
+          {
+            "type": "ModelMap Data",
+            "description": "Structured data (XML/Map) containing comment content, geometry links, and zone assignments, sent to the `hsbCommentManagementUI.dll` for database storage.",
+            "appliedTo": "Selected Elements (Entity keys)."
+          }
+        ]
+      },
+      "tokens_used": 9073,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch script 'hsb_CommentManagement'.",
+          "2. Display Properties Dialog (unless executed via Catalog key).",
+          "3. User configures properties (Action, Location Geometry, Orientation, etc.).",
+          "4. Insertion cycle starts (check for _bOnInsert).",
+          "5. Evaluate 'executionMode' property.",
+          "6. Branch A: If executionMode is 'Edit comments' OR ('Add comment' AND Location Geometry is 'No location') -> Prompt 'Select a set of elements' using PrEntity. Proceed to ModelMap composition.",
+          "7. Branch B: If executionMode is 'Add comment' AND Location Geometry is NOT 'No location' -> Prompt 'Select an element' (Single element).",
+          "8. Calculate Coordinate System of selected element.",
+          "9. Branch B1: If Location Geometry is 'Point' -> Prompt 'Select a position'. Set Origin.",
+          "10. Branch B2: If Location Geometry is 'Line segment' -> Prompt 'Select start of line segment', then 'Select end point of line segment'. Calculate direction and midpoint.",
+          "11. Branch B3: If Location Geometry is 'Area' -> Prompt 'Select a poly line' OR 'Select start of diagonal' and 'Select end of diagonal'. Define PLine rectangle.",
+          "12. Branch B4: If Location Geometry is 'Leader' -> Prompt 'Select start of leader line'. Loop for 'Select next point' points until user right-clicks. Validate at least 2 points.",
+          "13. Calculate Text Position (Origin + Horizontal/Vertical Offsets) and Orientation vectors based on Geometry and 'Text orientation' property.",
+          "14. Store Geometry Map and Text data in internal _Map.",
+          "15. Check if Elements were selected. If none, erase instance and exit.",
+          "16. Compose ModelMap containing selected Elements.",
+          "17. Prepare input map for .NET DLL (hsbCommentManagementUI.dll) including ModelMap, Geometry, Text data, and Zone.",
+          "18. Call .NET Function 'AddComment' or 'EditComments'.",
+          "19. Receive output map from .NET DLL.",
+          "20. Interpret returned ModelMap to update Entities.",
+          "21. Iterate through created/updated comments in output map.",
+          "22. Create 'hsb_CommentDisplay' TSL instance for each comment in ModelSpace.",
+          "23. Set display properties (Color, Text Height, Leader Size) on the new TSL instances.",
+          "24. Erase the management script instance.",
+          "25. End."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "executionModeProp selection",
+            "path1": {
+              "name": "Edit Mode",
+              "steps": [
+                "Prompt: Select a set of elements",
+                "Compose Map",
+                "Call 'EditComments' DLL function",
+                "Update Displays"
+              ]
+            },
+            "path2": {
+              "name": "Add Mode",
+              "steps": [
+                "Check Location Geometry",
+                "Select Anchor Element",
+                "Define Geometry (Point/Line/Area/Leader)",
+                "Compose Map",
+                "Call 'AddComment' DLL function",
+                "Create Displays"
+              ]
+            }
+          },
+          {
+            "condition": "Location Geometry (in Add Mode)",
+            "path1": {
+              "name": "No Location",
+              "steps": [
+                "Skip Geometry Prompts",
+                "Prompt: Select a set of elements"
+              ]
+            },
+            "path2": {
+              "name": "Specific Geometry (Point/Line/Area/Leader)",
+              "steps": [
+                "Prompt: Select single element",
+                "Execute Geometry specific prompts",
+                "Calculate Local Coordinates"
+              ]
+            }
+          },
+          {
+            "condition": "Area Selection Input",
+            "path1": {
+              "name": "PLine Selected",
+              "steps": [
+                "Extract PLine from selected Entity",
+                "Use as Boundary"
+              ]
+            },
+            "path2": {
+              "name": "User Right-clicks (No PLine)",
+              "steps": [
+                "Prompt: Select start of diagonal",
+                "Prompt: Select end of diagonal",
+                "Create Rectangle PLine programmatically"
+              ]
+            }
+          },
+          {
+            "condition": "showEditCommentsAfterAddingProp",
+            "path1": {
+              "name": "Yes",
+              "steps": [
+                "Trigger Edit Comments UI automatically after Adding"
+              ]
+            },
+            "path2": {
+              "name": "No",
+              "steps": [
+                "Finish after creating displays"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Minimum points in Leader Geometry",
+            "errorMessage": "Invalid leader selected. There are at least 2 points required.",
+            "recovery": "Script erases instance; user must re-insert and provide more points."
+          },
+          {
+            "check": "Selection of Elements",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "If no elements are selected, the script erases itself (_Element.length()==0 check)."
+          },
+          {
+            "check": "Area Selection Validity",
+            "errorMessage": "Invalid area selected.",
+            "recovery": "Script erases instance; user must select a valid PLine or provide valid diagonal points."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Text Appearance",
+            "how": "Properties Palette (OPM)",
+            "effect": "Updating 'Colour', 'Text Height', or 'Leader Size' in the management script before insertion, or editing the properties of the resulting 'hsb_CommentDisplay' instance."
+          },
+          {
+            "action": "Edit Content",
+            "how": "Run script again with 'Edit comments' mode",
+            "effect": "Opens the external UI (via DLL) to modify text or location data associated with selected elements."
+          },
+          {
+            "action": "Zone Assignment",
+            "how": "Properties Palette (OPM) on Insert",
+            "effect": "Assigns the comment to a specific Zone index, allowing for filtering in other views or reports."
+          }
+        ]
+      },
+      "tokens_used": 9347,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_CommentManagement.mcr\n\n## Overview\nThis script serves as a management tool for creating, editing, and organizing 3D annotations and comments attached to construction elements. It is typically used to add notes, markups, or quality check flags (e.g., \"Check clearance\", \"Fix connection\") directly onto specific 3D parts, areas, or points within the model.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script operates entirely within the 3D model environment. |\n| Paper Space | No | Not designed for 2D layout views. |\n| Shop Drawing | No | Not intended for generation within manufacturing drawings. |\n\n## Prerequisites\n- **Required Entities**: At least one Element (e.g., Beam, Wall) must be selected during the process.\n- **Minimum Beam Count**: 1 (for Add mode with geometry); 0 (for Add mode with no location).\n- **Required Settings**:\n  - `Utilities\\CadUtilities\\hsbCommentManagement\\hsbCommentManagementUI.dll`\n  - `hsb_CommentDisplay.tsl` (Used to visualize the comment).\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the command line.\n2.  Select `hsb_CommentManagement.mcr` from the list.\n\n### Step 2: Configure Properties\nBefore the command line prompts activate, the **Properties Palette** will appear.\n- **Action**: Set the **Execution Mode** to \"Add comment\" (default) or \"Edit comments\".\n- **Location**: Set **Location Geometry** (e.g., Point, Line segment, Area, Leader).\n- **Visuals**: Adjust Color, Text Height, or Offsets as needed.\n- *Tip:* If you select a **Comment Catalogue Entry**, standard text will be used automatically.\n\n### Step 3: Add Comment Workflow (If Mode is set to Add)\nThe prompts vary based on the **Location Geometry** setting chosen in Step 2.\n\n**Scenario A: Geometry is \"Point\"**\n```\nCommand Line: Select an element\nAction: Click on the beam or element you want to annotate.\n```\n```\nCommand Line: Select a position\nAction: Click the specific point on the element where the comment should anchor.\n```\n\n**Scenario B: Geometry is \"Line segment\"**\n```\nCommand Line: Select an element\nAction: Click the target element.\n```\n```\nCommand Line: Select start of line segment\nAction: Click the start point for the reference line.\n```\n```\nCommand Line: Select end point of line segment\nAction: Click the end point. The text will align with this direction.\n```\n\n**Scenario C: Geometry is \"Area\"**\n```\nCommand Line: Select an element\nAction: Click the target element.\n```\n```\nCommand Line: Select a poly line, right click to select two points as a diagonal\nAction: Either click an existing polyline in the drawing OR right-click to define a rectangle manually.\n```\n*(If right-clicked)*:\n```\nCommand Line: Select start of diagonal\nAction: Click one corner of the desired area.\n```\n```\nCommand Line: Select end of diagonal\nAction: Click the opposite corner.\n```\n\n**Scenario D: Geometry is \"Leader\"**\n```\nCommand Line: Select an element\nAction: Click the target element.\n```\n```\nCommand Line: Select start of leader line\nAction: Click where the arrow tip should touch.\n```\n```\nCommand Line: Select next point\nAction: Click to define the path of the leader line. Continue clicking for vertices.\n```\n```\nCommand Line: Select next point\nAction: Right-click or Enter to finish placing the leader.\n```\n\n**Scenario E: Geometry is \"No location\"**\n```\nCommand Line: Select a set of elements\nAction: Select one or multiple elements. The comment will be attached to the element data but may not have specific 3D geometry markers drawn.\n```\n\n### Step 4: Finish Input\n- Once geometry is defined, the script creates an `hsb_CommentDisplay` instance in the model.\n- If a **Comment Catalogue** was not used, a dialog box may appear asking for the text content.\n- The script instance erases itself automatically, leaving only the comment display.\n\n### Step 5: Edit Comments Workflow (If Mode is set to Edit)\n```\nCommand Line: Select a set of elements\nAction: Select the elements that have existing comments you wish to manage.\n```\n- An external interface window will open allowing you to view, modify, or delete comments associated with the selected elements.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Execution Mode | Dropdown | Add comment | Switches between creating new markup (\"Add comment\") or managing existing notes (\"Edit comments\"). |\n| Show Edit After Adding | Dropdown | No | If set to \"Yes\", automatically opens the Edit Comments window immediately after placing a new comment. |\n| Location Geometry | Dropdown | No location | Defines how the comment anchors: **Point**, **Line segment**, **Area**, **Leader**, or **No location**. |\n| Text Orientation | Dropdown | Default | Controls text rotation. Options include Default (aligns to geometry), Horizontal, Vertical, or Perpendicular. |\n| Comment Catalogue | String | (Empty) | Allows selection of pre-defined text templates from your company library to speed up entry. |\n| Horizontal Offset | Number | 0 | Shifts the text horizontally (mm) from the anchor point to avoid overlap. |\n| Vertical Offset | Number | 0 | Shifts the text vertically (mm) from the anchor point. |\n| Color | Index | 1 | Sets the CAD color index for the comment text and leader lines. |\n| Text Height | Number | 50 | Sets the physical height of the text in the model (mm). |\n| Leader Size | Number | 1 | Scales the thickness and arrowhead size of the leader line. |\n| Zone | Index | 5 | Assigns a construction zone or phase index to the comment for filtering purposes. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Refresh (if applicable) | Recalculates the script if inserted in an interactive state (rare, as this script typically erases itself). |\n\n## Settings Files\n- **Filename**: `hsbCommentManagementUI.dll`\n- **Location**: `Utilities\\CadUtilities\\hsbCommentManagement\\`\n- **Purpose**: Handles the database storage and user interface dialogs for entering and editing comment text.\n\n## Tips\n- **Use Zones**: If you work on large projects, utilize the **Zone** property to filter comments by floor or section when using the Edit mode.\n- **Leader Lines**: For crowded areas, use the \"Leader\" geometry type to point to specific details without obscuring the model geometry.\n- **Text Orientation**: If text appears upside down or unreadable after placement, change the **Text Orientation** property in the palette before clicking the insertion point.\n- **Catalogues**: If your company has a list of standard remarks (e.g., \"Check clearance\"), configure the **Comment Catalogue** to avoid typing errors.\n\n## FAQ\n- **Q: I clicked to place the comment, but nothing appeared.**\n  - **A:** Ensure you selected a valid Element. If you selected nothing or invalid geometry, the script silently erases itself. Also, check if `dTextHeight` is too small to see.\n- **Q: How do I change the text of a comment I already placed?**\n  - **A:** Run the script again, set **Execution Mode** to \"Edit comments\", and select the element(s) associated with the comment.\n- **Q: The leader line has no arrow.**\n  - **A:** Increase the **Leader Size** parameter (try `2.0` or `3.0`) in the properties palette before inserting.\n- **Q: Can I move the text after placing it?**\n  - **A:** Yes. Select the generated `hsb_CommentDisplay` entity in the model and use the AutoCAD `MOVE` command or adjust its **Origin** properties in the Properties Palette."
+      },
+      "tokens_used": 7541,
+      "error": null
+    }
+  }
+}

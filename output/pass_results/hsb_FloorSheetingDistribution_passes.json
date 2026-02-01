@@ -1,0 +1,359 @@
+{
+  "filename": "hsb_FloorSheetingDistribution.mcr",
+  "status": "completed",
+  "total_tokens": 52024,
+  "processing_time": 564.3993289470673,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "05-07-2012",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.1",
+            "date": "01-08-2012",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Sheeting split bugfix and added property for ignoring a minimum size of board from waste calculation"
+          },
+          {
+            "version": "1.2",
+            "date": "08-08-2012",
+            "author": null,
+            "changes": "Add the option to distribute the sheets parallel or perpendicullar to the joist"
+          },
+          {
+            "version": "1.3",
+            "date": "20-08-2012",
+            "author": null,
+            "changes": "Add a check in case that the sheet that is going to be create is smaller than 1mm"
+          },
+          {
+            "version": "1.4",
+            "date": "14-09-2012",
+            "author": null,
+            "changes": "Bugfix with a shee been bigger than the full size because the point was inside of the profile of the beam"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7357,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script generates and manipulates physical 3D entities using `Sheet.dbCreate()`, `Sheet.dbErase()`, and `Sheet.dbSplit()`. It uses `PrEntity` to select `Element` objects during insertion. It does not contain Shop Drawing prefixes (sd_), viewport logic, or drawing specific entity types."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space with at least one selected Element containing valid zones.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7581,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10411,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically calculates the layout, distribution, and cutting pattern of floor or roof sheathing boards (e.g., OSB, Plywood) within a selected element zone to minimize material waste.",
+          "category": "Framing/Cladding",
+          "typicalUseCase": "Applying structural decking to a floor element where the user needs to calculate the number of sheets required and generate the 3D sheet geometry with optimized staggered joints."
+        },
+        "parameters": [
+          {
+            "name": "nZones",
+            "technicalDefault": "0",
+            "businessMeaning": "The specific construction layer (Zone) within the element where the sheathing will be applied and managed.",
+            "validRange": "1 to 10 (Integer)",
+            "unit": "index",
+            "affectsOutput": "Determines which existing sheets are erased and which layer the new sheets are assigned to."
+          },
+          {
+            "name": "sOrientation",
+            "technicalDefault": "\"Perpendicular to Joist\"",
+            "businessMeaning": "The direction the long edge of the sheet runs relative to the underlying structural joists/beams.",
+            "validRange": "\"Perpendicular to Joist\", \"Parallel to Joist\"",
+            "unit": "enum",
+            "affectsOutput": "Rotates the layout grid. 'Parallel' swaps the effective Sheet Width and Sheet Length used in calculations."
+          },
+          {
+            "name": "dSheetWidth",
+            "technicalDefault": "600 (mm)",
+            "businessMeaning": "The width of the raw board material (typically the narrow dimension of a standard sheet, e.g., 600mm or 1200mm).",
+            "validRange": "400 - 1250 (mm)",
+            "unit": "mm",
+            "affectsOutput": "Defines the spacing between rows of sheathing."
+          },
+          {
+            "name": "dSheetLength",
+            "technicalDefault": "2400 (mm)",
+            "businessMeaning": "The length of the raw board material (typically the long dimension of a standard sheet).",
+            "validRange": "1800 - 6000 (mm)",
+            "unit": "mm",
+            "affectsOutput": "Defines the spacing of cuts along the joists. Used to calculate offcuts for staggering."
+          },
+          {
+            "name": "dSheetThickness",
+            "technicalDefault": "22 (mm)",
+            "businessMeaning": "The physical thickness of the sheathing material to be generated.",
+            "validRange": "12 - 40 (mm)",
+            "unit": "mm",
+            "affectsOutput": "Sets the Z-height/thickness of the generated 3D Sheet bodies."
+          },
+          {
+            "name": "dMinimumLength",
+            "technicalDefault": "100 (mm)",
+            "businessMeaning": "The minimum usable length of an offcut. Remnants shorter than this are discarded rather than carried over to the next row.",
+            "validRange": "0 - 600 (mm)",
+            "unit": "mm",
+            "affectsOutput": "Controls the staggering logic. Low values maximize material usage but create many small pieces; high values increase waste but simplify installation."
+          },
+          {
+            "name": "dMinWidthForWaste",
+            "technicalDefault": "150 (mm)",
+            "businessMeaning": "The threshold width for a strip of sheathing to be considered 'waste' rather than usable floor area for calculation purposes.",
+            "validRange": "0 - 300 (mm)",
+            "unit": "mm",
+            "affectsOutput": "Affects the calculated waste percentage. Strips narrower than this are still drawn but excluded from the effective floor area calculation."
+          },
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "Standard",
+            "businessMeaning": "The visual style (font, size, arrow) used for the waste area dimension text.",
+            "validRange": "Any valid Dimension Style in the drawing",
+            "unit": "style",
+            "affectsOutput": "Visual appearance of the waste annotation text."
+          },
+          {
+            "name": "strYNWaste",
+            "technicalDefault": "\"No\"",
+            "businessMeaning": "Toggle to show or hide the calculated waste area text in the model.",
+            "validRange": "\"Yes\", \"No\"",
+            "unit": "bool",
+            "affectsOutput": "Visibility of the waste dimension text at the start point."
+          },
+          {
+            "name": "_Pt0",
+            "technicalDefault": "User Point",
+            "businessMeaning": "The origin point for the sheathing layout grid.",
+            "validRange": "Any Point3d in the plane of the element",
+            "unit": "coordinates",
+            "affectsOutput": "Determines the alignment and starting position of the first sheet row. Critical for controlling joints over joists."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sOrientation is set to 'Parallel to Joist'",
+            "effect": "The script internally swaps the values of dSheetWidth and dSheetLength for the layout logic.",
+            "cascade": [
+              "dSheetWidth",
+              "dSheetLength"
+            ]
+          },
+          {
+            "trigger": "_Pt0 is moved",
+            "effect": "The entire grid of sheets shifts. The calculation of 'distance to origin' determines how many full or partial sheets fit before the element boundary.",
+            "cascade": [
+              "Sheet Geometry",
+              "Waste Calculation"
+            ]
+          },
+          {
+            "trigger": "dMinimumLength is increased",
+            "effect": "Offcuts that fall below this size are discarded, resetting the start point for the next row. This increases raw material consumption (waste) but may reduce installation labor.",
+            "cascade": [
+              "nBoards (Sheet Count)",
+              "dWasteArea"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Sheet",
+            "description": "3D bodies representing the floor/roof sheathing, trimmed to the element boundary and split according to the layout grid.",
+            "appliedTo": "The selected Element (Wall/Floor/Roof) in the specified Zone."
+          },
+          {
+            "type": "EntPLine",
+            "description": "2D diagonal lines drawn over sheets that are not full length (cut sheets) to visually indicate non-standard pieces or potential double-checks in the shop drawing.",
+            "appliedTo": "Center of individual Sheet entities."
+          },
+          {
+            "type": "Display (Text)",
+            "description": "A text label displaying the calculated waste area in square meters.",
+            "appliedTo": "Model Space at the _Pt0 location."
+          }
+        ]
+      },
+      "tokens_used": 9382,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User executes script (Launcher Mode)",
+          "2. Script opens Properties Dialog (if first run)",
+          "3. User prompts: Select one or more Elements",
+          "4. User prompts: Pick a Start Distribution Point (_Pt0)",
+          "5. Script validates selection and creates a Worker Instance attached to each selected Element",
+          "6. Launcher Instance erases itself",
+          "7. Worker Instance initializes: Validates Element attachment and existing Sheets",
+          "8. [Calculation Mode 0] Worker reads current properties (Sheet size, orientation, zone)",
+          "9. Worker calculates Union Profile of all existing Sheets in the specified Zone",
+          "10. Worker erases all existing Sheets in that Zone",
+          "11. Worker calculates new layout grid starting from _Pt0 (handling Parallel vs Perpendicular logic)",
+          "12. Worker generates Sheet entities and splits them based on Element boundaries and MinLength rules",
+          "13. Worker applies visual markers (diagonal lines) to cut sheets",
+          "14. Worker calculates total Waste Area and saves to Map",
+          "15. [Display Mode 1] Worker draws Waste Annotation (Lines and Text) at _Pt0",
+          "16. Worker attaches itself to the Element for future updates"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Sheeting Orientation Property (sOrientation)",
+            "path1": {
+              "name": "Perpendicular to Joist",
+              "steps": [
+                "Uses dSheetWidth for row spacing (transverse)",
+                "Uses dSheetLength for longitudinal sheet length",
+                "Coordinate System uses Y-axis along joist"
+              ]
+            },
+            "path2": {
+              "name": "Parallel to Joist",
+              "steps": [
+                "Swaps dSheetWidth and dSheetLength variables",
+                "Uses original Length for row spacing",
+                "Rotates Coordinate System 90 degrees"
+              ]
+            }
+          },
+          {
+            "condition": "Offcut Length vs Minimum Length",
+            "path1": {
+              "name": "Offcut is Usable (> dMinimumLength)",
+              "steps": [
+                "Store offcut length in dNextSheetLength",
+                "Use offcut as the starting piece for the next row",
+                "Optimizes material usage"
+              ]
+            },
+            "path2": {
+              "name": "Offcut is Waste (<= dMinimumLength)",
+              "steps": [
+                "Add offcut size to dWaste total",
+                "Reset dNextSheetLength to 0",
+                "Start next row with a fresh full sheet"
+              ]
+            }
+          },
+          {
+            "condition": "Execution Mode (_Map / Recalc Trigger)",
+            "path1": {
+              "name": "Calculation Mode (0)",
+              "steps": [
+                "Regenerate Sheet geometry",
+                "Recalculate waste",
+                "Set ExecutionMode to 1"
+              ]
+            },
+            "path2": {
+              "name": "Display Mode (1)",
+              "steps": [
+                "Skip geometry generation",
+                "Only update drawing markers and text based on stored Map data"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Existing sheets in the target Zone (nZone)",
+            "errorMessage": "None (Silent Exit)",
+            "recovery": "The script aborts execution if no sheets are found in the specified zone, as it cannot calculate a bounding area."
+          },
+          {
+            "check": "Element Selection Count",
+            "errorMessage": "None (Script Erasure)",
+            "recovery": "If the worker instance has no attached elements (_Element.length()==0), it erases itself immediately."
+          },
+          {
+            "check": "Minimum Sheet Size",
+            "errorMessage": "None (Internal Logic)",
+            "recovery": "If a calculated sheet segment is smaller than 1mm in width or height, it is skipped to prevent invalid geometry creation."
+          },
+          {
+            "check": "Waste Width Threshold",
+            "errorMessage": "None (Calculation Adjustment)",
+            "recovery": "If a sheet width is less than dMinWidthForWaste, it is still generated but subtracted from the effective 'Floor Area', increasing the calculated waste percentage."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Sheeting Dimensions",
+            "how": "Properties Palette (OPM) - edit dSheetWidth, dSheetLength, dSheetThickness",
+            "effect": "Recalculates layout grid, generates new sheet bodies, and updates waste count."
+          },
+          {
+            "action": "Move Start Point",
+            "how": "Grip Edit on the visual marker (Point3d)",
+            "effect": "Shifts the entire grid origin, changing which joints fall over joists and altering the cut pattern of the first and last rows."
+          },
+          {
+            "action": "Redistribute Sheets",
+            "how": "Right-click Context Menu on Element",
+            "effect": "Forces a full regeneration (sets ExecutionMode to 0), effectively 'refreshing' the sheets based on current element geometry (e.g., if wall shape changed)."
+          },
+          {
+            "action": "Toggle Waste Display",
+            "how": "Properties Palette - edit strYNWaste (Yes/No)",
+            "effect": "Shows or hides the text label indicating square meters of waste at the start point."
+          }
+        ]
+      },
+      "tokens_used": 11055,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_FloorSheetingDistribution.mcr\n\n## Overview\nAutomatically calculates, generates, and distributes floor or roof sheathing boards within a selected element zone. It optimizes material usage with staggered joints, calculates waste area, and allows for layout adjustments perpendicular or parallel to joists.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates in the 3D model to create Sheet bodies. |\n| Paper Space | No | Not applicable for layout generation. |\n| Shop Drawing | No | Script is for design/modeling phases only. |\n\n## Prerequisites\n- **Required Entities**: At least one `Element` (Floor, Roof, or Wall) must exist in the model.\n- **Minimum Beam Count**: 0 (Script functions based on Element zones and boundaries).\n- **Required Settings**: None specific.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_FloorSheetingDistribution.mcr` from the list.\n\n### Step 2: Select Elements\n```\nCommand Line: Select Elements:\nAction: Click on the floor or roof elements you want to apply sheathing to. Press Enter to confirm selection.\n```\n\n### Step 3: Define Origin Point\n```\nCommand Line: Pick start distribution point:\nAction: Click a point in the model to define the origin (usually a corner) where the sheathing layout grid begins.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| nZones | Integer | 0 | The construction layer (Zone) index within the element where sheathing is applied. Existing sheets in this zone will be regenerated. |\n| sOrientation | Dropdown | Perpendicular to Joist | Sets the direction of the boards relative to the joists. Options: *Perpendicular to Joist*, *Parallel to Joist*. |\n| dSheetWidth | Number (mm) | 600 | The width of the raw board material (short edge). |\n| dSheetLength | Number (mm) | 2400 | The length of the raw board material (long edge). |\n| dSheetThickness | Number (mm) | 22 | The thickness of the sheathing boards to be generated. |\n| dMinimumLength | Number (mm) | 100 | The minimum usable length of an offcut. Offcuts smaller than this are discarded as waste rather than used in the next row. |\n| dMinWidthForWaste | Number (mm) | 150 | Width threshold for waste calculation. Strips narrower than this are still drawn but counted as waste in the area calculation. |\n| sDimStyle | String | Standard | The dimension style used for the waste area text annotation. |\n| strYNWaste | Dropdown | No | Toggles the visibility of the waste area text label in the model. Options: *Yes*, *No*. |\n| _Pt0 | Point3d | User Point | The origin point for the sheathing grid. Moving this point shifts the entire layout to align cuts with joists. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Redistribute Sheets | Forces a full regeneration of the sheathing layout based on the current element geometry and properties. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script relies on standard hsbCAD Entity properties and does not require external XML settings files.\n\n## Tips\n- **Optimizing Layout**: Use the `_Pt0` grip point to slide the sheathing grid. This allows you to ensure joints fall directly over structural joists.\n- **Waste vs. Labor**: Lowering `dMinimumLength` will reduce material waste by using smaller offcuts, but it will increase installation time due to more small pieces. Increasing it simplifies installation but increases waste.\n- **Visualizing Cuts**: Sheets that are cut (not full size) are marked with a diagonal line. This helps identify non-standard pieces quickly on the shop floor.\n\n## FAQ\n- **Q: Why did my existing sheets disappear?**\n  A: The script regenerates the layout every time parameters change. Ensure `nZones` is set correctly to the layer containing your original sheets.\n- **Q: How do I switch sheets to run parallel to the joists?**\n  A: Select the generated sheathing instance, open the Properties palette, and change `sOrientation` to \"Parallel to Joist\".\n- **Q: The waste calculation seems higher than expected. Why?**\n  A: Check `dMinWidthForWaste`. If you have narrow strips of sheathing (e.g., 100mm wide) along a wall edge, they are still physically drawn but counted as waste if they are below this threshold (default 150mm).\n- **Q: Can I change the sheet size after insertion?**\n  A: Yes. Simply select the instance and modify `dSheetWidth` or `dSheetLength` in the Properties palette. The script will automatically recalculate the layout."
+      },
+      "tokens_used": 6238,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,338 @@
+{
+  "filename": "CE_Cut.mcr",
+  "status": "completed",
+  "total_tokens": 25938,
+  "processing_time": 207.41968822479248,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3458,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Uses Display dp for 3D visualization (drawing arrows and polylines), uses getPoint() for insertion in 3D space, references World Coordinate System vectors (_ZW, _XW), contains no ShopDrawing API calls (sd_*) or #Type E entity declarations, and does not check for _Viewport."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "None (Interactive point-based tool)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3590,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getPoint",
+              "promptOriginal": "Select Insertion Point",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrPoint",
+              "promptOriginal": "Indicate Cut direction",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "psTargetBeam",
+            "type": "PropString",
+            "displayName": "Target Beams",
+            "defaultValue": "2",
+            "inputType": "dropdown",
+            "options": [
+              "Parent",
+              "Child"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4899,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates a graphical representation of a cut plane and stores the cut definition (location and angle) in a Map to be used by other scripts for processing timber beams.",
+          "category": "Framing/Processing",
+          "typicalUseCase": "Used to define a specific, complex, or repeated cut angle (like a roof slope or hip rafter bevel) at a specific location that will be applied to Parent or Child beams within a collection."
+        },
+        "parameters": [
+          {
+            "name": "psTargetBeam",
+            "technicalDefault": "2 (Child)",
+            "businessMeaning": "Specifies which relationship of beams within the collection the cut logic should target (the main beam or the secondary beams attached to it).",
+            "validRange": "Parent, Child",
+            "unit": "Enumeration",
+            "affectsOutput": "Updates the 'stTarget' field in the output Map, altering which connected elements downstream scripts will apply the cut to."
+          },
+          {
+            "name": "_Pt0",
+            "technicalDefault": "User Selected",
+            "businessMeaning": "The 3D coordinate acting as the origin or 'pivot point' for the cut operation.",
+            "validRange": "Any point in Model Space",
+            "unit": "mm (Coordinates)",
+            "affectsOutput": "Sets the 'ptCut' value in the Map, determining where the cut surface physically intersects the material."
+          },
+          {
+            "name": "_PtG[0] (Direction Point)",
+            "technicalDefault": "User Selected",
+            "businessMeaning": "A user-selected point that defines the vector and direction of the cut relative to the origin.",
+            "validRange": "Any point not coincident with _Pt0",
+            "unit": "mm (Coordinates)",
+            "affectsOutput": "Calculates the 'vCut' vector, determining the angle and slope of the cut."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User moves the Direction Point (_PtG[0])",
+            "effect": "Recalculates the cut vector and updates the visual arrow geometry.",
+            "cascade": [
+              "vCut",
+              "vLastCutDir",
+              "ptCutDirection",
+              "mpCut"
+            ]
+          },
+          {
+            "trigger": "Script Insertion",
+            "effect": "Prompts user for Origin and Direction, initializing the cut geometry.",
+            "cascade": [
+              "_Pt0",
+              "_PtG[0]",
+              "vLastCutDir"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Map (mpCut)",
+            "description": "A data structure containing the string target, cut vector, and origin point, intended to be read by other scripts to apply machining.",
+            "appliedTo": "Collection Entity / Internal Script Storage"
+          },
+          {
+            "type": "Visual Graphic (Display dp)",
+            "description": "A 3D arrow and crosshair drawn to visualize the direction and position of the cut in the CAD model.",
+            "appliedTo": "Model Space (Screen only)"
+          }
+        ]
+      },
+      "tokens_used": 3448,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Execution Start",
+          "Check Debug Mode (stSpecial or _bOnDebug)",
+          "Check Insertion Flag (_bOnInsert)",
+          "[On Insert] Show Dialog (showDialogOnce)",
+          "[On Insert] Prompt user for 'Select Insertion Point' (getPoint) stored in _Pt0",
+          "[On Insert] Initialize PrPoint interactive prompt 'Indicate Cut direction' relative to _Pt0",
+          "[On Insert] Validate user completed PrPoint prompt (prp.go())",
+          "[On Insert] Validate point was selected (_PtG.length > 0)",
+          "[On Insert] Validate direction vector magnitude (vSelectedDirection.length != 0)",
+          "[On Insert] Store successful vector in Map as 'vLastCutDir'",
+          "[On Insert] Terminate script execution (return)",
+          "Post-Insertion / Recalculation Execution",
+          "Initialize Display object (dp) and filter for 'CE_Tools' display rep",
+          "Retrieve Cut Direction Point (_PtG[0]) and Origin (_Pt0) references",
+          "Retrieve 'vLastCutDir' from Map",
+          "Check for Overlapping Grips (vLastCutDir length > 0 and Distance < 1mm)",
+          "[If Overlap] Normalize vector and reset Direction Point to 50mm distance",
+          "Calculate Current Cut Vector (vCut) from Origin to Direction Point",
+          "Normalize vCut and update 'vLastCutDir' in Map",
+          "Enforce 50mm visual distance for Direction Point",
+          "Create 'mpCut' Map structure",
+          "Populate mpCut with 'stTarget' (from OPM), 'vCut', and 'ptCut'",
+          "Store mpCut in _Map",
+          "Calculate Reference Vectors for Visualization (vRef, vPerp, vCross) based on World Axis or Z-Up",
+          "Draw Crosshair Graphic (dp) centered on Origin",
+          "Draw Arrow Shaft and Arrow Head Graphic (dp) indicating direction",
+          "Draw Rotation Circle Graphic (dp) at arrow base",
+          "Script End"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Check if script is in Insertion mode (_bOnInsert)",
+            "path1": {
+              "name": "Insertion Routine",
+              "steps": [
+                "Show configuration dialog",
+                "Prompt for Origin Point",
+                "Prompt for Direction Point",
+                "Validate inputs",
+                "Save initial state to Map",
+                "Exit (return)"
+              ]
+            },
+            "path2": {
+              "name": "Recalculation/Render Routine",
+              "steps": [
+                "Initialize Display",
+                "Retrieve Points and Properties",
+                "Recalculate Vectors",
+                "Update internal Map (mpCut)",
+                "Generate Visualization Geometry"
+              ]
+            }
+          },
+          {
+            "condition": "Validation of User Point Input during Insertion",
+            "path1": {
+              "name": "Valid Input",
+              "steps": [
+                "Point successfully picked",
+                "Vector calculated",
+                "Script saves data and inserts instance"
+              ]
+            },
+            "path2": {
+              "name": "Invalid/Cancelled Input",
+              "steps": [
+                "No point selected (Esc pressed or bad click)",
+                "Direction vector length is 0",
+                "Report error message",
+                "Erase instance from model",
+                "Exit script"
+              ]
+            }
+          },
+          {
+            "condition": "Grip Overlap Detection (during recalculation)",
+            "path1": {
+              "name": "Grips Separated",
+              "steps": [
+                "Distance check > 1mm",
+                "Use actual user coordinates for vector calculation"
+              ]
+            },
+            "path2": {
+              "name": "Grips Coincident",
+              "steps": [
+                "Distance check < 1mm",
+                "Retrieve previous direction from 'vLastCutDir'",
+                "Force Direction Point to 50mm away along previous vector",
+                "Recalculate based on forced position"
+              ]
+            }
+          },
+          {
+            "condition": "Reference Vector Calculation (for drawing)",
+            "path1": {
+              "name": "Vertical Cut (Parallel to Z)",
+              "steps": [
+                "vCut is parallel to _ZW",
+                "Use _XW (World X) as reference vector (vRef)"
+              ]
+            },
+            "path2": {
+              "name": "Non-Vertical Cut",
+              "steps": [
+                "vCut is not parallel to _ZW",
+                "Use _ZW (World Z) as reference vector (vRef)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "PrPoint completion status (prp.go())",
+            "errorMessage": "Implicit (Script terminates silently or via array length check)",
+            "recovery": "User must restart script and provide a point"
+          },
+          {
+            "check": "Point Array Length (_PtG.length())",
+            "errorMessage": "None (Implicitly handled)",
+            "recovery": "Script erases instance; user must restart"
+          },
+          {
+            "check": "Direction Vector Length (vSelectedDirection.length())",
+            "errorMessage": "\\nDirection not successfully indicated",
+            "recovery": "Script erases instance; user must select a distinct point away from origin"
+          },
+          {
+            "check": "Grip Coincidence (vCheck.length() < U(1, 'mm'))",
+            "errorMessage": "None (Automatic correction)",
+            "recovery": "Script automatically moves the direction grip to 50mm away using the previous known direction"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Target Beam Type",
+            "how": "OPM Properties Palette (PropString psTargetBeam)",
+            "effect": "Updates the 'stTarget' field in the internal 'mpCut' Map (swaps logic between 'Parent' and 'Child')"
+          },
+          {
+            "action": "Move Origin Point (_Pt0)",
+            "how": "Grip Edit (Point3d)",
+            "effect": "Updates 'ptCut' in 'mpCut', moves the entire visual cut indicator to new location"
+          },
+          {
+            "action": "Move Direction Point (_PtG[0])",
+            "how": "Grip Edit (Point3d)",
+            "effect": "Recalculates 'vCut' vector, updates arrow orientation, updates 'mpCut', updates 'vLastCutDir' for future reference"
+          },
+          {
+            "action": "Visual Representation Update",
+            "how": "Automatic Recalculation on change",
+            "effect": "Redraws the crosshair and arrow to reflect new position/angle; handles display representation 'CE_Tools' visibility"
+          }
+        ]
+      },
+      "tokens_used": 5519,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# CE_Cut.mcr\n\n## Overview\nThis script creates a graphical 3D indicator (arrow and crosshair) to define a specific cut plane location and angle. It stores this cut definition in a data map so that other scripts can apply the cut to timber beams (Parent or Child) within a collection.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Used to define cuts in 3D context. |\n| Paper Space | No | Not designed for 2D layouts. |\n| Shop Drawing | No | Does not generate 2D views. |\n\n## Prerequisites\n- **Required entities**: None (Interactive point-based tool)\n- **Minimum beam count**: 0\n- **Required settings files**: None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `CE_Cut.mcr` from the file dialog.\n\n### Step 2: Select Insertion Point\n```\nCommand Line: Select Insertion Point\nAction: Click in the Model Space to set the origin (pivot point) of the cut.\n```\n\n### Step 3: Indicate Cut Direction\n```\nCommand Line: Indicate Cut direction\nAction: Click a second point to define the vector/angle of the cut relative to the origin.\n```\n*Note: An arrow and crosshair will appear to visualize the cut plane.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Target Beams | dropdown | Child | Determines which beams in the collection are affected by the cut logic stored in this element. Options: Parent or Child. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| (None) | No custom context menu items are defined for this script. Standard AutoCAD options apply. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Adjusting the Cut**: You can drag the origin grip (crosshair) to move the cut location or drag the arrow head to change the angle dynamically.\n- **Grip Overlap**: If you accidentally drag the direction grip directly on top of the origin point, the script will automatically snap the direction point 50mm away in the last known direction to maintain the cut definition.\n- **Visual Reference**: The arrow represents the direction of the cut, while the circle indicates the rotation/plane reference.\n\n## FAQ\n- **Q: Can I use this to physically cut a beam immediately?**\n  A: No. This script defines and stores the cut geometry. Other scripts in the collection must read the data generated by this tool to apply the actual machining to the beams.\n- **Q: Why did my direction point snap away when I tried to place it on the origin?**\n  A: The script requires a distinct direction to calculate a vector. To prevent errors, it enforces a minimum distance between the origin and the direction point."
+      },
+      "tokens_used": 5024,
+      "error": null
+    }
+  }
+}

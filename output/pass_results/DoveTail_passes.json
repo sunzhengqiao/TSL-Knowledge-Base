@@ -1,0 +1,87 @@
+{
+  "filename": "DoveTail.mcr",
+  "status": "completed",
+  "total_tokens": 49954,
+  "processing_time": 336.2939615249634,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": 1,
+          "minorVersion": 0,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "18.11.2021",
+            "author": "Thorsten Huck",
+            "changes": "HSB-13847 initial version of dovetail tool"
+          }
+        ],
+        "settingsFiles": null,
+        "dependencies": null
+      },
+      "tokens_used": 7869,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No 'sd_' or 'Multipage' prefix found. No '#Type E' or '_Entity[]' usage detected. Script uses GenBeam (Beam) operations and 3D geometry (Body, Dove, Quader). Logic focuses on 3D connection creation and modification."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6268,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10654,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Creates a dovetail connection (tenon and mort"
+      },
+      "tokens_used": 10234,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. User executes script (c:TSLCONTENT).\",\n    \"2. Script prompts user to select beams.\",\n    \"3. <Conditional> User Input Analysis (1 vs 2 beams).\",\n    \"4. <If 1 Beam> Script identifies intersecting T-connections, creates new script instances for valid pairs, and erases itself (Launcher mode).\",\n    \"5. <If 2 Beams> Script validates input (Count & Parallelism).\",\n    \"6. Script calculates Coordinate System (CS) based on beam alignment.\",\n    \"7. Script calculates intersection envelope and common range.\",\n    \"8. <Conditional> Geometry Generation based on dimensions.\",\n    \"9. <If Valid Dimensions> Applies Dovetail tools (Male/Female) to beams with optional Keyhole.\",\n    \"10. <If Invalid Dimensions> Applies simple Cut (Stretch) planes to beams.\",\n    \"11. <Loop> Script waits for user interaction (Property change, Drag, or Context Menu).\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Number of beams selected during insertion\",\n      \"path1\": {\n        \"name\": \"Single Beam (Launcher Mode)\",\n        \"steps\": [\n          \"User selects 1 beam.\",\n          \"Script calls 'filterBeamsTConnection' to find intersecting beams.\",\n          \"Script loops through found beams.\",\n          \"For each intersection, 'dbCreate' inserts a new instance of DoveTail.mcr.\",\n          \"Launcher instance executes 'eraseInstance()'.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Two Beams (Direct Tool Mode)\",\n        \"steps\": [\n          \"User selects 2 beams (or Launcher creates instance with 2 beams).\",\n          \"Script proceeds to Validation and Tool application.\",\n          \"Instance remains in model to maintain connection.\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Dimension Validity (bDove flag)\",\n      \"path1\": {\n        \"name\": \"Create Dovetail Connection\",\n        \"steps\": [\n          \"Check if Width (X), Height (Y), and Depth (Z) > Epsilon.\",\n          \"Create 'Dove' tool with Male end on Beam 0.\",\n          \"Create 'Dove' tool with Female end on Beam 1.\",\n          \"Conditionally add Keyhole based on vertical relative position.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Create Simple Cut/Stretch\",\n        \"steps\": [\n          \"Dimensions are zero or invalid.\",\n          \"Create 'Cut' planes at reference point on both beams.\",\n          \"Acts as a simple trim/stretch joint.\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Beam Relative Vertical Position\",\n      \"path1\": {\n        \"name\": \"Add Keyhole\",\n        \"steps\": [\n          \"Check if DotProduct(BeamY, CenterVector) > Epsilon.\",\n          \"Set 'setAddKeyhole(true)' on the Female dovetail part.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Standard Dovetail\",\n        \"steps\": [\n          \"Condition failed.\",\n          \"Set 'setAddKeyhole(false)' on the Female dovetail part.\"\n        ]\n      }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"Minimum Beam Count\",\n      \"errorMessage\": \"DoveTail Requires two beams. Tool will be deleted.\",\n      \"recovery\": \"Select two valid beams and run tool again.\"\n    },\n    {\n      \"check\": \"Beam Parallelism\",\n      \"errorMessage\": \"DoveTail Only parallel connection supported. Tool will be deleted.\",\n      \"recovery\": \"Select beams that are parallel to each other.\"\n    }\n  ],\n  \"postInsertionActions\": [\n    {\n      \"action\": \"Adjust Dimensions/Offset\",\n      \"how\": \"Properties Palette (OPM)\",\n      \"effect\": \"Updates 'dOffset', 'XWidth', 'YHeight', 'ZDepth', or 'Alfa'. Recalculates geometry and switches between Dovetail/Cut mode if dimensions cross threshold.\"\n    },\n    {\n      \"action\": \"Move Connection\",\n      \"how\": \"Grip Point Drag (_Pt0)\",\n      \"effect\": \"Dragges the connection point along the beam axis, constrained by beam overlap lengths. Updates Cut/Dove position.\"\n    },\n    {\n      \"action\": \""
+      },
+      "tokens_used": 10242,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# DoveTail.mcr\n\n## Overview\nThis script creates a dovetail connection (tenon and mortise) between two parallel structural beams. It supports both automatic connection generation for multiple intersections and manual placement for specific beam pairs, reverting to a simple cut if dimensions are insufficient.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script works only in the 3D Model environment. |\n| Paper Space | No | Not supported for layout views. |\n| Shop Drawing | No | This is a modeling tool, not a detailing tool. |\n\n## Prerequisites\n- **Required Entities:** Two Structural Beams (`GenBeam`).\n- **Minimum Beam Count:** 2 beams.\n- **Required Settings:** None required.\n- **Geometry Constraint:** Beams must be parallel to each other.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `DoveTail.mcr`\n\n### Step 2: Select Beams\n```\nCommand Line: Select beams:\nAction: Click on the desired beam(s). You have two modes:\n  • Mode A (Launcher): Select 1 beam. The script will auto-detect all intersecting beams, create connections for them, and then delete itself.\n  • Mode B (Direct): Select 2 beams. The script will create a connection specifically between these two beams.\n```\n\n### Step 3: Position Connection (If applicable)\n```\nCommand Line: Specify insertion point:\nAction: Click to place the connection reference point. By default, this is usually at the intersection of the beams.\n```\n\n### Step 4: Adjust Parameters\n```\nAction: Select the inserted script instance and open the Properties Palette (Ctrl+1). Adjust dimensions (X, Y, Z) and Angle (Alfa) to define the dovetail geometry.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **dOffset** | Double | 0.0 | Moves the connection point along the beam axis. |\n| **XWidth** | Double | Variable | The horizontal width of the dovetail tenon. |\n| **YHeight** | Double | Variable | The vertical height of the dovetail tenon. |\n| **ZDepth** | Double | Variable | The depth of the cut/penetration into the material. |\n| **Alfa** | Double | Variable | The angle of the dovetail sides (slope). |\n\n### Behavior Note\nIf **XWidth**, **YHeight**, or **ZDepth** are set to zero or are too small, the script automatically switches from a Dovetail connection to a simple Cut/Stretch plane.\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Recalculate** | Updates the connection geometry based on current beam positions and property values. |\n| **Erase** | Deletes the script instance. Note: If the \"Launcher\" mode was used, the instance may erase itself automatically after processing. |\n\n## Settings Files\n- **Filename:** None.\n- **Location:** N/A.\n- **Purpose:** This script uses hardcoded logic and does not require external XML settings files.\n\n## Tips\n- **Batch Processing:** To apply dovetails to all intersections along a long beam, select only that single beam during insertion. The script will handle the rest automatically.\n- **Switching to Cut:** If you want a simple butt joint instead of a dovetail, set the **XWidth** to `0` in the properties.\n- **Keyholes:** The script automatically adds a keyhole to the female part of the dovetail if the vertical relative position of the beams requires it.\n- **Moving the Joint:** Use the grip point (`_Pt0`) to drag the connection along the beam. It will stop automatically when it reaches the end of the beam overlap.\n\n## FAQ\n- **Q: I selected one beam and the script disappeared. Why?**\n  A: This is normal behavior for \"Launcher Mode.\" The script detected valid intersections, created the actual connection scripts for them, and deleted the temporary launcher instance.\n- **Q: Why does the tool say \"Only parallel connection supported\"?**\n  A: The geometric calculations for a dovetail in this script require the beams to be parallel. Non-parallel connections are not supported.\n- **Q: How do I change a dovetail back to a straight cut?**\n  A: In the Properties Palette, set the **XWidth**, **YHeight**, or **ZDepth** to `0`. The tool will update to a simple cut plane."
+      },
+      "tokens_used": 4687,
+      "error": null
+    }
+  }
+}

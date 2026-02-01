@@ -1,0 +1,211 @@
+{
+  "filename": "hsb_DrawXonWindow.mcr",
+  "status": "completed",
+  "total_tokens": 20447,
+  "processing_time": 221.01618313789368,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5390,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses PrEntity to select an Opening entity and draws LineSeg and text entities directly into the 3D model context using the Opening's coordinate system. It lacks ShopDrawing prefixes (sd_), _Viewport checks, and Sheet references."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Opening"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing valid Opening elements",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2693,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect an Opening",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "psDimstyle",
+            "type": "PropString",
+            "displayName": "Enter a Dimstyle",
+            "defaultValue": null,
+            "inputType": "dropdown",
+            "options": "_DimStyles",
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2313,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "This script creates a visual marker on a selected window or door opening, consisting of an 'X' shape and a text label 'PL Above Opening', to indicate specific detailing requirements like plasterboard over the opening.",
+          "category": "Annotation/Detailing",
+          "typicalUseCase": "A detailer marks openings on the model to communicate to factory or site teams that plasterboard or specific paneling work is required above the window or door frame."
+        },
+        "parameters": [
+          {
+            "name": "psDimstyle",
+            "technicalDefault": "Current Active Dimstyle",
+            "businessMeaning": "Sets the specific CAD Dimstyle (font, size, color) to be used for the 'PL Above Opening' text label, ensuring the annotation matches drafting standards.",
+            "validRange": "Any Dimension Style currently loaded in the AutoCAD drawing",
+            "unit": "String (Selection List)",
+            "affectsOutput": "Alters the visual appearance (height, font, color) of the text annotation. It does not affect the geometry of the 'X' or the position of the label."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "No dependencies detected",
+            "effect": "The parameter relies solely on external AutoCAD Dimstyles being available.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "LineSeg (Visual Geometry)",
+            "description": "Two diagonal lines crossing each other to form an 'X', spanning the full width and height of the opening from the bottom-left corner.",
+            "appliedTo": "The selected Opening entity (geometry is placed in the opening's coordinate system)."
+          },
+          {
+            "type": "Text (Annotation)",
+            "description": "A text string reading 'PL Above Opening' positioned at the center of the 'X', offset slightly in Y and Z to be visible in plan/elevation views.",
+            "appliedTo": "The selected Opening entity."
+          }
+        ]
+      },
+      "tokens_used": 2532,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched via TSL Palette or command line.",
+          "System checks _bOnInsert flag (true for new insertion, false for recalc/update).",
+          "Insertion Phase: User prompted via command line to select an Opening entity.",
+          "System validates selection; if valid, Opening reference stored in internal array and script returns.",
+          "Recalc Phase: System retrieves stored Opening reference from internal array.",
+          "System extracts Opening geometry (coordinate system, width, height) and outline points.",
+          "System iterates through TSL instances already attached to the Opening to check for duplicates.",
+          "Validation: If an instance of the same script already exists on this Opening, the current instance erases itself.",
+          "Geometry Calculation: Script identifies the bottom-left corner of the opening based on projected points.",
+          "Creation: Two LineSeg entities are created diagonally (forming an 'X') from the bottom-left corner.",
+          "Creation: A Text entity 'PL Above Opening' is created at the center of the 'X', offset in Y and Z.",
+          "Visual Filtering: Display rules are applied to hide the 'X' in plan view and restrict text visibility.",
+          "Script finishes, assigning the new geometry to the Opening's Element group."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Check for duplicate TSL instances on the same Opening",
+            "path1": {
+              "name": "Duplicate Detected",
+              "steps": [
+                "Identify attached TSL instance with matching script name but different handle.",
+                "Execute eraseInstance().",
+                "Terminate script execution immediately."
+              ]
+            },
+            "path2": {
+              "name": "No Duplicate Detected",
+              "steps": [
+                "Proceed to calculate coordinates.",
+                "Generate 'X' and Text geometry."
+              ]
+            }
+          },
+          {
+            "condition": "Opening selection state during Insertion",
+            "path1": {
+              "name": "Valid Opening Selected",
+              "steps": [
+                "Cast entity to Opening object.",
+                "Validate Opening using bIsValid().",
+                "Append valid Opening to _Opening list.",
+                "Return to wait for recalculation trigger."
+              ]
+            },
+            "path2": {
+              "name": "Selection Failed or Invalid",
+              "steps": [
+                "Script enters Recalc phase with empty _Opening list.",
+                "Enter 'else' block logic.",
+                "Execute eraseInstance()."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Opening Entity Validity",
+            "errorMessage": "None explicitly shown in UI, but script fails silently if entity is invalid.",
+            "recovery": "User must ensure a valid hsbCAD Opening element is selected during insertion."
+          },
+          {
+            "check": "Uniqueness of Instance on Element",
+            "errorMessage": "None explicitly shown.",
+            "recovery": "Script automatically self-destructs if a duplicate is found. User does not need to fix manually."
+          },
+          {
+            "check": "Point Availability for Geometry Calculation",
+            "errorMessage": "None explicitly shown.",
+            "recovery": "Script relies on `op.plShape()` returning vertices. If opening shape is degenerate, geometry generation may fail or produce incorrect output."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Dimstyle of text",
+            "how": "OPM (Object Properties Manager)",
+            "effect": "Updates the visual style (font, size) of the 'PL Above Opening' text immediately upon recalculation."
+          },
+          {
+            "action": "Delete the annotation",
+            "how": "Standard AutoCAD Erase command",
+            "effect": "Removes the TSL instance and all associated line/text geometry."
+          }
+        ]
+      },
+      "tokens_used": 3729,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_DrawXonWindow.mcr\n\n## Overview\nThis script creates a visual annotation on window or door openings consisting of a crossing \"X\" shape and a text label reading \"PL Above Opening\". It is used to communicate detailing instructions, such as plasterboard requirements, directly on the 3D model.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates directly on Opening entities within the 3D model. |\n| Paper Space | No | Script does not support 2D layout views or sheets. |\n| Shop Drawing | No | This is not a shop drawing generation script. |\n\n## Prerequisites\n- **Required Entities:** A valid hsbCAD **Opening** (Window or Door).\n- **Minimum Beam Count:** 0.\n- **Required Settings:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Navigate to the script location, select `hsb_DrawXonWindow.mcr`, and click **Open**.\n\n### Step 2: Select an Opening\n```\nCommand Line: Select an Opening\nAction: Click on the desired window or door opening object in the Model Space.\n```\n*Note: The script will automatically calculate the geometry and draw the \"X\" and text upon completion of the selection.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Enter a Dimstyle | Dropdown | Current Active Dimstyle | Selects the Dimension Style (font, size, color) to be applied to the \"PL Above Opening\" text label. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu items are added by this script. |\n\n## Settings Files\n- **Filename:** None required.\n- **Location:** N/A\n- **Purpose:** N/A\n\n## Tips\n- **Adjusting Text Appearance:** To change the font or size of the label, select the inserted script instance, open the **Properties** palette (Ctrl+1), and choose a different style from the \"Enter a Dimstyle\" dropdown.\n- **Avoiding Duplicates:** If you accidentally insert this script twice on the same opening, the script will automatically detect the duplicate and erase the newest instance to keep your model clean.\n\n## FAQ\n- **Q: Can I change the text \"PL Above Opening\" to something else?**\n  - A: No, the text string is hardcoded within the script.\n- **Q: Why did the script disappear after I inserted it?**\n  - A: This happens if you insert the script on an opening that already has this script attached. The script automatically deletes duplicate instances.\n- **Q: Does this work on custom drawn openings?**\n  - A: As long as the entity is recognized as a valid hsbCAD Opening object, the script will function correctly."
+      },
+      "tokens_used": 3790,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,250 @@
+{
+  "filename": "hsb_CleanupStudInDynamicConnection.mcr",
+  "status": "completed",
+  "total_tokens": 43089,
+  "processing_time": 187.63440895080566,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "29.02.2012",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.1",
+            "date": "14.03.2012",
+            "author": null,
+            "changes": "Bugfix"
+          },
+          {
+            "version": "1.2",
+            "date": "07.10.2013",
+            "author": null,
+            "changes": "Add option for when no elements are selected"
+          },
+          {
+            "version": "1.4",
+            "date": "10.11.2014",
+            "author": null,
+            "changes": "Added support for multiple material."
+          },
+          {
+            "version": "1.5",
+            "date": "11.11.2014",
+            "author": null,
+            "changes": "Add property for a gap."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7151,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script manipulates ElementWallSF and Beam objects using 3D geometric operations (CoordSys, transformBy, addToolStatic). It checks `_bOnElementConstructed` and interacts with `el.beam()` collections. No `_Viewport`, `sd_` prefix, or 2D drawing generation logic found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWallSF"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5841,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sMaleWalls",
+            "type": "PropString",
+            "displayName": "Male Wall Code",
+            "defaultValue": "A;B;C;",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sFemaleWalls",
+            "type": "PropString",
+            "displayName": "Female Wall Code",
+            "defaultValue": "A;B;C;",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 2,
+            "variable": "sMaterials",
+            "type": "PropString",
+            "displayName": "Sheet Material",
+            "defaultValue": "Plasterboard",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "dWallGap",
+            "type": "PropDouble",
+            "displayName": "Extra Gap",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 7948,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically clears studs and adjusts plates in a 'Male' wall to provide space for cladding materials on a connected 'Female' wall, ensuring structural components do not interfere with sheeting at wall junctions.",
+          "category": "Framing/ConnectionProcessing",
+          "typicalUseCase": "Used during wall processing to automatically notch or move studs in an intersecting wall (Male) where it meets a returning wall (Female) that has sheet material (e.g., drywall) wrapping the corner."
+        },
+        "parameters": [
+          {
+            "name": "sMaleWalls",
+            "technicalDefault": "A;B;C;",
+            "businessMeaning": "Filters which walls act as the primary (Male) wall to be modified. Only walls with a Code matching this list will be processed by this script.",
+            "validRange": "List of wall codes (e.g., 'EXT;INT;PART;')",
+            "unit": "Text",
+            "affectsOutput": "If the selected wall's code is not in this list, the script does nothing and exits."
+          },
+          {
+            "name": "sFemaleWalls",
+            "technicalDefault": "A;B;C;",
+            "businessMeaning": "Identifies the connected (Female) walls whose cladding thickness dictates the cutout. Only adjacent walls with a Code in this list are considered for interference checking.",
+            "validRange": "List of wall codes (e.g., 'EXT;INT;')",
+            "unit": "Text",
+            "affectsOutput": "If a connected wall's code is missing from this list, the junction with that specific wall is ignored."
+          },
+          {
+            "name": "sMaterials",
+            "technicalDefault": "Plasterboard",
+            "businessMeaning": "The specific material name(s) used in the Element Zones of the Female wall that represent the cladding causing the obstruction (e.g., 'Plasterboard', 'OSB').",
+            "validRange": "List of material names (e.g., 'Plasterboard;Plywood;')",
+            "unit": "Text",
+            "affectsOutput": "Determines the physical depth of the interference. If the material is not found in the Female wall's zones, no cuts are made."
+          },
+          {
+            "name": "dWallGap",
+            "technicalDefault": "0",
+            "businessMeaning": "An additional clearance distance added to the standard material thickness, providing tolerance for installation or imperfections.",
+            "validRange": "0 to 20 mm",
+            "unit": "mm",
+            "affectsOutput": "Moves the cut point on the studs further away from the Female wall by this distance, effectively increasing the gap."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sMaleWalls",
+            "effect": "Determines execution eligibility for the current element.",
+            "cascade": []
+          },
+          {
+            "trigger": "sFemaleWalls",
+            "effect": "Filters the list of connected elements to check for interference.",
+            "cascade": []
+          },
+          {
+            "trigger": "sMaterials",
+            "effect": "Used to calculate the cut depth on the Female wall zones.",
+            "cascade": []
+          },
+          {
+            "trigger": "dWallGap",
+            "effect": "Adds to the calculated cut distance.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Cut",
+            "description": "Static cuts applied to studs at the junction point to clear the female wall material.",
+            "appliedTo": "Vertical studs in the Male Wall."
+          },
+          {
+            "type": "Transform",
+            "description": "Studs physically shifted along the wall's X-axis to avoid the obstruction.",
+            "appliedTo": "Vertical studs in the Male Wall."
+          },
+          {
+            "type": "Stretch",
+            "description": "Top and bottom plates are stretched to maintain continuity after studs are moved.",
+            "appliedTo": "Top Plates, Bottom Plates, and Blocking in the Male Wall."
+          }
+        ]
+      },
+      "tokens_used": 6761,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. Script starts; check if `insertCycleCount() > 1`. If true, erase instance and exit (prevents duplicate execution).\",\n    \"2. Display configuration dialog if executed manually.\",\n    \"3. Prompt user to select a set of Element entities.\",\n    \"4. Iterate through selected elements. For each element, spawn a new instance of the script attached specifically to that element, passing current properties.\",\n    \"5. Erase the original temporary instance.\",\n    \"6. [Attached Instance] Validate single element assignment. If `_Element.length <= 0`, erase and exit.\",\n    \"7. Parse properties: Split `sMaleWalls`, `sFemaleWalls`, and `sMaterials` into arrays of tokens.\",\n    \"8. Check if current element's code matches a code in `sMaleWalls`. If no match, erase and exit.\",\n    \"9. Identify and remove duplicate instances of this script already attached to the element.\",\n    \"10. Collect beams from the element: Categorize `bmToCut` (Top/Bottom/Angled Plates) and `bmToStretch` (Blocking).\",\n    \"11. Iterate through all connected elements (`getConnectedElements`).\",\n    \"12. [Connected Element Check] Verify if connected element code matches `sFemaleWalls`. If no match, skip.\",\n    \"13. Calculate geometry: Determine intersection points (Junction and Far Side) between the current wall's front line and the connected wall's front/back faces.\",\n    \"14. [Corner Check] Determine if the connection is at the Left or Right end of the current wall based on `ptJunction`.\",\n    \"15. Scan Zones: Check zones on the connected wall for materials matching `sMaterials`.\",\n    \"16. [Side Check] Determine if the connection is on the Front or Back face of the connected wall to scan correct zones.\",\n    \"17. If matching material zone found, set `nMove = true` and calculate `ptToMove` on the current wall's front line corresponding to the material depth.\",\n    \"18. Filter Beams: Identify beams perpendicular to the movement direction (`vDirToMove`).\",\n    \"19. Create a `PlaneProfile` (shadow) of the material zones on the connected wall.\",\n    \"20. Identify Studs: Find which perpendicular beams intersect with this profile. Collect these into `bmToMove` list (grouping adjacent studs).\",\n    \"21. If studs to move exist:\",\n    \"    \"   a. Calculate move distance (`dDist`) based on the first stud's position relative to `ptToMove` plus `dWallGap`.\",\n    \"    \"   b. Transform (move) all identified studs by `dDist`.\",\n    \"    \"   c. Apply Cut: Create a static cut on plates (`bmToCut`) at the intersection with the moved studs.\",\n    \"    \"   d. Apply Stretch: Stretch blocking (`bmToStretch`) to connect to the last moved stud.\",\n    \"22. Loop to next connected element.\",\n    \"23. Finalize: If `_bOnElementConstructed` is true or any cuts were made (`nErase`), erase the script instance.\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Insertion Cycle Check\",\n      \"path1\": {\n        \"name\": \"First Cycle\",\n        \"steps\": [\n          \"Proceed to user prompts (Element selection)\",\n          \"Spawn attached instances\",\n          \"Erase self\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Subsequent Cycle\",\n        \"steps\": [\n          \"Erase instance immediately\",\n          \"Exit script\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Element Code Filter (Male Wall)\",\n      \"path1\": {\n        \"name\": \"Code Match\",\n        \"steps\": [\n          \"Proceed to analyze connections\",\n          \"Process Female walls\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"No Match\",\n        \"steps\": [\n          \"Erase instance\",\n          \"Exit script\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Connected Element Filter (Female Wall)\",\n      \"path1\": {\n        \"name\": \"Valid Female Connection\",\n        \"steps\": [\n          \"Calculate intersection geometry\",\n          \"Check for material obstruction\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Invalid Connection\",\n        \"steps\": [\n          \"Ignore specific connected wall\",\n          \"Check next connection\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Junction Location\",\n      \"path1\": {\n        \"name\": \"Left End Connection\",\n        \"steps\": [\n          \"Search zones on connected wall\",\n          \"Move studs to the Right\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Right End Connection\",\n        \"steps\": [\n          \"Search zones on connected wall\",\n          \"Move studs to the Left\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Material Match in Zones\",\n      \"path1\": {\n        \"name\": \"Material Found\",\n        \"steps\": [\n          \"Calculate interference depth\",\n          \"Identify studs to move\",\n          \"Execute move/cut/stretch\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"No Material Found\",\n        \"steps\": [\n          \"Do nothing for this junction\",\n          \"Continue to next connected element\"\n        ]\n      }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"Element selection during insertion\",\n      \"errorMessage\": \"Implicitly handled. If user cancels selection (`ssE.go()` fails), script proceeds but spawns no instances and erases itself.\",\n      \"recovery\": \"Re-run command and select elements.\"\n    },\n    {\n      \"check\": \"Element Type\",\n      \"errorMessage\": \"None. Script attempts cast to `ElementWallSF`.\",\n      \"recovery\": \"Script will crash or exit if cast fails.\"\n    },\n    {\n      \"check\": \"Wall Code Match\",\n      \"errorMessage\": \"Silent failure. Script erases instance without modifying the wall if Code is not in `sMaleWalls`.\",\n      \"recovery\": \"Update `sMaleWalls` property or Wall Code.\"\n    },\n    {\n      \"check\": \"Beam Existence\",\n      \"errorMessage\": \"Silent failure. If `bmAll.length < 1`, script returns without action.\",\n      \"recovery\": \"Ensure wall has generated beams.\"\n    }\n  ],\n  \"postInsertionActions\": [\n    {\n      \"action\": \"Adjust Wall Codes or Material Properties\",\n      \"how\": \"OPM Properties Palette\",\n      \"effect\": \"Updating `sMaleWalls`, `sFemaleWalls`, or `sMaterials` and recalculating will change which walls/junctions are processed and the depth of cuts. Updating `dWallGap` adjusts clearance.\"\n    },\n    {\n      \"action\": \"Geometry Update (Wall Move/Resize)\",\n      \"how\": \"Grip Edit / Standard AutoCAD Modify\",\n      \"effect\": \"Since the script erases itself after execution (`_bOnElementConstructed` or `nErase`), changes to wall geometry will likely trigger a rebuild. If the script is re-triggered (e.g., by a master script or manual reload), it will re-calculate cuts based on new positions.\"\n    }\n  ]\n}\n```"
+      },
+      "tokens_used": 8881,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_CleanupStudInDynamicConnection.mcr\n\n## Overview\nAutomatically adjusts studs and plates in a primary wall (\"Male\" wall) to create space for cladding materials on a connecting wall (\"Female\" wall), ensuring clean structural intersections at corners without manual editing.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in 3D model context. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | Does not generate 2D output directly. |\n\n## Prerequisites\n- **Required Entities:** `ElementWallSF` (Standard hsbCAD Wall elements).\n- **Minimum Beam Count:** 0 (Logic checks for beams automatically).\n- **Required Settings:** None required for execution.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Browse and select `hsb_CleanupStudInDynamicConnection.mcr`\n\n### Step 2: Select Walls\n```\nCommand Line: \nSelect a set of elements\n```\n**Action:** Click on the wall elements you wish to process (the \"Male\" walls). Press **Enter** to confirm selection.\n\n**Note:** The script will attach itself to the selected walls, process connections, and then automatically erase itself once complete.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Male Wall Code | text | A;B;C; | Determines which walls are modified. Only walls with a Code listed here will be processed. Separate codes with semicolons. |\n| Female Wall Code | text | A;B;C; | Determines which connected walls are checked for obstructions. Only intersecting walls with a Code listed here are considered. |\n| Sheet Material | text | Plasterboard | The name of the material found in the Female wall's zones that defines the interference depth (e.g., \"Plasterboard\", \"OSB\"). |\n| Extra Gap | number | 0 | Additional clearance distance added to the material thickness to ensure a gap exists. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu items are added by this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script relies entirely on OPM (Properties Palette) inputs.\n\n## Tips\n- **Semicolon Separators:** When entering multiple wall codes or materials (e.g., \"INT;EXT;\"), ensure you separate them with a semicolon and end with a semicolon if required by your configuration standards.\n- **Verification:** After running, visually inspect corners to ensure the studs have moved or been cut correctly to accommodate the sheet material thickness.\n- **Recalculation:** Since the script deletes itself after processing (`_bOnElementConstructed`), re-running the command on the same walls may be necessary if you change the wall geometry significantly after the initial run.\n\n## FAQ\n- **Q: Why didn't my wall change after running the script?**\n  **A:** Check the **Male Wall Code** property. The Code assigned to your wall element (in the General properties) must match one of the codes in this list for the script to activate.\n- **Q: How do I account for different thicknesses of drywall?**\n  **A:** Ensure the **Sheet Material** property matches the exact name of the material used in the Element Zones of the intersecting wall. The script calculates the depth based on the zone thickness.\n- **Q: Can I use this on curved walls?**\n  **A:** This script is primarily designed for straight wall intersections. Results on curved walls may vary depending on the intersection geometry."
+      },
+      "tokens_used": 6507,
+      "error": null
+    }
+  }
+}

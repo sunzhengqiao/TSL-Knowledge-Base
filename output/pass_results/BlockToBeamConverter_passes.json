@@ -1,0 +1,214 @@
+{
+  "filename": "BlockToBeamConverter.mcr",
+  "status": "completed",
+  "total_tokens": 41413,
+  "processing_time": 558.6682980060577,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "14.12.2022",
+            "author": "Thorsten Huck",
+            "changes": "HSB-17333 bugfix on complex solids"
+          },
+          {
+            "version": "1.0",
+            "date": "13.12.2022",
+            "author": "Thorsten Huck",
+            "changes": "HSB-17333 initial version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6493,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses PrEntity to prompt user selection of BlockRef objects and iterates through the _Entity array. It creates new Beam entities using dbCreate() based on solids found within blocks. There are no ShopDrawing indicators (sd_ prefix, #Type E) or Paper Space checks (_Viewport)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "BlockRef",
+            "Solid"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (User must select Block References containing solids)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4091,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"|Select entities|\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      },\n      {\n        \"step\": 2,\n        \"function\": \"getPoint\",\n        \"promptOriginal\": null,\n        \"condition\": \"bDebug\",\n        \"required\": false\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [\n    {\n      \"type\": \"Standard\",\n      \"trigger\": \"Insertion\",\n      \"title\": null,\n      \"dataSource\": \"OPM Properties\",\n      \"features\": {\n        \"searchable\": false,\n        \"multiSelect\": false\n      }\n    }\n  ],\n  \"opmProperties\": [\n    {\n      \"index\": 0,\n      \"variable\": \"sSeparator\",\n      \"type\": \"PropString\",\n      \"displayName\": \"|Separator|\",\n      \"defaultValue\": \"-\",\n      \"inputType\": \"text\",\n      \"options\": [],\n      \"category\": \"|General|\",\n      \"description\": \"|Defines the Separator to identify tokens within the layer name|\"\n    },\n    {\n      \"index\": 1,\n      \"variable\": \"sType\",\n      \"type\": \"PropString\",\n      \"displayName\": \"|Type|\",\n      \"defaultValue\": \"|Real Solid|\",\n      \"inputType\": \"dropdown\",\n      \"options\": [\n        \"|Real Solid|\",\n        \"|Simplified Solid|\"\n      ],\n      \"category\": \"|General|\",\n      \"description\": \"|Defines if the converted beam will represent the real solid of the source or a simplified solid (faster)|\"\n    },\n    {\n      \"index\": 2,\n      \"variable\": \"sHide\",\n      \"type\": \"PropString\",\n      \"displayName\": \"|Set source invisible|\",\n      \"defaultValue\": \"|Yes|\",\n      \"inputType\": \"dropdown\",\n      \"options\": [\n        \"|No|\",\n        \"|Yes|\"\n      ],\n      \"category\": \"|General|\",\n      \"description\": \"|Defines wether a successfully converted"
+      },
+      "tokens_used": 7531,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Converts AutoCAD Block References containing 3D Solids into native hsbCAD Beams, extracting naming and material properties from the source block's layer name.",
+          "category": "Modeling/Import",
+          "typicalUseCase": "Used when importing architectural reference models (e.g., from Revit or other CAD software) where structural elements are represented as generic blocks or solids, and need to be converted into intelligent timber beams for detailing and manufacturing."
+        },
+        "parameters": [
+          {
+            "name": "sSeparator",
+            "technicalDefault": "-",
+            "businessMeaning": "The delimiter character used to split the source block's layer name into distinct segments (tokens) for automatic property mapping.",
+            "validRange": "Any single character (e.g., '-', '_', '.', '|')",
+            "unit": "String",
+            "affectsOutput": "If the separator does not match the layer naming convention, the script will fail to extract tokens, resulting in beams with default names and materials instead of the specific ones encoded in the layer name."
+          },
+          {
+            "name": "sType",
+            "technicalDefault": "|Real Solid|",
+            "businessMeaning": "Specifies the geometric accuracy of the resulting beam. 'Real Solid' preserves exact geometry (chamfers, complex cuts), while 'Simplified Solid' approximates it as a bounding box.",
+            "validRange": "|Real Solid| (Accurate), |Simplified Solid| (Performance optimized)",
+            "unit": "Enumeration",
+            "affectsOutput": "'Real Solid' creates a beam with a custom cross-section matching the source solid, essential for irregular glulam or log shapes. 'Simplified Solid' creates a standard rectangular beam, potentially ignoring complex geometry like notches or rounded edges to improve calculation speed."
+          },
+          {
+            "name": "sHide",
+            "technicalDefault": "|Yes|",
+            "businessMeaning": "Determines visibility of the original source block after conversion.",
+            "validRange": "|Yes|, |No|",
+            "unit": "Boolean (Enumeration)",
+            "affectsOutput": "If 'Yes', the source block is hidden, decluttering the model to show only the new parametric beams. If 'No', the original block remains visible on top of or behind the new beam, causing visual duplication."
+          },
+          {
+            "name": "sToken1",
+            "technicalDefault": "<|Disabled|>",
+            "businessMeaning": "Maps the first segment of the layer name to a specific beam property (e.g., Name, Material, Grade).",
+            "validRange": "Disabled, Name, Material, Grade, Information, Label, SubLabel, SubLabel2",
+            "unit": "Enumeration",
+            "affectsOutput": "Directly populates the selected property of the new beam. For example, mapping this to 'Name' allows batch-renaming of beams based on the layer structure (e.g., layer 'Floor-Joist' sets Beam Name to 'Floor')."
+          },
+          {
+            "name": "sToken2",
+            "technicalDefault": "<|Disabled|>",
+            "businessMeaning": "Maps the second segment of the layer name to a beam property.",
+            "validRange": "Disabled, Name, Material, Grade, Information, Label, SubLabel, SubLabel2",
+            "unit": "Enumeration",
+            "affectsOutput": "Enables extraction of a second attribute, commonly used for 'Material' or 'Grade' assignment (e.g., layer 'Joist-C24' sets Material to 'C24')."
+          },
+          {
+            "name": "sToken3",
+            "technicalDefault": "<|Disabled|>",
+            "businessMeaning": "Maps the third segment of the layer name to a beam property.",
+            "validRange": "Disabled, Name, Material, Grade, Information, Label, SubLabel, SubLabel2",
+            "unit": "Enumeration",
+            "affectsOutput": "Allows extraction of deeper metadata from complex layer naming conventions (e.g., specific grade information or labels)."
+          },
+          {
+            "name": "sToken4",
+            "technicalDefault": "<|Disabled|>",
+            "businessMeaning": "Maps the fourth segment of the layer name to a beam property.",
+            "validRange": "Disabled, Name, Material, Grade, Information, Label, SubLabel, SubLabel2",
+            "unit": "Enumeration",
+            "affectsOutput": "Provides additional slots for data mapping if the layer name contains detailed segmentation."
+          },
+          {
+            "name": "sToken5",
+            "technicalDefault": "<|Disabled|>",
+            "businessMeaning": "Maps the fifth segment of the layer name to a beam property.",
+            "validRange": "Disabled, Name, Material, Grade, Information, Label, SubLabel, SubLabel2",
+            "unit": "Enumeration",
+            "affectsOutput": "Further extends data extraction capabilities."
+          },
+          {
+            "name": "sToken6",
+            "technicalDefault": "<|Disabled|>",
+            "businessMeaning": "Maps the sixth segment of the layer name to a beam property.",
+            "validRange": "Disabled, Name, Material, Grade, Information, Label, SubLabel, SubLabel2",
+            "unit": "Enumeration",
+            "affectsOutput": "Further extends data extraction capabilities."
+          },
+          {
+            "name": "sToken7",
+            "technicalDefault": "<|Disabled|>",
+            "businessMeaning": "Maps the seventh segment of the layer name to a beam property.",
+            "validRange": "Disabled, Name, Material, Grade, Information, Label, SubLabel, SubLabel2",
+            "unit": "Enumeration",
+            "affectsOutput": "Further extends data extraction capabilities."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sSeparator is changed",
+            "effect": "The logic used to tokenize the layer name changes. All token mappings rely on this split occurring correctly.",
+            "cascade": [
+              "sToken1",
+              "sToken2",
+              "sToken3",
+              "sToken4",
+              "sToken5",
+              "sToken6",
+              "sToken7"
+            ]
+          },
+          {
+            "trigger": "sType is set to '|Simplified Solid|'",
+            "effect": "The beam is generated using a bounding box algorithm, which discards detailed geometric features of the source solid.",
+            "cascade": []
+          },
+          {
+            "trigger": "Any sToken parameter is set",
+            "effect": "The specific property (Name, Material, etc.) of the generated beam is overwritten by the corresponding string segment found in the layer name.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam",
+            "description": "Parametric hsbCAD Beam entities. They inherit the exact geometry of the source solid (if 'Real Solid') or a bounding box (if 'Simplified Solid'). They are placed on the same layer and assigned the same color as the source block.",
+            "appliedTo": "Model Space, replacing the geometry of the selected Block References."
+          }
+        ]
+      },
+      "tokens_used": 6541,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. User inserts script via TSLCONTENT command.\",\n    \"2. Script checks for Catalog execution key; if found, loads properties silently, otherwise shows Properties Palette (Dialog).\",\n    \"3. Command line prompts user to 'Select entities' (Filter: Block References).\",\n    \"4. User selects Block References from Model Space and confirms.\",\n    \"5. [Conditional] If 'bDebug' is true, user is prompted for a reference point ('getPoint').\",\n    \"6. Script iterates through each selected Block Reference.\",\n    \"7. For each Block, script iterates through nested entities to find Solids.\",\n    \"8. [Conditional] Branch based on 'bDebug' state: visualize geometry at cursor OR create Beam.\",\n    \"9. [Conditional] Branch based on 'sType': Create 'Real Solid' beam OR 'Simplified Solid' beam.\",\n    \"10. Script tokenizes the Block's Layer Name using 'sSeparator'.\",\n    \"11. Script maps identified tokens to Beam properties (Name, Material, etc.) based on 'sToken' settings.\",\n    \"12. Script assigns Layer and Color from source Block to new Beam.\",\n    \"13. [Conditional] If 'sHide' is 'Yes', the source Block Reference visibility is set to false.\",\n    \"14. [Conditional] If not in Debug mode, the script instance erases itself from the drawing.\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Catalog Execution Key (_kExecuteKey)\",\n      \"path1\": {\n        \"name\": \"Catalog Load\",\n        \"steps\": [\n          \"Check if key exists in script catalog.\",\n          \"Load property values from catalog entry.\",\n          \"Skip Properties Palette dialog.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Manual Input\",\n        \"steps\": [\n          \"Invoke Properties Palette (showDialog).\",\n          \"User manually inputs Separator, Type, Visibility, and Token mappings.\",\n          \"User closes dialog to proceed.\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Debug Mode (bDebug flag)\",\n      \"path1\": {\n        \"name\": \"Debug Execution\",\n        \"steps\": [\n          \"Prompt user for a spatial point (_Pt0).\",\n          \"Extract Solid body from block.\",\n          \"Transform body to the selected point.\",\n          \"Visualize body (vis 3) without creating a beam.\",\n          \"Script instance persists in drawing.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Production Execution\",\n        \"steps\": [\n          \"Extract Solid body from block.\",\n          \"Validate solid is not null.\",\n          \"Create hsbCAD Beam entity (dbCreate).\",\n          \"Script instance erases self upon completion.\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Solid Type (sType property)\",\n      \"path1\": {\n        \"name\": \"Real Solid\",\n        \"steps\": [\n          \"Call dbCreate with bounding box flag set to false.\",\n          \"Beam geometry exactly matches the source solid (including complex cuts/chamfers).\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Simplified Solid\",\n        \"steps\": [\n          \"Call dbCreate with bounding box flag set to true.\",\n          \"Beam geometry is simplified to a bounding box (performance optimized).\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Source Visibility (sHide property)\",\n      \"path1\": {\n        \"name\": \"Hide Source\",\n        \"steps\": [\n          \"Check if Beam creation was successful.\",\n          \"Call setIsVisible(false) on the original Block Reference.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Keep Source\",\n        \"steps\": [\n          \"Leave Block Reference visible in the model.\"\n        ]\n      }\n    }\n  ],\n  \"validationRules\":"
+      },
+      "tokens_used": 9166,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# BlockToBeamConverter.mcr\n\n## Overview\nConverts AutoCAD Block References containing 3D Solids into native hsbCAD Beams. It automatically extracts naming and material properties from the source block's layer name using configurable delimiters.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This is the primary environment for operation. Users must select Block References from here. |\n| Paper Space | No | Script does not function in Layout views. |\n| Shop Drawing | No | Script is intended for model generation, not detailing views. |\n\n## Prerequisites\n- **Required Entities**: Block References containing 3D Solids.\n- **Minimum Beam Count**: 0 (Script creates beams from scratch).\n- **Required Settings**: None (Relies on user-configured properties and layer naming structure).\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command**: `TSLINSERT` (or via the hsbCAD TSL Palette) → Select `BlockToBeamConverter.mcr`\n\n### Step 2: Configure Properties\n**Action**: Before insertion, the Properties Palette (OPM) will appear. Configure the following:\n1.  Set the **Separator** character (e.g., `-` or `_`) that splits your layer names.\n2.  Define **Type** (Real vs Simplified Solid).\n3.  Set up **Token Mapping** (which part of the layer name corresponds to Material, Name, etc.).\n4.  Decide if you want to **Set source invisible**.\n\n### Step 3: Select Entities\n```\nCommand Line: |Select entities|\nAction: Click on the Block References in the model that you wish to convert. Press Enter to confirm selection.\n```\n*Note: The script filters for Block References. Ensure your blocks contain 3D Solid geometry.*\n\n### Step 4: Processing\n**Action**: The script processes each block, extracts the solid geometry, and creates a new hsbCAD Beam in the same location. Depending on your settings, the original block will be hidden. The script instance will then automatically remove itself from the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| |Separator| | Text | `-` | The character used to split the layer name into segments (tokens). E.g., if layer is `Beam-GL24h`, use `-`. |\n| |Type| | Dropdown | `|Real Solid|` | Defines the geometry of the new beam. `|Real Solid|` keeps exact complex shapes; `|Simplified Solid|` uses a bounding box (faster). |\n| |Set source invisible| | Dropdown | `|Yes|` | If `|Yes|`, the original Block Reference is hidden after successful conversion. |\n| |Token 1| | Dropdown | `<|Disabled|>` | Maps the 1st segment of the layer name to a beam property (e.g., Name, Material, Grade). |\n| |Token 2| | Dropdown | `<|Disabled|>` | Maps the 2nd segment of the layer name to a beam property. |\n| |Token 3| | Dropdown | `<|Disabled|>` | Maps the 3rd segment of the layer name to a beam property. |\n| |Token 4| | Dropdown | `<|Disabled|>` | Maps the 4th segment of the layer name to a beam property. |\n| |Token 5| | Dropdown | `<|Disabled|>` | Maps the 5th segment of the layer name to a beam property. |\n| |Token 6| | Dropdown | `<|Disabled|>` | Maps the 6th segment of the layer name to a beam property. |\n| |Token 7| | Dropdown | `<|Disabled|>` | Maps the 7th segment of the layer name to a beam property. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Re-runs the script logic (Note: The script instance typically erases itself after completion, so this option is primarily available during debugging or if the script fails to finish). |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script relies on direct user input via the Properties Palette and does not require external settings files.\n\n## Tips\n- **Layer Naming**: Organize your import layers carefully. For example, use `Structural-Floor-C24` if you want to map Token 1 to Name (\"Structural\"), Token 2 to Name (\"Floor\"), and Token 3 to Material (\"C24\").\n- **Performance**: If converting a large number of complex architectural blocks (e.g., from Revit), use the `|Simplified Solid|` option initially to speed up processing. You can switch to `|Real Solid|` for specific elements later if detailed geometry is required.\n- **Verification**: Set `|Set source invisible|` to `|No|` for your first run. This allows you to visually compare the new hsbCAD beam against the original block to ensure the conversion was accurate.\n\n## FAQ\n- **Q: My beams were created, but they have default names and materials. Why?**\n  - A: Check your `|Separator|` setting. If the separator character does not match the one used in the actual layer name, the script cannot split the name into tokens to map properties.\n\n- **Q: The new beams are simple boxes, but my original blocks had complex notches.**\n  - A: Check the `|Type|` property. It is likely set to `|Simplified Solid|`. Change it to `|Real Solid|` and run the conversion again to preserve the exact geometry.\n\n- **Q: Can I use this on nested blocks (blocks inside blocks)?**\n  - A: The script iterates through entities within the selected block reference to find solids. Ensure you select the top-level parent block."
+      },
+      "tokens_used": 7591,
+      "error": null
+    }
+  }
+}

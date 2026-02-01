@@ -1,0 +1,171 @@
+{
+  "filename": "GE_WALLS_TRIPLE_T_CONNECTION.mcr",
+  "status": "completed",
+  "total_tokens": 33486,
+  "processing_time": 821.8101952075958,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.4",
+            "date": "22.mar.2013",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Renamed from GE_3_WALL_CONNECTION to GE_WALLS_TRIPLE_T_CONNECTION"
+          },
+          {
+            "version": "1.3",
+            "date": "15.ago.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Thumbnail updated"
+          },
+          {
+            "version": "1.2",
+            "date": "13.jul.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Thumbnail added\n\t\t- Description added"
+          },
+          {
+            "version": "1.1",
+            "date": "10-feb-2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Added functionality for very top plates"
+          },
+          {
+            "version": "1.0",
+            "date": "14-apr-2011",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7846,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script manipulates 3D model geometry using ElementWall, Beam, and Sheet classes. It performs model modifications such as transformBy, stretchDynamicTo, and addToolStatic. The display logic uses Display(-1) which renders in Model Space. There are no references to sd_* classes, Multipage, or Viewport APIs."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing at least 3 ElementWall entities in a specific T-connection arrangement (2 walls forming a corner, 1 offset wall).",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7328,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"\\n\"+T(\"|Select walls for T connection|\"),\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [],\n  \"opmProperties\": [],\n  \"contextMenu\": [],\n  \"settingsFiles\": []\n}\n```"
+      },
+      "tokens_used": 7413,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the detailing of a triple-wall timber junction where two walls form a perpendicular corner and a third wall aligns with one of them (offset connection), handling stretching, cutting, and sheeting modifications.",
+          "category": "Framing",
+          "typicalUseCase": "Used during the design phase to connect three walls where a standard corner T-connection isn't applicable, specifically when one wall runs past the intersection and needs to be wrapped or connected to the corner assembly."
+        },
+        "parameters": [
+          {
+            "name": "Element[] (via PrEntity)",
+            "technicalDefault": "User selects 3 ElementWall entities at runtime",
+            "businessMeaning": "The selection of the three walls involved in the junction (2 forming a corner, 1 offset)",
+            "validRange": "Exactly 3 ElementWall entities",
+            "unit": "count",
+            "affectsOutput": "Determines the geometry of the connection. The script identifies which walls form the corner and which is the 'single' offset wall to stretch and cut based on their spatial relationships."
+          },
+          {
+            "name": "ExecutionMode (Map)",
+            "technicalDefault": "0 (Insert) -> 1 (Calculated)",
+            "businessMeaning": "Internal state tracking to ensure the geometric calculations only run once after successful validation.",
+            "validRange": "0, 1",
+            "unit": "state",
+            "affectsOutput": "Prevents re-processing of geometry on subsequent recalculation events, locking in the generated cuts and stretches."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of 3 walls during insert",
+            "effect": "Script analyzes topological relationships (connectivity and perpendicularity) to automatically classify roles.",
+            "cascade": [
+              "elSingle",
+              "elMaleOnCorner",
+              "elFemale"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Geometric Modification (Stretch)",
+            "description": "Vertical beams in the 'single' wall are transformed to meet the corner wall geometry.",
+            "appliedTo": "Vertical beams of the identified offset wall (elSingle)"
+          },
+          {
+            "type": "Geometric Modification (Stretch)",
+            "description": "Horizontal beams in contact with the moved vertical beams are dynamically stretched to maintain connections.",
+            "appliedTo": "Horizontal beams intersecting the modified vertical beams"
+          },
+          {
+            "type": "Cut",
+            "description": "Sheathing on the external side of the single wall is copied, moved, and cut to wrap around the corner connection.",
+            "appliedTo": "Sheeting entities on the external side of elSingle"
+          },
+          {
+            "type": "Cut",
+            "description": "Sheathing on the internal side of the single wall is cut to accommodate the perpendicular wall.",
+            "appliedTo": "Sheeting entities on the internal side of elSingle"
+          },
+          {
+            "type": "Cut",
+            "description": "Sheathing on the perpendicular corner wall is cut to align with the single wall.",
+            "appliedTo": "Sheeting entities on the wall perpendicular to elSingle"
+          }
+        ]
+      },
+      "tokens_used": 7087,
+      "error": null
+    },
+    "5": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "Request timeout after retries"
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_WALLS_TRIPLE_T_CONNECTION.mcr\n\n## Overview\nThis script automates the detailing of a triple-wall timber junction where two walls form a perpendicular corner and a third wall aligns with one of them (offset connection). It handles the necessary beam stretching and sheathing modifications to connect the assembly correctly.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates exclusively in the 3D model. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | Does not generate 2D drawings directly. |\n\n## Prerequisites\n- **Required Entities**: At least 3 `ElementWall` entities must exist in the model.\n- **Geometry**: The walls must be arranged in a specific \"Triple T\" configuration (two walls forming a corner, with a third wall running parallel to one of them at an offset).\n- **Cleanup**: Ensure walls are positioned correctly in 3D space before running the script.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_WALLS_TRIPLE_T_CONNECTION.mcr` from the file list.\n\n### Step 2: Select Walls\n```\nCommand Line: Select walls for T connection\nAction: Select the 3 ElementWall entities that form the junction.\n```\n*Note: The script will automatically detect which walls form the corner and which is the offset wall based on their spatial position; you do not need to select them in a specific order.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script has no user-editable properties in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | No custom context menu options are added by this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script does not rely on external settings files.\n\n## Tips\n- **Auto-Detection**: You can select all three walls in a single window selection or pick them one by one. The script analyzes the geometry to determine which beams to stretch and where to cut the sheathing.\n- **Top Plates**: This script includes functionality to handle \"very top plates,\" ensuring connections are correctly processed even at the highest levels of the wall structure.\n- **Sheathing**: The script automatically copies and moves sheathing on the external side of the single wall to wrap around the corner, while cutting the internal sheathing to fit the perpendicular wall.\n\n## FAQ\n- **Q: Does the order in which I select the walls matter?**\n  A: No, the script calculates the topology automatically. Just ensure you select exactly the three walls involved in the connection.\n\n- **Q: Why didn't the script update the walls?**\n  A: Ensure the selected entities are `ElementWall` types and that they are positioned in a valid corner/offset arrangement. The script requires specific geometric relationships to determine how to stretch the beams."
+      },
+      "tokens_used": 3812,
+      "error": null
+    }
+  }
+}

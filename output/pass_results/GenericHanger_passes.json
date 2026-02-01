@@ -1,0 +1,273 @@
+{
+  "filename": "GenericHanger.mcr",
+  "status": "completed",
+  "total_tokens": 50755,
+  "processing_time": 631.1161615848541,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8941,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly uses '_kModelSpace' in the tslDialog.dbCreate function. The summary describes creating 'hangers between T-connected beams, trusses and panels', which are 3D structural entities. Variables include 'kBeam', 'kPanel', 'kTruss' indicating structural modeling."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element",
+            "GenBeam (Truss)"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space containing intersecting structural elements (T-connections)",
+          "requiredSettings": [
+            "Manufacturer definition XML files (e.g., StrongTie)",
+            "Map configuration for hanger products and tolerances"
+          ]
+        }
+      },
+      "tokens_used": 6746,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"getString\",\n        \"promptOriginal\": \"|Are you sure to overwrite existing settings?| [|No|]/[|Yes|]\",\n        \"condition\": \"_bOnRecalc && _kExecuteKey == sTriggerExportSettings\",\n        \"required\": true\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [\n    {\n      \"type\": \"ShowDynamicDialog\",\n      \"trigger\": \"TagSettings Recalc Trigger (sTriggerTagSettings)\",\n      \"title\": null,\n      \"dataSource\": \"mapSetting (Tag/TagSequentialColor)\",\n      \"features\": {\n        \"searchable\": false,\n        \"multiSelect\": false\n      }\n    },\n    {\n      \"type\": \"ShowNotice\",\n      \"trigger\": \"AllowAngleDeviation Recalc Trigger\",\n      \"title\": \"|Angle Deviation|\",\n      \"dataSource\": \"Internal script logic\",\n      \"features\": {\n        \"searchable\": false,\n        \"multiSelect\": false\n      }\n    },\n    {\n      \"type\": \"ShowMultilineNotice\",\n      \"trigger\": \"PrintCommand Recalc Trigger\",\n      \"title\": null,\n      \"dataSource\": \"Command string generation\",\n      \"features\": {\n        \"searchable\": false,\n        \"multiSelect\": false\n      }\n    },\n    {\n      \"type\": \"ShowMultilineNotice\",\n      \"trigger\": \"ReportIssues Recalc Trigger\",\n      \"title\": null,\n      \"dataSource\": \"sIssues array\",\n      \"features\": {\n        \"searchable\": false,\n        \"multiSelect\": false\n      }\n    }\n  ],\n  \"opmProperties\": [],\n  \"contextMenu\": [\n    {\n      \"menuItem"
+      },
+      "tokens_used": 9673,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the insertion and configuration of structural timber connectors (joist hangers, skewed hangers, straps) between beams, trusses, and panels.",
+          "category": "Hardware / Connections",
+          "typicalUseCase": "Connecting floor joists to rim beams or carrying beams where metal reinforcement is required to transfer loads, handling complex geometry like skewed angles or top-mounted situations."
+        },
+        "parameters": [
+          {
+            "name": "bAllowAngleDeviation",
+            "technicalDefault": "false",
+            "businessMeaning": "Toggles whether standard perpendicular hangers can be applied to connections that are not perfectly 90 degrees. If enabled, it allows a small tolerance (±2°) to accommodate minor field or modeling variances without requiring a specifically skewed hanger.",
+            "validRange": "true / false",
+            "unit": "Boolean",
+            "affectsOutput": "Determines if a hanger is placed on slightly angled connections; prevents 'No valid product found' errors for near-square connections."
+          },
+          {
+            "name": "sTagMode",
+            "technicalDefault": "\"Disabled\"",
+            "businessMeaning": "Controls how production identifiers (tags) are assigned to the hanger hardware. It determines if the hanger inherits a tag, gets a new unique tag, or is ignored in the numbering sequence.",
+            "validRange": "Disabled, Set Tag, Set + Create Tag",
+            "unit": "Enum",
+            "affectsOutput": "BOM (Bill of Materials) listing and CAM labeling for the hardware component."
+          },
+          {
+            "name": "sSeqColor",
+            "technicalDefault": "Empty",
+            "businessMeaning": "Defines a custom palette of RGB colors used to sequentially color-code hangers in the model. This aids visual verification to ensure different hanger types or positions are easily distinguishable.",
+            "validRange": "Semicolon-separated list of integers (e.g., '255;0;0;0;255;0')",
+            "unit": "RGB Values",
+            "affectsOutput": "Visual representation color in 3D model and potentially 2D drawings."
+          },
+          {
+            "name": "AllowedAngularDeviation",
+            "technicalDefault": "Not set (0)",
+            "businessMeaning": "The specific threshold of angle error permitted when 'Allow Angle Deviation' is active. Defines the limit of deviation from 90°.",
+            "validRange": "Degrees (Logic implies 5° total deviation based on 'mapSetting.setDouble(..., 5, _kAngle)')",
+            "unit": "Degrees",
+            "affectsOutput": "The geometric tolerance used during the product selection algorithm."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User changes 'sTagMode' to 'Set Tag' or 'Set + Create Tag'",
+            "effect": "Enables the 'AddTags' flag in the internal Map.",
+            "cascade": [
+              "Tag Mode",
+              "Sequential Colors"
+            ]
+          },
+          {
+            "trigger": "User toggles 'bAllowAngleDeviation'",
+            "effect": "Updates the Parameter map with or without 'AllowedAngularDeviation' value.",
+            "cascade": [
+              "AllowedAngularDeviation"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "MetalPart / Hanger",
+            "description": "The physical steel connector geometry (e.g., Simpson Strong-Tie, MiTek) selected based on the beam dimensions and connection angle.",
+            "appliedTo": "The intersection of Male (Joist) and Female (Support) beams."
+          },
+          {
+            "type": "Element (Backer / Stiffener)",
+            "description": "Reinforcement timber blocks added to the female beam to provide nailing surface or prevent web crushing, specified by the 'CreateStiff' and 'Backers' map keys.",
+            "appliedTo": "Female beam (support)."
+          },
+          {
+            "type": "Machining (Drill/Cut)",
+            "description": "Holes or cuts in the timber members required to accommodate the hanger straps or flanges, including nail holes defined in 'Fixture' patterns.",
+            "appliedTo": "Male and Female beams."
+          }
+        ]
+      },
+      "tokens_used": 9327,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User executes script (GenericHanger) via command, toolbar, or catalog entry.",
+          "2. Script initializes: Loads configuration from XML (MapSetting) and validates manufacturer definitions.",
+          "3. User Selection: Prompts user to select structural entities (Female/Support beam and Male/Joist beam).",
+          "4. Geometry Calculation: Script analyzes connection angles, dimensions, and clearances.",
+          "5. Product Selection: Matches geometry against manufacturer catalog (auto-selects best fit or uses specified product).",
+          "6. Generation: Creates MetalPart (hanger), generates Backers/Stiffeners (Element), and applies Machining (Drills/Cuts).",
+          "7. Completion: Visualizes result and logs any issues to 'sIssues' array (e.g., 'No valid product found')."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User executes 'Export Settings' context command",
+            "path1": {
+              "name": "File Exists",
+              "steps": [
+                "Script detects configuration file already exists at path.",
+                "Prompt user via getString: 'Are you sure to overwrite existing settings?'",
+                "If user inputs 'Yes': Overwrite file and report success.",
+                "If user inputs 'No' or other: Abort export operation."
+              ]
+            },
+            "path2": {
+              "name": "File Does Not Exist",
+              "steps": [
+                "Script detects no existing file.",
+                "Write mapSetting to XML file immediately.",
+                "Report success message."
+              ]
+            }
+          },
+          {
+            "condition": "User executes 'Allow Angle Deviation' context command",
+            "path1": {
+              "name": "Deviation Enabled (Currently Off)",
+              "steps": [
+                "Toggle bAllowAngleDeviation to true.",
+                "Set 'AllowedAngularDeviation' to 5 degrees in Map.",
+                "Show Notice: 'Hangers will tolerate ±2° angular deviation.'"
+              ]
+            },
+            "path2": {
+              "name": "Deviation Disabled (Currently On)",
+              "steps": [
+                "Toggle bAllowAngleDeviation to false.",
+                "Remove 'AllowedAngularDeviation' from Map.",
+                "Show Notice: 'Hangers will not tolerate any angular deviation.'"
+              ]
+            }
+          },
+          {
+            "condition": "User executes 'Show Command for UI Creation'",
+            "path1": {
+              "name": "Product is <Automatic>",
+              "steps": [
+                "Generate generic command string using Manufacturer and Family arguments.",
+                "Display command for creating UI button."
+              ]
+            },
+            "path2": {
+              "name": "Product is Specific",
+              "steps": [
+                "Construct catalog entry string (Manufacturer_Family_Product).",
+                "Call setCatalogFromPropValues to define entry.",
+                "Generate command string using the specific catalog entry.",
+                "Display command for creating UI button."
+              ]
+            }
+          },
+          {
+            "condition": "Script execution finishes (Post-Calculation)",
+            "path1": {
+              "name": "Issues Detected (sIssues.length > 0)",
+              "steps": [
+                "Populate 'Show Selection Log' context menu item.",
+                "Wait for user to execute trigger to view details."
+              ]
+            },
+            "path2": {
+              "name": "No Issues",
+              "steps": [
+                "Keep 'Show Selection Log' context menu item hidden."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "File Overwrite Intent",
+            "errorMessage": "None (Prompt is blocking)",
+            "recovery": "User types 'Yes' to confirm overwrite or 'No' to cancel."
+          },
+          {
+            "check": "Settings File Import",
+            "errorMessage": "Implicit (Script checks mapSetting.length > 0)",
+            "recovery": "User selects a valid XML file containing correct structure."
+          },
+          {
+            "check": "Tag Configuration",
+            "errorMessage": "Invalid tagging configuration (Note: v1.21 fix prevents this from breaking insertion)",
+            "recovery": "Script logs issue to 'sIssues' array; user can view via 'Show Selection Log' and adjust Tag settings."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Toggle Angle Deviation",
+            "how": "Context Menu -> 'Allow Angle Deviation' / 'Angle Deviation off'",
+            "effect": "Switches between strict 90-degree enforcement and allowing a 5-degree tolerance for product selection."
+          },
+          {
+            "action": "Configure Tagging",
+            "how": "Context Menu -> 'TagSettings'",
+            "effect": "Opens Dynamic Dialog to set Tag Mode (Disabled/Set/Create) and Sequential Colors."
+          },
+          {
+            "action": "View Creation Log",
+            "how": "Context Menu -> 'Show Selection Log' (Only if issues exist)",
+            "effect": "Displays a Multiline Notice with details of why a hanger might not have been generated or fitted correctly."
+          },
+          {
+            "action": "Generate UI Command",
+            "how": "Context Menu -> 'Show Command for UI Creation'",
+            "effect": "Generates a LISP string to copy/paste into a CUI/CUIx file to create a toolbar button for the current configuration."
+          },
+          {
+            "action": "Import/Export Configuration",
+            "how": "Context Menu -> 'Import Settings' / 'Export Settings'",
+            "effect": "Loads or Saves the current MapSetting (Manufacturer, Family, Tolerances, Tag settings) to an XML file."
+          }
+        ]
+      },
+      "tokens_used": 9925,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GenericHanger.mcr\n\n## Overview\nAutomates the insertion and configuration of structural timber connectors (joist hangers, skewed hangers, and straps) between beams, trusses, and panels. It selects the appropriate hardware based on geometry, handles machining (drilling/cutting), and manages reinforcement/backers.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script specifically designed for 3D structural modeling. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | Intended for model generation, not drawing annotation. |\n\n## Prerequisites\n- **Required Entities**: At least two intersecting structural entities (`GenBeam`, `GenBeam` (Truss), or `Element`) forming a T-connection.\n- **Minimum Beam Count**: 2 (Support beam and Joist/Truss).\n- **Required Settings**: Manufacturer definition XML files (e.g., Simpson Strong-Tie) and Map configuration files must be accessible to the script.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the command line.\n2.  Select `GenericHanger.mcr` from the file dialog.\n\n### Step 2: Select Supporting Beam (Female)\n```\nCommand Line: Select beam or truss (Support):\nAction: Click on the main carrying beam (e.g., rim beam or ledger) that the hanger will attach to.\n```\n\n### Step 3: Select Joist Beam (Male)\n```\nCommand Line: Select beam or truss (Joist):\nAction: Click on the beam being supported (e.g., floor joist) that sits into the hanger.\n```\n\n### Step 4: Automatic Generation\nThe script will automatically calculate the geometry, select the best-fitting product from the catalog, and generate the hanger, associated metal parts, and required machining.\n\n### Step 5: Verify and Adjust\n1.  Visually inspect the generated hanger in the model.\n2.  If the hanger is missing or incorrectly placed, right-click the script instance and select **Show Selection Log** to see error details (e.g., \"No valid product found\").\n3.  Adjust parameters (e.g., Allow Angle Deviation) via the Properties Palette or Right-Click Menu if necessary.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| bAllowAngleDeviation | Boolean | False | If True, allows standard hangers to be used on connections that are not perfectly 90° (within a small tolerance). Prevents placement failures on minor field variances. |\n| AllowedAngularDeviation | Number (Double) | 0.0 | Specifies the maximum degree of deviation from 90° allowed when 'bAllowAngleDeviation' is active. |\n| sTagMode | Enum | Disabled | Controls how production identifiers (tags) are assigned. Options: Disabled, Set Tag, or Set + Create Tag. Affects BOM and labeling. |\n| sSeqColor | String | Empty | Defines a custom color palette (RGB values separated by semicolons) for sequential color-coding of hangers in the model. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| TagSettings | Opens a dialog to configure tagging modes and sequential color settings. |\n| Allow Angle Deviation | Toggles the angle tolerance setting on/off. Prompts for confirmation and updates the configuration. |\n| Show Selection Log | Displays a report of issues or errors if the hanger could not be generated (only appears if issues exist). |\n| Show Command for UI Creation | Generates a LISP command string to create a toolbar button for the current specific product configuration. |\n| Export Settings | Saves the current configuration (Manufacturer, Family, Tolerances) to an XML file. |\n| Import Settings | Loads a previously saved configuration from an XML file. |\n\n## Settings Files\n- **Filename**: `GenericHanger.xml` (or manufacturer-specific XMLs).\n- **Location**: Company standard paths or hsbCAD installation directories.\n- **Purpose**: Stores map configurations defining which manufacturer catalogs (e.g., StrongTie) to use, tolerances, and default product selections.\n\n## Tips\n- **Troubleshooting Missing Hangers**: If the hanger does not appear, use the **Show Selection Log** menu item. The most common cause is that the connection angle is slightly off 90°, and the deviation setting is disabled.\n- **Non-Standard Connections**: For connections significantly skewed (not 90°), ensure your selected manufacturer catalog includes \"Skewed Hangers\" or enable **Allow Angle Deviation** if the variance is small.\n- **UI Customization**: Use the **Show Command for UI Creation** option if you frequently use a specific hanger type. You can copy the output to create a dedicated toolbar button.\n\n## FAQ\n- **Q: Why does the script fail to insert a hanger on two intersecting beams?**\n  **A:** Check the \"Show Selection Log\". It may be due to the connection angle not matching the catalog (try enabling \"Allow Angle Deviation\"), insufficient clearance, or missing manufacturer XML files.\n- **Q: Can I use this script for connections other than 90 degrees?**\n  **A:** Yes, provided the manufacturer catalog supports skewed hangers, or if the deviation is minor (usually ±2-5°). Toggle \"Allow Angle Deviation\" in the right-click menu to accommodate minor variances.\n- **Q: How do I share my hanger setup with a colleague?**\n  **A:** Use the **Export Settings** context menu item to save your configuration to an XML file. Your colleague can then use **Import Settings** to load it."
+      },
+      "tokens_used": 6143,
+      "error": null
+    }
+  }
+}

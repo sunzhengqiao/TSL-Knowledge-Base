@@ -1,0 +1,204 @@
+{
+  "filename": "GE_HDWR_HANGER_WAH.mcr",
+  "status": "completed",
+  "total_tokens": 33683,
+  "processing_time": 869.3251011371613,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7585,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script constructs 3D geometry using 'Body' and 'PLine' entities and draws them via 'dp.draw()'. It uses 'PrEntity' to select 'Beam()' entities in the model. It lacks 'sd_' command prefixes, '#Type E' declarations, or any 'sd*' related logic typically found in ShopDrawing or Paper Space scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "TSL_HARDWARE_FAMILY_LIST.dxx (Catalog file in Company TSL\\Catalog folder)",
+            "TSL_Read_Metalpart_Family_Props.dll (In hsbCAD Utilities folder)"
+          ]
+        }
+      },
+      "tokens_used": 5206,
+      "error": null
+    },
+    "3": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "Request timeout after retries"
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Inserts a WAH (Wide-Angle Hanger) hardware family, generating a custom metal hanger with seat flanges, a back plate, and a stiffener web, along with optional anchor connections.\",\n    \"category\": \"Hardware\",\n    \"typicalUseCase\": \"Used to support floor joists or beams on the face of vertical studs or wall plates. The user selects multiple studs and a reference point to automatically array the hangers along the support beam.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"sType\",\n      \"technicalDefault\": \"\\\"WAH16\\\"\",\n      \"businessMeaning\": \"The specific model number of the hanger (e.g., WAH16). This determines the geometric dimensions of the hardware.\",\n      \"validRange\": \"N/A (Text string based on catalog entries)\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Selects the dimensional profile (Width, Depth, Height) loaded from the external hardware catalog.\"\n    },\n    {\n      \"name\": \"dClearWidth\",\n      \"technicalDefault\": \"U(70, 2.625)\",\n      \"businessMeaning\": \"The internal gap between the two side flanges of the hanger. This corresponds to the width of the beam/joist being supported.\",\n      \"validRange\": \"45mm to 300mm (Typical timber joist widths)\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Adjusts the separation distance between the left and right lateral plates (flanges).\"\n    },\n    {\n      \"name\": \"dOverallDepth\",\n      \"technicalDefault\": \"U(560, 22)\",\n      \"businessMeaning\": \"The horizontal depth of the hanger from the back plate to the front edge of the flanges. Defines the bearing length for the supported joist.\",\n      \"validRange\": \"70mm to 400mm\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Controls the length of the base plate, side flanges, and stiffener web in the direction of the supported beam.\"\n    },\n    {\n      \"name\": \"dOverallHeight\",\n      \"technicalDefault\": \"U(50, 2)\",\n      \"businessMeaning\": \"The total vertical height of the hanger assembly.\",\n      \"validRange\": \"100mm to 600mm\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Controls the vertical extent of the back plate and side flanges.\"\n    },\n    {\n      \"name\": \"sChangeType (Context Menu)\",\n      \"technicalDefault\": \"\\\"Change type\\\"\",\n      \"businessMeaning\": \"Trigger to open the hardware catalog selector.\",\n      \"validRange\": \"N/A\",\n      \"unit\": \"N/A\",\n      \"affectsOutput\": \"Opens a dialog to swap the current hanger model for a different size/type from the WAH family, updating all dimension parameters.\"\n    },\n    {\n      \"name\": \"sHelp (Context Menu)\",\n      \"technicalDefault\": \"\\\"Help\\\"\",\n      \"businessMeaning\": \"Displays usage instructions in the report window.\",\n      \"validRange\": \"N/A\",\n      \"unit\": \"N/A\",\n      \"affectsOutput\": \"None (Informational only).\"\n    }\n  ],\n  \"parameterDependencies\": [\n    {\n      \"trigger\": \"Execution of 'Change type' context menu item\",\n      \"effect\": \"Reloads the Map object from the TSL_HARDWARE_FAMILY_LIST.dxx catalog file.\",\n      \"cascade\": [\n        \"sType\",\n        \"dClearWidth\",\n        \"dOverallDepth\",\n        \"dOverallHeight\"\n      ]\n    },\n    {\n      \"trigger\": \"Modification of dClearWidth\",\n      \"effect\": \"Updates the position of the right lateral plate relative to the left.\",\n      \"cascade\": [\n        \"Right Lateral Body\",\n"
+      },
+      "tokens_used": 7908,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch / Insert Trigger",
+          "Check Insert Cycle: If insertCycleCount() > 1, eraseInstance() and exit",
+          "Load Catalog Settings: Determine path to TSL_HARDWARE_FAMILY_LIST.dxx",
+          "Call .NET Assembly: Execute TSL_Read_Metalpart_Family_Props to retrieve family properties",
+          "Check Execution Context (Insert/Recalc/Change Type)",
+          "[Branch] If 'Help' context menu triggered, display notice and exit",
+          "Check Map Output: If mapOut is empty during _bOnInsert, eraseInstance() and exit",
+          "Store Map Data: Save mapOut to _Map if on Recalc or Change Type",
+          "[Branch] If _bOnInsert is True:",
+          "   Prompt User: PrEntity to select stud(s) (Beams)",
+          "   Validation: If no beams selected, eraseInstance() and exit",
+          "   Prompt User: getPoint for reference point",
+          "   Filter Beams: Identify vertical beams (parallel to ZW) and find closest one to reference point",
+          "   Calculate Direction: Determine direction vector from closest beam center to reference point",
+          "   Loop Selection: For each vertical beam identified:",
+          "     Calculate Insertion Point: Closest end/face based on reference direction",
+          "     Create Instance: tsl.dbCreate for the specific beam with current mapOut properties",
+          "   Cleanup: eraseInstance() original helper script and exit",
+          "[Branch] If Single Instance Mode (Post-Insert/Recalc):",
+          "   Validation: If _Beam array is empty or beam invalid, eraseInstance() and exit",
+          "   Update Properties: Read _Map to update sType, dClearWidth, dOverallDepth, dOverallHeight",
+          "   Recalculate Origin: Relocate _Pt0 to closest face/end of the attached beam",
+          "   Construct Geometry: Create Base Plate, Left Lateral, Right Lateral, and Drilled Plate bodies",
+          "   Boolean Operations: Subtract drill cylinder from Drilled Plate",
+          "   [Conditional] Anchor Insertion: Check 'InsertedAnchor' flag in _Map",
+          "     If False: Determine Anchor Model (J-Bolt, Adhesive, Screw, Embedded) from _Map",
+          "     Construct Anchor: tsl.dbCreate specific anchor script at drill location with orientation vectors",
+          "   Finalize: Draw all bodies via dp.draw()"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "_kExecuteKey == 'Help'",
+            "path1": {
+              "name": "Show Help",
+              "steps": [
+                "Display reportNotice with usage instructions",
+                "Script terminates"
+              ]
+            },
+            "path2": {
+              "name": "Continue Execution",
+              "steps": [
+                "Proceed to property loading and insertion logic"
+              ]
+            }
+          },
+          {
+            "condition": "_bOnInsert",
+            "path1": {
+              "name": "Insertion Sequence",
+              "steps": [
+                "Select Beams and Reference Point",
+                "Loop through selected vertical beams",
+                "Create individual TSL instances via dbCreate",
+                "Erase the 'helper' script instance"
+              ]
+            },
+            "path2": {
+              "name": "Single Instance Logic (Recalc/Modify)",
+              "steps": [
+                "Validate single beam attachment",
+                "Update geometric properties from Map",
+                "Draw 3D bodies (Plates, Flanges)",
+                "Insert Anchor components if required"
+              ]
+            }
+          },
+          {
+            "condition": "Map contains valid 'ANCHORMODEL' and 'InsertedAnchor' is 0",
+            "path1": {
+              "name": "Insert Anchor",
+              "steps": [
+                "Identify specific anchor script (J-Bolt, Adhesive, etc.)",
+                "Calculate anchor position and orientation (-vx, vy, -vz)",
+                "Execute tsl.dbCreate for the anchor sub-component"
+              ]
+            },
+            "path2": {
+              "name": "Skip Anchor",
+              "steps": [
+                "Proceed to finalize drawing"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert cycle count",
+            "errorMessage": "N/A (Silent fail)",
+            "recovery": "Script self-erases (eraseInstance) to prevent duplicate insertion logic."
+          },
+          {
+            "check": "Beam Selection on Insert",
+            "errorMessage": "N/A (Silent fail)",
+            "recovery": "Script erases instance if no beams are selected or found in PrEntity set."
+          },
+          {
+            "check": "Catalog Data Availability",
+            "errorMessage": "Catalog path and Family name reported to message window, but silent failure if mapOut is empty.",
+            "recovery": "Ensure TSL_HARDWARE_FAMILY_LIST.dxx exists in Company TSL\\Catalog and TSL_Read_Metalpart_Family_Props.dll is accessible."
+          },
+          {
+            "check": "Beam Validity on Recalc",
+            "errorMessage": "N/A (Silent fail)",
+            "recovery": "Script erases instance if _Beam[0] is invalid."
+          },
+          {
+            "check": "Element Dependency",
+            "errorMessage": "N/A (Internal logic)",
+            "recovery": "If associated Element is deleted (_bOnElementDeleted), the script erases itself."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Hardware Type",
+            "how": "Right-click Context Menu -> 'Change type'",
+            "effect": "Reloads catalog, allowing selection of a different WAH model (e.g., WAH20). Updates dClearWidth, dOverallDepth, dOverallHeight."
+          },
+          {
+            "action": "View Help",
+            "how": "Right-click Context Menu -> 'Help'",
+            "effect": "Displays instructions in the report window regarding usage and features."
+          },
+          {
+            "action": "Relocate on Beam",
+            "how": "Grip Edit (Move) of the insertion point",
+            "effect": "Script recalculates the closest end/face of the attached beam and snaps the hanger to that new position."
+          },
+          {
+            "action": "Delete Anchor",
+            "how": "Not directly exposed via OPM, but handled via _Map",
+            "effect": "If 'InsertedAnchor' flag is managed externally or via reset script, anchor regeneration can be controlled."
+          }
+        ]
+      },
+      "tokens_used": 7500,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_HDWR_HANGER_WAH.mcr\n\n## Overview\nInserts a Wide-Angle Hanger (WAH) hardware family, generating a custom metal hanger with seat flanges, a back plate, and a stiffener web, along with optional anchor connections. It is typically used to support floor joists or beams on the face of vertical studs or wall plates.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script creates 3D geometry. |\n| Paper Space | No | Not designed for 2D layout or detailing. |\n| Shop Drawing | No | Does not generate shop drawing views. |\n\n## Prerequisites\n- **Required Entities**: Beams (GenBeam) and Elements must exist in the model.\n- **Minimum Beam Count**: At least 1 beam (usually multiple vertical studs) must be selected during insertion.\n- **Required Settings**:\n  - Catalog file: `TSL_HARDWARE_FAMILY_LIST.dxx` (Located in `Company TSL\\Catalog`).\n  - DLL file: `TSL_Read_Metalpart_Family_Props.dll` (Located in hsbCAD Utilities folder).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_HDWR_HANGER_WAH.mcr`\n\n### Step 2: Select Studs\n```\nCommand Line: Select beams\nAction: Click on the vertical stud(s) or support beams where you want to install the hangers. Press Enter to confirm selection.\n```\n\n### Step 3: Define Reference Point\n```\nCommand Line: Give point\nAction: Click a point near the selected beams to define the side or face where the hangers should be attached. The script will detect the direction based on this point relative to the beams.\n```\n\n### Step 4: Automatic Generation\n**Action**: The script automatically calculates the insertion points on the selected beams and creates individual hanger instances. The initial \"helper\" instance will disappear, leaving the actual hardware components on the beams.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sType | Text | WAH16 | The specific model number of the hanger (e.g., WAH16). This loads the standard dimensions from the catalog. |\n| dClearWidth | Number | 70 | The internal gap between the side flanges (width of the joist being supported). |\n| dOverallDepth | Number | 560 | The horizontal depth of the hanger from back to front (bearing length). |\n| dOverallHeight | Number | 50 | The total vertical height of the hanger assembly. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Change type | Opens a dialog to select a different hanger model from the catalog. This updates dimensions (Width, Depth, Height) automatically. |\n| Help | Displays usage instructions and feature details in the command line/report window. |\n\n## Settings Files\n- **Filename**: `TSL_HARDWARE_FAMILY_LIST.dxx`\n- **Location**: `Company TSL\\Catalog`\n- **Purpose**: Stores the standard dimensions and properties for various WAH hardware models (e.g., WAH16, WAH20). Without this file, the script cannot load default dimensions.\n\n## Tips\n- **Batch Installation**: You can select multiple vertical studs at once during the \"Select beams\" prompt. The script will array the hangers along all selected beams based on the reference point.\n- **Grip Editing**: If you need to move a hanger after insertion, use the grip edit point to move it. The script will automatically snap it to the nearest end or face of the attached beam.\n- **Vertical Detection**: Ensure the beams selected are vertical (studs). The script is optimized to detect vertical beams relative to the world Z-axis.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I ran it?**\n  **A**: This usually happens if the script cannot find the catalog file (`TSL_HARDWARE_FAMILY_LIST.dxx`) or if no valid beams were selected. Check your file paths and ensure you selected valid beams.\n\n- **Q: How do I change the size of an existing hanger?**\n  **A**: Select the hanger, right-click, and choose **Change type**. Select the new model from the list, and the dimensions will update automatically.\n\n- **Q: Can I use this on horizontal beams?**\n  **A**: The script is designed to detect vertical beams to act as supports. Using it on horizontal beams may result in incorrect orientation or failure to attach."
+      },
+      "tokens_used": 5484,
+      "error": null
+    }
+  }
+}

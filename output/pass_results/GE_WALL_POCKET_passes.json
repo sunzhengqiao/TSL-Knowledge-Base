@@ -1,0 +1,197 @@
+{
+  "filename": "GE_WALL_POCKET.mcr",
+  "status": "completed",
+  "total_tokens": 53846,
+  "processing_time": 797.226970911026,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7161,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script utilizes 3D modeling classes (ElementWallSF, Wall, Beam, Body) and methods (dbCreate, assignToElementGroup, addToolStatic, stretchDynamicTo). No interaction with Viewports, sd_ prefixes, or 2D drawing generation logic found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWallSF (Stud Framed Wall)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space containing a Stud Framed Wall",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7703,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10510,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Automates the creation of structural wall pockets (openings) for beams in stud-framed walls, including framing (king/jack studs), sheathing fillers, and CNC milling operations.\",\n    \"category\": \"Framing\",\n    \"typicalUseCase\": \"Used when a structural beam needs to pass through a wall, requiring the removal of studs, insertion of trimmer studs, and cutting of wall plates to accommodate the beam load.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"middleStudSize\",\n      \"technicalDefault\": \"\\\"2x\\\"\",\n      \"businessMeaning\": \"Selects the standard nominal size (width) of the jack/trimmer studs that support the beam.\",\n      \"validRange\": \"2x, 3x, 4x, 6x, 8x, Custom\",\n      \"unit\": \"String (Nominal)\",\n      \"affectsOutput\": \"Determines the width of the generated vertical studs located beneath the beam ends.\"\n    },\n    {\n      \"name\": \"bmW\",\n      \"technicalDefault\": \"U(1.5)\",\n      \"businessMeaning\": \"The actual width of the custom stud when 'Custom' is selected as the Pocket Stud Size.\",\n      \"validRange\": \"0.5\\\" to 12.0\\\"\",\n      \"unit\": \"Inches\",\n      \"affectsOutput\": \"Sets the geometric width of the jack studs if middleStudSize is 'Custom'.\"\n    },\n    {\n      \"name\": \"overShootPkt\",\n      \"technicalDefault\": \"\\\"No\\\"\",\n      \"businessMeaning\": \"Automatically enlarges the pocket width to accommodate the selected stud size, ensuring the jack studs fit without compressing the opening.\",\n      \"validRange\": \"Yes, No\",\n      \"unit\": \"Boolean\",\n      \"affectsOutput\": \"If 'Yes', adds the stud width to the total pocket width calculation.\"\n    },\n    {\n      \"name\": \"pkW\",\n      \"technicalDefault\": \"U(3)\",\n      \"businessMeaning\": \"The horizontal clear opening width (A) required for the beam.\",\n      \"validRange\": \"3.0\\\" (Min beam width) to 48.0\\\"\",\n      \"unit\": \"Inches\",\n      \"affectsOutput\": \"Controls the spacing between the inner faces of the jack studs and the width of the cut in the wall plates.\"\n    },\n    {\n      \"name\": \"strKingLocation\",\n      \"technicalDefault\": \"\\\"Auto\\\"\",\n      \"businessMeaning\": \"Placement of the primary full-height king studs on either side of the pocket.\",\n      \"validRange\": \"Auto, Both, Left, Right\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Adds vertical studs on the left, right, or both sides of the pocket to transfer load around the opening.\"\n    },\n    {\n      \"name\": \"strExtraKingLocation\",\n      \"technicalDefault\": \"\\\"Auto\\\"\",\n      \"businessMeaning\": \"Placement of a second set of full-height king studs for additional structural support.\",\n      \"validRange\": \"Auto, Both, Left, Right, None\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Adds a secondary layer of vertical studs outside the primary king studs.\"\n    },\n    {\n      \"name\": \"pkH\",\n      \"technicalDefault\": \"U(9.25)\",\n      \"businessMeaning\": \"The vertical elevation of the beam seat relative to the reference point (Top or Bottom of Wall) (B).\",\n      \"validRange\": \"0.0\\\" to Wall Height\",\n      \"unit\": \"Inches\",\n      \"affectsOutput\": \"Determines the vertical position of the pocket opening within the wall.\"\n    },\n    {\n      \"name\": \"strCalcFrom\",\n      \"technicalDefault\": \"\\\"Top of Wall\\\"\",\n      \"businessMeaning\": \"Reference datum for the 'Elevation of Beam' dimension.\",\n      \"validRange\": \"Top of Wall, Bottom of Wall\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Inverts the vertical placement calculation (Top down vs Bottom up).\"\n    },\n    {\n      \"name\": \"gapSide\",\n      \"technicalDefault\": \"U(0)\",\n      \"businessMeaning\": \"Additional horizontal clearance on each side of the beam within the pocket.\",\n      \"validRange\": \"0.0\\\" to 1.0\\\"\",\n      \"unit\": \"Inches\",\n      \"affectsOutput\": \"Widens the opening cut beyond the beam width.\"\n    },\n    {\n      \"name\": \"gapBot\",\n      \"technicalDefault\": \"U(0)\",\n      \"businessMeaning\": \"Additional vertical clearance below the beam.\",\n      \"validRange\": \"0.0\\\" to 1.0\\\"\",\n      \"unit\": \"Inches\",\n      \"affectsOutput\": \"Lowers the bottom cut of the opening.\"\n    },\n    {\n      \"name\": \"nColor\",\n      \"technicalDefault\": \"-1\",\n      \"businessMeaning\": \"Display color index for the generated components in the model.\",\n      \"validRange\": \"0-255 (AutoCAD Color Index)\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Visual representation of generated studs/bodies.\"\n    },\n    {\n      \"name\": \"strSheetFill\",\n      \"technicalDefault\": \"\\\"No\\\"\",\n      \"businessMeaning\": \"Option to fill the vertical gaps between the beam and the studs with sheathing material (plywood/OSB).\",\n      \"validRange\": \"Yes, No\",\n      \"unit\": \"Boolean\",\n      \"affectsOutput\": \"Generates filler sheet bodies based on the predefined thickness list.\"\n    },\n    {\n      \"name\": \"strAddPlate\",\n      \"technicalDefault\": \"\\\"Yes\\\"\",\n      \"businessMeaning\": \"Determines if a horizontal bearing plate is added beneath the beam.\",\n      \"validRange\": \"Yes, No\",\n      \"unit\": \"Boolean\",\n      \"affectsOutput\": \"Generates a plate body resting on top of the jack studs.\"\n    },\n    {\n      \"name\": \"strEndStudsKeep\",\n      \"technicalDefault\": \"\\\"to be kept full\\\"\",\n      \"businessMeaning\": \"Controls whether existing wall plates are cut or kept whole around the pocket.\",\n      \"validRange\": \"to be cut, to be kept full\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Applies cut operations to existing wall plates vs. creating a void around them.\"\n    },\n    {\n      \"name\": \"arZonesMilled\",\n      \"technicalDefault\": \"\\\"\\\"\",\n      \"businessMeaning\": \"Specifies which wall layers (cladding/sheeting zones) require CNC milling for the pocket.\",\n      \"validRange\": \"Zone IDs (e.g., 1;2;-1)\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Adds CNC milling contours to the specified element zones.\"\n    },\n    {\n      \"name\": \"nToolingIndex\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"Identifier for the CNC machine tool to be used for the milling operation.\",\n      \"validRange\": \"Integer (Machine dependent)\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Sets the tool number in the CNC export.\"\n    },\n    {\n      \"name\": \"strSide\",\n      \"technicalDefault\": \"\\\"Left\\\"\",\n      \"businessMeaning\": \"The side of the wall geometry the milling operation is referenced from.\",\n      \"validRange\": \"Left, Right\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Orientation of the toolpath.\"\n    },\n    {\n      \"name\": \"strTurn\",\n      \"technicalDefault\": \"\\\"Against course\\\"\",\n      \"businessMeaning\": \"Machining direction relative to the material grain.\",\n      \"validRange\": \"Against course, With course\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"CNC toolpath direction.\"\n    },\n    {\n      \"name\": \"strOShoot\",\n      \"technicalDefault\": \"\\\"No\\\"\",\n      \"businessMeaning\": \"Enables the tool to overrun the geometry boundaries to ensure a clean cut.\",\n      \"validRange\": \"Yes, No\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"CNC toolpath extension.\"\n    },\n    {\n      \"name\": \"strVacuum\",\n      \"technicalDefault\": \"\\\"No\\\"\",\n      \"businessMeaning\": \"Activates vacuum hold-down annotations for the machining operation.\",\n      \"validRange\": \"Yes, No\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"CNC production data annotations.\"\n    }\n  ],\n"
+      },
+      "tokens_used": 10090,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Insertion Initiated",
+          "Prompt User to Select a Stud Framed Wall (ElementWallSF)",
+          "Validate Wall Entity",
+          "Prompt User to Select Beam(s) OR Press Enter to Select Point",
+          "Branch: Analyze Input Type",
+          "IF Beam(s) Selected: Validate intersection and parallelism. Calculate Pocket Width (pkW) and Elevation (pkH) from beam geometry.",
+          "IF Point Selected: Set reference point (_Pt0) and use default or existing property values.",
+          "Display Properties Dialog (showDialogOnce)",
+          "Calculate geometric parameters based on properties (Stud sizes, Overshoot, Gaps)",
+          "Generate Jack/Trimmer Studs (Middle)",
+          "Generate King Studs (Primary) based on 'strKingLocation'",
+          "Generate Extra King Studs based on 'strExtraKingLocation'",
+          "Dynamically Stretch generated studs to intersect with existing top/bottom plates",
+          "Identify and Erase existing studs colliding with the pocket volume",
+          "Cut existing Wall Plates and Blocking (Single cut or Split in two)",
+          "Apply CNC Milling Operations to specified zones",
+          "Save Instance and Exit"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User Input Selection",
+            "path1": {
+              "name": "Select Beam(s)",
+              "steps": [
+                "User selects one or multiple beams",
+                "Script calculates combined body of beams",
+                "Validates if beams intersect and are parallel",
+                "IF Valid: Auto-calculates Pocket Width (pkW) and Elevation (pkH). Sets Elevation reference to 'Bottom of Wall'. Updates Read-only properties and opens dialog.",
+                "IF Invalid: Shows warning 'Beam selection is not correct', clears beam selection, and falls back to default logic."
+              ]
+            },
+            "path2": {
+              "name": "Select Point / No Beam",
+              "steps": [
+                "User presses Enter or selects a point",
+                "Sets reference point (_Pt0)",
+                "Opens dialog using current/default property values (Width, Height, etc.)"
+              ]
+            }
+          },
+          {
+            "condition": "Plate Cutting Logic (Intersection)",
+            "path1": {
+              "name": "Partial Intersection (Left or Right)",
+              "steps": [
+                "Check intersection of plate body with Left and Right bounds of pocket",
+                "Apply single Cut tool (Left or Right) to the existing plate/beam"
+              ]
+            },
+            "path2": {
+              "name": "Spanning Intersection (Pocket cuts through plate)",
+              "steps": [
+                "Detect plate intersects both Left and Right bounds",
+                "Copy the plate beam entity",
+                "Apply Right Cut to original beam",
+                "Apply Left Cut to the copied beam (Effectively splitting one plate into two pieces)"
+              ]
+            }
+          },
+          {
+            "condition": "King Stud Configuration",
+            "path1": {
+              "name": "With King Studs",
+              "steps": [
+                "Increase clean-out body width to include stud depth",
+                "Generate King Stud geometry",
+                "Adjust Milling PLine contour to account for stud material"
+              ]
+            },
+            "path2": {
+              "name": "Without King Studs",
+              "steps": [
+                "Use basic pocket width for clean-out",
+                "Standard Milling PLine contour"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Is the selected element a valid Stud Framed Wall (ElementWallSF)?",
+            "errorMessage": "Not a proper Stickframe Element selected.",
+            "recovery": "Script erases itself. User must restart script and select correct wall."
+          },
+          {
+            "check": "Do the selected beams intersect and are they parallel?",
+            "errorMessage": "Beam selection is not correct.",
+            "recovery": "Script clears the beam selection and allows user to proceed via Point mode or adjust OPM manually."
+          },
+          {
+            "check": "Is the wall split or modified?",
+            "errorMessage": "(Implicit) Instance detects invalid element reference.",
+            "recovery": "Script automatically attempts to find the new wall segment corresponding to the original location. If failed, it erases itself."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Pocket Dimensions",
+            "how": "Object Properties Palette (OPM)",
+            "effect": "Updates Pocket Width (pkW), Elevation (pkH), Stud Sizes, and Gaps. Triggers full geometry regeneration."
+          },
+          {
+            "action": "Toggle King Studs / Extras",
+            "how": "OPM Enum Dropdowns",
+            "effect": "Adds or removes King/Extra King stud entities and adjusts associated plate cuts."
+          },
+          {
+            "action": "Re-calculate Pocket",
+            "how": "Right-click Context Menu",
+            "effect": "Forces a refresh of the script logic (Regenerates studs and cuts)."
+          },
+          {
+            "action": "Move Wall / Split Wall",
+            "how": "CAD Move / Split commands",
+            "effect": "Script detects via `_bOnElementListModified`. Updates internal wall reference if split to maintain association with the correct wall segment."
+          }
+        ]
+      },
+      "tokens_used": 11325,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_WALL_POCKET.mcr\n\n## Overview\nThis script automates the creation of structural wall pockets (openings) in stud-framed walls to accommodate passing beams. It generates the necessary framing (king and jack studs), handles plate cutting, creates sheathing fillers, and applies CNC milling operations based on the selected geometry.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in the 3D model environment. |\n| Paper Space | No | Not designed for 2D layout or shop drawing generation. |\n| Shop Drawing | No | Not a multipage or drawing generation script. |\n\n## Prerequisites\n- **Required Entities**: A Stud Framed Wall (`ElementWallSF`) must exist in the model.\n- **Optional Entities**: Structural beams intersecting the wall (can be selected to auto-calculate dimensions).\n- **Minimum Beam Count**: 0 (Can be used by defining dimensions manually).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse to and select `GE_WALL_POCKET.mcr`.\n\n### Step 2: Select Wall\n```\nCommand Line: Select a wall:\nAction: Click on the Stud Framed Wall where the pocket is required.\n```\n\n### Step 3: Define Geometry (Beam or Point)\n```\nCommand Line: Select beam(s) or [Enter] for point:\n```\n**Option A: Select Beam(s) (Recommended)**\n1. Select one or multiple beams that pass through the wall.\n2. The script automatically calculates the **Pocket Width** and **Elevation** based on the beam's geometry and sets the reference to \"Bottom of Wall\".\n3. If beams are not parallel or do not intersect correctly, a warning \"Beam selection is not correct\" will appear.\n\n**Option B: Select Point / Press Enter**\n1. Press Enter or click a point on the wall to set the insertion location.\n2. The script uses the default or previously configured property values for width and height.\n\n### Step 4: Configure Properties\nAfter selection, the **Properties Palette** (OPM) opens automatically.\n1. Adjust parameters like Stud Sizes, Gaps, or King Stud locations.\n2. The geometry updates dynamically to reflect changes.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Pocket Stud Size | Dropdown | 2x | Selects the nominal size of the jack/trimmer studs supporting the beam. |\n| Custom Stud Width | Number | 1.5\" | Sets the actual width of the stud if \"Custom\" is selected for size. |\n| Overshoot Pocket | Dropdown | No | If \"Yes\", enlarges the pocket width to ensure jack studs fit without compression. |\n| Pocket Width (pkW) | Number | 3.0\" | The horizontal clear opening width required for the beam. |\n| King Stud Location | Dropdown | Auto | Places full-height king studs (Auto, Both, Left, Right). |\n| Extra King Stud Location | Dropdown | Auto | Places a second set of king studs for extra support. |\n| Pocket Elevation (pkH) | Number | 9.25\" | The vertical elevation of the beam seat relative to the reference. |\n| Calculation Reference | Dropdown | Top of Wall | Reference datum for the elevation (Top of Wall or Bottom of Wall). |\n| Side Gap | Number | 0.0\" | Additional horizontal clearance on each side of the beam. |\n| Bottom Gap | Number | 0.0\" | Additional vertical clearance below the beam. |\n| Sheet Filler | Dropdown | No | Fills vertical gaps between the beam and studs with sheathing material. |\n| Add Bearing Plate | Dropdown | Yes | Adds a horizontal bearing plate beneath the beam. |\n| End Studs Handling | Dropdown | to be kept full | Controls whether existing wall plates are cut or kept whole. |\n| Milled Zones | String | (Empty) | Specifies which wall layers (cladding zones) require CNC milling (e.g., \"1;2\"). |\n| Tooling Index | Number | 0 | Identifier for the CNC machine tool. |\n| Milling Side | Dropdown | Left | The side of the wall geometry the milling is referenced from. |\n| Milling Turn | Dropdown | Against course | Machining direction relative to material grain. |\n| Overrun Tool | Dropdown | No | Enables the tool to overrun geometry boundaries for a clean cut. |\n| Vacuum | Dropdown | No | Activates vacuum hold-down annotations for CNC. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Re-calculate Pocket | Forces a full refresh of the script logic, regenerating studs and cuts based on current property values. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script does not rely on external settings files; all configurations are managed via the Properties Panel.\n\n## Tips\n- **Quick Setup**: Use the \"Select Beam(s)\" option in Step 3 to let the script auto-calculate the correct pocket width and height. This saves manual entry.\n- **Wall Splitting**: If you split the wall after creating the pocket, the script attempts to detect the change and stay attached to the correct wall segment.\n- **Plate Cutting**: If a plate spans the entire pocket width, the script automatically splits it into two pieces. If it only touches one side, a single cut is applied.\n\n## FAQ\n\n- **Q: I see the error \"Not a proper Stickframe Element selected.\" What does this mean?**\n  A: You must select a valid Stud Framed Wall (`ElementWallSF`). Standard 3D solids or other wall types will not work.\n\n- **Q: I selected a beam, but I get \"Beam selection is not correct.\"**\n  A: Ensure the selected beams actually pass through the wall and are parallel to each other. The script cannot calculate a pocket for intersecting or non-parallel beams.\n\n- **Q: How do I add extra structural support around the beam?**\n  A: In the Properties Panel, change **King Stud Location** to \"Both\" or \"Left/Right\" as needed, and set **Extra King Stud Location** to add a second layer of studs."
+      },
+      "tokens_used": 7057,
+      "error": null
+    }
+  }
+}

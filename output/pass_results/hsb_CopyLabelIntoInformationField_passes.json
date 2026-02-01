@@ -1,0 +1,214 @@
+{
+  "filename": "hsb_CopyLabelIntoInformationField.mcr",
+  "status": "completed",
+  "total_tokens": 17461,
+  "processing_time": 203.16336226463318,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "19.10.2015",
+            "author": "Alberto Jena (alberto.jena@hsbcad.com)",
+            "changes": ""
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3031,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select GenBeam entities and modifies model properties using bm.setInformation(). No ShopDrawing (sd_) or Layout specific (_Viewport) commands found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2615,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Please select Beams",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 1738,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Copies the visible label text of selected timber beams into their internal system information field, facilitating data transfer for lists, exports, or downstream processing.",
+          "category": "Data Management",
+          "typicalUseCase": "Used when a user has manually adjusted beam labels (e.g., adding specific assembly notes or sorting codes) and needs that specific text data populated into the 'Information' property for use in reports or other automated scripts."
+        },
+        "parameters": [],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Property Update",
+            "description": "Updates the 'Information' attribute of the selected GenBeam entities to match the current content of their 'Label' attribute.",
+            "appliedTo": "User-selected GenBeams"
+          }
+        ]
+      },
+      "tokens_used": 1579,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script starts execution",
+          "Check Insert Cycle Count",
+          "Prompt user to select Beams via PrEntity",
+          "Process user selection result",
+          "Validate internal beam array",
+          "Iterate through selected beams",
+          "Check validity of individual beam",
+          "Copy 'Label' text to 'Information' field",
+          "Erase script instance and finish"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count (insertCycleCount > 1)",
+            "path1": {
+              "name": "Abort",
+              "steps": [
+                "Erase script instance",
+                "Return immediately"
+              ]
+            },
+            "path2": {
+              "name": "Proceed",
+              "steps": [
+                "Continue to Selection Prompt"
+              ]
+            }
+          },
+          {
+            "condition": "User Selection Input (ssE.go())",
+            "path1": {
+              "name": "Selection Confirmed",
+              "steps": [
+                "Retrieve selected entities",
+                "Cast entities to GenBeam type",
+                "Populate internal _GenBeam array"
+              ]
+            },
+            "path2": {
+              "name": "Selection Cancelled/Empty",
+              "steps": [
+                "Leave _GenBeam array empty",
+                "Return to trigger recalculation"
+              ]
+            }
+          },
+          {
+            "condition": "Array Population Status (_GenBeam.length() == 0)",
+            "path1": {
+              "name": "Empty Array",
+              "steps": [
+                "Erase script instance",
+                "Terminate execution"
+              ]
+            },
+            "path2": {
+              "name": "Populated Array",
+              "steps": [
+                "Begin loop processing beams"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Reference Validity (bm.bIsValid())",
+            "path1": {
+              "name": "Valid Beam",
+              "steps": [
+                "Read 'Label' property",
+                "Write value to 'Information' property"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Beam",
+              "steps": [
+                "Skip to next beam in loop"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Type Filter",
+            "errorMessage": "None (Implicit)",
+            "recovery": "PrEntity prompt restricts selection to GenBeam types only; user cannot select other entity types."
+          },
+          {
+            "check": "Beam Reference Integrity",
+            "errorMessage": "None (Silent)",
+            "recovery": "If a selected beam was deleted or is invalid, the script detects it via bIsValid() and skips it without crashing."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Script Self-Deletion",
+            "how": "Automatic Execution",
+            "effect": "The script instance erases itself immediately after updating the beams, leaving no interactive script object in the drawing."
+          }
+        ]
+      },
+      "tokens_used": 5169,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_CopyLabelIntoInformationField.mcr\n\n## Overview\nThis utility script copies the current visible label text of selected timber beams into their internal 'Information' property. It is designed to quickly transfer label data into the system field for use in reports, lists, or manufacturing exports.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D model elements. |\n| Paper Space | No | Not intended for use in Layouts. |\n| Shop Drawing | No | Not intended for use within Shop Drawings. |\n\n## Prerequisites\n- **Required entities:** GenBeam (Timber Beams)\n- **Minimum beam count:** 1\n- **Required settings files:** None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\n- Navigate to the folder containing `hsb_CopyLabelIntoInformationField.mcr`\n- Select the file and click **Open**\n\n### Step 2: Select Beams\n```\nCommand Line: Please select Beams\nAction: Click on the desired beams in the model view.\n```\n- Select one or multiple beams using any standard AutoCAD selection method (click, window, crossing).\n- Press **Enter** or **Space** to confirm the selection.\n\n### Step 3: Automatic Processing\n- The script will automatically read the **Label** text of each selected beam.\n- It will write this text into the **Information** property of the beam.\n- The script instance will automatically erase itself from the drawing upon completion.\n\n## Properties Panel Parameters\n\nThis script does not expose any parameters to the Properties Palette (OPM).\n\n## Right-Click Menu Options\n\nThis script does not add any specific options to the right-click context menu.\n\n## Settings Files\nNone required.\n\n## Tips\n- **Manual Label Edits:** Use this script after you have manually edited beam labels (e.g., adding specific assembly notes or sorting codes) and need that text to appear in data exports or BOMs.\n- **Verification:** After running the script, you can verify the change by selecting a beam and checking the 'Information' field in the Properties Palette.\n- **Run-Once Utility:** The script erases itself immediately after execution. You do not need to delete it manually.\n\n## FAQ\n- **Q: Can I use this on elements other than beams?**\n  A: No, the script is designed specifically for GenBeam entities.\n- **Q: Does this overwrite existing Information?**\n  A: Yes, the content of the 'Information' field will be replaced entirely by the text currently in the 'Label' field.\n- **Q: Why did the script disappear after I ran it?**\n  A: This is normal behavior. The script is a utility that performs its task and removes itself to keep your drawing clean."
+      },
+      "tokens_used": 3329,
+      "error": null
+    }
+  }
+}

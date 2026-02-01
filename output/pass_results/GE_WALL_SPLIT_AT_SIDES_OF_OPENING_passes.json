@@ -1,0 +1,147 @@
+{
+  "filename": "GE_WALL_SPLIT_AT_SIDES_OF_OPENING.mcr",
+  "status": "completed",
+  "total_tokens": 48807,
+  "processing_time": 731.5026502609253,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9398,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script directly manipulates 3D construction entities (OpeningSF, Wall Element, Beams, Sheets) using methods like dbErase(), dbCopy(), transformBy(), and envelopeBody(). It performs geometric calculations on 3D points and vectors to split wall elements. It does not use sd_ prefixes, Viewport checks, or generate 2D drawing views."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "OpeningSF",
+            "Wall (Element)",
+            "Beam",
+            "Sheet"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing a framed wall with a valid opening",
+          "requiredSettings": [
+            "Wall must be framed prior to execution (requires existing Beams and Sheets)",
+            "Opening must have jack studs (type _kSFSupportingBeam) on both left and right sides",
+            "Valid OpeningSF selected via getOpening()"
+          ]
+        }
+      },
+      "tokens_used": 7669,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getOpening",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getInt",
+              "promptOriginal": "Set split type\t\t[0: Both sides of opening / 1: Left Side of opening / 2: Right side of opening]",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 8020,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Splits a single framed wall element into multiple distinct wall elements (manufacturing units) based on the location of a selected opening, separating the wall structure around windows and doors.",
+          "category": "Framing / Manufacturing",
+          "typicalUseCase": "Used when a long wall with an opening needs to be delivered or manufactured in separate sections, rather than as one long piece."
+        },
+        "parameters": [
+          {
+            "name": "_Opening",
+            "technicalDefault": "User Selected",
+            "businessMeaning": "The specific window or door opening (OpeningSF) that serves as the geometric reference for calculating where to cut the wall into sections.",
+            "validRange": "Any valid OpeningSF instance embedded in a wall element.",
+            "unit": "Entity",
+            "affectsOutput": "Defines the X/Y coordinates and dimensions of the split zones, including the necessary gaps (rough opening dimensions) around the frame."
+          },
+          {
+            "name": "nChoice",
+            "technicalDefault": "0",
+            "businessMeaning": "Selects the manufacturing segmentation strategy. Determines if the wall is cut into separate panels on both sides of the opening, or just on one specific side.",
+            "validRange": "0 (Both sides), 1 (Left Side only), 2 (Right Side only)",
+            "unit": "Enumeration",
+            "affectsOutput": "Controls the number of resulting wall elements and the placement of vertical cut lines relative to the opening's jambs."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of _Opening",
+            "effect": "Calculates split geometry and validates wall prerequisites (framing status).",
+            "cascade": [
+              "Opening Dimensions",
+              "Opening Gaps",
+              "Wall Beams"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Element (Wall)",
+            "description": "New wall elements representing the segments created by the split (e.g., Left Panel, Right Panel, Top Panel, Bottom Panel).",
+            "appliedTo": "Newly created wall elements derived from the original wall."
+          },
+          {
+            "type": "Beam",
+            "description": "Studs, plates, and cripples are copied, cut (if necessary), and assigned to the new wall elements.",
+            "appliedTo": "Structural framing members within the split wall sections."
+          },
+          {
+            "type": "Sheet",
+            "description": "Wall sheathing/sheets are cut and assigned to the appropriate new wall elements.",
+            "appliedTo": "Surface materials of the split wall sections."
+          }
+        ]
+      },
+      "tokens_used": 9392,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"Script Launch / Insertion\",\n    \"Check Insert Cycle Count (prevent loops)\",\n    \"Prompt User to Select Opening (OpeningSF)\",\n    \"[Validation] Verify valid Opening selected\",\n    \"Prompt User for Split Type (0: Both sides, 1: Left, 2: Right)\",\n    \"Store User Input in internal Map\",\n    \"Script Recalculation / Execution Phase\",\n    \"Retrieve Split Type and set Logic Flags (bSplitLeftSide, etc.)\",\n    \"[Validation] Verify Opening is valid (OpeningSF type)\",\n    \"Retrieve Parent Wall Element (elOriginal)\",\n    \"Calculate Wall Geometry (Height, Width, Length) and Opening Geometry (with rough gaps)\",\n    \"[Validation] Check if Wall is Framed (Beams and Sheets exist)\",\n    \"Identify Wall Module and relevant Beams (Jack Studs, Plates, Cripples)\",\n    \"[Validation] Verify Jack Studs exist on BOTH Left and Right sides of opening\",\n    \"Calculate Cut/Stretch Points based on Jack Stud locations\",\n    \"Create New Wall Elements (Left, Right, and optionally Top/Bottom) by copying Original\",\n    \"Process Beams: Copy/Cut studs and plates to new wall elements\",\n    \"Process Sheets: Copy/Transform sheets to new wall elements\",\n    \"Cleanup: Erase original beams that have been replaced/intersected\",\n    \"Assign Beams/Sheets to new Elements (Panhand/ElementGroup)\",\n    \"Set Execution Flag to 'Complete' (Prevent re-running split logic)\",\n    \"Finish\"\n  ],\n"
+      },
+      "tokens_used": 10446,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_WALL_SPLIT_AT_SIDES_OF_OPENING.mcr\n\n## Overview\nSplits a single framed wall element into multiple distinct manufacturing units (separate wall panels) based on the location of a selected opening, such as a window or door.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script manipulates 3D construction entities (Walls, Beams, Sheets). |\n| Paper Space | No | Not applicable for 2D drawing generation. |\n| Shop Drawing | No | This is a model/framing modification tool. |\n\n## Prerequisites\n- **Required Entities**: A Wall Element containing an OpeningSF (Window or Door).\n- **Minimum Requirements**: The wall must be fully framed (Beams and Sheets must exist).\n- **Structural Requirements**: The opening must have jack studs (trimmer studs) installed on **both** the left and right sides.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_WALL_SPLIT_AT_SIDES_OF_OPENING.mcr`\n\n### Step 2: Select Opening\n```\nCommand Line: Select Opening\nAction: Click on the window or door (OpeningSF) inside the wall you wish to split.\n```\n\n### Step 3: Set Split Type\n```\nCommand Line: Set split type\t\t[0: Both sides of opening / 1: Left Side of opening / 2: Right side of opening]\nAction: Type the desired number and press Enter.\n- 0: Splits the wall on both the left and right sides of the opening (creates three wall sections).\n- 1: Splits only the left side of the opening.\n- 2: Splits only the right side of the opening.\n```\n\n## Properties Panel Parameters\n*Note: This script does not expose parameters to the Properties Palette. All configurations are made via the command line during insertion.*\n\n## Right-Click Menu Options\n*None available.*\n\n## Settings Files\n*None required.*\n\n## Tips\n- **Check Framing First**: Ensure the wall has already been processed by the framing generator (Beams and Sheets exist) before running this script.\n- **Jack Studs are Critical**: The script calculates the split location based on the position of the jack studs. If jack studs are missing on either side of the opening, the script will fail to validate.\n- **Undo**: Use the standard AutoCAD `UNDO` command immediately if the split creates unexpected geometry.\n\n## FAQ\n- **Q: Can I use this on a wall that hasn't been framed yet?**\n  A: No, the script requires the wall to have existing Beams and Sheets to copy and cut them into the new wall elements.\n\n- **Q: What happens to the sheathing (sheets)?**\n  A: The sheets are cut and assigned to the new wall elements automatically along with the studs.\n\n- **Q: Why does the script ask for jack studs on both sides if I only want to split the left side?**\n  A: The script logic validates the structural integrity of the opening geometry by ensuring supporting beams exist on both sides before allowing any modification."
+      },
+      "tokens_used": 3882,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,259 @@
+{
+  "filename": "GE_BEAM_CHANGE_TYPE.mcr",
+  "status": "completed",
+  "total_tokens": 24369,
+  "processing_time": 273.519389629364,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "v1.2",
+            "date": "29-ago-2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "- Strings added to translation"
+          },
+          {
+            "version": "v1.1",
+            "date": "15-may-2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "- Thumbnail added"
+          },
+          {
+            "version": "v1.0",
+            "date": "10-mar-2011",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "- Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3763,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses _Beam and Beam() entities which are standard Model Space entities. No 'sd_' or 'Multipage*' prefixes are found. No '_Viewport' or '#Type E + _Entity' patterns are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space with Beams available for selection.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1752,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\\n\"+T(\"|Select beam (s)|\")",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowPropertyDialog",
+            "trigger": "On Insert (showDialogOnce) and Map IO (showDialog)",
+            "title": null,
+            "dataSource": "Script Properties (sNewType)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sNewType",
+            "type": "PropString",
+            "displayName": "New Beam Type",
+            "defaultValue": "First entry in _BeamTypes",
+            "inputType": "dropdown",
+            "options": "_BeamTypes (System Beam Types)",
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4662,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Allows the user to reassign the material or profile type (e.g., Solid Timber vs. Glulam) of existing beams to a different classification defined in the catalog.",
+          "category": "ModelManagement",
+          "typicalUseCase": "Converting a selection of generic beams to 'Glulam' or 'CLT' after initial placement, or correcting material assignments for multiple elements simultaneously."
+        },
+        "parameters": [
+          {
+            "name": "sNewType",
+            "technicalDefault": "First entry in _BeamTypes (alphabetically sorted)",
+            "businessMeaning": "The target construction category or material class to apply to the selected beams. This defines the beam's default profile behavior, material properties, and machining settings.",
+            "validRange": "Any string defined in the project's _BeamTypes catalog (e.g., 'Solid Wood', 'Glulam', 'LVL', 'CLT').",
+            "unit": "String (Enumeration)",
+            "affectsOutput": "Changes the internal type property of the selected beam(s). This may trigger recalculation of default dimensions, material weights, and associated machining if the new type has different default profiles or material logic."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User executes the script and selects beams",
+            "effect": "The script reads the selected sNewType and applies it to the selected entities.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam",
+            "description": "The script updates the 'Type' property of the selected existing beam(s) to the value specified in sNewType. No new geometry is created; existing beam definitions are modified.",
+            "appliedTo": "Beams selected by the user during the PrEntity prompt."
+          }
+        ]
+      },
+      "tokens_used": 3501,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script initializes and retrieves all available '_BeamTypes' from the system catalog.",
+          "Script sorts the beam types alphabetically in ascending order.",
+          "Script checks execution context (Map IO vs Standard Insert).",
+          "[Standard Insert] The Property Palette displays the 'New Beam Type' dropdown.",
+          "User selects the desired target beam type from the dropdown.",
+          "Command line prompts user to 'Select beam(s)'.",
+          "User selects one or more beams in the model and confirms (Enter).",
+          "Script triggers a recalculation cycle (processing phase).",
+          "Script iterates through the collected selection set.",
+          "For each valid beam, the internal Type property is updated to the selected value.",
+          "Script instance executes 'eraseInstance' to remove itself from the drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Mode: '_bOnMapIO' flag",
+            "path1": {
+              "name": "Map IO Mode",
+              "steps": [
+                "Read 'TYPE' index from the internal Map.",
+                "Update the local property 'sNewTypeOnMap' to match the Map value.",
+                "Show dialog for confirmation.",
+                "Write the selected index back to the Map.",
+                "Return immediately (bypassing beam selection and geometry modification)."
+              ]
+            },
+            "path2": {
+              "name": "Standard Insert Mode",
+              "steps": [
+                "Proceed to insertion logic.",
+                "Check insert cycle count.",
+                "Display Dialog and Prompt for Entity selection."
+              ]
+            }
+          },
+          {
+            "condition": "Insert Cycle Count: 'insertCycleCount() > 1'",
+            "path1": {
+              "name": "Subsequent Cycle",
+              "steps": [
+                "Execute 'eraseInstance()'.",
+                "Return (Prevent re-running the selection prompt)."
+              ]
+            },
+            "path2": {
+              "name": "First Cycle (Cycle 1)",
+              "steps": [
+                "Execute 'showDialogOnce()'.",
+                "Execute 'PrEntity' to prompt user for beams.",
+                "Append valid beams to '_Beam' array.",
+                "Return to trigger recalculation."
+              ]
+            }
+          },
+          {
+            "condition": "Selection Status: '_Beam.length() <= 0'",
+            "path1": {
+              "name": "No Beams Selected",
+              "steps": [
+                "Execute 'eraseInstance()'.",
+                "Return (Script terminates without making changes)."
+              ]
+            },
+            "path2": {
+              "name": "Beams Selected",
+              "steps": [
+                "Loop through the '_Beam' array.",
+                "Check if each beam is valid ('bIsValid()').",
+                "Apply 'setType(nNew)' to the beam.",
+                "Proceed to cleanup."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Validity (Internal)",
+            "errorMessage": "None (Silent)",
+            "recovery": "If a selected beam entity is invalid or deleted, the script detects this via 'bm.bIsValid()', skips that specific entity using 'continue', and processes the remaining beams."
+          },
+          {
+            "check": "Selection Existence",
+            "errorMessage": "None (Silent)",
+            "recovery": "If the user cancels the selection prompt or selects nothing, '_Beam.length()' is 0. The script detects this, erases itself, and exits."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Script Self-Deletion",
+            "how": "Automatic Command ('eraseInstance')",
+            "effect": "The script does not remain as a persistent object in the drawing. It executes, changes the beam properties, and deletes its own instance immediately."
+          }
+        ]
+      },
+      "tokens_used": 5888,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_BEAM_CHANGE_TYPE.mcr\n\n## Overview\nThis utility allows you to batch update the \"Type\" classification (e.g., Solid Timber, Glulam, CLT) of one or more existing beams in your model. It is useful for quickly correcting material assignments or converting generic beams to specific catalog types.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script interacts directly with beams in the 3D model. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Entities:** At least one existing Beam (`GenBeam`) in the drawing.\n- **Minimum Beam Count:** 1\n- **Required Settings:** Standard `_BeamTypes` catalog (default hsbCAD system catalogs).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or `TSL` depending on configuration) → Browse and select `GE_BEAM_CHANGE_TYPE.mcr`.\n\n### Step 2: Select New Beam Type\n1.  After loading the script, open the **Properties Palette** (Ctrl+1).\n2.  Locate the parameter **New Beam Type**.\n3.  Select the desired material type (e.g., \"Glulam\", \"Solid Wood\", \"CLT\") from the dropdown list.\n\n### Step 3: Select Beams to Update\n```\nCommand Line: Select beam(s)\nAction: Click on the beams you wish to change. You can select multiple beams one by one or use a window selection.\n```\n\n### Step 4: Confirm Changes\n1.  Press **Enter** or **Space** to confirm the selection.\n2.  The script will update the selected beams and automatically remove itself from the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| New Beam Type | dropdown | (First entry in list) | Select the target beam type (material classification) to apply to the selected beams. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not add persistent items to the right-click menu. |\n\n## Settings Files\n- **Filename:** None\n- **Location:** N/A\n- **Purpose:** This script uses the internal hsbCAD `_BeamTypes` catalog; no custom XML settings files are required.\n\n## Tips\n- **Batch Processing:** You can select as many beams as needed in a single operation to speed up your workflow.\n- **Undo:** You can use the standard AutoCAD `U` (Undo) command to revert the changes if you selected the wrong type or wrong beams.\n- **Script Removal:** Do not be alarmed if the script \"disappears\" after pressing Enter. It is designed to delete itself (`eraseInstance`) immediately after updating the beams to keep your drawing clean.\n\n## FAQ\n- **Q: Does this script change the dimensions of the beam?**\n  - **A:** It changes the *Type* property. Whether dimensions change depends on your catalog settings. If the new Type has different default profile logic, the beam may update, but it primarily affects material classification and machining defaults.\n- **Q: Can I use this on elements other than beams?**\n  - **A:** No, this script is specifically designed for `GenBeam` entities. Other elements like walls or panels will be ignored.\n- **Q: Why didn't the beam change?**\n  - **A:** Ensure that the beam you selected was not on a locked layer. Also, verify that you selected a valid \"New Beam Type\" from the dropdown before selecting the beams."
+      },
+      "tokens_used": 4803,
+      "error": null
+    }
+  }
+}

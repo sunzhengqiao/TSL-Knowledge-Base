@@ -1,0 +1,197 @@
+{
+  "filename": "hsb_CommentEditor.mcr",
+  "status": "completed",
+  "total_tokens": 26404,
+  "processing_time": 199.41057419776917,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"header\": {\n    \"type\": \"\",\n    \"numBeamsReq\": null,\n    \"keywords\": [],\n    \"majorVersion\": null,\n    \"minorVersion\": null,\n    \"dxaOut\": null,\n    \"implInsert\": null\n  },\n  \"description\": \"\",\n  \"versionHistory\": [\n    {\n      \"version\": \"1.00\",\n      \"date\": \"26."
+      },
+      "tokens_used": 5245,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script prompts for PrEntity(Element()) and PrEntity(TslInst()). It utilizes ModelMap (dbComposeMap/dbInterpretMap) to modify data. It erases itself after execution (eraseInstance), indicating it is a command/utility script rather than a persistent element."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "TslInst"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (Utility script)",
+          "requiredSettings": [
+            "hsbCommentManagementUI.dll"
+          ]
+        }
+      },
+      "tokens_used": 2954,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select a set of elements|",
+              "condition": "_kExecuteKey == 'SelectElements'",
+              "required": true
+            },
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select a set of comment displays|",
+              "condition": "else (default execution)",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ExternalDotNetUI",
+            "trigger": "After selection confirmation",
+            "title": "CommentManager",
+            "dataSource": "hsbCommentManagementUI.dll",
+            "features": {
+              "searchable": null,
+              "multiSelect": null
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5157,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A utility launcher script that opens a .NET interface to batch edit or add comment annotations to structural elements, either by selecting raw elements or existing comment displays.",
+          "category": "Utility / Annotation",
+          "typicalUseCase": "Adding production notes, assembly instructions, or quality status tags to a group of beams/walls, or correcting text errors on existing comment markers in the 3D model."
+        },
+        "parameters": [
+          {
+            "name": "elementsSelectionSet",
+            "technicalDefault": "Empty set",
+            "businessMeaning": "The specific structural elements (beams, walls, panels) selected to have their comment data edited or appended.",
+            "validRange": "1 or more Elements",
+            "unit": "Count",
+            "affectsOutput": "Determines which entities receive the updated comment attributes via the ModelMap."
+          },
+          {
+            "name": "commentDisplaySelectionSet",
+            "technicalDefault": "Empty set",
+            "businessMeaning": "Existing visual markers (created by hsb_CommentDisplay) selected to identify which elements need their underlying comment text modified.",
+            "validRange": "1 or more TslInst (specifically hsb_CommentDisplay)",
+            "unit": "Count",
+            "affectsOutput": "Identifies the parent elements and specific comment IDs to be updated in the external editor."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Data/Attributes",
+            "description": "Updates the internal data map (string properties) of the selected Elements with new comment keys and values.",
+            "appliedTo": "Selected Elements or parent Elements of selected Comment Displays."
+          }
+        ]
+      },
+      "tokens_used": 4066,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script instance is inserted/launched in the drawing.",
+          "2. Check insertion cycle count (if > 1, erase instance and exit immediately).",
+          "3. Evaluate the Execution Key (_kExecuteKey).",
+          "4. [Branch] If 'SelectElements': Prompt user to select raw structural Elements (Element()).",
+          "5. [Branch] Else (Default): Prompt user to select TSL instances (TslInst()).",
+          "6. [Branch] Loop through selected TSL instances to validate they are 'hsb_CommentDisplay', extract IDs, and collect parent Elements.",
+          "7. Compose ModelMap containing the data of the selected target Elements.",
+          "8. Initialize external .NET assembly (hsbCommentManagementUI.dll).",
+          "9. Call specific .NET function ('EditComments' or 'EditComment') passing the ModelMap and extracted IDs.",
+          "10. User interacts with the .NET UI to modify comment data.",
+          "11. Receive output Map from .NET UI.",
+          "12. Interpret the output ModelMap to write changes back to the Elements in the database (resolve by handle).",
+          "13. Erase the script instance (cleanup) and exit."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Value of the _kExecuteKey variable",
+            "path1": {
+              "name": "Direct Element Mode",
+              "steps": [
+                "Prompt: Select a set of elements (Element class).",
+                "Store selected elements directly in ModelMap.",
+                "Call .NET function 'EditComments'."
+              ]
+            },
+            "path2": {
+              "name": "Comment Display Mode",
+              "steps": [
+                "Prompt: Select a set of comment displays (TslInst class).",
+                "Filter selection: Only accept instances where scriptName == 'hsb_CommentDisplay'.",
+                "Extract 'Id' from displays and collect their parent Elements.",
+                "Store parent Elements in ModelMap and display IDs in input map.",
+                "Call .NET function 'EditComment'."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "TSL Instance validity",
+            "errorMessage": "None (Silent skip)",
+            "recovery": "Script continues loop if 'bIsValid()' returns false."
+          },
+          {
+            "check": "Script Name match",
+            "errorMessage": "None (Silent skip)",
+            "recovery": "Script ignores any selected TSL instance that is not strictly named 'hsb_CommentDisplay'."
+          },
+          {
+            "check": "Selection Confirmation",
+            "errorMessage": "None (Command abort)",
+            "recovery": "If user cancels the PrEntity dialog (go() returns false), the script proceeds directly to erasing itself without making changes."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Script Self-Deletion",
+            "how": "Automatic (eraseInstance)",
+            "effect": "The script instance removes itself from the drawing immediately after execution. It cannot be edited or re-run via OPM or grips later. The only lasting change is the data modification on the selected Elements."
+          }
+        ]
+      },
+      "tokens_used": 4492,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_CommentEditor.mcr\n\n## Overview\nThis script provides a batch-editing interface for managing comments (annotations) attached to structural elements. It allows you to select either raw construction elements or existing comment markers to update their text data via an external editor.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script runs in the 3D model to modify element data. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | Not applicable for drawings. |\n\n## Prerequisites\n- **Required Entities**: Structural Elements (Beams, Walls) or existing TSL Instances (Comment Displays).\n- **Minimum Beam Count**: 0 (Can be used on any valid element).\n- **Required Settings**:\n  - `hsbCommentManagementUI.dll` (Must be available for the user interface to appear).\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the command line.\n2. Select `hsb_CommentEditor.mcr` from the file list.\n\n### Step 2: Select Items\nDepending on how the script is configured (via your company's toolbar), you will see one of the following prompts:\n\n**Option A: Direct Element Mode**\n```\nCommand Line: Select a set of elements\nAction: Click on beams, walls, or panels in the model you wish to comment on. Press Enter to confirm.\n```\n\n**Option B: Comment Display Mode**\n```\nCommand Line: Select a set of comment displays\nAction: Click on existing visual comment markers (created by hsb_CommentDisplay) in the model. Press Enter to confirm.\n```\n\n### Step 3: Edit Comments\n1. After selection, the **Comment Manager** (.NET interface) window will appear automatically.\n2. Use the interface to search, add, edit, or delete comments for the selected elements.\n\n### Step 4: Finish\n1. Click **OK** or **Save** in the Comment Manager window.\n2. The script will update the element data in the background and immediately remove itself from the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This is a utility script that runs once and deletes itself. It does not have persistent properties. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | This script does not add specific options to the Right-Click context menu. |\n\n## Settings Files\n- **Dependency**: `hsbCommentManagementUI.dll`\n- **Purpose**: Provides the graphical user interface (Dialog) required to view and edit the comment strings.\n\n## Tips\n- **Script Behavior**: This script deletes itself immediately after running. Do not look for it in the model after you finish your edits.\n- **Selection Speed**: You can use standard AutoCAD selection methods (e.g., Window Selection) to quickly pick multiple elements or comment markers at once.\n- **Data Safety**: The script updates data in the model map. Ensure you have a backup if you are batch-editing critical production information.\n\n## FAQ\n- **Q: The script ran, but I don't see it in my drawing anymore. Did it fail?**\n  - A: No. This is a \"launcher\" script designed to open the editor and then erase itself. If the Comment Manager window appeared and you saved your changes, the operation was successful.\n- **Q: I selected a comment marker, but the editor didn't show the text I expected.**\n  - A: Ensure you selected a marker created by `hsb_CommentDisplay`. Other TSL instances will be ignored by this script.\n- **Q: Can I undo changes made with this script?**\n  - A: Yes, you can use the standard AutoCAD `UNDO` command to revert the data changes made by the script."
+      },
+      "tokens_used": 4490,
+      "error": null
+    }
+  }
+}

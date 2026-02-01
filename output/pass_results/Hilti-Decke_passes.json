@@ -1,0 +1,316 @@
+{
+  "filename": "Hilti-Decke.mcr",
+  "status": "completed",
+  "total_tokens": 52188,
+  "processing_time": 469.82927322387695,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9259,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script modifies 3D geometry using ElemDrill and ElemSaw added via Element.addTool(). It targets 'Element' and 'GenBeam' objects. No usage of _Viewport, sd_ prefixes, or #Type E entity arrays typical of ShopDrawing or Paper Space scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element (Floor)",
+            "Element (Wall)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "ModelSpace (3D Model)",
+          "requiredSettings": [
+            "HiltiExport.dxx (Located in parent folder of _kPathDwg)",
+            "MapObject 'Hilti\\HiltiExport'"
+          ]
+        }
+      },
+      "tokens_used": 6765,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9985,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the generation of drilling and sawing operations for Hilti Stexon fasteners in timber floor elements based on adjacent wall positions or imported engineering data.",
+          "category": "Hardware / Connection",
+          "typicalUseCase": "Used during the detailing phase to transfer fastener positions from architectural/engineering models (dxx) or from adjacent reference walls (Top/Bottom) onto the floor element for CNC production."
+        },
+        "parameters": [
+          {
+            "name": "Diameter (Various)",
+            "technicalDefault": "Derived from import or reference",
+            "businessMeaning": "Defines the bore diameter required for the specific Hilti anchor or screw being installed (e.g., for Hilti X-HVB or X-SSD). The script distinguishes between Bottom, Top (Type 1 & 2), and Manual diameters via property name suffixes.",
+            "validRange": "14.0 - 30.0 mm (Typical range for Hilti fasteners)",
+            "unit": "mm",
+            "affectsOutput": "Adjusts the diameter of the generated ElemDrill cylinders. Incorrect values may lead to fastener installation failures."
+          },
+          {
+            "name": "Depth (Various)",
+            "technicalDefault": "Derived from import or reference",
+            "businessMeaning": "Specifies the penetration depth of the drill into the timber element. Ensures the fastener reaches the required embedment depth without drilling through the floor.",
+            "validRange": "10.0 mm - Floor Element Thickness",
+            "unit": "mm",
+            "affectsOutput": "Controls the length (Z-axis) of the generated ElemDrill objects."
+          },
+          {
+            "name": "Zone",
+            "technicalDefault": "1 or -1",
+            "businessMeaning": "Assigns the machining operation to a specific CNC zone or side. Negative values (-1 to -5) typically represent bottom sides, positive values (1 to 5) represent top sides.",
+            "validRange": "-5 to 5 (Integer)",
+            "unit": "Index",
+            "affectsOutput": "Determines which side of the element the machine applies the tooling and how it is grouped in production reports."
+          },
+          {
+            "name": "Reference Wall (Top/Bottom)",
+            "technicalDefault": "None (Selected on Insert)",
+            "businessMeaning": "The adjacent wall element used to calculate the X/Y coordinates of the fasteners. Can be a specific selected wall or 'All' walls touching the floor.",
+            "validRange": "Element (Wall)",
+            "unit": "Entity",
+            "affectsOutput": "Directly controls the planar position (X, Y) of the drills. If the wall moves, the drill positions update accordingly."
+          },
+          {
+            "name": "Manual Drills",
+            "technicalDefault": "Empty Array",
+            "businessMeaning": "User-defined drill points added manually via right-click context menu, independent of the automatic import or wall reference logic.",
+            "validRange": "0 to N (Point3d Array)",
+            "unit": "Coordinates",
+            "affectsOutput": "Adds additional ElemDrill objects at the specified coordinates."
+          },
+          {
+            "name": "Project Special (Baufritz)",
+            "technicalDefault": "Check of 'projectSpecial()' string",
+            "businessMeaning": "A conditional flag that detects if the project is for the client 'Baufritz'. Alters the machining logic to use wood dowels ('Holzdolle') and replace saw cuts with drills.",
+            "validRange": "String Comparison ('baufritz')",
+            "unit": "Boolean/Flag",
+            "affectsOutput": "Switches tooling strategy: For Baufritz, replaces standard saw cuts (ElemSaw) with drills (ElemDrill) and adjusts depth/diameter presets for wood dowels."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "External File 'HiltiExport.dxx' Update",
+            "effect": "Updates the internal MapModel with new positions from the engineering file.",
+            "cascade": [
+              "Diameter",
+              "Depth",
+              "Drill Positions"
+            ]
+          },
+          {
+            "trigger": "Project Special is 'Baufritz'",
+            "effect": "Activates 'Holzdolle' (Wood Dowel) logic and overrides standard tooling.",
+            "cascade": [
+              "Tooling Type (Drill vs Saw)",
+              "Diameter/Depth Defaults"
+            ]
+          },
+          {
+            "trigger": "Reference Wall Deletion/Movement",
+            "effect": "Recalculates drill positions based on the new wall geometry or defaults to 'All' if specific wall is lost.",
+            "cascade": [
+              "Drill Positions (X/Y)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "ElemDrill",
+            "description": "Cylindrical holes for Hilti anchors or wood dowels. Generated on the top or bottom surface of the floor element.",
+            "appliedTo": "Selected Floor Element (and contained loose beams)"
+          },
+          {
+            "type": "ElemSaw",
+            "description": "Saw cuts for clearance or preparation (Conditional: Used for non-Baufritz specific top connections or specific bottom scenarios).",
+            "appliedTo": "Selected Floor Element"
+          },
+          {
+            "type": "MapRequest",
+            "description": "Dimension requests for detailing drawings, indicating the position of the fasteners.",
+            "appliedTo": "Drawing Views"
+          }
+        ]
+      },
+      "tokens_used": 9519,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initialization: Check for Debug mode, define unit conversion (mm), and load MapObject 'HiltiExport' from parent folder of current drawing.",
+          "2. Import Data Check: On insert, compare 'HiltiExport.dxx' file date with stored MapObject date. Update MapObject if file is newer.",
+          "3. Insertion Cycle: If insertCycleCount > 1, erase duplicate instance immediately.",
+          "4. Determine Script Type (Top/Bottom): The script instance is either configured as 'Top' or 'Bottom' (usually handled by separate catalog entries or properties).",
+          "5. Prompt User Input (If Inserting):",
+          "   a. Select Floor Element (GenBeam/Element).",
+          "   b. Select Reference Wall (Optional: 'All', specific single wall, or None).",
+          "   c. Verify Import Data availability (checks MapModel for 'Hilti-Stockschraube' or 'Hilti-Verankerung').",
+          "6. Entity Collection: Gather all beams inside the selected floor element. Distinguish between floor beams and 'Loose Beams' (freie Bauteile).",
+          "7. Position Calculation:",
+          "   a. If 'Reference Wall' is selected: Project intersections from wall geometry onto the floor plane.",
+          "   b. If 'Import Data' exists: Extract points from 'HiltiExport' MapModel matching the element GUID.",
+          "   c. Combine points from Reference and Import sources.",
+          "8. Filtering Validation:",
+          "   a. Check if points fall within the floor contour (or within 5mm tolerance).",
+          "   b. If Baufritz Project: Apply logic to replace Saw cuts with Drills (Holzdolle).",
+          "   c. Check if points fall within specific beam sub-elements (for Top drills).",
+          "9. Tool Generation:",
+          "   a. Create 'ElemDrill' objects at valid positions using specified Diameter, Depth, and Zone properties.",
+          "   b. If Bottom mode (and non-Baufritz): Create 'ElemSaw' objects for slot cuts where specified.",
+          "   c. Add Manual Drills stored in _Map.",
+          "10. Finalize: Add tools to Floor Element, Publish MapRequest for detailing, Publish 'nR' (count) to SubMapX.",
+          "11. Cleanup: If no valid points found, erase instance to prevent empty script clutter."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script Mode (Top vs Bottom)",
+            "path1": {
+              "name": "Top Mode",
+              "steps": [
+                "Load Top-specific properties (DiameterTop1, DepthTop1, ZoneTop).",
+                "Filter points: Only accept points strictly inside the beam geometry (+ 5mm tolerance).",
+                "Generate ElemDrill only. No Saw cuts.",
+                "Set Zone to positive values (1-5)."
+              ]
+            },
+            "path2": {
+              "name": "Bottom Mode",
+              "steps": [
+                "Load Bottom-specific properties (DiameterBottom, DepthBottom, ZoneBottom).",
+                "Filter points: Accept points within floor contour.",
+                "Generate ElemDrill for anchors.",
+                "If NOT Baufritz, generate ElemSaw for slot cuts at specific positions.",
+                "Set Zone to negative values (-5 to -1)."
+              ]
+            }
+          },
+          {
+            "condition": "Data Source (Reference Wall vs Import)",
+            "path1": {
+              "name": "Reference Wall Selected",
+              "steps": [
+                "Prompt user to select Wall Element.",
+                "Calculate insertion points based on wall projection.",
+                "Store wall handle for future recalculation."
+              ]
+            },
+            "path2": {
+              "name": "Import from DXX / MapModel",
+              "steps": [
+                "Read 'HiltiExport.dxx' data.",
+                "Match element GUID to find associated drill points.",
+                "Apply properties (Dia/Depth) defined in the import map."
+              ]
+            }
+          },
+          {
+            "condition": "Project Special Client (Baufritz)",
+            "path1": {
+              "name": "Is Baufritz",
+              "steps": [
+                "Detect 'baufritz' string in projectSpecial().",
+                "Suppress 'ElemSaw' generation.",
+                "Replace with 'ElemDrill' (Holzdolle) with specific diameter/depth overrides."
+              ]
+            },
+            "path2": {
+              "name": "Standard Project",
+              "steps": [
+                "Use standard Hilti fastener logic.",
+                "Generate Saw cuts where required for bottom connections."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "Implicit (Script exits or prompts again if no element selected).",
+            "recovery": "User must select a valid Floor Element."
+          },
+          {
+            "check": "Point Location (Inside Floor)",
+            "errorMessage": "Implicit (Point is skipped, reported in 'Einfügepunkte prüfen' stats).",
+            "recovery": "Move reference wall or update import data so points fall within floor bounds (+5mm)."
+          },
+          {
+            "check": "Top Drill Location (Inside Beam)",
+            "errorMessage": "Implicit (Point is skipped if outside beam bounds).",
+            "recovery": "Adjust wall position or ensure Top Drills align with internal floor beams."
+          },
+          {
+            "check": "HiltiExport.dxx Existence",
+            "errorMessage": "Silent fail (MapObject not created/updated).",
+            "recovery": "Ensure 'HiltiExport.dxx' exists in the parent folder of the current drawing."
+          },
+          {
+            "check": "Duplicate Instance on Insert",
+            "errorMessage": "Instance is automatically erased.",
+            "recovery": "None required (Script handles cleanup automatically)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Drill Parameters",
+            "how": "OPM (Object Properties Manager)",
+            "effect": "Updates Diameter and Depth for all generated drills upon recalculation."
+          },
+          {
+            "action": "Change Reference Wall",
+            "how": "OPM Property 'Wandreferenz' (Wall Reference)",
+            "effect": "Recalculates drill positions based on the new selected wall. 'All' option calculates against all adjacent walls."
+          },
+          {
+            "action": "Add Manual Drill",
+            "how": "Right-click Context Menu -> 'Add Manual Drill'",
+            "effect": "Prompts user to pick a point on the floor. Adds an ElemDrill at that location using Manual Diameter/Depth settings."
+          },
+          {
+            "action": "Delete Manual Drill",
+            "how": "Right-click Context Menu -> 'Delete Manual Drill'",
+            "effect": "Prompts user to select an existing drill point. Removes that specific manual drill from the array."
+          },
+          {
+            "action": "Delete All Manual Drills",
+            "how": "Right-click Context Menu -> 'Delete all manual drills'",
+            "effect": "Clears the entire array of user-defined manual drills."
+          },
+          {
+            "action": "Update from DXX",
+            "how": "Update 'HiltiExport.dxx' file externally + Recalculate drawing",
+            "effect": "Script detects file date change, updates internal MapModel, and regenerates tools based on new engineering data."
+          },
+          {
+            "action": "Move Floor/Wall",
+            "how": "Grip Edit / Standard AutoCAD Move",
+            "effect": "Script recalcuates and moves drill positions to maintain relative position to the floor and reference walls."
+          }
+        ]
+      },
+      "tokens_used": 9967,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Hilti-Decke.mcr\n\n## Overview\nAutomates the generation of drilling and sawing operations for Hilti fasteners (or wood dowels) in timber floor elements. It calculates positions based on adjacent wall geometry or imported engineering data (`.dxx`) and generates the necessary CNC tooling.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates on 3D model elements (Floors/Walls). |\n| Paper Space | No | Not designed for 2D drawings or viewports. |\n| Shop Drawing | No | Does not generate dimensions or annotations for drawings directly. |\n\n## Prerequisites\n- **Required Entities**:\n  - A Floor Element (Element or GenBeam).\n  - (Optional) A Wall Element to use as a positional reference.\n- **Minimum Beam Count**: 0.\n- **Required Settings Files**:\n  - `HiltiExport.dxx` (Located in the parent folder of the current drawing). This file contains engineering data for fastener positions.\n\n## Usage Steps\n\n### Step 1: Launch Script\n```\nCommand: TSLINSERT\nAction: Select 'Hilti-Decke.mcr' from the script catalog/dialog.\n```\n\n### Step 2: Select Floor Element\n```\nCommand Line: Select Element:\nAction: Click on the timber floor element you wish to process.\n```\n\n### Step 3: Select Reference Wall\n```\nCommand Line: Select Reference Wall or [All/None]:\nAction:\n- Click a specific wall to align drills to it.\n- Type 'All' to use all walls touching the floor.\n- Press Enter to use only imported data (or if no wall is needed).\n```\n\n### Step 4: Automatic Processing\nThe script will automatically import data from `HiltiExport.dxx` (if available and newer), calculate intersection points based on the wall, and generate the tools.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| DiameterTop1 | Number | Derived | Sets the bore diameter for Top fasteners (Type 1). |\n| DepthTop1 | Number | Derived | Sets the drill depth for Top fasteners. |\n| DiameterBottom | Number | Derived | Sets the bore diameter for Bottom fasteners. |\n| DepthBottom | Number | Derived | Sets the drill depth for Bottom fasteners. |\n| DiameterManual | Number | 12.0 | Diameter used for manually added drill points. |\n| DepthManual | Number | 50.0 | Depth used for manually added drill points. |\n| ZoneTop | Integer | 1 | CNC Zone assignment for Top side (Positive value). |\n| ZoneBottom | Integer | -1 | CNC Zone assignment for Bottom side (Negative value). |\n| Wandreferenz | Entity | None | The wall element used to calculate drill positions. Can be set to 'All'. |\n| ProjectSpecial | String | (Auto) | Logic flag. If 'baufritz' is detected, switches logic to wood dowels (Holzdolle) and removes saw cuts. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Add Manual Drill | Prompts you to click a point on the floor to add an extra drill using Manual Diameter/Depth settings. |\n| Delete Manual Drill | Prompts you to select an existing drill to remove it from the manual list. |\n| Delete all manual drills | Removes all user-added manual drills at once. |\n| Recalculate | Updates the tooling based on current wall positions or updated import files. |\n\n## Settings Files\n- **Filename**: `HiltiExport.dxx`\n- **Location**: Parent folder of the current `.dwg` file.\n- **Purpose**: Contains engineering data (Point positions and attributes) imported from external structural calculation software. The script automatically checks this file on insertion to update the internal MapObject.\n\n## Tips\n- **Reference Walls**: If you select 'All' for the reference wall, the script will generate drill points everywhere a wall touches the floor contour.\n- **Baufritz Projects**: The script automatically detects if the project special string is 'baufritz'. In this mode, saw cuts are replaced with wood dowel drills.\n- **Moving Elements**: If you move the floor or the reference wall, use the `Recalculate` option (or grip-edit the floor) to snap the drill holes to the new positions.\n- **Data Updates**: To update fastener positions from engineering, replace the `HiltiExport.dxx` file and recalculate the script instance.\n\n## FAQ\n- **Q: Why are my drill holes not appearing?**\n  - **A**: Check if the calculated points fall within the floor contour (tolerance is 5mm). If using a Reference Wall, ensure the wall actually overlaps or touches the floor correctly in the XY plane. Also, verify the `HiltiExport.dxx` exists if you are relying on import data.\n- **Q: What happens if I delete the wall I used as a reference?**\n  - **A**: The script will default to 'All' walls or lose the specific reference. It is recommended to re-select a valid wall in the Properties Palette (Wandreferenz) if the original is deleted.\n- **Q: Can I mix imported data and wall references?**\n  - **A**: Yes. The script combines points found in the `HiltiExport.dxx` file with points calculated from the selected Reference Wall."
+      },
+      "tokens_used": 6693,
+      "error": null
+    }
+  }
+}

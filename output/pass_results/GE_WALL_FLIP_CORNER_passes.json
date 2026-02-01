@@ -1,0 +1,128 @@
+{
+  "filename": "GE_WALL_FLIP_CORNER.mcr",
+  "status": "completed",
+  "total_tokens": 31563,
+  "processing_time": 516.9394044876099,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6819,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses Element, ElementWall, and Wall classes to directly modify 3D geometry (stretchOutlineTo, setStartEnd) and triggers regeneration via 'Hsb_GenerateConstruction'. It lacks 'sd_' prefixes, _Viewport usage, or #Type E definitions associated with Shop Drawings."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "ElementWall",
+            "Wall"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4329,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 3421,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically modifies the intersection geometry of two connected timber walls to create specific joint types (miter, butt-and-pass, etc.) and updates the underlying CAD wall length to match.",
+          "category": "Framing",
+          "typicalUseCase": "When two timber walls meet at a corner and require clean-up of their end geometry (e.g., changing a default square butt joint to a mitered joint or ensuring the walls meet exactly flush)."
+        },
+        "parameters": [
+          {
+            "name": "iStretchACA",
+            "technicalDefault": "1",
+            "businessMeaning": "Determines if the script should automatically adjust the length of the host AutoCAD Architecture (ACA) wall object to match the new timber element geometry.",
+            "validRange": "0 (No), 1 (Yes)",
+            "unit": "Boolean/Integer",
+            "affectsOutput": "If 1, the graphical wall line in CAD is stretched to align with the new cut point of the timber. If 0, only the timber element geometry changes, potentially leaving a gap or overlap with the CAD wall line."
+          },
+          {
+            "name": "nAngleConfig",
+            "technicalDefault": "7",
+            "businessMeaning": "Specifies the type of corner joint construction to apply at the intersection.",
+            "validRange": "0 (Butt and pass), 1 (Miter), 2 (Open angle), 3 (Miter-square bottom), 4 (Miter-square top), 5 (Square-miter bottom), 6 (Square-miter top), 7 (Prompt user)",
+            "unit": "Enumeration",
+            "affectsOutput": "Dictates the calculation of cut planes. 0 creates a square cut on one wall against the face of the other. 1 creates matching angled cuts on both walls. 3-6 create hybrid profiles mixing square and mitered cuts based on wall orientation (top/bottom)."
+          },
+          {
+            "name": "dTol",
+            "technicalDefault": "4",
+            "businessMeaning": "The tolerance angle (in degrees) used to identify if the intersection is effectively a standard 90-degree corner.",
+            "validRange": "1 to 10 degrees",
+            "unit": "degrees",
+            "affectsOutput": "If the angle between walls falls within this range of 90 degrees, the script may apply specific logic optimized for right-angles (often defaulting to a specific configuration) rather than arbitrary angle calculations."
+          },
+          {
+            "name": "strPrompt",
+            "technicalDefault": "\"\\nAngle Type [1 Butt and pass/2 Miter/3 Open angle/4 Miter-square bottom/5 Miter-square top/6 Square-miter bottom/7 Square-miter top] <2>\"",
+            "businessMeaning": "The text instruction displayed to the user if the script is set to manual prompt mode.",
+            "validRange": "N/A (String)",
+            "unit": "String",
+            "affectsOutput": "No direct geometric effect; purely instructional UI."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "nAngleConfig equals 7",
+            "effect": "The script interrupts execution to display the command line prompt (strPrompt) to ask the user for the desired joint type.",
+            "cascade": []
+          },
+          {
+            "trigger": "Wall intersection angle is within dTol of 90 degrees",
+            "effect": "The script prioritizes geometric logic for right-angles, often defaulting to a specific configuration (like Butt and Pass) without prompting, regardless of the nAngleConfig setting.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Geometry Modification",
+            "description": "The outline of the timber wall elements is stretched to new cut planes calculated based on the selected configuration.",
+            "appliedTo": "Selected ElementWall entities."
+          },
+          {
+            "type": "CAD Entity Update",
+            "description": "The start or end point of the underlying ACA Wall entity is moved to align with the new timber cut.",
+            "appliedTo": "Associated ACA Wall objects (if iStretchACA is enabled)."
+          }
+        ]
+      },
+      "tokens_used": 4963,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7968,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_WALL_FLIP_CORNER\n\n## Overview\nThis script automatically modifies the intersection geometry of two connected timber walls to create specific corner joint types (e.g., miter, butt-and-pass) and updates the underlying AutoCAD wall length to match the new timber geometry.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for 3D modification of timber elements. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | This script modifies 3D model elements, not 2D layouts. |\n\n## Prerequisites\n- **Required Entities**: Two `ElementWall` entities connected at a corner.\n- **Minimum Beam Count**: 2 walls.\n- **Required Settings**: None specific to external files; however, the underlying ACA (AutoCAD Architecture) wall must exist if you intend to use the \"Stretch ACA\" feature.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_WALL_FLIP_CORNER.mcr`\n\n### Step 2: Select Walls\n```\nCommand Line: Select wall entities:\nAction: Click on the two timber walls that meet at the corner you wish to modify. Press Enter to confirm selection.\n```\n\n### Step 3: Specify Joint Type (if prompted)\n```\nCommand Line: Angle Type [1 Butt and pass/2 Miter/3 Open angle/4 Miter-square bottom/5 Miter-square top/6 Square-miter bottom/7 Square-miter top] <2>:\nAction: Type the number corresponding to the desired joint configuration and press Enter.\n```\n*(Note: This prompt only appears if the `nAngleConfig` property is set to \"Prompt user\" and the corner is not automatically detected as a standard right angle).*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| iStretchACA | Integer | 1 | **Stretch ACA Wall**: Determines if the script automatically adjusts the length of the host AutoCAD Architecture (ACA) wall object. <br>0 = No (Only timber geometry changes).<br>1 = Yes (CAD wall line updates to match timber). |\n| nAngleConfig | Integer | 7 | **Corner Joint Configuration**: Specifies the type of corner joint to apply.<br>0 = Butt and pass<br>1 = Miter<br>2 = Open angle<br>3 = Miter-square bottom<br>4 = Miter-square top<br>5 = Square-miter bottom<br>6 = Square-miter top<br>7 = Prompt user (asks via command line). |\n| dTol | Integer | 4 | **90° Tolerance (degrees)**: The tolerance used to identify if the intersection is a standard 90-degree corner. If the angle is within this range (±4° by default), the script may apply optimized right-angle logic. |\n| strPrompt | String | (See Desc.) | **Prompt Text**: The text instruction displayed to the user when in manual prompt mode. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Re-runs the script logic using the current property values to update the wall geometry. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script operates on standard hsbCAD entities and does not require external XML configuration files.\n\n## Tips\n- **Synchronization**: Keep `iStretchACA` set to `1` (Yes) to ensure your 2D CAD wall lines always stay aligned with the 3D timber elements after modifications.\n- **Right Angles**: If your walls are exactly 90 degrees, the script may default to a specific joint type (often Butt and Pass) regardless of the `nAngleConfig` setting, due to internal optimization logic. Adjust the `dTol` value if you need to force a specific calculation on near-right angles.\n- **Hybrid Joints**: Options 3–6 (e.g., \"Miter-square bottom\") are useful for specific framing conditions where a complex profile is required at the top or bottom of the wall intersection.\n\n## FAQ\n- **Q: Why didn't the script ask me for the joint type?**\n  **A:** The `nAngleConfig` property might be set to a specific number (0–6) instead of 7, or the walls were detected as a perfect 90-degree corner, which triggers an automatic configuration.\n- **Q: Does this script work if I delete the underlying AutoCAD wall?**\n  **A:** The script can still modify the timber element geometry (`ElementWall`), but the \"Stretch ACA\" feature (`iStretchACA`) will fail or have no effect if the host CAD wall object is missing."
+      },
+      "tokens_used": 4063,
+      "error": null
+    }
+  }
+}

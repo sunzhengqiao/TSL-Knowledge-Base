@@ -1,0 +1,184 @@
+{
+  "filename": "HSB_E-ElementLinker.mcr",
+  "status": "completed",
+  "total_tokens": 27594,
+  "processing_time": 601.1291809082031,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5579,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses 'Element' class, 'PrEntity', and 'getElement' prompts for 3D model selection. The core functionality uses 'setSubMapX' to attach data to model elements. Visualization is drawn in 3D using PLine relative to the element's coordinate system. No ShopDrawing ('sd_') prefixes, viewports, or 2D layout logic are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (3D environment)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3174,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getElement",
+              "promptOriginal": "Select the main element",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "Select one or more elements",
+              "condition": "_bOnInsert",
+              "required": false
+            },
+            {
+              "step": 3,
+              "function": "PrEntity",
+              "promptOriginal": "Select one or more sub elements to add",
+              "condition": "_kExecuteKey == T(\"|Add subelements|\")",
+              "required": false
+            },
+            {
+              "step": 4,
+              "function": "PrEntity",
+              "promptOriginal": "Select one or more sub elements to remove",
+              "condition": "_kExecuteKey == T(\"|Remove subelements|\")",
+              "required": false
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "Add subelements",
+            "handler": "T(\"|Add subelements|\")",
+            "action": "Prompts the user to select additional elements to link to the main element.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Remove subelements",
+            "handler": "T(\"|Remove subelements|\")",
+            "action": "Prompts the user to select elements to remove from the link.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 2810,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Logically links and groups multiple secondary elements to a primary 'main' element for data association, logistical grouping, or assembly tracking.",
+          "category": "Data Management / Logistics",
+          "typicalUseCase": "A user needs to associate a set of studs, beams, or sub-panels to a primary wall or beam so that export routines or other scripts recognize them as a single assembly unit."
+        },
+        "parameters": [
+          {
+            "name": "mainElement",
+            "technicalDefault": "User Selection (getElement)",
+            "businessMeaning": "The primary parent element (Master) to which other elements will be attached. This element hosts the link data.",
+            "validRange": "Any valid hsbCAD Element (Wall, Beam, etc.)",
+            "unit": "Entity",
+            "affectsOutput": "Determines the coordinate system for the visualization and the storage location (SubMap) of the link data."
+          },
+          {
+            "name": "subElements",
+            "technicalDefault": "User Selection (PrEntity)",
+            "businessMeaning": "The child elements (Slaves) to be grouped with the main element.",
+            "validRange": "Any valid hsbCAD Elements except the mainElement",
+            "unit": "Entity List",
+            "affectsOutput": "Populates the 'SubElement[]' list stored on the main element and updates the text list drawn in the model."
+          },
+          {
+            "name": "dSymbolSize",
+            "technicalDefault": "U(50)",
+            "businessMeaning": "The visual scale of the linking symbol drawn in the model to indicate the group.",
+            "validRange": "10 - 500 mm (depending on model scale)",
+            "unit": "mm",
+            "affectsOutput": "Scales the size of the anchor graphic and the spacing between the text labels of the linked elements."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "5",
+            "businessMeaning": "The CAD color index used for the visual linking symbol and text.",
+            "validRange": "1 - 255 (AutoCAD color index)",
+            "unit": "Index",
+            "affectsOutput": "Changes the visual appearance of the drawn group marker (Lines and Text)."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of mainElement",
+            "effect": "Initializes the storage map and coordinate system.",
+            "cascade": [
+              "subElements",
+              "dSymbolSize"
+            ]
+          },
+          {
+            "trigger": "Selection of subElements",
+            "effect": "Updates the _Element array and overwrites the 'SubElement[]' SubMap on the mainElement.",
+            "cascade": [
+              "Visualization"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "SubMap Data",
+            "description": "An attribute map attached to the main element containing a list of handles for all linked sub-elements.",
+            "appliedTo": "Main Element"
+          },
+          {
+            "type": "Visual Geometry (PLine & Text)",
+            "description": "A graphical anchor symbol (lines) and a numbered list of linked elements drawn in Model Space on the 'DEFPOINTS' layer.",
+            "appliedTo": "Model Space (relative to Main Element)"
+          }
+        ]
+      },
+      "tokens_used": 5221,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. Script Insertion: Launch command from catalog or toolbar.\",\n    \"2. Cycle Check: Script validates 'insertCycleCount()' to prevent recursive execution loops.\",\n    \"3. Main Selection: User prompted to select the 'main element' (Master/Parent).\",\n    \"4. Sub Selection: User prompted to select one or more 'sub elements' (Children) to link.\",\n    \"5. Initial Filtering: Script silently ignores duplicates or if the sub-element is the same as the main element.\",\n    \"6. Data Storage: Script appends valid selections to the internal _Element array.\",\n    \"7. Script Commitment: Instance created in Model Space.\",\n    \"8. [Re-calculation/Update Phase]: Script validates that the _Element array is not empty.\",\n    \"9. Context Menu Handling: If invoked via 'Add' or 'Remove' triggers, prompt user for specific modifications.\",\n    \"10. Data Persistence: Write the list of sub-elements to the Main Element's SubMap ('SubElement[]').\",\n    \"11. Visualization: Draw coordinate-based anchor symbol and numbered list of sub-elements at the Main Element's origin.\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Insertion Cycle Check\",\n      \"path1\": {\n        \"name\": \"Cycle Count > 1\",\n        \"steps\": [\n          \"Execute eraseInstance()\",\n          \"Return immediately (Stop)\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Cycle Count == 1\",\n        \"steps\": [\n          \"Proceed to Main Element selection\",\n          \"Proceed to Sub Element selection\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Context Menu Trigger (_kExecuteKey)\",\n      \"path1\": {\n        \"name\": \"Add subelements\",\n        \"steps\": [\n          \"Prompt user to select elements to add\",\n          \"Filter out duplicates and Main Element\",\n          \"Append new items to _Element array\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Remove subelements\",\n        \"steps\": [\n          \"Prompt user to select elements to remove\",\n          \"Locate items in _Element array\",\n          \"Remove items from _Element array\"\n        ]\n      },\n      \"path3\": {\n        \"name\": \"Standard Recalc (No specific key)\",\n        \"steps\": [\n          \"Skip modification prompts\",\n          \"Proceed directly to Data Persistence and Visualization\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Data Integrity Check\",\n      \"path1\": {\n        \"name\": \"_Element array is Empty\",\n        \"steps\": [\n          \"Report Warning: 'No elements selected.'\",\n          \"Erase Script Instance\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"_Element array contains items\",\n        \"steps\": [\n          \"Set Main Element reference (_Element[0])\",\n          \"Proceed to update SubMap and Draw\"\n        ]\n      }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"Recursive Insertion\",\n      \"errorMessage\": \"None (Silent)\",\n      \"recovery\": \"Script automatically erases itself if insertCycleCount() > 1.\"\n    },\n    {\n      \"check\": \"Empty Selection List\",\n      \"errorMessage\": TN(\"|No elements selected.|\"),\n      \"recovery\": \"Script instance is erased. User must re-insert and select valid elements.\"\n    },\n    {\n      \"check\": \"Self-Reference or Duplicate\",\n      \"errorMessage\": \"None (Silent)\",\n      \"recovery\": \"During selection (Add/Insert/Remove), the script checks if the selected handle matches the Main Element or is already in the list. If so, it is skipped silently.\"\n    }\n  ],\n  \"postInsertionActions\": [\n    {\n      \"action\": \"Add Subelements\",\n      \"how\": \"Right-click script instance -> Context Menu -> 'Add subelements'\",\n      \"effect\": \"Prompts selection, appends to the internal list, updates the SubMap, and redraws the visual list to include new numbers.\"\n    },\n    {\n      \"action\": \"Remove Subelements\",\n      \"how\": \"Right-click script instance -> Context Menu -> 'Remove subelements'\",\n      \"effect\": \"Prompts selection, removes items from the internal list, updates the SubMap, and redraws the visual list (removing numbers).\"\n    },\n    {\n      \"action\": \"Visual Update\",\n      \"how\": \"Modify geometry of linked elements or move Main Element\",\n      \"effect\": \"Script re-calculates on model update, ensuring the link symbol and text list remain anchored to the Main Element's coordinate system origin and orientation.\"\n    }\n  ]\n}\n```"
+      },
+      "tokens_used": 5610,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-ElementLinker\n\n## Overview\nThis script logically links and groups multiple secondary elements to a primary \"main\" element. It is designed for data association and logistical grouping, allowing you to define assemblies (like studs or sub-beams) attached to a master element (like a wall or primary beam) for export or tracking purposes.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates in the 3D model environment. |\n| Paper Space | No | Not supported for 2D layouts. |\n| Shop Drawing | No | Not intended for production drawings. |\n\n## Prerequisites\n- **Required Entities**: At least one valid hsbCAD Element (Wall, Beam, etc.) to act as the parent.\n- **Minimum Beams**: 1 (The Main Element).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_E-ElementLinker.mcr` from the catalog.\n\n### Step 2: Select Main Element\n```\nCommand Line: Select the main element\nAction: Click on the primary element (Parent) you wish to use as the anchor for the group.\n```\n\n### Step 3: Select Sub Elements\n```\nCommand Line: Select one or more elements\nAction: Select all the secondary elements (Children) you want to associate with the main element. \n        Press Enter or Space to confirm the selection.\n```\n\n### Step 4: Completion\nThe script will generate a visual anchor symbol and a numbered list on the `DEFPOINTS` layer at the main element's origin to indicate the link has been created.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not expose editable parameters in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Add subelements** | Prompts you to select additional elements in the model to append to the existing link group. |\n| **Remove subelements** | Prompts you to select elements currently in the group to remove them from the link. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Non-Printing Visuals**: The script draws the link symbol and text on the `DEFPOINTS` layer. This ensures the visual indicators are visible on screen but will not plot on your drawings.\n- **Data Storage**: The link data is stored directly inside the Main Element's attributes (SubMap). This means the relationship survives model regeneration.\n- **Error Handling**: The script automatically prevents you from linking an element to itself or adding duplicate elements to the same group.\n\n## FAQ\n- **Q: Can I add more elements to a group after I have already created the link?**\n  - A: Yes. Select the script instance in the model, right-click, and choose \"Add subelements\" from the context menu.\n- **Q: What happens if I delete the main element?**\n  - A: Since the script instance relies on the main element for its coordinate system and data storage, deleting the main element will likely result in errors or the script instance being deleted/invalidated.\n- **Q: Why didn't the script link an element I selected?**\n  - A: The script silently ignores selections if the chosen element is the Main Element itself or if it is already part of the linked group."
+      },
+      "tokens_used": 5200,
+      "error": null
+    }
+  }
+}

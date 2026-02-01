@@ -1,0 +1,204 @@
+{
+  "filename": "HSB_E-DrawZone.mcr",
+  "status": "completed",
+  "total_tokens": 31681,
+  "processing_time": 1370.5968279838562,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9536,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": true,
+          "isMultipageScript": true,
+          "detectionEvidence": "Script includes a property 'sSpace' with options 'Paper space' and 'Shopdraw multipage'. Insert logic uses getViewport() for Paper Space and getShopDrawView() for Shopdrawing. Runtime logic checks _Viewport.length() and _Entity[0].bIsKindOf(ShopDrawView). Script calls eraseInstance() if run in Model Space."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Paper Space layout or Shopdrawing layout",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7884,
+      "error": null
+    },
+    "3": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "Request timeout after retries"
+    },
+    "4": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "Request timeout after retries"
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script launched.",
+          "2. Properties Dialog (OPM) displayed for initial configuration.",
+          "3. User selects 'Space' type (Paper Space or Shopdraw Multipage).",
+          "4. [Conditional] User selects geometric entity (Viewport or ShopDrawView).",
+          "5. User selects insertion point.",
+          "6. Script executes: Validates environment and retrieves Element/View data.",
+          "7. Script filters beams based on name filters (Include/Exclude).",
+          "8. Script constructs Zone Profile geometry:",
+          "   - If Zone 0: Unions filtered beam projections and subtracts openings.",
+          "   - If Zone > 0: Unions sheet envelopes from specific zone index.",
+          "9. Script applies transformations (Model to Paper Space).",
+          "10. Script draws Main Zone (Outline and Hatch).",
+          "11. [Conditional] Script draws Connections between selected Zone and Target Zone.",
+          "12. [Conditional] Script draws Extended Rafters.",
+          "13. Execution completes."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Space Type selection during Insert",
+            "path1": {
+              "name": "Paper Space",
+              "steps": [
+                "Prompt: 'Select the viewport'",
+                "Store object in _Viewport array",
+                "Extract Element from Viewport",
+                "Get CoordSys from Viewport"
+              ]
+            },
+            "path2": {
+              "name": "Shopdraw Multipage",
+              "steps": [
+                "Prompt: 'Select the view entity'",
+                "Store object in _Entity array",
+                "Extract ViewData from internal Map",
+                "Extract Element from ViewData definitions",
+                "Get CoordSys from ViewData"
+              ]
+            }
+          },
+          {
+            "condition": "Zone Index Calculation",
+            "path1": {
+              "name": "Zone 0 (Default)",
+              "steps": [
+                "Collect all beams from Element",
+                "Apply Name Filters (Include/Exclude)",
+                "Union beam shadow profiles",
+                "Subtract Opening shapes (or Netto rings)",
+                "Apply Log wall gaps if enabled"
+              ]
+            },
+            "path2": {
+              "name": "Zone 1-10 or Outlines (99/100)",
+              "steps": [
+                "Iterate Element Sheets",
+                "Select Sheets matching specific Zone Index",
+                "Union Sheet Envelopes",
+                "Add Sheet Openings (as islands/rings) if enabled"
+              ]
+            }
+          },
+          {
+            "condition": "Connecting Zones (Vertex Matching)",
+            "path1": {
+              "name": "Vertex Count Mismatch",
+              "steps": [
+                "Identify profile with fewer vertices",
+                "Map each vertex to the nearest neighbor in the larger profile"
+              ]
+            },
+            "path2": {
+              "name": "Vertex Count Match",
+              "steps": [
+                "Calculate distance for all cyclic rotations",
+                "Select rotation with minimum total distance",
+                "Map vertices based on optimal rotation"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Script execution environment",
+            "errorMessage": "(Implicit) Script deletes itself",
+            "recovery": "Re-insert script in valid Paper Space or Shopdraw environment"
+          },
+          {
+            "check": "Shopdraw View Entity Validity",
+            "errorMessage": "(Internal bError=1) Invalid ShopDrawView selected",
+            "recovery": "Select a valid ShopDrawView entity"
+          },
+          {
+            "check": "ViewData Existence",
+            "errorMessage": "(Internal bError=2) No ViewData found for selected view",
+            "recovery": "Ensure the drawing generation processed the view correctly or select a different view"
+          },
+          {
+            "check": "Viewport Selection (Paper Space)",
+            "errorMessage": "(Internal bError=3) No viewport selected",
+            "recovery": "Select a viewport during insertion"
+          },
+          {
+            "check": "Element Linkage",
+            "errorMessage": "(Internal bError=4) No hsbData attached to viewport",
+            "recovery": "Ensure the selected viewport references a valid hsbCAD Element"
+          },
+          {
+            "check": "Zone Index Validity",
+            "errorMessage": "ReportMessage: 'Zone reset to 0.'",
+            "recovery": "User adjusts property to a valid integer (script auto-corrects to 0 if invalid)"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Zone Number",
+            "how": "OPM (Properties Palette)",
+            "effect": "Recalculates geometry based on beam union (Zone 0) or specific Sheet zones (1-10, Outlines)"
+          },
+          {
+            "action": "Adjust Appearance",
+            "how": "OPM (Properties Palette)",
+            "effect": "Updates Outline Color, Hatch Color (or -1 for auto-sheet-color), Hatch Pattern, and Scale"
+          },
+          {
+            "action": "Toggle Openings",
+            "how": "OPM (Properties Palette)",
+            "effect": "Adds or removes opening cutouts/lines from the generated profile"
+          },
+          {
+            "action": "Filter Beams",
+            "how": "OPM (Properties Palette)",
+            "effect": "Modifies the calculated profile for Zone 0 by including/excluding specific beam names"
+          },
+          {
+            "action": "Connect to other Zone",
+            "how": "OPM (Properties Palette)",
+            "effect": "Draws lines connecting the profile of the current zone to a target zone"
+          }
+        ]
+      },
+      "tokens_used": 9440,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-DrawZone.mcr\n\n## Overview\nThis script automatically generates a 2D zone profile in Paper Space or Shop Drawing layouts. It calculates the shape based on projected beam shadows, specific sheet zones, or outlines, and allows for customized hatching and connection lines between different zones.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | Script will delete itself if run here. |\n| Paper Space | Yes | Select a Viewport linked to an Element. |\n| Shop Drawing | Yes | Select a Shopdraw View entity. |\n\n## Prerequisites\n- **Required Entities:** A Viewport (Paper Space) or a Shopdraw View (Multipage) linked to a valid hsbCAD Element.\n- **Minimum Beam Count:** 0 (Can work purely with sheet data).\n- **Required Settings:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_E-DrawZone.mcr` from the list.\n\n### Step 2: Configure Space Type\n**Action:** The Properties Palette (OPM) will appear. Select the desired working environment under the **Space** property.\n- **Paper space:** Use if working in a standard 2D layout view.\n- **Shopdraw multipage:** Use if working within a generated hsbCAD shop drawing.\n\n### Step 3: Select View Entity\n**Action:** Click on the drawing to select the specific view representation.\n- **If Paper Space:** Click the border of the Viewport.\n- **If Shopdraw:** Click the Shopdraw View entity.\n\n### Step 4: Set Insertion Point\n**Command Line:** `Specify insertion point:`\n**Action:** Click in the drawing where you want the zone reference point to be located.\n\n### Step 5: Adjust Appearance (Optional)\n**Action:** Select the newly inserted script instance. Use the Properties Palette to adjust the Zone Index, Colors, and Hatch patterns. The geometry will update automatically.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Space | String | Paper space | Sets the environment (Paper space or Shopdraw multipage). |\n| Zone | Integer | 0 | Determines the logic: **0** for beam union, **1-10** for specific sheet zones, **99/100** for outlines. |\n| Include | String | (Empty) | Filter: Only includes beams with names containing this string. |\n| Exclude | String | (Empty) | Filter: Excludes beams with names containing this string. |\n| OutlineColor | Integer | 1 | AutoCAD Color Index (ACI) for the outline boundary. |\n| HatchColor | Integer | -1 | AutoCAD Color Index for the hatch. **-1** matches the sheet color automatically. |\n| HatchPattern | String | SOLID | The hatch pattern name (e.g., ANSI31, SOLID). |\n| HatchScale | Double | 1.0 | Scale factor for the hatch pattern. |\n| DrawOpenings | Yes/No | Yes | If Yes, subtracts openings (windows/doors) from the zone profile. |\n| ConnectToZone | Integer | 0 | Zone index to draw connection lines towards. Set to 0 to disable. |\n| ConnectDist | Double | 1000 | Maximum distance to search for vertices to connect. |\n| LogWallGaps | Yes/No | No | If Yes, applies specific log wall gap calculations to the profile. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Forces an immediate update of the zone geometry based on current properties. |\n| Properties | Opens the Properties Palette to edit script parameters. |\n\n## Settings Files\nNo external settings files are required for this script.\n\n## Tips\n- **Visualizing Voids:** Set `Zone` to **99** or **100** to generate clean outlines of the structure excluding internal beam details.\n- **Color Coding:** Set `HatchColor` to **-1** to make the hatch color match the layer or sheet color of the element automatically.\n- **Filtering:** Use the `Include` property (e.g., \"Wall\") to generate a zone profile only for specific wall types within a complex element.\n- **Troubleshooting:** If the script disappears immediately after insertion, ensure you are not in Model Space; this script only runs in Layouts.\n\n## FAQ\n- **Q: What happens if I select a Zone that has no data?**\n  A: The script will default to Zone 0 or display an empty profile. Check the Output window for specific messages like \"Zone reset to 0.\"\n- **Q: Can I use this to show the footprint of the whole house?**\n  A: Yes, set `Zone` to 0 and ensure the `Include`/`Exclude` filters allow all structural beams to be projected.\n- **Q: My hatch looks too dense.**\n  A: Increase the `HatchScale` property in the Properties Palette."
+      },
+      "tokens_used": 4821,
+      "error": null
+    }
+  }
+}

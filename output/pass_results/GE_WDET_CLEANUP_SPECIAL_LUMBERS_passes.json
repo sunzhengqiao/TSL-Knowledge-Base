@@ -1,0 +1,208 @@
+{
+  "filename": "GE_WDET_CLEANUP_SPECIAL_LUMBERS.mcr",
+  "status": "completed",
+  "total_tokens": 17331,
+  "processing_time": 261.805703163147,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "v1.0",
+            "date": "28.dic.2013",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "- Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2475,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script targets Element and Beam objects (via ElementWallSF and beam()) and performs database operations (dbErase), indicating interaction with the 3D model database. There is no usage of sd_ prefixes, Viewport entities, or #Type E declarations."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1274,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select Element (s)",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2748,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the cleanup of special lumbers in wall elements by deleting temporary void filler beams and highlighting borate-treated timber with a specific color.",
+          "category": "Data Management / Utility",
+          "typicalUseCase": "Run after initial wall generation or importing to remove construction aid beams (voids) and visually identify treated timber for manufacturing."
+        },
+        "parameters": [
+          {
+            "name": "_Element",
+            "technicalDefault": "Empty",
+            "businessMeaning": "The collection of structural wall or floor elements selected by the user to be scanned and processed.",
+            "validRange": "Any valid Element (Wall/Floor) present in the Model Space",
+            "unit": "Selection Set",
+            "affectsOutput": "Defines the scope of beams that will be checked for deletion (Void) or color change (Borate)."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Database Modification",
+            "description": "Beams with 'VOID' in their code are erased from the database. Beams with 'BORATE' as their grade are recolored to Green (Color Index 3).",
+            "appliedTo": "All beams contained within the selected elements."
+          }
+        ]
+      },
+      "tokens_used": 2974,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script inserted into drawing",
+          "Check if insertCycleCount > 1; if true, erase script and exit",
+          "Prompt user to select Wall/Floor Elements (PrEntity)",
+          "Store selected Elements into the _Element property array",
+          "End insertion phase and trigger recalculation",
+          "Check if _Element array is empty; if true, erase script and exit",
+          "Loop through each Element in the _Element array",
+          "Validate Element (bIsValid); if invalid, skip to next Element",
+          "Retrieve all Beams contained within the current Element",
+          "Loop through each Beam in the Element",
+          "Check if Beam Code (token 0) contains 'VOID' (case-insensitive)",
+          "[Conditional] If 'VOID' found: Erase Beam from database and skip to next Beam",
+          "[Conditional] If 'VOID' not found: Check if Beam Grade is 'BORATE'",
+          "[Conditional] If Grade is 'BORATE': Set Beam Color to Green (Index 3)",
+          "After processing all Beams and Elements, erase the script instance from the drawing"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User Interaction during Element Selection",
+            "path1": {
+              "name": "Valid Selection",
+              "steps": [
+                "User selects one or more Elements",
+                "Elements are stored in _Element",
+                "Script proceeds to processing/recalculation phase"
+              ]
+            },
+            "path2": {
+              "name": "Empty Selection / Cancel",
+              "steps": [
+                "User cancels or selects nothing",
+                "_Element array remains empty",
+                "Script detects empty array on recalculation",
+                "Script erases itself immediately"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Analysis (Content)",
+            "path1": {
+              "name": "Void Filler Detected",
+              "steps": [
+                "Beam Code token contains 'VOID'",
+                "Beam is permanently deleted (dbErase)",
+                "Loop continues to next Beam"
+              ]
+            },
+            "path2": {
+              "name": "Structural / Special Timber",
+              "steps": [
+                "Beam Code does not contain 'VOID'",
+                "Script checks Beam Grade",
+                "If Grade is 'BORATE', Color is set to Green",
+                "Loop continues to next Beam"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insertion Cycle Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "None. Script prevents recursive insertion by erasing itself immediately."
+          },
+          {
+            "check": "Element Selection Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script requires at least one Element to run. If no elements are selected or the user cancels, the script instance removes itself."
+          },
+          {
+            "check": "Element Validity",
+            "errorMessage": "None (Silent)",
+            "recovery": "If an Element in the set is invalid (erased/corrupt), it is skipped silently."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "The script executes once and calls 'eraseInstance()' at the end, removing the macro instance from the drawing. Therefore, there are no grips, OPM properties, or context menus available after execution."
+          }
+        ]
+      },
+      "tokens_used": 4100,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_WDET_CLEANUP_SPECIAL_LUMBERS.mcr\n\n## Overview\nAutomates the cleanup of wall elements by deleting temporary void filler beams and highlighting borate-treated timber in green. This script runs once upon insertion and removes itself from the drawing immediately after processing.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script targets Wall/Floor Elements in the 3D model. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | Not applicable for 2D drawing generation. |\n\n## Prerequisites\n- **Required entities**: Wall or Floor Elements must exist in the drawing.\n- **Minimum beam count**: 0 (The script processes beams inside the selected elements).\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse to the script location and select `GE_WDET_CLEANUP_SPECIAL_LUMBERS.mcr`.\n\n### Step 2: Select Elements\n```\nCommand Line: Select Element (s)\nAction: Click on the Wall or Floor elements you wish to clean up. You can select multiple elements. Press Enter to confirm selection.\n```\n\n### Step 3: Automatic Processing\nThe script will automatically process the selected elements:\n1. It scans every beam within the selected elements.\n2. **Cleanup**: Any beam containing \"VOID\" in its code name is permanently deleted.\n3. **Highlighting**: Any beam assigned the grade \"BORATE\" is recolored to **Green**.\n4. The script instance erases itself automatically from the drawing once complete.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script erases itself after execution, leaving no properties to edit. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | The script runs once and deletes itself; no context menu options are available. |\n\n## Settings Files\n- **Filename**: None used.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Undo Capability**: If the script deletes the wrong beams, use the standard AutoCAD `UNDO` command immediately to restore the elements.\n- **Workflow**: Run this script after importing walls or generating initial layouts to remove temporary construction aid beams (voids) before proceeding to detailing or manufacturing.\n- **Visual Check**: The Green color (Index 3) for Borate timber helps visually identify treated wood forCAM output or shop drawings.\n\n## FAQ\n- **Q: Why did the script disappear after I ran it?**\n  **A:** This is a \"utility\" script designed to perform a specific task once. It automatically removes its instance from the drawing database to keep your project clean.\n- **Q: What happens if I select nothing?**\n  **A:** If you cancel the selection or pick no elements, the script will detect this and erase itself without making any changes.\n- **Q: How does the script identify which beams to delete?**\n  **A:** It looks strictly at the beam's Code (Name). If the text \"VOID\" appears anywhere in the code, that beam is deleted."
+      },
+      "tokens_used": 3760,
+      "error": null
+    }
+  }
+}

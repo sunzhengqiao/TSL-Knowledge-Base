@@ -1,0 +1,148 @@
+{
+  "filename": "HSB_E-BeamToBlocking.mcr",
+  "status": "completed",
+  "total_tokens": 50259,
+  "processing_time": 594.4600474834442,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9420,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly defines the insertion space as `_kModelSpace` within the `dbCreate` method (`tsl.dbCreate(strScriptName, vecUcsX,vecUcsY,lstBeams, lstElements, lstPoints, lstPropInt, lstPropDouble, lstPropString, _kModelSpace, mapTsl);`). It manipulates 3D geometry using `Beam.envelopeBody()`, `Body.intersectWith()`, and `Beam.dbSplit()`, and selects `Element` objects during insertion, all of which are characteristic of Model Space processing."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "HSB_G-FilterGenBeams"
+          ]
+        }
+      },
+      "tokens_used": 7253,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10178,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically splits continuous blocking beams into individual segments based on intersections with structural members (rafters/studs), applying gaps and cleaning up small fragments.",
+          "category": "Framing",
+          "typicalUseCase": "Processing long trimmer or blocking members in roof or wall assemblies to fit them between main structural members (rafters/joists)."
+        },
+        "parameters": [
+          {
+            "name": "sBmCodeBlocking",
+            "technicalDefault": "KLO-01",
+            "businessMeaning": "The identifier (BeamCode) for the beams that need to be split into blocking pieces.",
+            "validRange": "Any valid BeamCode string present in the model",
+            "unit": "String",
+            "affectsOutput": "Determines which beams are selected for processing. Beams without this code are ignored."
+          },
+          {
+            "name": "dMinimalBlockingLength",
+            "technicalDefault": "100",
+            "businessMeaning": "The threshold below which a resulting blocking piece is considered scrap and deleted.",
+            "validRange": "50 - 300",
+            "unit": "mm",
+            "affectsOutput": "Prevents the creation of tiny, unusable timber fragments. If a split results in a piece shorter than this, it is erased."
+          },
+          {
+            "name": "dGap",
+            "technicalDefault": "0",
+            "businessMeaning": "The clearance distance between the cut end of the blocking and the face of the intersecting rafter or stud.",
+            "validRange": "0 - 10",
+            "unit": "mm",
+            "affectsOutput": "Shortens the resulting blocking pieces by offsetting the cut point away from the intersecting beam."
+          },
+          {
+            "name": "sBCRafter",
+            "technicalDefault": "",
+            "businessMeaning": "The BeamCode(s) of the structural members (e.g., rafters, studs) that define the split points for the blocking.",
+            "validRange": "Any valid BeamCode string (supports multiple separators)",
+            "unit": "String",
+            "affectsOutput": "Identifies the intersecting geometry. The blocking is split where it overlaps these beams."
+          },
+          {
+            "name": "sInclExcl",
+            "technicalDefault": "Include",
+            "businessMeaning": "Defines whether the sBCRafter list is an allow-list (only split at these) or a block-list (split at everything except these).",
+            "validRange": "Include, Exclude",
+            "unit": "Enum",
+            "affectsOutput": "Alters the selection logic for intersecting beams."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dGap > 0",
+            "effect": "The effective length of blocking pieces is reduced. This can cause pieces that would otherwise be valid to fall below dMinimalBlockingLength.",
+            "cascade": [
+              "dMinimalBlockingLength"
+            ]
+          },
+          {
+            "trigger": "sInclExcl = Exclude",
+            "effect": "The script attempts to split at *all* intersecting beams of valid types (rafters/studs), ignoring those listed in sBCRafter.",
+            "cascade": [
+              "sBCRafter"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Split Beams (GenBeam)",
+            "description": "The original blocking beams are physically split into multiple separate entities corresponding to the spaces between rafters/studs.",
+            "appliedTo": "Beams identified by sBmCodeBlocking."
+          },
+          {
+            "type": "Erased Beams",
+            "description": "Segments that are too short (below dMinimalBlockingLength) or located too close to the end of a rafter are removed from the model.",
+            "appliedTo": "Resulting blocking segments."
+          },
+          {
+            "type": "Static Cuts (StretchNot)",
+            "description": "Notches or cuts applied to blocking ends where they intersect vertical sheets or wall boundaries.",
+            "appliedTo": "Blocking beams intersecting sheets or located at element edges."
+          }
+        ]
+      },
+      "tokens_used": 7466,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. Script Start: Initialize properties and check for 'DspToTsl' or '_kExecuteKey' catalog mappings.\",\n    \"2. [Insert Phase] Check if 'insertCycleCount' > 1. If so, erase duplicate instance and exit.\",\n    \"3. [Insert Phase] Verify '_kExecuteKey'. If invalid or empty, show properties dialog to user.\",\n    \"4. [Insert Phase] Prompt user to select a set of Elements ('PrEntity').\",\n    \"5. [Insert Phase] Iterate through selected Elements and create a satellite instance of the script for each one, passing properties via Map.\",\n    \"6. [Insert Phase] Erase the master 'controller' instance.\",\n    \"7. [Execution Phase - Satellite] Load properties from Map and set sequence number to 1100.\",\n    \"8. [Execution Phase] Validate Element. If invalid or missing, report notice and erase instance.\",\n    \"9. [Execution Phase] Filter Element beams: Identify 'Blocking' beams (by Code) and 'Rafter' beams (by Code/Type/Include-Exclude logic).\",\n    \"10. [Execution Phase] Filter Element sheets: Identify vertical sheets for edge trimming.\",\n    \"11. [Execution Phase] Sort Rafters along the Element X-axis.\",\n    \"12. [Processing Loop] Iterate through each 'Blocking' beam.\",\n    \"13. [Intersection Check] Check for volume intersection between the Blocking body and each Rafter body.\",\n    \"14. [Branching Logic] Based on intersection location relative to blocking ends (calculated via dot product distances):\",\n    \"   -> Case A (Too Close): Erase the blocking beam entirely.\",\n    \"   -> Case B (End Cut): Apply a static cut ('_kStretchNot') at the rafter face (minus gap), adjusted if a sheet interferes.\",\n    \"   -> Case C (Split): Perform 'dbSplit' at the rafter center. Create new blocking segment and restart loop for the current segment to check next rafter.\",\n    \"15. [Post-Split Cleanup] Remove erased/invalid beams from arrays. Remove duplicate entries.\",\n    \"16. [Min Length Check] Iterate through all resulting blocking segments. Erase any segment with 'solidLength' < 'dMinimalBlockingLength' + 'dGap'.\",\n    \"17. [Gap Application] Iterate through remaining segments. Calculate precise cut points based on nearest rafters and 'dGap'.\",\n    \"18. [Sheet Overlap] Check if vertical sheets overlap the cut points. If so, shift the cut point to the sheet face (minus gap).\",\n    \"19. [Finalize] Apply calculated static cuts to blocking beams.\",\n    \"20. [Exit] If running on element constructed/manual insert/recalc, erase script instance (Generator behavior).\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Execute Key Availability during Insert\",\n      \"path1\": {\n        \"name\": \"Catalog Key Valid\",\n        \"steps\": [\n          \"Load properties from catalog specified in '_kExecuteKey'\",\n          \"Skip dialog display\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Catalog Key Invalid/Missing\",\n        \"steps\": [\n          \"Display properties dialog to user\",\n          \"User confirms settings\",\n          \"Proceed with insertion\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Intersection of Rafter with Blocking\",\n      \"path1\": {\n        \"name\": \"No Intersection\",\n        \"steps\": [\n          \"Continue to next rafter in the list\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Intersection at End (Too Small)\",\n        \"steps\": [\n          \"Check if distance to end < (0.5 * RafterWidth + MinLength)\",\n          \"Condition true: Erase Blocking Beam ('dbErase')\",\n          \"Skip to next blocking beam\"\n        ]\n      },\n      \"path3\": {\n        \"name\": \"Intersection at End (Valid)\",\n        \"steps\": [\n          \"Calculate cut point at Rafter face\",\n          \"Check overlap with Vertical Sheets\",\n          \"Apply static cut ('_kStretchNot')\",\n          \"Skip to next blocking beam\"\n        ]\n      },\n      \"path4\": {\n        \"name\": \"Intersection in Middle\",\n        \"steps\": [\n          \"Split Blocking Beam at Rafter center ('dbSplit')\",\n          \"Append new segment to processing list\",\n          \"Decrement loop index to re-process current (shortened) beam against remaining rafters\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Sheet Interference at Cut Point\",\n      \"path1\": {\n        \"name\": \"Sheet Overlaps Cut Area\",\n        \"steps\": [\n          \"Move cut point to Sheet face\",\n          \"Subtract 'dGap' from sheet face position\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"No Sheet Overlap\",\n        \"steps\": [\n          \"Keep cut point at Rafter face\",\n"
+      },
+      "tokens_used": 10623,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-BeamToBlocking.mcr\n\n## Overview\nThis script automatically splits long blocking beams into individual segments based on their intersections with structural members like rafters or studs. It applies clearance gaps at the ends of the new pieces and removes any resulting fragments that are too short to be usable.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for 3D geometry processing. |\n| Paper Space | No | Script operates on 3D model entities. |\n| Shop Drawing | No | Not intended for 2D drawing generation. |\n\n## Prerequisites\n- **Required Entities**: An hsbCAD `Element` containing both the blocking beams to be split and the intersecting structural members (e.g., rafters, joists, or studs).\n- **Minimum Beam Count**: At least one blocking beam and one intersecting structural member.\n- **Required Settings**: `HSB_G-FilterGenBeams.xml` (Standard hsbCAD configuration file used to identify beam types).\n\n## Usage Steps\n\n### Step 1: Launch Script\n```\nCommand Line: TSLINSERT\nAction: Select HSB_E-BeamToBlocking.mcr from the file dialog and click Open.\n```\n\n### Step 2: Select Elements\n```\nCommand Line: Select Elements:\nAction: Click on the wall or roof Element(s) containing the blocking you wish to process. Press Enter to confirm selection.\n```\n\n### Step 3: Configure Properties (Optional)\n```\nCommand Line: (Properties Palette opens automatically if no catalog key is preset)\nAction: If the default BeamCode for your blocking or rafters is incorrect, change them in the AutoCAD Properties Palette.\n```\n\n### Step 4: Execution\n```\nAction: The script will automatically process the selected elements. It splits the blocking, applies gaps, and deletes short segments.\nNote: This script acts as a generator; the script instance will erase itself after execution.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Blocking Code (sBmCodeBlocking) | String | KLO-01 | The BeamCode identifier for the long beams that need to be cut into blocking pieces. |\n| Minimal Blocking Length (dMinimalBlockingLength) | Double | 100 | The shortest allowable length for a blocking piece (in mm). Pieces shorter than this are deleted. |\n| Gap (dGap) | Double | 0 | The clearance distance (in mm) between the end of the blocking and the face of the intersecting rafter/stud. |\n| Rafter Code (sBCRafter) | String | (Empty) | The BeamCode of the structural members (rafters/studs) that define where the blocking is cut. |\n| Include/Exclude (sInclExcl) | Enum | Include | Determines if 'Rafter Code' is a whitelist (Include) or blacklist (Exclude). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Re-runs the script logic using the currently selected element and updated properties. |\n\n## Settings Files\n- **Filename**: `HSB_G-FilterGenBeams.xml`\n- **Location**: Company or Install path (Standard hsbCAD directory)\n- **Purpose**: Defines which beam types are treated as structural members (e.g., rafters, studs) to assist in filtering intersections.\n\n## Tips\n- **Gap vs. Length**: If you set a large `Gap`, ensure you increase your `Minimal Blocking Length`. The gap shortens the piece, potentially turning a valid piece into \"scrap\" that gets deleted.\n- **Filtering**: If you want the blocking to split at *every* intersecting beam regardless of type, leave the `Rafter Code` empty and set `Include/Exclude` to \"Exclude\".\n- **Selection**: Since this script processes by Element, ensure all relevant blocking and rafters are part of the same Element assembly.\n\n## FAQ\n- **Q: Why did some of my blocking disappear entirely?**\n  **A:** The resulting segment was likely shorter than the `Minimal Blocking Length` (default 100mm) or was positioned too close to the end of an intersecting rafter. Try lowering the Minimal Blocking Length parameter.\n- **Q: The script ran, but nothing happened.**\n  **A:** Check your `Blocking Code` property. It likely does not match the BeamCode of the beams you selected in the model.\n- **Q: Can I use this for both walls and roofs?**\n  **A:** Yes, as long as the Element structure is valid and the intersecting beams are recognized by the system filters."
+      },
+      "tokens_used": 5319,
+      "error": null
+    }
+  }
+}

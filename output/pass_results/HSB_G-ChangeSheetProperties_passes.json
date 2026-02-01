@@ -1,0 +1,234 @@
+{
+  "filename": "HSB_G-ChangeSheetProperties.mcr",
+  "status": "completed",
+  "total_tokens": 19896,
+  "processing_time": 791.5096340179443,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 2,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "02.06.2015",
+            "author": "AS",
+            "changes": "Pilot version"
+          },
+          {
+            "version": "1.01",
+            "date": "08.12.2017",
+            "author": "RP",
+            "changes": "Add Color"
+          },
+          {
+            "version": "1.02",
+            "date": "11.12.2017",
+            "author": "RP",
+            "changes": "Add Color change to int"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4272,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity with Sheet() selection and operates directly on Sheet objects in the model (sh.setDH, sh.setMaterial). No references to sd_*, _Viewport, #Type E, or drawing output functions."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sheet"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1673,
+      "error": null
+    },
+    "3": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))"
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Batch modifies the thickness, material, and visual color of selected sheeting/cladding panels while preserving their alignment relative to the structure.",
+          "category": "Model Modification",
+          "typicalUseCase": "Updating the specification of interior drywall (e.g., changing from standard to moisture resistant or changing thickness) or sheathing material across multiple wall elements at once."
+        },
+        "parameters": [
+          {
+            "name": "dNewThickness",
+            "technicalDefault": "12.5",
+            "businessMeaning": "The physical thickness of the board or panel to be applied.",
+            "validRange": "6mm to 50mm (Common sizes: 9.5, 12.5, 15, 18, 22)",
+            "unit": "mm",
+            "affectsOutput": "Updates the geometric thickness of the sheet and shifts the sheet's position along its local Z-axis to maintain the face alignment (offsetting the thickness difference)."
+          },
+          {
+            "name": "sNewMaterial",
+            "technicalDefault": "Groen gips",
+            "businessMeaning": "The material name/grade assigned to the sheet (e.g., OSB, Plywood, Type X Gypsum).",
+            "validRange": "Any string defined in the hsbCAD material catalog.",
+            "unit": "String (Name)",
+            "affectsOutput": "Changes the material property of the sheet entity, affecting reports, machining properties, and rendering."
+          },
+          {
+            "name": "sNewColor",
+            "technicalDefault": "-1",
+            "businessMeaning": "The AutoCAD/hsbCAD color index used for visual display.",
+            "validRange": "-1 (Default/No Change) or 1 to 255 (Standard ACI colors).",
+            "unit": "Integer (Index)",
+            "affectsOutput": "Alters the display color of the sheet if the value is greater than 0; otherwise, the color remains unchanged."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Sheet",
+            "description": "Existing sheet entities are modified in place. Their geometry is updated (thickness), material is reassigned, and they are repositioned to maintain the face location.",
+            "appliedTo": "Sheets selected by the user during script insertion."
+          }
+        ]
+      },
+      "tokens_used": 5062,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched via command or catalog execute key",
+          "[Conditional] Check if Catalog Execute Key is present and valid",
+          "If valid key found, load properties from catalog; otherwise, open Properties Dialog",
+          "[Conditional] Check Insert Cycle Count",
+          "If insert cycle > 1, erase instance and stop (system regen guard)",
+          "Prompt user to select Sheets using PrEntity",
+          "Filter selection: Iterate through entities, verify validity, and add to _Sheet array",
+          "[Conditional] Check if valid sheets were found",
+          "Calculate current thickness and Element coordinate system for each sheet",
+          "Apply new Thickness (setDH)",
+          "Apply new Material (setMaterial)",
+          "[Conditional] Check if Color parameter is greater than 0",
+          "If Color > 0, apply new Color (setColor)",
+          "Transform Sheet geometry: Move along local Z-axis by difference between old and new thickness to maintain face alignment",
+          "Erase script instance",
+          "End"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Does _kExecuteKey match a name in the script's catalog list?",
+            "path1": {
+              "name": "Catalog Execution",
+              "steps": [
+                "Load properties (Thickness, Material, Color) from catalog definition",
+                "Skip interactive dialog"
+              ]
+            },
+            "path2": {
+              "name": "Manual Execution",
+              "steps": [
+                "Invoke showDialog()",
+                "User manually inputs Thickness, Material, and Color"
+              ]
+            }
+          },
+          {
+            "condition": "Is insertCycleCount() greater than 1?",
+            "path1": {
+              "name": "Regen/Loop Detected",
+              "steps": [
+                "eraseInstance()",
+                "Return immediately"
+              ]
+            },
+            "path2": {
+              "name": "First Run",
+              "steps": [
+                "Proceed to Entity Selection Prompt"
+              ]
+            }
+          },
+          {
+            "condition": "Did the user select any valid sheets (length of _Sheet array)?",
+            "path1": {
+              "name": "No Valid Selection",
+              "steps": [
+                "Display 'Invalid selection' report message",
+                "eraseInstance()",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "Valid Selection",
+              "steps": [
+                "Proceed to Loop: Modify Geometry and Properties"
+              ]
+            }
+          },
+          {
+            "condition": "Is the sNewColor parameter greater than 0?",
+            "path1": {
+              "name": "Color Defined",
+              "steps": [
+                "Apply new color to sheet using sh.setColor(sNewColor)"
+              ]
+            },
+            "path2": {
+              "name": "Default/No Color",
+              "steps": [
+                "Skip color modification (keep existing color)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Selected entity is a valid hsbCAD Sheet",
+            "errorMessage": "None (Silent skip)",
+            "recovery": "Script ignores invalid entities in the selection set"
+          },
+          {
+            "check": "Selection set contains at least one valid Sheet",
+            "errorMessage": "Invalid selection",
+            "recovery": "User must restart the script and ensure valid sheets are selected"
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 4513,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_G-ChangeSheetProperties\n\n## Overview\nThis script allows you to batch modify the thickness, material, and display color of selected sheeting or cladding panels. It automatically adjusts the panel position to maintain the existing face alignment, ensuring the exterior or interior surface location remains unchanged when the thickness varies.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script runs in the 3D model. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | Not applicable for 2D drawings. |\n\n## Prerequisites\n- **Required Entities:** Existing Sheet elements (cladding/sheathing) in the model.\n- **Minimum Beam Count:** 1 or more sheets.\n- **Required Settings:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Select `HSB_G-ChangeSheetProperties.mcr` from the file dialog.\n\n### Step 2: Configure Properties\nThe script will load default properties. If a catalog execute key is not used, you must manually adjust the settings in the AutoCAD Properties Palette (press `Ctrl+1` if not visible).\n- Set the desired **New Thickness**.\n- Enter the **New Material** name (must exist in your hsbCAD catalog).\n- Set the **New Color** index (or leave as -1 to ignore color changes).\n\n### Step 3: Select Sheets\nCommand Line: `Select Sheets:`\nAction: Click on the sheet elements you wish to modify. You can select multiple sheets. Press `Enter` to confirm selection.\n\n### Step 4: Execution\nThe script will update the geometry, material, and color of the selected sheets and then automatically delete itself from the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| New Thickness | Number | 12.5 | The physical thickness of the sheet (e.g., 12.5, 15, 18). Common unit is mm. |\n| New Material | String | Groen gips | The name of the material to assign to the sheets (e.g., \"OSB\", \"Plywood\"). |\n| New Color | Integer | -1 | The AutoCAD color index (1-255). Set to -1 to keep the existing color unchanged. |\n\n## Right-Click Menu Options\n*Note: This script runs once and deletes itself upon completion. It does not persist in the drawing to offer context menu options.*\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Face Alignment:** When changing the thickness, the script calculates the difference and moves the sheet along its local Z-axis. This ensures the face of the sheet (the side you likely care about for finishes) stays in the exact same position relative to the structure.\n- **Color Preservation:** If you only want to change the material or thickness without changing the visual color, ensure the **New Color** parameter is set to `-1`.\n- **Batching:** You can window select multiple sheets at the prompt to update an entire wall section quickly.\n\n## FAQ\n- **Q: What happens if I enter a material name that doesn't exist?**\n- **A:** The script will assign the text string as the material name, but it may not render correctly or have the correct physical properties if it isn't defined in your hsbCAD material database.\n- **Q: Why did the script disappear from my drawing?**\n- **A:** This is a utility script designed to perform an action and exit. It automatically erases its instance after applying the changes to keep your drawing clean.\n- **Q: Can I use this on structural beams?**\n- **A:** No, this script is designed specifically for \"Sheet\" entities (cladding/sheathing), not GenBeams or Columns."
+      },
+      "tokens_used": 4376,
+      "error": null
+    }
+  }
+}

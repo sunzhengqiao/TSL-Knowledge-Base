@@ -1,0 +1,337 @@
+{
+  "filename": "HSB_D-Element.mcr",
+  "status": "completed",
+  "total_tokens": 53311,
+  "processing_time": 240.27741122245789,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9674,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Explicit use of 'ms2ps' (Model Space to Paper Space) transformation matrix is found multiple times (e.g., 'dim.transformBy(ms2ps)', 'ptTextRef.transformBy(ms2ps)'). The script draws dimension lines and text after this transformation. Comments explicitly mention 'offset in paperspace units', 'viewport scale', and 'Make it available for shopdrawings'. Variables _XW and _YW (Viewport axes) are used for orientation."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Context requires a valid 'ms2ps' transformation matrix, typically provided when generating a Layout, Shop Drawing, or Plan view.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 8339,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 9537,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates automatic architectural and structural dimension lines (lengths, heights, grid positions) for Elements (walls/floors) in Paper Space.",
+          "category": "ShopDrawing/Annotation",
+          "typicalUseCase": "Used during the creation of Layouts or production drawings to automatically annotate the size and position of timber elements, zones, or specific beams relative to a grid or zero point."
+        },
+        "parameters": [
+          {
+            "name": "nSideRef",
+            "technicalDefault": "0",
+            "businessMeaning": "Determines if 'Reference Dimensions' (dimensions from a fixed origin to the element edges) are drawn on the left, right, or both sides.",
+            "validRange": "0 (None), 1 (Left), 2 (Right), 3 (Both)",
+            "unit": "count",
+            "affectsOutput": "Adds or removes dimension chains showing the distance from a reference point to the start and end of the element."
+          },
+          {
+            "name": "nExtLines",
+            "technicalDefault": "0",
+            "businessMeaning": "Defines how the extension lines (the lines pointing from the object to the dimension line) are projected.",
+            "validRange": "0 (Perpendicular to dim line), 1 (Projected to the object/element surface), 2 (No projection/Straight)",
+            "unit": "count",
+            "affectsOutput": "Changes the graphical style of the dimension markers, ensuring they align cleanly with complex geometry or just pointing straight out."
+          },
+          {
+            "name": "nRefTextType",
+            "technicalDefault": "0",
+            "businessMeaning": "Specifies how labels for reference dimensions (e.g., '0', '5000') are formatted.",
+            "validRange": "0 (No text), 1 (Inside dimension line), 2 (Separate text block)",
+            "unit": "count",
+            "affectsOutput": "If set to 2, draws independent text labels at the reference points instead of placing text inside the dimension line."
+          },
+          {
+            "name": "bRefSigned",
+            "technicalDefault": "false",
+            "businessMeaning": "Adds a '+' or '-' prefix to reference dimensions to indicate direction relative to the zero point.",
+            "validRange": "true/false",
+            "unit": "boolean",
+            "affectsOutput": "Modifies the text content of reference dimensions (e.g., changing '5000' to '+5000' or '-5000')."
+          },
+          {
+            "name": "nReadDirection",
+            "technicalDefault": "0",
+            "businessMeaning": "Controls the rotation of the dimension text to ensure readability based on the viewport orientation.",
+            "validRange": "0, 1",
+            "unit": "count",
+            "affectsOutput": "Rotates the dimension text 90 degrees if necessary."
+          },
+          {
+            "name": "bDeltaOnTop",
+            "technicalDefault": "false",
+            "businessMeaning": "Forces the dimension value text to sit above the dimension line rather than inline.",
+            "validRange": "true/false",
+            "unit": "boolean",
+            "affectsOutput": "Graphically moves the measurement text above the line."
+          },
+          {
+            "name": "dOffsetText",
+            "technicalDefault": "0",
+            "businessMeaning": "The horizontal distance between the dimension point and the description or reference text label.",
+            "validRange": "0 - 5000",
+            "unit": "mm (model space units)",
+            "affectsOutput": "Adjusts the spacing of text labels along the dimension line to avoid overlap or improve aesthetics."
+          },
+          {
+            "name": "dyOffsetTextRef",
+            "technicalDefault": "0",
+            "businessMeaning": "The vertical distance for separate reference text labels from the dimension line.",
+            "validRange": "0 - 1000",
+            "unit": "mm (model space units)",
+            "affectsOutput": "Moves separate reference labels up or down."
+          },
+          {
+            "name": "sObject",
+            "technicalDefault": "\"Element\"",
+            "businessMeaning": "Selects the entity to be dimensioned (e.g., the whole element, a specific material zone, or a specific beam code).",
+            "validRange": "Element, Zone, Beams, TSL, BeamCode, etc.",
+            "unit": "enum",
+            "affectsOutput": "Calculates dimension points based on the extreme bounds of the selected entity type."
+          },
+          {
+            "name": "offsetFrom",
+            "technicalDefault": "\"Element\"",
+            "businessMeaning": "Selects the geometry used to calculate the start position of the dimension line offset.",
+            "validRange": "Element, ObjectPoints",
+            "unit": "enum",
+            "affectsOutput": "If 'ObjectPoints' is chosen, the dimension line offset is calculated from the specific beams being dimensioned, rather than the overall element bounding box."
+          },
+          {
+            "name": "nMinRequiredDimPoints",
+            "technicalDefault": "2",
+            "businessMeaning": "The threshold number of points required to draw the dimension. Prevents drawing dimensions for empty or invalid selections.",
+            "validRange": "2 - 100",
+            "unit": "count",
+            "affectsOutput": "Suppresses the dimension entity if the calculated points are fewer than this value."
+          },
+          {
+            "name": "nTextSide",
+            "technicalDefault": "0",
+            "businessMeaning": "Placement of the main description text relative to the dimension line.",
+            "validRange": "-1 (Left), 0 (None), 1 (Right)",
+            "unit": "count",
+            "affectsOutput": "Aligns the description label to the left or right end of the dimension chain."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "nRefTextType is set to 2",
+            "effect": "Activates the logic to draw separate text blocks, making dyOffsetTextRef relevant.",
+            "cascade": [
+              "dyOffsetTextRef"
+            ]
+          },
+          {
+            "trigger": "nSideRef is set to 0",
+            "effect": "Disables all reference dimension generation logic.",
+            "cascade": [
+              "bRefSigned",
+              "nRefTextType",
+              "sTxtRefLeftPos",
+              "sTxtRefRightPos"
+            ]
+          },
+          {
+            "trigger": "sObject changes",
+            "effect": "Recalculates the dimension points (arPtToDim), which determines if nMinRequiredDimPoints is met.",
+            "cascade": [
+              "arPtToDim",
+              "nMinRequiredDimPoints",
+              "offsetFrom"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Dim (Dimension)",
+            "description": "Paper space dimension lines showing measurements of the element or its components.",
+            "appliedTo": "Element (Parent)"
+          },
+          {
+            "type": "Text (String)",
+            "description": "Labels describing the dimensioned object (e.g., 'Element', 'Zone 1') or reference values.",
+            "appliedTo": "Paper Space"
+          }
+        ]
+      },
+      "tokens_used": 9118,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initialization: Triggered during Layout/ShopDrawing generation based on Element assignment.",
+          "2. Property Reading: Script reads configuration from OPM (Object to dim, Side, Offset, Text styles).",
+          "3. Geometry Calculation: Extracts bounding box or specific points from the selected object (Element, Zone, Beams).",
+          "4. Validation: Checks if the number of calculated dimension points meets the 'nMinRequiredDimPoints' threshold.",
+          "5. Reference Dimensioning: If enabled ('nSideRef' != 0), calculates and draws Left/Right reference dimensions to the zero point or grid.",
+          "6. Offset Calculation: Determines the position of the main dimension line based on 'offsetFrom' (Element bounding box vs. actual Object points).",
+          "7. Extension Line Projection: Projects the dimension points based on 'nExtLines' setting (Perpendicular, Straight, or None).",
+          "8. Main Dimension Drawing: Creates the primary dimension entity in Model Space, applies text rotation ('nReadDirection'), and transforms to Paper Space.",
+          "9. Description Labeling: Determines the text string (Material, Name, or Custom) and draws it at the calculated position ('nTextSide')."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Property 'nSideRef' (Reference Side)",
+            "path1": {
+              "name": "Left Reference Only",
+              "steps": [
+                "Calculates distance from Left Reference point to first Dimension point.",
+                "Draws single reference dimension chain on the left."
+              ]
+            },
+            "path2": {
+              "name": "Right Reference Only",
+              "steps": [
+                "Calculates distance from Right Reference point to last Dimension point.",
+                "Draws single reference dimension chain on the right."
+              ]
+            },
+            "path3": {
+              "name": "Both Sides",
+              "steps": [
+                "Calculates and draws Left Reference dimension.",
+                "Calculates and draws Right Reference dimension."
+              ]
+            }
+          },
+          {
+            "condition": "Property 'nRefTextType' (Reference Text Format)",
+            "path1": {
+              "name": "Type 1 (Inline)",
+              "steps": [
+                "Text is included inside the dimension line string (e.g., '<>0')."
+              ]
+            },
+            "path2": {
+              "name": "Type 2 (Separate)",
+              "steps": [
+                "Calculates a separate Point3d for text based on 'dOffsetText' and 'dyOffsetTextRef'.",
+                "Draws an independent Text entity in Paper Space."
+              ]
+            }
+          },
+          {
+            "condition": "Property 'nExtLines' (Extension Line Style)",
+            "path1": {
+              "name": "Perpendicular (1)",
+              "steps": [
+                "Projects dimension points onto a line perpendicular to the dimension line to create 'dog-leg' extensions."
+              ]
+            },
+            "path2": {
+              "name": "Straight (2)",
+              "steps": [
+                "Projects points straight out to the dimension line offset.",
+                "Usually results in oblique or straight lines depending on geometry."
+              ]
+            },
+            "path3": {
+              "name": "Default/None (0)",
+              "steps": [
+                "Uses raw coordinates for extension lines (default AutoCAD behavior)."
+              ]
+            }
+          },
+          {
+            "condition": "Property 'offsetFrom'",
+            "path1": {
+              "name": "Element",
+              "steps": [
+                "Calculates dimension line start position based on the Element's overall bounding box."
+              ]
+            },
+            "path2": {
+              "name": "ObjectPoints",
+              "steps": [
+                "Iterates through specific points of the objects being dimensioned.",
+                "Sets dimension line offset relative to the furthest point in the set."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Minimum Points Threshold",
+            "errorMessage": "None (Script exits silently).",
+            "recovery": "Check if 'sObject' (Dimension Target) actually contains valid geometry (e.g., specific zone exists, or beam code matches). Increase 'nMinRequiredDimPoints' or ensure the Element selection is valid.",
+            "technicalDetail": "If 'arPtToDim.length() < nMinRequiredDimPoints', the script executes 'return;' immediately."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Dimension Object (sObject)",
+            "how": "OPM Properties Palette",
+            "effect": "Recalculates the points to be dimensioned (e.g., switching from 'Element' outline to specific 'Zone' or 'Beams')."
+          },
+          {
+            "action": "Adjust Position (nPosition/dOffsetDim)",
+            "how": "OPM Properties Palette / Grip Edit",
+            "effect": "Moves the dimension line closer to or further from the element."
+          },
+          {
+            "action": "Toggle Reference Dimensions (nSideRef)",
+            "how": "OPM Properties Palette",
+            "effect": "Adds or removes the measurement from the zero point / grid to the element edges."
+          },
+          {
+            "action": "Change Text Label (sDescription)",
+            "how": "OPM Properties Palette",
+            "effect": "Updates the text label drawn next to the dimension line. Supports @Material variable."
+          }
+        ]
+      },
+      "tokens_used": 10379,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_D-Element.mcr\n\n## Overview\nThis script automatically generates architectural and structural dimension lines for Elements (walls or floors) in Paper Space. It is primarily used to annotate the size, position, and layering of timber elements during the creation of Layouts or production drawings.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script is attached to the Element in Model Space. |\n| Paper Space | Yes (Output) | Dimensions are drawn in Paper Space using the active viewport scale. |\n| Shop Drawing | Yes | Designed specifically for use in hsbCAD Shop Drawings and Layouts. |\n\n## Prerequisites\n- **Required Entities**: An Element (e.g., a Wall or Floor).\n- **Minimum Beam Count**: 0.\n- **Required Settings**: A valid Layout or Shop Drawing context with an active viewport (requires a `ms2ps` transformation matrix to function).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Select `HSB_D-Element.mcr` from the script list and click OK.\n\n### Step 2: Select Element\nCommand Line: `Select Element:`\nAction: Click on the Element (wall/floor) in the drawing that you wish to dimension.\n\n### Step 3: Configure Dimensions\nAction: With the script still selected or after insertion, open the **Properties Palette** (Ctrl+1). Adjust the parameters listed below to control the placement and appearance of the dimensions.\n\n### Step 4: View Results\nAction: Switch to your Layout (Paper Space) tab. The script will automatically draw the dimension lines based on the Element's geometry and your Property settings.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **sObject** | enum | Element | Selects the part of the element to dimension. Options include the whole Element, a specific Material Zone, specific Beams, or a BeamCode. |\n| **offsetFrom** | enum | Element | Determines where the dimension line starts measuring from. \"Element\" uses the overall bounding box; \"ObjectPoints\" uses the specific beams being dimensioned. |\n| **nSideRef** | int | 0 | Sets where Reference Dimensions (distance from 0/Grid to element edge) are drawn. 0=None, 1=Left, 2=Right, 3=Both. |\n| **nExtLines** | int | 0 | Defines the projection style of extension lines. 0=Perpendicular, 1=Projected to surface, 2=Straight. |\n| **nRefTextType** | int | 0 | Controls how reference dimension text is formatted. 0=No text, 1=Inside line, 2=Separate text block. |\n| **bRefSigned** | bool | false | If true, adds a '+' or '-' sign to reference dimensions to indicate direction from the origin. |\n| **nReadDirection** | int | 0 | Controls text rotation (0 or 1) to ensure readability based on viewport orientation. |\n| **bDeltaOnTop** | bool | false | If true, forces the measurement text to sit above the dimension line instead of inline. |\n| **dOffsetText** | double | 0 | Horizontal distance (mm) between the dimension point and the description label. |\n| **dyOffsetTextRef** | double | 0 | Vertical distance (mm) for separate reference text labels from the dimension line. |\n| **nTextSide** | int | 0 | Placement of the main description text. -1=Left, 0=None, 1=Right. |\n| **nMinRequiredDimPoints** | int | 2 | Minimum number of points required to draw the dimension. If calculated points are fewer, nothing is drawn. |\n\n## Right-Click Menu Options\nThere are no specific custom right-click menu options for this script. All configuration is handled via the Properties Palette.\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script relies entirely on Properties Palette inputs and does not use external settings files.\n\n## Tips\n- **Dimensioning Layers**: To dimension only the structural timber layer of a wall, set `sObject` to `Zone` and select the corresponding material index.\n- **Avoiding Overlaps**: If dimension text overlaps with geometry, increase `dOffsetText` or set `bDeltaOnTop` to `true` to move the text above the line.\n- **Reference Dimensions**: Use `nSideRef` set to `3` (Both) to show the grid position relative to the zero point on both sides of the element, which is useful for structural checks.\n\n## FAQ\n- **Q: I inserted the script, but no dimensions appear in my layout.**\n  - **A:** Check your `sObject` property. If set to a specific Zone or BeamCode that doesn't exist in the element, or if the geometry results in fewer points than `nMinRequiredDimPoints`, the script will exit silently. Try switching `sObject` to `Element`.\n- **Q: The reference text is too far away from the dimension line.**\n  - **A:** Adjust the `dyOffsetTextRef` property. This value controls the vertical gap for separate reference text blocks.\n- **Q: Can I use this script in Model Space?**\n  - **A:** No. This script is designed explicitly for Paper Space (Shop Drawings) and uses the viewport scale to calculate correct sizing. It will not function correctly in a pure Model Space view without a layout context."
+      },
+      "tokens_used": 6264,
+      "error": null
+    }
+  }
+}

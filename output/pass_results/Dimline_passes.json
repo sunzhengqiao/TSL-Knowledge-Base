@@ -1,0 +1,295 @@
+{
+  "filename": "Dimline.mcr",
+  "status": "completed",
+  "total_tokens": 42052,
+  "processing_time": 217.46005201339722,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8910,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "Both",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": true,
+          "detectionEvidence": "History 10.1 states 'custom grid can be dimensioned within paperspace'. History 9.6 states 'opening and element dimensioning in modelspace enhanced'. History 8.9 mentions 'supporting MultipageController'. Script includes logic for Import/Export Settings and Painter Management using Map storage."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element",
+            "MetalPart",
+            "Opening"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space or Paper Space (linked to Viewport)",
+          "requiredSettings": [
+            "Element Painter definitions",
+            "hsbDesign 26 or higher"
+          ]
+        }
+      },
+      "tokens_used": 7515,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5952,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A flexible dimensioning tool that automatically generates and manages dimension lines for timber structures in both Model and Paper Space, supporting elements, beams, openings, and metalwork.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Automating the annotation of manufacturing drawings (views) and model layouts to show sizes of beams, wall contours, openings, and assembly positions."
+        },
+        "parameters": [
+          {
+            "name": "sPainterCollection",
+            "technicalDefault": "\"Dimline_Painter\"",
+            "businessMeaning": "The folder name in the catalog where Element Painter definitions specific to this dimensioning script are stored.",
+            "validRange": "Any valid string matching a catalog folder name",
+            "unit": "String",
+            "affectsOutput": "Determines which predefined filters/smart selections are available to automatically detect what needs dimensioning."
+          },
+          {
+            "name": "nPainterManagementMode",
+            "technicalDefault": "0",
+            "businessMeaning": "Controls the scope of Painter definitions used to select geometry. 0=Only specific folder, 1=Any painter for this dimline, 2=Any painter for any dimline.",
+            "validRange": "0, 1, 2",
+            "unit": "Index",
+            "affectsOutput": "Changes how aggressively the script finds geometry to dimension. Restrictive (0) vs Global (2)."
+          },
+          {
+            "name": "sFullPath",
+            "technicalDefault": "Constructed from hsbCompany path + 'DimlineSettings.xml'",
+            "businessMeaning": "The file path used for importing and exporting dimension style and configuration settings.",
+            "validRange": "Valid file system path",
+            "unit": "Path",
+            "affectsOutput": "Allows transferring configurations between projects or standardizing office settings."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "nPainterManagementMode changes to 1",
+            "effect": "Sets mode locally to the instance only.",
+            "cascade": [
+              "_Map"
+            ]
+          },
+          {
+            "trigger": "nPainterManagementMode changes to 0 or 2",
+            "effect": "Updates global settings and catalog structure.",
+            "cascade": [
+              "mapSetting",
+              "mo (MapObject)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Dimension Line",
+            "description": "Standard AutoCAD dimensions representing lengths, widths, heights, and positions of structural components.",
+            "appliedTo": "Selected Beams, Elements, Openings, MetalParts, or Custom Grids in Model or Paper Space."
+          },
+          {
+            "type": "Setup Graphics",
+            "description": "Non-plotting visual guides in Paper Space used to configure the dimension line location.",
+            "appliedTo": "Viewports in Layouts."
+          }
+        ]
+      },
+      "tokens_used": 6354,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Insertion/Execution Starts",
+          "Initialize Variables and Load Settings (Global & Instance Map)",
+          "Determine Environment (Model Space vs. Paper Space/Viewport)",
+          "Display Dynamic Dialog for User Configuration (if in interactive mode)",
+          "User selects Dimension Mode (Linear, Diagonal, Gable, Offset) and Origin",
+          "User selects Target Geometry (Element, Beam, Opening, MetalPart, or Point Cloud)",
+          "Calculate Dimension Points and Projection Lines based on selection and Mode",
+          "Filter Dimension Points (Viewport boundaries, Tool visibility, Layer filters)",
+          "Draw Dimension Lines and Extension Lines in AutoCAD",
+          "Store Reference Data (Viewport ID, Element ID, Position) for future updates",
+          "Script Execution Ends (Enters sleep/monitoring state)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Is the script running during Insert or Recalculation?",
+            "path1": {
+              "name": "Insert Mode",
+              "steps": [
+                "Prompt user for Base Point/Location",
+                "Show Dynamic Dialog for immediate configuration",
+                "Allow user to select specific entities or rely on Element Painters"
+              ]
+            },
+            "path2": {
+              "name": "Recalculation Mode",
+              "steps": [
+                "Skip prompts and base point selection",
+                "Fetch stored settings and coordinates",
+                "Re-generate dimensions based on current state of linked geometry"
+              ]
+            }
+          },
+          {
+            "condition": "Is the active space Model Space or Paper Space?",
+            "path1": {
+              "name": "Model Space",
+              "steps": [
+                "Dimensions apply to 3D geometry projected to XY plane",
+                "Direct interaction with GenBeams/Elements",
+                "No Viewport transformation required"
+              ]
+            },
+            "path2": {
+              "name": "Paper Space",
+              "steps": [
+                "Dimensions linked to a specific Viewport",
+                "Apply Viewport transformation (Scale/Rotation) to coordinates",
+                "Filter points outside Viewport boundaries",
+                "Draw Setup Graphics on non-plotting layer"
+              ]
+            }
+          },
+          {
+            "condition": "Painter Management Mode Configuration",
+            "path1": {
+              "name": "Folder Restricted (Mode 0)",
+              "steps": [
+                "Only use painters defined in 'Dimline_Painter' folder",
+                "Global catalog setting enforced"
+              ]
+            },
+            "path2": {
+              "name": "Instance Specific (Mode 1)",
+              "steps": [
+                "Use specific folder settings but allow instance overrides",
+                "Settings stored in instance Map"
+              ]
+            },
+            "path3": {
+              "name": "Global/Any Painter (Mode 2)",
+              "steps": [
+                "Accept any Painter definition available in the catalog",
+                "Global catalog setting enforced"
+              ]
+            }
+          },
+          {
+            "condition": "User invokes Context Menu Command",
+            "path1": {
+              "name": "Import Settings",
+              "steps": [
+                "Load XML file from path",
+                "Update Global MapObject",
+                "Recalculate script with new settings"
+              ]
+            },
+            "path2": {
+              "name": "Export Settings",
+              "steps": [
+                "Prompt for overwrite confirmation if file exists",
+                "Write current settings to XML file"
+              ]
+            },
+            "path3": {
+              "name": "Painter Management",
+              "steps": [
+                "Show Dialog to select Mode",
+                "Update internal mode flags",
+                "Update Global/Instance Maps accordingly"
+              ]
+            },
+            "path4": {
+              "name": "Realign/Move",
+              "steps": [
+                "Update Base Point or Offset properties",
+                "Trigger recalculation to move dimensions"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "hsbDesign Version",
+            "errorMessage": "Script requires hsbDesign 26 or higher.",
+            "recovery": "Update hsbCAD environment."
+          },
+          {
+            "check": "File Path for Settings (Import)",
+            "errorMessage": "Failed to find settings file at specified path.",
+            "recovery": "Verify the file path or browse to select correct XML."
+          },
+          {
+            "check": "Overwrite Settings (Export)",
+            "errorMessage": "File already exists.",
+            "recovery": "User prompted to confirm 'Yes' to overwrite or 'No' to cancel."
+          },
+          {
+            "check": "Viewport Linking",
+            "errorMessage": "Invalid Viewport selected or Viewport deleted.",
+            "recovery": "Select a valid hsbCAD Viewport in Paper Space."
+          },
+          {
+            "check": "Entity Selection",
+            "errorMessage": "No valid geometry found matching painters or selection.",
+            "recovery": "Adjust Painters or manually select valid Beams/Elements."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Dimension Style/Location",
+            "how": "Properties Palette (OPM) / Grip Edit",
+            "effect": "Updates dimension offset, layer, style, or base point coordinates."
+          },
+          {
+            "action": "Update Linked Geometry",
+            "how": "Automatic Recalculation / Realign Context Command",
+            "effect": "Dimensions move/resize if the wall, beam, or opening geometry changes."
+          },
+          {
+            "action": "Change Painter Scope",
+            "how": "Context Menu -> 'Painter Management'",
+            "effect": "Alters which components are detected for dimensioning (e.g., including/excluding specific metalparts)."
+          },
+          {
+            "action": "Copy/Paste Settings",
+            "how": "Context Menu -> 'Export Settings' / 'Import Settings'",
+            "effect": "Standardizes dimension configuration across multiple projects or drawings."
+          },
+          {
+            "action": "Purge Redundant Lines",
+            "how": "Context Menu / Multipage Controller",
+            "effect": "Removes dimension lines associated with deleted or invalid elements."
+          }
+        ]
+      },
+      "tokens_used": 8295,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Dimline.mcr\n\n## Overview\nA flexible dimensioning tool that automatically generates and manages dimension lines for timber structures. It supports both Model and Paper Space, capable of dimensioning elements, beams, openings, metalwork, and custom grids.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Dimensions are projected to the XY plane. |\n| Paper Space | Yes | Links to specific Viewports; includes setup graphics for configuration. |\n| Shop Drawing | Yes | Supports MultipageController for managing views. |\n\n## Prerequisites\n- **Required Entities**: GenBeam, Element, MetalPart, or Opening.\n- **Minimum Beam Count**: 0 (Can dimension empty contours or specific points).\n- **Required Settings**: hsbDesign 26 or higher; Element Painter definitions (usually in a \"Dimline_Painter\" catalog folder).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `Dimline.mcr` from the catalog.\n\n### Step 2: Set Base Point\n```\nCommand Line: Select base point:\nAction: Click in the drawing to specify the insertion point for the dimension line.\n```\n\n### Step 3: Configure Options (Dialog)\n```\nDialog: Dynamic Dialog\nAction: Select the Dimension Mode (e.g., Linear, Diagonal, Gable, Offset) and Origin settings. Click OK to confirm.\n```\n\n### Step 4: Select Geometry\n```\nCommand Line: Select entities:\nAction: Select the beams, walls, or openings you wish to dimension. Alternatively, rely on the configured Element Painters to auto-detect geometry.\n```\n\n### Step 5: Generation\nThe script automatically calculates the relevant points, filters them based on the viewport (if in Paper Space), and draws the dimension lines.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sPainterCollection | String | \"Dimline_Painter\" | The name of the catalog folder containing smart selection filters (Painters) used to auto-detect geometry. |\n| nPainterManagementMode | Index | 0 | Controls how Painters are used: 0=Folder Only, 1=Instance Specific, 2=Any Painter (Global). |\n| sFullPath | Path | [Company Path]\\DimlineSettings.xml | The file path used to Import or Export dimension configuration settings. |\n| PtInsert | Point | (User Selected) | The insertion coordinates of the dimension line. |\n| dOffset | Double | 0.0 | The distance offset from the base geometry. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Import Settings | Loads dimension styles and configurations from an external XML file. |\n| Export Settings | Saves the current script configuration to an XML file for use in other projects. |\n| Painter Management | Opens a dialog to change how the script selects geometry (e.g., switching between specific folders or global search). |\n| Realign / Move | Allows you to update the base point or offset to move the dimension line without deleting it. |\n\n## Settings Files\n- **Filename**: `DimlineSettings.xml`\n- **Location**: `hsbCompany` path (or user-specified path).\n- **Purpose**: Stores configuration data such as dimension styles, offsets, and Painter management modes. Used to standardize settings across projects.\n\n## Tips\n- **Paper Space Setup**: When working in layouts, ensure the script is linked to the correct Viewport. \"Setup Graphics\" (non-plotting lines) will appear to help you visualize the link.\n- **Smart Selection**: Configure your Element Painters in the catalog to automatically select specific wall layers or beam types without manual clicking.\n- **Multipage**: This script works with the MultipageController. If you delete an element in the model, use the controller to purge the now-invalid dimension lines.\n\n## FAQ\n- **Q: My dimensions disappeared in Paper Space.**\n  A: This likely means the linked geometry is outside the Viewport boundaries or the Viewport scale changed. Check the \"Setup Graphics\" layer or use the Realign command.\n- **Q: How do I copy my setup to another drawing?**\n  A: Right-click the dimension instance, select \"Export Settings\" to save an XML file, then \"Import Settings\" in the new drawing.\n- **Q: What is the difference between Painter Management Modes?**\n  A: Mode 0 (Folder Restricted) ensures strict adherence to a specific catalog folder. Mode 2 (Any Painter) allows the script to use any Painter found in the catalog, offering more flexibility but less control."
+      },
+      "tokens_used": 5026,
+      "error": null
+    }
+  }
+}

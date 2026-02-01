@@ -1,0 +1,247 @@
+{
+  "filename": "GE_HDWR_ANCHOR_SCREW.mcr",
+  "status": "completed",
+  "total_tokens": 19696,
+  "processing_time": 658.8056781291962,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "v1.2",
+            "date": "15.jun.2014",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "- TSL can now be inserted by other hardware systems"
+          },
+          {
+            "version": "v1.1",
+            "date": "27.nov.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "- Version control (several enhancements, coordinated with Manish Patel and Marcelo Quevedo)"
+          },
+          {
+            "version": "v1.0",
+            "date": "14.nov.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "- Release. Created as dummy only, insertion yet to be coded. Will be useful inserted from outside"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4425,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script creates 3D Body geometry (rod, nuts, washers) and interacts with Element entities using global vectors (_ZW, _XW). It lacks any ShopDrawing specific prefixes (sd_), Viewport handling, or 2D layout logic, indicating operation in a 3D modeling environment."
+        },
+        "prerequisites": {
+          "requiredEntities": [],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2859,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowNotice",
+            "trigger": "_bOnInsert",
+            "title": null,
+            "dataSource": "reportMessage",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sType",
+            "type": "PropString",
+            "displayName": "|Anchor type|",
+            "defaultValue": "1/2 Screw Anchor",
+            "inputType": "dropdown",
+            "options": [
+              "1/2 Screw Anchor",
+              "5/8 Screw Anchor",
+              "7/8 Screw Anchor"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3564,
+      "error": null
+    },
+    "4": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "Request timeout after retries"
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launch",
+          "[Condition] Check if _bOnInsert is true",
+          "[Branch] If Inserting: Show warning message reporting lack of manual insertion definition",
+          "[Branch] If Inserting: Erase instance immediately",
+          "[Branch] If Running/Recalculating: Define coordinate vectors (vx, vy, vz) based on global system",
+          "Read configuration from _Map (ANCHORTYPE, vectors, directives)",
+          "[Condition] Check if InsertedByDirective is set",
+          "[Branch] If Directive Inserted: Set sType property to Read-Only",
+          "[Condition] Check if _Element[0] exists",
+          "[Branch] If Element exists: Set dependency on element to track deletions",
+          "[Condition] Check if _bOnElementDeleted is true",
+          "[Branch] If Element Deleted: Erase instance",
+          "Construct Geometry: Generate Anchor Rod based on type",
+          "Construct Geometry: Cut sharp threads/subtract boolean operation on rod",
+          "[Condition] Check HideWasherAndNuts flag from _Map",
+          "[Branch] If True: Exit script (Skip drawing hardware)",
+          "[Branch] If False: Construct Square Washers",
+          "[Branch] If False: Construct Hex Nuts",
+          "Draw geometry to Display dp",
+          "Finish"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "_bOnInsert state",
+            "path1": {
+              "name": "Manual Insertion",
+              "steps": [
+                "Display warning message",
+                "Erase TSL instance",
+                "Stop"
+              ]
+            },
+            "path2": {
+              "name": "External/System Insertion",
+              "steps": [
+                "Proceed to initialization",
+                "Read coordinate vectors from _Map",
+                "Read properties from _Map",
+                "Generate 3D geometry"
+              ]
+            }
+          },
+          {
+            "condition": "InsertedByDirective flag",
+            "path1": {
+              "name": "System Controlled",
+              "steps": [
+                "Lock 'Anchor type' property (Read-Only)"
+              ]
+            },
+            "path2": {
+              "name": "User/Script Controlled",
+              "steps": [
+                "Allow 'Anchor type' property editing"
+              ]
+            }
+          },
+          {
+            "condition": "Element association",
+            "path1": {
+              "name": "Element Linked",
+              "steps": [
+                "Set dependency",
+                "Monitor deletion events"
+              ]
+            },
+            "path2": {
+              "name": "Standalone",
+              "steps": [
+                "Skip dependency checks"
+              ]
+            }
+          },
+          {
+            "condition": "HideWasherAndNuts flag",
+            "path1": {
+              "name": "Show Full Assembly",
+              "steps": [
+                "Draw Anchor Rod",
+                "Draw Square Washers",
+                "Draw Hex Nuts"
+              ]
+            },
+            "path2": {
+              "name": "Rod Only",
+              "steps": [
+                "Draw Anchor Rod",
+                "Terminate Script"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insertion method",
+            "errorMessage": "GE_HDWR_ANCHOR_SCREW TSL: This TSL has not yet a manual insertion defined. It can be inserted only by other script. Instance will be erased",
+            "recovery": "None (Instance auto-deletes). User must insert via parent script/system."
+          },
+          {
+            "check": "ANCHORTYPE in _Map",
+            "errorMessage": "None (Uses default or previous property value)",
+            "recovery": "Update via Properties Palette if not read-only"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Anchor Type",
+            "how": "Properties Palette (OPM)",
+            "effect": "Updates sType, recalculates geometry dimensions (Radius, Washer/Nut sizes) based on selected string (1/2, 5/8, 7/8)"
+          },
+          {
+            "action": "Delete associated Element",
+            "how": "CAD Delete command",
+            "effect": "Triggers _bOnElementDeleted flag -> Erases TSL instance"
+          }
+        ]
+      },
+      "tokens_used": 4719,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_HDWR_ANCHOR_SCREW\n\n## Overview\nThis script generates 3D geometry for anchor screw hardware, including the rod, square washers, and hex nuts. It is designed exclusively for automated insertion by other hardware systems or scripts and supports specific sizing variations.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Generates 3D solid bodies for hardware. |\n| Paper Space | No | Not designed for 2D layout. |\n| Shop Drawing | No | Not designed for shop drawing views. |\n\n## Prerequisites\n- **Parent Script/System**: This script cannot be run manually. It must be inserted by a parent script or hardware system.\n- **Element Association**: Usually linked to a timber element; if that element is deleted, the screw will also be removed.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Note:** This script cannot be launched manually via the command line.\n- If you attempt to run `TSLINSERT` and select this file, a warning message will display stating: *\"This TSL has not yet a manual insertion defined. It can be inserted only by other script.\"*\n- The instance will erase itself immediately.\n\n### Step 2: Modifying Existing Instances\nSince instances are created automatically by the system, you interact with them through the Properties Palette.\n1.  Select the Anchor Screw instance in the drawing.\n2.  Open the **Properties Palette** (Ctrl+1).\n3.  Locate the `Anchor type` parameter.\n4.  Select the desired size from the dropdown list (e.g., \"1/2 Screw Anchor\").\n5.  The 3D geometry will automatically update to reflect the new size.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Anchor type | dropdown | 1/2 Screw Anchor | Selects the size of the hardware. Options include: 1/2 Screw Anchor, 5/8 Screw Anchor, and 7/8 Screw Anchor. |\n\n## Right-Click Menu Options\nNone. This script does not add custom options to the right-click context menu.\n\n## Settings Files\nNone. This script does not use external XML settings files; configuration is handled via internal mapping and properties.\n\n## Tips\n- **Automatic Cleanup:** If this screw is attached to a timber element (beam), deleting the timber element will automatically delete the screw.\n- **Read-Only Behavior:** Depending on how the parent script inserted this hardware, the `Anchor type` property may be locked (Read-Only) to prevent changes to a calculated specification.\n\n## FAQ\n- **Q: Why does the script disappear immediately when I try to insert it?**\n  - A: This is a \"sub-component\" script intended to be called by other scripts, not used independently. The script detects manual insertion and erases itself to prevent errors.\n- **Q: Can I hide the washers and nuts?**\n  - A: This depends on the instructions provided by the parent script that inserted the hardware. Some configurations may generate only the rod, while others generate the full assembly.\n- **Q: How do I change the screw size?**\n  - A: Select the screw in the model and change the \"Anchor type\" in the AutoCAD Properties Palette."
+      },
+      "tokens_used": 4129,
+      "error": null
+    }
+  }
+}

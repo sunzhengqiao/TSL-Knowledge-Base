@@ -1,0 +1,187 @@
+{
+  "filename": "HSB_E-IntegrateTimbers.mcr",
+  "status": "completed",
+  "total_tokens": 51802,
+  "processing_time": 344.8019173145294,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9051,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script filename 'HSB_E-IntegrateTimbers.mcr' indicates an Element script (E prefix). The insertion block uses PrEntity to select an Element. Explicitly passes _kModelSpace to dbCreate. The script retrieves 3D geometry using el.beam() and el.coordSys(), and processes intersections between beams. It acts as a master script that creates satellite instances of 'HSB_T-IntegrateTimber'."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": [
+            "HSB_G-FilterGenBeams (must be loaded in drawing for filtering)",
+            "HSB_T-IntegrateTimber (required for creating milling operations)"
+          ]
+        }
+      },
+      "tokens_used": 7180,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9807,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Automates the creation of timber integrations (pockets/cuts) between selected 'male' beams (to be cut) and intersecting 'female' beams within an element.\",\n    \"category\": \"Manufacturing / Joinery\",\n    \"typicalUseCase\": \"Batch processing of floor cassettes or roof structures where joists must be notched or housed into main support beams.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"sMaleFilterBC\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Defines which beams are to be cut (Male) based on their Beam Code.\",\n      \"validRange\": \"Any existing Beam Code\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Determines the set of beams that will receive the integration cuts.\"\n    },\n    {\n      \"name\": \"alwaysIntegrate\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Forces specific beams (by code) to always be treated as Male beams for integration, regardless of standard intersection logic.\",\n      \"validRange\": \"Any existing Beam Code\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Ensures critical structural beams are processed even if geometry detection is borderline.\"\n    },\n    {\n      \"name\": \"genBeamFilterDefinitionMale\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Link to a pre-configured filter catalog to determine Male beams using complex criteria (e.g., name, material, dimensions).\",\n      \"validRange\": \"Catalog names in 'HSB_G-FilterGenBeams'\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Acts as the primary filter for selecting beams to be cut.\"\n    },\n    {\n      \"name\": \"sFemaleFilterBC\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Defines which intersecting beams are the 'targets' (Female) based on Beam Code. The Male beam is cut to fit these.\",\n      \"validRange\": \"Any existing Beam Code\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Restricts which intersecting beams trigger a cut operation.\"\n    },\n    {\n      \"name\": \"genBeamFilterDefinitionFeMale\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Link to a pre-configured filter catalog to determine Female beams (the reference beams).\",\n      \"validRange\": \"Catalog names in 'HSB_G-FilterGenBeams'\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Filters the list of beams that the Male beam checks against for intersections.\"\n    },\n    {\n      \"name\": \"dDepth\",\n      \"technicalDefault\": \"3\",\n      \"businessMeaning\": \"Standard depth of the integration cut/pocket into the Male beam.\",\n      \"validRange\": \"1 to half the beam width (mm)\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Controls how deep the housing or notch is machined.\"\n    },\n    {\n      \"name\": \"dOverrideDepth\",\n      \"technicalDefault\": \"3\",\n      \"businessMeaning\": \"Special cut depth used for beams matching the specific 'Override' Beam Code.\",\n      \"validRange\": \"1 to half the beam width (mm)\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Allows for custom machining depths on specific beam types (e.g., deeper notch for heavier loads).\"\n    },\n    {\n      \"name\": \"sBmCodeOverrideDepth\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"The Beam Code that triggers the use of the Override Depth instead of the standard Depth.\",\n      \"validRange\": \"Any existing Beam Code\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Conditionally switches the depth parameter for specific beams.\"\n    },\n    {\n      \"name\": \"dMinimumMillWidth\",\n      \"technicalDefault\": \"25\",\n      \"businessMeaning\": \"Smallest allowed width for a cut to be generated. Prevents creation of unmanufacturable slivers.\",\n      \"validRange\": \"10 to 50 (mm)\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Filters out narrow intersections; suppresses machining if the contact area is too small.\"\n    },\n    {\n      \"name\": \"dGapWidth\",\n      \"technicalDefault\": \"1\",\n      \"businessMeaning\": \"Clearance added to the sides of the cut (perpendicular to beam length).\",\n      \"validRange\": \"0 to 5 (mm)\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Widens the pocket slightly to allow for easy assembly, paint, or timber swelling.\"\n    },\n    {\n      \"name\": \"dGapLength\",\n      \"technicalDefault\": \"200\",\n      \"businessMeaning\": \"Clearance added to the ends of the cut (parallel to beam length).\",\n      \"validRange\": \"0 to 500 (mm)\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Shortens the tenon or pocket length to ensure parts do not bottom out or bind.\"\n    },\n    {\n      \"name\": \"extraWidthForAdjacentConnections\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"Additional width added to the mill specifically when beams are adjacent/parallel.\",\n      \"validRange\": \"0 to 50 (mm)\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Prevents collision in tight connections or specific joint geometries.\"\n    },\n    {\n      \"name\": \"sApplyMarking\",\n      \"technicalDefault\": \"Yes\",\n      \"businessMeaning\": \"Enables or disables the writing of text/engraving on the beam to indicate the integration.\",\n      \"validRange\": \"Yes/No\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Controls generation of text/symbol entities on the beam.\"\n    },\n    {\n      \"name\": \"sMarkingSide\",\n      \"technicalDefault\": \"Inside\",\n      \"businessMeaning\": \"Specifies which face of the beam receives the marking (Inside or Outside relative to the construction).\",\n      \"validRange\": \"Inside/Outside\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Moves the text/marking position on the beam surface.\"\n    },\n    {\n      \"name\": \"dSymbolSize\",\n      \"technicalDefault\": \"20\",\n      \"businessMeaning\": \"Size of the visualization symbol drawn in the CAD model to represent this script.\",\n      \"validRange\": \"5 to 100 (mm)\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Scales the 3D symbol and 2D plan marker for visibility.\"\n    }\n  ],\n  \"parameterDependencies\": [\n    {\n      \"trigger\": \"Female Beam matches sBmCodeOverrideDepth\",\n      \"effect\": \"dOverrideDepth is used instead of dDepth for that specific connection.\",\n      \"cascade\": [\"dOverrideDepth\"]\n    },\n    {\n      \"trigger\": \"sApplyMarking is set to No\",\n      \"effect\": \"sMarking"
+      },
+      "tokens_used": 9387,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script command",
+          "Properties Dialog displays (Insertion cycle)",
+          "Prompt: Select Element(s) to process",
+          "System validates 'HSB_G-FilterGenBeams' is loaded",
+          "Script attaches to selected Element(s) as Master Instance",
+          "Script retrieves all GenBeams from Element",
+          "Script applies Male/Female filters to separate beams",
+          "Script checks 'Always Integrate' list to force specific beams to Male set",
+          "Script iterates through Male beams to find intersections with Female beams",
+          "Script validates intersection points (excludes head-to-head connections)",
+          "Script calculates cut parameters (depth, gaps) for each intersection",
+          "Script generates Satellite instances ('HSB_T-IntegrateTimber') on intersecting beams",
+          "Script draws 3D symbol and 2D plan representation at Element origin"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Is 'HSB_G-FilterGenBeams' TSL available in the drawing?",
+            "path1": {
+              "name": "Success",
+              "steps": [
+                "Proceed with filtering beams based on properties and catalogs"
+              ]
+            },
+            "path2": {
+              "name": "Failure",
+              "steps": [
+                "Report Warning: 'GenBeams could not be filtered!'",
+                "Erase current script instance",
+                "Abort operation"
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Command 'Restore connection' executed?",
+            "path1": {
+              "name": "Restore",
+              "steps": [
+                "Find all Satellite instances ('HSB_T-IntegrateTimber') on the Element",
+                "Trigger Recalc on Satellites with 'Restore connection' key",
+                "Erase Master Script instance",
+                "Stop execution"
+              ]
+            },
+            "path2": {
+              "name": "Standard Run",
+              "steps": [
+                "Proceed with intersection finding and Satellite creation"
+              ]
+            }
+          },
+          {
+            "condition": "Does Female beam match 'sBmCodeOverrideDepth'?",
+            "path1": {
+              "name": "Override Active",
+              "steps": [
+                "Use 'dOverrideDepth' property for the cut depth"
+              ]
+            },
+            "path2": {
+              "name": "Standard",
+              "steps": [
+                "Use standard 'dDepth' property for the cut depth"
+              ]
+            }
+          },
+          {
+            "condition": "Is intersection a 'Head-to-Head' connection?",
+            "path1": {
+              "name": "Head-to-Head",
+              "steps": [
+                "Ignore this intersection point",
+                "Do not create Satellite"
+              ]
+            },
+            "path2": {
+              "name": "Valid T-Connection",
+              "steps": [
+                "Calculate Top and Bottom intersection points",
+                "Create Satellite(s) at valid locations"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Availability of HSB_G-FilterGenBeams",
+            "errorMessage": "GenBeams could not be filtered! Make sure that the tsl HSB_G-FilterGenBeams is loaded in the drawing.",
+            "recovery": "Load the required HSB_G-FilterGenBeams script and retry the operation."
+          },
+          {
+            "check": "Element contains GenBeams",
+            "errorMessage": "(Implicit) No beams found to process.",
+            "recovery": "Ensure the selected Element has structural members (GenBeams) assigned to it."
+          },
+          {
+            "check": "Intersection Geometry Validity",
+            "errorMessage": "None (Script skips invalid intersections silently).",
+            "recovery": "N/A"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Filters",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changing 'sMaleFilterBC', 'sFemaleFilterBC', or Filter Definitions will trigger a recalc, automatically removing old cuts and generating new ones based on the new beam sets."
+          },
+          {
+            "action": "Adjust Dimensions",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changing 'dDepth', 'dGapWidth', etc., will update the geometry of all Satellite integrations immediately."
+          },
+          {
+            "action": "Restore Connections",
+            "how": "Right-click Context Menu > 'Restore connection'",
+            "effect": "Sends a signal to all Satellites to delete the cuts/pockets they created, effectively restoring the beams to their original unmilled state. The Master script then deletes itself."
+          }
+        ]
+      },
+      "tokens_used": 9655,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-IntegrateTimbers.mcr\n\n## Overview\nAutomates the creation of timber integrations (pockets/cuts) between selected \"male\" beams (to be cut) and intersecting \"female\" beams within an Element. This is typically used for batch processing floor cassettes or roof structures where joists must be notched or housed into main support beams.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for processing 3D geometry and intersections. |\n| Paper Space | No | Not applicable. |\n| Shop Drawing | No | This script modifies the 3D model geometry. |\n\n## Prerequisites\n- **Required Entities:** An `Element` containing `GenBeams`.\n- **Minimum Beam Count:** At least 1 beam (though practical application requires intersecting sets).\n- **Required Settings/Scripts:**\n    - `HSB_G-FilterGenBeams` (must be loaded in the drawing for beam filtering).\n    - `HSB_T-IntegrateTimber` (required for creating the actual milling operations).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: In the dialog that appears, select `HSB_E-IntegrateTimbers.mcr` and click Open.\n\n### Step 2: Configure Parameters (Optional)\nAction: Before selecting the element, you can adjust properties in the Properties Palette (OPM) if you know the specific Beam Codes or depth settings required.\n\n### Step 3: Select Element\n```\nCommand Line: Select Element(s):\nAction: Click on the Element (e.g., a floor cassette) containing the beams you wish to process. Press Enter to confirm selection.\n```\n*Note: If `HSB_G-FilterGenBeams` is not loaded, the script will report an error and abort.*\n\n### Step 4: Processing\nAction: The script automatically identifies intersections based on your filters, creates satellite instances of `HSB_T-IntegrateTimber`, and generates the cuts.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **sMaleFilterBC** | String | (Empty) | Beam Code defining which beams are to be cut (the \"Male\" beams). |\n| **genBeamFilterDefinitionMale** | String | (Empty) | Name of a filter catalog (from HSB_G-FilterGenBeams) to select Male beams using complex criteria (e.g., material, name). |\n| **alwaysIntegrate** | String | (Empty) | Forces specific beams (by Beam Code) to always be treated as Male beams, regardless of standard intersection logic. |\n| **sFemaleFilterBC** | String | (Empty) | Beam Code defining the target beams (the \"Female\" beams). The Male beam is cut to fit these. |\n| **genBeamFilterDefinitionFeMale** | String | (Empty) | Name of a filter catalog to select Female beams (the reference beams). |\n| **dDepth** | Number | 3 | Standard depth of the integration cut/pocket into the Male beam (mm). |\n| **dOverrideDepth** | Number | 3 | Special cut depth used when a beam matches the `sBmCodeOverrideDepth` code (mm). |\n| **sBmCodeOverrideDepth** | String | (Empty) | The Beam Code that triggers the use of `dOverrideDepth` instead of the standard `dDepth`. |\n| **dMinimumMillWidth** | Number | 25 | Smallest allowed width for a cut. Intersections narrower than this will be ignored (mm). |\n| **dGapWidth** | Number | 1 | Clearance added to the sides of the cut (perpendicular to beam length) for assembly tolerance (mm). |\n| **dGapLength** | Number | 200 | Clearance added to the ends of the cut (parallel to beam length) to prevent binding (mm). |\n| **extraWidthForAdjacentConnections** | Number | 0 | Additional width added to the mill specifically when beams are adjacent or parallel (mm). |\n| **sApplyMarking** | Enum | Yes | Enables or disables text/engraving on the beam to indicate the integration (Yes/No). |\n| **sMarkingSide** | Enum | Inside | Specifies which face of the beam receives the marking (Inside/Outside relative to construction). |\n| **dSymbolSize** | Number | 20 | Size of the visualization symbol drawn in the CAD model to represent this script (mm). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Restore connection** | Removes all integration cuts/pockets created by this script on the Element, restores the original beam geometry, and deletes the script instance. |\n\n## Settings Files\n- **Script Dependency**: `HSB_G-FilterGenBeams.mcr`\n- **Purpose**: Provides the catalog names and complex logic for filtering Male and Female beams based on properties other than just Beam Code.\n\n## Tips\n- **Using Filters**: If you have many different beam types, use `genBeamFilterDefinitionMale` instead of `sMaleFilterBC` to select beams based on multiple attributes (like width or material) defined in the Filter catalog.\n- **Prevent Small Cuts**: If you see small, unwanted slivers or cuts appearing on your beams, increase the `dMinimumMillWidth` value (e.g., to 30 or 40).\n- **Assembly Gaps**: Ensure `dGapLength` is sufficient if you are using tenons or loose tongues so that parts do not bottom out during assembly.\n- **Visualizing**: If you cannot see the script marker in the model, increase `dSymbolSize`.\n\n## FAQ\n- **Q: The script reports \"GenBeams could not be filtered!\" and stops. What is wrong?**\n  **A:** The script `HSB_G-FilterGenBeams.mcr` is not loaded in your current drawing. You must load this script using `TSLLOAD` or ensure it is in your autoload list.\n- **Q: Some intersections are not being cut. Why?**\n  **A:** Check if the intersection width is smaller than your `dMinimumMillWidth` setting. Also, verify that your `sMaleFilterBC` and `sFemaleFilterBC` settings match the actual Beam Codes of the elements in your model.\n- **Q: How can I make one specific beam type cut deeper than the others?**\n  **A:** Enter the Beam Code of the special beam in the `sBmCodeOverrideDepth` field, then set the specific deeper value in `dOverrideDepth`. Leave `dDepth` for the standard depth."
+      },
+      "tokens_used": 6722,
+      "error": null
+    }
+  }
+}

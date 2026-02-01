@@ -1,0 +1,276 @@
+{
+  "filename": "hsb-SteelProfileFlip.mcr",
+  "status": "completed",
+  "total_tokens": 28008,
+  "processing_time": 208.4402048587799,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "17-11-2015",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4252,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script utilizes Element, ElementRoof, and Beam classes to modify 3D geometry. It performs a transformation (setToRotation) on beams based on Roof Edge coordinates. There are no references to Viewports, Sheets, sd_ functions, or drawing generation entities."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "ElementRoof",
+            "Beam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3312,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select one, or more elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sFilterBeams",
+            "type": "PropString",
+            "displayName": "|Convert Beams with Code|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": "|Separate multiple entries by| ;"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6062,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically rotates specific steel beams by 180 degrees around the element Z-axis based on roof edge variables and beam codes.",
+          "category": "Automation/Framing",
+          "typicalUseCase": "Used during the design of roof structures with steel purlins or beams to automatically align the orientation (flip) of specific profiles along roof edges where detailing variables dictate a change in direction."
+        },
+        "parameters": [
+          {
+            "name": "sFilterBeams",
+            "technicalDefault": "",
+            "businessMeaning": "A whitelist of beam codes (profile names) that are eligible to be flipped. Only beams with a code matching an entry in this list will be processed.",
+            "validRange": "Any valid beam code from the catalog. Multiple codes must be separated by a semicolon (;).",
+            "unit": "Text",
+            "affectsOutput": "Determines which beams are checked against the roof edge logic. Beams with codes not listed are ignored and will not be rotated."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Beam (Modification)",
+            "description": "Rotates the geometry of existing beams by 180 degrees around the element's vertical axis (Z-axis) at their center point.",
+            "appliedTo": "Beams within the selected Element that match the sFilterBeams code and are closest to a roof edge where the 'FLIP' variable condition is met."
+          }
+        ]
+      },
+      "tokens_used": 4265,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script inserted/launched",
+          "2. Check insertion cycle: if insertCycleCount > 1, erase instance and exit (prevent recursion)",
+          "3. Check execution key: if _kExecuteKey is empty, show configuration dialog",
+          "4. Command line prompt: Select one or more elements (PrEntity)",
+          "5. Store selected elements in _Element list and exit insertion mode",
+          "6. Parse 'sFilterBeams' property string into an array of uppercase beam codes",
+          "7. Begin loop through each selected Element",
+          "8. Validate Element: Cast to ElementRoof. If invalid, skip to next Element",
+          "9. Retrieve all Beams from the Element",
+          "10. Filter Beams: Check if Beam Code exists in parsed filter list. Add matches to 'bmToConvert' array",
+          "11. Retrieve all Roof Edges (ElemRoofEdge) from the Element",
+          "12. Begin loop through each Roof Edge",
+          "13. Parse Edge Construction Details (constrDetail string) into tokens",
+          "14. Analyze tokens for 'FLIP' keyword and associated variable name",
+          "15. Check specific variable value (40DVAR...) to determine flip state (nFlip)",
+          "16. [Conditional] If Flip is required (nFlip == true):",
+          "   a. Get Edge geometry (Midpoint, Direction Vector)",
+          "   b. Filter 'bmToConvert' list for beams parallel to Edge Direction",
+          "   c. Find the specific beam closest to the Edge Midpoint",
+          "   d. Rotate identified beam 180 degrees around Element Z-axis at beam center",
+          "   e. Set 'nErase' flag to true",
+          "17. Erase script instance from drawing (cleanup)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle Count",
+            "path1": {
+              "name": "Recursive/Update Call",
+              "steps": [
+                "Detect insertCycleCount > 1",
+                "Erase Instance",
+                "Exit Script"
+              ]
+            },
+            "path2": {
+              "name": "First Run",
+              "steps": [
+                "Detect insertCycleCount == 1",
+                "Check _kExecuteKey",
+                "Proceed to User Input"
+              ]
+            }
+          },
+          {
+            "condition": "Element Type",
+            "path1": {
+              "name": "Valid Roof Element",
+              "steps": [
+                "Cast to ElementRoof succeeds",
+                "Proceed to Beam/Edge processing"
+              ]
+            },
+            "path2": {
+              "name": "Invalid/Non-Roof Element",
+              "steps": [
+                "Cast to ElementRoof fails",
+                "Skip current Element",
+                "Continue to next Element in list"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Code Filter",
+            "path1": {
+              "name": "Match Found",
+              "steps": [
+                "Beam Code exists in sFilterBeams list",
+                "Add Beam to 'bmToConvert' array"
+              ]
+            },
+            "path2": {
+              "name": "No Match",
+              "steps": [
+                "Beam Code not found",
+                "Ignore Beam"
+              ]
+            }
+          },
+          {
+            "condition": "Edge Flip Logic",
+            "path1": {
+              "name": "Flip Condition Met",
+              "steps": [
+                "Edge detail contains 'FLIP' and variable evaluates to true",
+                "Find closest parallel beam",
+                "Rotate beam 180 deg Z"
+              ]
+            },
+            "path2": {
+              "name": "No Flip",
+              "steps": [
+                "No 'FLIP' keyword or variable is 0",
+                "Skip Edge processing"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Type",
+            "errorMessage": "(None - Silent)",
+            "recovery": "Script ignores the selected entity if it is not a valid Roof Element."
+          },
+          {
+            "check": "Beam Availability",
+            "errorMessage": "(None - Silent)",
+            "recovery": "If the element contains no beams, or no beams match the filter code, the script exits without changes."
+          },
+          {
+            "check": "Edge Configuration",
+            "errorMessage": "(None - Silent)",
+            "recovery": "If roof edges do not contain the specific 'FLIP' and '40DVAR' construction details, beams will not be rotated."
+          },
+          {
+            "check": "Proximity",
+            "errorMessage": "(None - Silent)",
+            "recovery": "Only the single closest parallel beam to the edge midpoint is flipped. Other nearby parallel beams are ignored."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None (Script Self-Destructs)",
+            "how": "N/A",
+            "effect": "The script instance automatically erases itself (eraseInstance) after processing, leaving only the modified beams in the model."
+          },
+          {
+            "action": "Reverse Changes",
+            "how": "AutoCAD Undo (Ctrl+Z) or manual rotation",
+            "effect": "Since the script instance is gone, changes must be undone via standard CAD undo or manually rotating the beam 180 degrees back."
+          },
+          {
+            "action": "Re-run Logic",
+            "how": "Insert Script again",
+            "effect": "To flip additional beams or adjust logic based on new edge variables, the script must be inserted and elements selected again."
+          }
+        ]
+      },
+      "tokens_used": 5734,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb-SteelProfileFlip.mcr\n\n## Overview\nThis script automatically rotates specific steel beams by 180 degrees around the element Z-axis based on roof edge variables. It filters beams by their profile code and flips them if the associated roof edge construction details require a change in orientation.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in the 3D model. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | This is a model modification script. |\n\n## Prerequisites\n- **Required Entities**: Elements (specifically of the \"ElementRoof\" type) containing Beams.\n- **Minimum Beam Count**: 0 (Script processes silently if no beams match criteria).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb-SteelProfileFlip.mcr`\n\n### Step 2: Select Elements\n```\nCommand Line: Select one, or more elements\nAction: Click on the Roof Element(s) in the 3D model that contain the steel profiles you wish to process. Press Enter to confirm selection.\n```\n*Note: Once confirmed, the script will automatically process the elements, rotate the beams, and then remove itself from the drawing.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Convert Beams with Code | text | (Empty) | Enter the beam codes (profile names) to be processed. Separate multiple codes with a semicolon (;). Only beams matching these codes will be flipped. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu options are provided for this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Beam Codes**: Ensure the beam codes in the properties panel exactly match the codes used in your catalog (e.g., `IPE300;HEA200`).\n- **Self-Deleting**: This script instance automatically erases itself after running. You do not need to manually delete the script entity from the model after use.\n- **Undo**: If the rotation results are incorrect, use the standard AutoCAD `Undo` command (Ctrl+Z) to revert the changes.\n- **Logic Dependency**: The script only flips beams if the Roof Edge has specific construction details set (specifically a \"FLIP\" variable token). Ensure your roof edge properties are correctly configured before running.\n\n## FAQ\n- **Q: Why didn't my beams flip even though I selected the element?**\n  **A**: Check three things: 1) The beam code is listed in the \"Convert Beams with Code\" property; 2) The roof edge construction details include the specific \"FLIP\" variable logic; 3) The beam is parallel to the roof edge.\n  \n- **Q: Can I run this on multiple elements at once?**\n  **A**: Yes, you can select multiple Roof Elements during the prompt, and the script will process all of them.\n\n- **Q: Where did the script go after I ran it?**\n  **A**: The script is designed to \"self-destruct\" (eraseInstance) immediately after processing to keep your drawing clean. To run it again, simply insert it via `TSLINSERT` again."
+      },
+      "tokens_used": 4383,
+      "error": null
+    }
+  }
+}

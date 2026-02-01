@@ -1,0 +1,198 @@
+{
+  "filename": "GE_FLOOR_MARKING.mcr",
+  "status": "completed",
+  "total_tokens": 45615,
+  "processing_time": 789.8510591983795,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6845,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Entity entsFloor[] = gpFloor.collectEntities(true, Beam(), _kModelSpace);; PrEntity ssE(\"\\nSelect a set of elements\",Element());; Beam arBm[] = el.beam();; arBm[i].addTool(...);; Body intersection logic;"
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": null,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7495,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6505,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the placement of floor assembly markings, including connection codes, end angles, and squash block indicators, onto beams within a selected floor element.",
+          "category": "ShopDrawing / Labeling",
+          "typicalUseCase": "Used during the shop drawing phase to generate layout marks for assemblers, indicating T-connection references, beam end cut angles, and locations of squash blocks."
+        },
+        "parameters": [
+          {
+            "name": "ssE",
+            "technicalDefault": "User Selection",
+            "businessMeaning": "The set of floor elements to be processed for marking.",
+            "validRange": "Any valid Floor Element in Model Space",
+            "unit": "Element",
+            "affectsOutput": "Determines the scope of beams that will receive the generated marking tools."
+          },
+          {
+            "name": "arHSBid",
+            "technicalDefault": "Array of IDs (e.g., '14', '114', '10002')",
+            "businessMeaning": "List of hsbId identifiers used to classify specific beam types (like Minimizers) which require specific labeling rules.",
+            "validRange": "Predefined string list matching catalog HSB IDs",
+            "unit": "String",
+            "affectsOutput": "Filters beams to determine if they receive a specialized label based on their HSB catalog ID."
+          },
+          {
+            "name": "arMinimiser",
+            "technicalDefault": "Array of chars (e.g., 'B', 'S', 'C', 'J')",
+            "businessMeaning": "The short-form label code applied to beams identified as minimizers or trimmers.",
+            "validRange": "Single characters (B, S, C, J, K, R, V, SS)",
+            "unit": "String",
+            "affectsOutput": "Overrides the standard marking text on specific structural components."
+          },
+          {
+            "name": "strMarkC2",
+            "technicalDefault": "arBm[i].label() + \"-\" + arBm[i].subLabel()",
+            "businessMeaning": "The primary assembly mark (e.g., beam number combined with sub-label) placed along the length of the beam.",
+            "validRange": "String derived from Element/Beam properties",
+            "unit": "String",
+            "affectsOutput": "Creates the main Mark tool on the beam indicating its unique identifier."
+          },
+          {
+            "name": "sAngle / sAngleN",
+            "technicalDefault": "Angle from cut properties +/- \"/\" or \"\\\"",
+            "businessMeaning": "The calculated angle of the beam end cut (positive or negative), formatted as text (e.g., \"/45.00\" or \"\\30.00\").",
+            "validRange": "0.00 to 90.00",
+            "unit": "Degrees",
+            "affectsOutput": "Adds a Mark tool near the beam end to communicate the required cutting angle to the floor installer."
+          },
+          {
+            "name": "strMark",
+            "technicalDefault": "arBm[i].subLabel()",
+            "businessMeaning": "The reference label marked on intersecting beams (male beam) to indicate which female beam they connect to.",
+            "validRange": "Alphanumeric sub-label",
+            "unit": "String",
+            "affectsOutput": "Places a mark on the web/side of the T-connected beam showing the connecting member's ID."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Element Number contains a hyphen (e.g., 'FLR-01')",
+            "effect": "Script attempts to parse beam markings using the left/right tokens of the Element Number.",
+            "cascade": [
+              "sTemp",
+              "strMarkC2"
+            ]
+          },
+          {
+            "trigger": "Beam HSB ID matches arHSBid",
+            "effect": "Beam receives a specific Minimizer label instead of the standard layout mark.",
+            "cascade": [
+              "strLabel"
+            ]
+          },
+          {
+            "trigger": "Beam Cut Angle > 0.001 degrees",
+            "effect": "Generates an angle text mark at the beam end.",
+            "cascade": [
+              "sAngle",
+              "mark1"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Mark",
+            "description": "Text label indicating the beam number and sub-label, positioned along the beam centerline.",
+            "appliedTo": "All beams within the selected Element."
+          },
+          {
+            "type": "Mark",
+            "description": "Angle indicator (e.g., '/45.00') placed at the beam end, preceded by '/' or '\\' to indicate slope direction.",
+            "appliedTo": "Beams with non-square end cuts (strCutP/strCutN)."
+          },
+          {
+            "type": "Mark",
+            "description": "Connection reference label placed on the surface of T-connections to identify the intersecting beam.",
+            "appliedTo": "Beams within the floor group that intersect the current element's beams."
+          },
+          {
+            "type": "Mark",
+            "description": "Label 'SB' indicating the location of a Squash Block.",
+            "appliedTo": "Joists intersecting vertical blocking packs."
+          }
+        ]
+      },
+      "tokens_used": 8247,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. Script execution starts.\",\n    \"2. [Insertion Check] If running for the first time (_bOnInsert), prompt user to select Elements.\",\n    \"3. Filter selected entities: keep only those that are of type 'ElementRoof'.\",\n    \"4. Clone the script instance to each selected Element.\",\n    \"5. Erase the original interactive script instance.\",\n    \"6. [Runtime Execution] Each cloned instance validates its attached Element.\",\n    \"7. Check for and remove duplicate script instances attached to the same Element.\",\n    \"8. Calculate Element floor area (sqft) and update the Element's SubType property.\",\n    \"9. Retrieve all beams from the Element and the broader Floor Group.\",\n    \"10. Loop through each beam in the Element:\",\n    \"11.   Verify and correct beam Z-axis orientation relative to Element.\",\n    \"12.   Determine marking text based on Element Number tokens.\",\n    \"13.   Add Main ID Mark to the beam.\",\n    \"14.   Check beam HSB ID against Minimizer catalog list (internal logic).\",\n    \"15.   Check Positive Cut Angle: if angle > 0.001, add '/Angle' mark.\",\n    \"16.   Check Negative Cut Angle: if angle > 0.001, add '\\\\\\\\Angle' mark.\",\n    \"17.   Detect T-connections with other beams in the floor group.\",\n    \"18.   Add Reference Mark to connected beams.\",\n    \"19. [Squash Block Logic] Identify vertical blocking packs within the element.\",\n    \"20.   Execute Squash Block intersection logic (New Code path).\",\n    \"21.   Add 'SB' mark to joists intersecting block packs.\",\n    \"22. Place invisible marble at Element origin to anchor instance.\",\n    \"23. Script execution finishes.\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Execution Mode (_bOnInsert)\",\n      \"path1\": {\n        \"name\": \"Initial Insertion\",\n        \"steps\": [\n          \"Prompt user for Element selection\",\n          \"Filter for ElementRoof type\",\n          \"Clone instance to Elements\",\n          \"Erase self\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Attached Instance Update\",\n        \"steps\": [\n          \"Validate _Element existence\",\n          \"Clean duplicates\",\n          \"Execute marking logic\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Beam Orientation\",\n      \"path1\": {\n        \"name\": \"Flipped Beam\",\n        \"steps\": [\n          \"Check Z-axis dot product < 0\",\n          \"Invert CoordSys orientation\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Standard Beam\",\n        \"steps\": [\n          \"Keep existing CoordSys\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Label Text Source\",\n      \"path1\": {\n        \"name\": \"Token Match\",\n        \"steps\": [\n          \"Element Number contains hyphen\",\n          \"Beam SubLabel2 matches Element Number tokens\",\n          \"Use SubLabel2 for Mark Text\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Default Label\",\n        \"steps\": [\n          \"Use Element Number for Mark Text\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"End Cut Angle (Positive Side)\",\n      \"path1\": {\n        \"name\": \"Angled Cut\",\n        \"steps\": [\n          \"Absolute Angle > 0.001 degrees\",\n          \"Format text with '/' for positive or '\\\\\\\\' for negative\",\n          \"Create Mark tool at beam end\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Square Cut\",\n        \"steps\": [\n          \"Angle is negligible\",\n          \"Skip angle mark creation\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Squash Block Algorithm (Hardcoded)\",\n      \"path1\": {\n        \"name\": \"Active Logic (if 1)\",\n        \"steps\": [\n          \"Iterate vertical blocks\",\n          \"Check intersection against all beams individually\",\n          \"Mark 'SB' on intersecting joists\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Legacy Logic (else)\",\n        \"steps\": [\n          \"Group blocks by center distance\",\n          \"Create bounding box for groups\",\n          \"Mark 'SB' on beams intersecting group bounds\"\n        ]\n      }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"Attached Element array length\",\n      \"errorMessage\": \"\\\\nNo Element Found\",\n      \"recovery\": \"Script erases itself and stops execution.\"\n    },\n    {\n      \"check\":"
+      },
+      "tokens_used": 11190,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_FLOOR_MARKING.mcr\n\n## Overview\nThis script automates the placement of floor assembly markings on beams. It generates layout marks for assemblers, including T-connection references, beam end cut angles, and specific indicators for squash blocks.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D model elements. |\n| Paper Space | No | |\n| Shop Drawing | No | Marks are applied to the model for downstream processing. |\n\n## Prerequisites\n- **Required Entities**: Floor Elements (specifically of type `ElementRoof`).\n- **Minimum Beams**: There are no strict minimums, but the element must contain beams to generate marks.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_FLOOR_MARKING.mcr`\n\n### Step 2: Select Floor Elements\n```\nCommand Line: \\nSelect a set of elements\nAction: Click on the floor elements (Roof Elements) you wish to mark and press Enter.\n```\n*The script will automatically attach itself to the selected elements and process all beams within them.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script has no user-editable properties in the Properties Palette. All markings are calculated automatically based on beam geometry and catalog properties. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Standard TSL Options | Use standard commands like `Erase` to remove the script instance if needed. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Automatic Cleaning**: If you run the script on an element that already has marking instances, the script will automatically remove duplicates before adding new marks.\n- **Angle Markings**: Look for angle indicators near beam ends. The script uses a `/` for positive angles and a `\\` for negative angles to indicate the slope direction.\n- **Squash Blocks**: The script automatically detects \"Squash Blocks\" (vertical blocking packs) and marks an `SB` on any joist intersecting them.\n- **Floor Area**: The script updates the Element's `SubType` property with the calculated floor area (in square feet).\n\n## FAQ\n- **Q: How are Minimizer or Trimmer beams identified?**\n  **A:** The script automatically identifies these beams based on their internal HSB catalog ID and applies specific short-form labels (e.g., 'B', 'S', 'C') rather than standard layout marks.\n\n- **Q: What does the \"SB\" mark mean?**\n  **A:** The \"SB\" mark indicates the location of a Squash Block. This is placed on joists where they intersect with vertical blocking packs.\n\n- **Q: Can I edit the specific text used for the labels?**\n  **A:** No, the text is derived directly from the Element Number and Beam SubLabels in the project properties."
+      },
+      "tokens_used": 5333,
+      "error": null
+    }
+  }
+}

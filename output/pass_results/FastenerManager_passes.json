@@ -1,0 +1,249 @@
+{
+  "filename": "FastenerManager.mcr",
+  "status": "completed",
+  "total_tokens": 33745,
+  "processing_time": 216.0397548675537,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6995,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Explicit usage of 'int bForceModelSpace = true' during tslNew.dbCreate() call. Script manipulates 3D GenBeam envelopes, Body intersections, and adds Drills to GenBeams. No Paper Space or ShopDrawing API usage detected."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "MetalPartCollectionEnt",
+            "GenBeam",
+            "FastenerAssemblyEnt"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "Fastener Assembly Catalog entries",
+            "MetalPart Collection definition containing TSL instances with FastenerGuidelines"
+          ]
+        }
+      },
+      "tokens_used": 4443,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getEntity",
+              "promptOriginal": "|Select metalparts|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "Insertion (if no execute key)",
+            "title": "Script Properties",
+            "dataSource": "Properties Palette",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dExtraRadius",
+            "type": "PropDouble",
+            "displayName": "|Extra Radius|",
+            "defaultValue": "0",
+            "inputType": "number",
+            "options": [],
+            "category": "|General|",
+            "description": "|Defines additional radius which will be added to the radius ofthe selected fastener.|"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "|Add Fastener|",
+            "handler": "|Add Fastener|",
+            "action": "Deletes existing fastener assemblies, sets map flag to recreate fasteners based on guidelines, and sets execution loops to 2.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 4245,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Manages fasteners within metal part collections by extending guidelines to intersecting timber beams and generating corresponding clearance holes or hardware assemblies.",
+          "category": "Connection/Hardware",
+          "typicalUseCase": "Used when a metal connection plate (containing sub-components with fastener guidelines) connects to timber beams, to automatically drill the necessary holes in the wood based on the fastener positions."
+        },
+        "parameters": [
+          {
+            "name": "dExtraRadius",
+            "technicalDefault": "0",
+            "businessMeaning": "Clearance tolerance added to the drill hole diameter. It defines how much larger the hole in the timber should be compared to the actual fastener diameter to account for manufacturing tolerances or wood shrinkage/swelling.",
+            "validRange": "0.0 mm to 5.0 mm",
+            "unit": "mm",
+            "affectsOutput": "Increases the diameter of the Drill entities created on the intersecting GenBeams. Drill Radius = (Fastener Main Diameter / 2) + dExtraRadius."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Drill Geometry Calculation",
+            "effect": "The value of dExtraRadius is added to the radius derived from the selected Fastener Assembly definition found in the sub-components.",
+            "cascade": [
+              "Drill Diameter"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Drill",
+            "description": "Cylindrical holes drilled through the timber beams to accommodate the fasteners. The length is determined by the intersection of the fastener guideline with the beam body.",
+            "appliedTo": "GenBeams connected to the selected MetalPartCollection."
+          },
+          {
+            "type": "FastenerAssemblyEnt",
+            "description": "3D representations of the actual hardware (screws, bolts, etc.) created along the calculated guidelines.",
+            "appliedTo": "Anchored to the script instance (MetalPartCollection context)."
+          }
+        ]
+      },
+      "tokens_used": 5508,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User launches script via command or palette.",
+          "2. [Conditional] If an execution key (catalog name) is provided, properties are loaded from that catalog. Otherwise, the Properties Palette (showDialog) is displayed.",
+          "3. Command prompts user to 'Select metalparts' (MetalPartCollectionEnt).",
+          "4. User selects one or more entities. Script loops through selection.",
+          "5. Script instance is created (dbCreate) anchored to the selected MetalPartCollectionEnt in ModelSpace. The temporary insertion instance is erased.",
+          "6. Script fetches the definition of the MetalPartCollection and extracts internal TSL components (tsls).",
+          "7. Script identifies connected GenBeams and internal 'Dummy' beams to generate intersectable Body objects.",
+          "8. Script iterates through internal TSL components to find FastenerGuidelines.",
+          "9. [Geometry Processing] For each guideline, a test volume is created to calculate intersections with Dummy Beams. Points are added/ordered to extend the guideline to the metal plate boundary.",
+          "10. [Geometry Processing] The test volume (now extended) checks for intersections with connected GenBeams. Points are added/ordered to extend the guideline through the timber.",
+          "11. The calculated polyline is added to the script instance as a FastenerGuideline.",
+          "12. [Conditional Branch - Fastener Generation] The script checks if it should create a new physical fastener (based on 'bAddFastener' flag) or use an existing one.",
+          "13. If creating new: A FastenerAssemblyEnt is instantiated at the guideline's coordinate system and anchored.",
+          "14. If updating (or immediately after creating new): The script identifies the FastenerAssemblyEnt associated with the guideline.",
+          "15. Drill entity is created using the guideline start/end points. Drill Radius = (Fastener Diameter / 2) + dExtraRadius.",
+          "16. Drill is applied to the intersecting GenBeams using addMeToGenBeamsIntersect.",
+          "17. [Validation] If no guidelines were generated, the script instance erases itself. Otherwise, execution completes."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Source",
+            "path1": {
+              "name": "Catalog Entry",
+              "steps": [
+                "User runs script with a specific catalog key (e.g., from a toolbar).",
+                "Script detects _kExecuteKey.",
+                "Properties are set using setPropValuesFromCatalog(_kExecuteKey).",
+                "Skips showDialog()."
+              ]
+            },
+            "path2": {
+              "name": "Manual Insert",
+              "steps": [
+                "User runs script without arguments.",
+                "Script executes showDialog().",
+                "User manually modifies Properties Palette (e.g., Extra Radius)."
+              ]
+            }
+          },
+          {
+            "condition": "Fastener Entity State (Managed by 'Add Fastener' Context Menu)",
+            "path1": {
+              "name": "Regenerate Fasteners",
+              "steps": [
+                "User triggers 'Add Fastener' context menu.",
+                "Script deletes all existing FastenerAssemblyEnts attached to the instance.",
+                "Script sets 'addFastener' flag in Map.",
+                "Script forces a second execution loop.",
+                "In the second loop, script instantiates new FastenerAssemblyEnts based on current guidelines and catalog definitions."
+              ]
+            },
+            "path2": {
+              "name": "Standard Update / Retain Fasteners",
+              "steps": [
+                "Script calculates geometry changes (e.g., beam moved).",
+                "Script fetches existing attached FastenerAssemblyEnts.",
+                "Script matches existing fasteners to the calculated guidelines.",
+                "Drills are updated based on the existing fastener's position and properties."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Reference Entity Validity",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "If the attached MetalPartCollectionEnt is invalid or missing, the script calls eraseInstance() immediately."
+          },
+          {
+            "check": "Guideline Count",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "If the scan definition results in zero FastenerGuidelines (numGuideline < 1), the script calls eraseInstance() as it has no function."
+          },
+          {
+            "check": "Drill Radius Calculation",
+            "errorMessage": "None (Silent skip)",
+            "recovery": "If the calculated radius (FastenerDia/2 + dExtraRadius) is <= 0, the Drill creation is skipped to avoid invalid geometry."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Drill Clearance",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changing the 'Extra Radius' property triggers a recalc, increasing the diameter of the generated Drill entities in the timber beams."
+          },
+          {
+            "action": "Regenerate Hardware Fasteners",
+            "how": "Right-click Context Menu -> 'Add Fastener'",
+            "effect": "Deletes current 3D fastener representations and re-creates them from the assembly catalog defined in the sub-components. This updates the fastener visualization if the catalog definition changed."
+          },
+          {
+            "action": "Geometry Update",
+            "how": "Grip edit / Move MetalPartCollection",
+            "effect": "Guidelines automatically recalculate intersections with beams. Drills move to match the new fastener positions."
+          }
+        ]
+      },
+      "tokens_used": 7817,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# FastenerManager.mcr\n\n## Overview\nThis script automates the management of fasteners within metal part collections. It calculates fastener paths from metal plates to intersecting timber beams, generating the necessary clearance holes and managing 3D hardware representations.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for 3D interaction with beams and metal parts. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required Entities**: A `MetalPartCollection` (containing sub-components with FastenerGuidelines) and intersecting `GenBeams`.\n- **Minimum Beam Count**: 0 (Script can be inserted without beams, but beams are required to generate drill holes).\n- **Required Settings**: Valid entries in the **Fastener Assembly Catalog**.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `FastenerManager.mcr`\n\n### Step 2: Select Metalparts\n```\nCommand Line: Select metalparts\nAction: Click on the metal connection plate or assembly (MetalPartCollection) that contains the fastener definitions.\n```\n\n### Step 3: Configure Properties (Optional)\n*If not using a predefined catalog entry, the Properties Palette will appear automatically.*\n```\nAction: Adjust the 'Extra Radius' if necessary to define clearance tolerances, then press Enter or click Close.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Extra Radius | Number | 0 | Defines additional clearance radius (in mm) added to the fastener radius. Increasing this creates larger holes in the timber to accommodate manufacturing tolerances. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Add Fastener | Deletes existing fastener assemblies and re-creates them based on the current guidelines and catalog definitions. Use this to reset the hardware if the catalog configuration has changed. |\n\n## Settings Files\n- **Source**: Fastener Assembly Catalog\n- **Location**: hsbCAD Company/Install Configuration\n- **Purpose**: Provides the geometric definitions and diameters for the 3D fasteners (screws, bolts, etc.) used to calculate hole sizes.\n\n## Tips\n- **Clearance Tolerances**: If you find the holes in the wood are too tight for the screws, increase the **Extra Radius** property (e.g., to 1.0 mm) to add 2mm total clearance to the hole diameter.\n- **Automatic Updates**: If you move the metal plate or modify the connected timber beams, the script will automatically recalculate and update the drill hole positions.\n- **Visualizing Hardware**: Use the \"Add Fastener\" context menu option if the 3D screws/bolts disappear or need to be updated to match a new catalog standard.\n\n## FAQ\n- **Q: Why didn't any holes appear?**\n  - A: Ensure the metal part collection is actually intersecting with timber GenBeams. The script only drills holes where the fastener volume physically intersects the wood.\n- **Q: Can I change the hole size later?**\n  - A: Yes. Select the script instance (or the metal plate it is attached to), open the Properties Palette, and modify the **Extra Radius** value.\n- **Q: What happens if I delete the metal plate?**\n  - A: Since the script instance is anchored to the metal part collection, deleting the plate will usually result in the script instance erasing itself as it loses its reference point."
+      },
+      "tokens_used": 4737,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,190 @@
+{
+  "filename": "hsb_CreateSoleplate.mcr",
+  "status": "completed",
+  "total_tokens": 48513,
+  "processing_time": 242.53763461112976,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9167,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script generates physical Beam objects (soleplates) and inserts Metal Parts (hsb_Anchor, hsb_Restraint) into the model. It explicitly calls tsl.dbCreate with the parameter _kModelSpace. It iterates through _Element to derive geometry for new construction parts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "The script must be run on or associated with wall elements in the 3D model.",
+          "requiredSettings": [
+            "hsb_Anchor",
+            "hsb_Restraint",
+            "hsb_SolePlate Material Table",
+            "hsb_SolePlateSplitAtDoors"
+          ]
+        }
+      },
+      "tokens_used": 6333,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9901,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9481,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initialization & Unit Setup (mm)",
+          "2. Property Input Configuration (User defines dimensions, materials, wall codes, and metal part settings via Properties Palette)",
+          "3. Entity Selection & Filtering (Iterates through _Element; identifies External, Party, and Locating Plate walls based on code filters)",
+          "4. Geometry Calculation (Calculates soleplate coordinates, heights, and T-junction overlaps based on wall geometry)",
+          "5. Soleplate Generation (Creates GenBeam objects for each calculated layer/level)",
+          "6. [Conditional] BOM Generation (Calculates totals and executes hsb_SolePlate Material Table)",
+          "7. [Conditional] Anchor Insertion (Calculates qty based on length and executes hsb_Anchor)",
+          "8. [Conditional] Restraint Insertion (Calculates qty based on wall length type and executes hsb_Restraint)",
+          "9. [Conditional] Door Splitting (Groups generated beams by Element and executes hsb_SolePlateSplitAtDoors)",
+          "10. Script Termination (eraseInstance)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Split at Doors (sSplitAtDoor)",
+            "path1": {
+              "name": "Yes",
+              "steps": [
+                "Script groups generated beams by their source Element number",
+                "Instance of 'hsb_SolePlateSplitAtDoors' is created",
+                "Beams are processed externally to split at door openings"
+              ]
+            },
+            "path2": {
+              "name": "No",
+              "steps": [
+                "Beams remain continuous",
+                "No splitting script is executed"
+              ]
+            }
+          },
+          {
+            "condition": "Restraint Scope (sShowRestraint)",
+            "path1": {
+              "name": "No (0)",
+              "steps": [
+                "Restraint quantity set to 0",
+                "hsb_Restraint script is not executed"
+              ]
+            },
+            "path2": {
+              "name": "External (1)",
+              "steps": [
+                "Quantity calculated based on dLenghtExternal",
+                "hsb_Restraint script executed with specific qty"
+              ]
+            },
+            "path3": {
+              "name": "All (2)",
+              "steps": [
+                "Quantity calculated based on dTotalLength",
+                "hsb_Restraint script executed with specific qty"
+              ]
+            }
+          },
+          {
+            "condition": "Insert Anchors (sShowAnchor)",
+            "path1": {
+              "name": "Yes",
+              "steps": [
+                "Calculate total quantity (dTotalLength / dAnchorCenters)",
+                "Execute hsb_Anchor script with calculated dimensions and qty"
+              ]
+            },
+            "path2": {
+              "name": "No",
+              "steps": [
+                "Skip hsb_Anchor generation"
+              ]
+            }
+          },
+          {
+            "condition": "Locating Plate Filter (psLocatingPlateFilter)",
+            "path1": {
+              "name": "Codes Specified",
+              "steps": [
+                "Script checks wall code against filter list",
+                "Locating plate (Width Locating Plate) generated only if code matches"
+              ]
+            },
+            "path2": {
+              "name": "Empty/All",
+              "steps": [
+                "Locating plate generated for all processed walls"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Length properties (Min/Max)",
+            "errorMessage": "Implicitly fails if segments fall outside range",
+            "recovery": "Adjust 'Min Length' and 'Max Length' properties in OPM to match wall segment sizes"
+          },
+          {
+            "check": "Wall Codes",
+            "errorMessage": "Script ignores walls not matching 'Code External Walls' or 'Code Party Walls'",
+            "recovery": "Update 'psExtType' and 'psIntType' properties to match the specific codes used in the project"
+          },
+          {
+            "check": "Sub-script Availability",
+            "errorMessage": "Generation fails if hsb_Anchor, hsb_Restraint, or hsb_SolePlateSplitAtDoors are missing from search path",
+            "recovery": "Ensure required TSL scripts are installed in the hsbCAD TSL folder"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Soleplate Configuration",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changes dimensions, materials, wall codes, or toggles metal parts. Right-click 'Recalculate' updates the model."
+          },
+          {
+            "action": "Edit Generated Geometry",
+            "how": "Direct Grip/Edit on generated Beams",
+            "effect": "Modifies the individual soleplate beam geometry manually."
+          },
+          {
+            "action": "Edit Metal Parts",
+            "how": "Select Anchor or Restraint entities",
+            "effect": "Metal parts are independent TSL instances; they can be modified via their own properties or script logic."
+          }
+        ]
+      },
+      "tokens_used": 8986,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_CreateSoleplate\n\n## Overview\nThis script automates the generation of timber soleplates for wall elements. It handles geometry calculation for straight walls and T-junctions, applies wall code filters, and optionally inserts metalwork anchors and restraints based on user-defined parameters.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script generates 3D physical beams and metal parts. |\n| Paper Space | No | Not applicable for 2D drawing generation. |\n| Shop Drawing | No | This is a model generation script. |\n\n## Prerequisites\n- **Required Entities**: An existing Wall Element (`ElementWall`) must exist in the model.\n- **Minimum Beam Count**: 0 (Script derives geometry from the Wall Element).\n- **Required Settings Files**:\n  - `hsb_Anchor` (script)\n  - `hsb_Restraint` (script)\n  - `hsb_SolePlate Material Table` (script/settings)\n  - `hsb_SolePlateSplitAtDoors` (script)\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the AutoCAD command line.\n2. Navigate to the folder containing `hsb_CreateSoleplate.mcr` and select it.\n3. Alternatively, assign the script to a toolbar button or menu for quick access.\n\n### Step 2: Select Wall Element\n```\nCommand Line: Select Element:\nAction: Click on the Wall Element in the 3D model where you wish to generate soleplates.\n```\n\n### Step 3: Configure Parameters\n```\nAction: The script attaches to the element. Select the script instance (or the element) and open the Properties Palette (Ctrl+1).\nAction: Adjust wall codes, dimensions, and metalwork settings as described below.\n```\n\n### Step 4: Recalculate\n```\nAction: Right-click on the script instance or the Wall Element.\nMenu: Select \"Recalculate\" from the context menu.\nResult: The script generates the beams and metal parts based on your settings.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Code External Walls** | String | *Project Default* | The wall code identifier used to filter external walls for soleplate generation. |\n| **Code Party Walls** | String | *Project Default* | The wall code identifier used to filter party walls. |\n| **Width Soleplate** | Double | *e.g., 45mm* | The width (thickness) of the soleplate beam. |\n| **Height Soleplate** | Double | *e.g., 100mm* | The height (depth) of the soleplate beam. |\n| **Width Locating Plate** | Double | *e.g., 45mm* | The width of the locating plate (if applicable). |\n| **Locating Plate Filter** | String | *Empty/All* | Comma-separated list of wall codes. If specified, locating plates are only generated for walls matching these codes. |\n| **Min Length** | Double | *e.g., 50mm* | Minimum length of a soleplate segment. Segments shorter than this may be ignored or handled differently. |\n| **Max Length** | Double | *e.g., 6000mm* | Maximum allowed length for a continuous soleplate segment. |\n| **Anchor Centers** | Double | *e.g., 1200mm* | Spacing distance between anchor metal parts. |\n| **Insert Anchors** | Boolean/Option | Yes/No | Toggles the insertion of the `hsb_Anchor` metal part. |\n| **Restraint Scope** | Integer (0,1,2) | 0 (None) | Determines where restraints are placed: <br>0 = No Restraints<br>1 = External Walls Only<br>2 = All Walls |\n| **Split at Doors** | Boolean/Option | No | If Yes, executes `hsb_SolePlateSplitAtDoors` to split soleplates at door openings. |\n| **Material** | String | *Timber* | Material assignment for the generated beams. |\n| **Layer** | String | *Soleplates* | The CAD layer on which generated beams are placed. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Recalculate** | Re-runs the script. Updates geometry, dimensions, and metal parts based on current Properties Palette settings or changes to the wall geometry. |\n| **Erase** | Removes the script instance and typically deletes the generated geometry associated with it. |\n\n## Settings Files\n- **hsb_SolePlate Material Table**\n  - **Purpose**: Generates a Bill of Materials (BOM) or schedule for the created soleplates.\n- **hsb_Anchor**\n  - **Purpose**: Defines the geometry and properties of the anchor metal parts inserted by the script.\n- **hsb_Restraint**\n  - **Purpose**: Defines the geometry and properties of the restraint metal parts.\n- **hsb_SolePlateSplitAtDoors**\n  - **Purpose**: A sub-script used to cut soleplate beams where door openings occur in the wall.\n\n## Tips\n- **Wall Codes**: Ensure your Wall Elements in the model have codes (e.g., \"EXT\", \"PARTY\") that exactly match the codes entered in the script properties, or no plates will be generated for those walls.\n- **T-Junctions**: The script automatically calculates overlaps and intersections at wall T-junctions. Ensure your wall geometry is clean and joined correctly in the model before running.\n- **Performance**: If running on large assemblies, consider turning off \"Split at Doors\" or metal part insertion initially to generate the basic timber structure faster.\n- **Unit Independence**: The script handles internal unit conversions, but ensure you input dimensions in the project's current working units (usually mm for hsbCAD).\n\n## FAQ\n- **Q: Why are no soleplates appearing when I recalculate?**\n  - **A**: Check the \"Code External Walls\" and \"Code Party Walls\" properties. If your wall codes in the model do not match these strings exactly, the script filters them out. Also, check that the wall length falls within the \"Min Length\" and \"Max Length\" range.\n\n- **Q: Why are my anchors not showing up?**\n  - **A**: Verify that \"Insert Anchors\" is enabled. Additionally, ensure the `hsb_Anchor.mcr` script exists in your TSL search path.\n\n- **Q: Can I modify the plates after generation?**\n  - **A**: Yes, you can use standard AutoCAD/hsbCAD editing commands (grips, properties) on the generated beams, but re-running the \"Recalculate\" command on the script will overwrite manual changes to match the script logic again.\n\n- **Q: What does \"Restraint Scope - External\" do?**\n  - **A**: It calculates the quantity of restraints based on the total length of walls identified as \"External\" and inserts metal parts only along those walls."
+      },
+      "tokens_used": 4645,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,222 @@
+{
+  "filename": "HSB_G-GetEntitySubMapX.mcr",
+  "status": "completed",
+  "total_tokens": 23932,
+  "processing_time": 393.5981333255768,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "21.06.2018",
+            "author": "DR",
+            "changes": "Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3867,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly uses `_kModelSpace` in the `tslNew.dbCreate` call. It interacts with general `Entity` objects via `PrEntity` selection and `ent.subMapX()`. There are no indicators such as `sd_` prefixes, `_Viewport` checks, or `#Type E` logic that suggest ShopDrawing or PaperSpace usage."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Entity (Any valid AutoCAD entity supported by hsbCAD)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1768,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Sentect entities|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "PropertyDialog",
+            "trigger": "_bOnInsert (if no execute key)",
+            "title": null,
+            "dataSource": "Script Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sSubMapXName",
+            "type": "PropString",
+            "displayName": "SubMapX",
+            "defaultValue": "|SubMapX name|",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4854,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Extracts internal non-graphical data (SubMapX) stored on an entity and exports it to a .dxx file for debugging or data inspection.",
+          "category": "Utility/DataExport",
+          "typicalUseCase": "Used by developers or advanced users to visualize the internal variable states or metadata stored within a specific element when troubleshooting complex scripts."
+        },
+        "parameters": [
+          {
+            "name": "sSubMapXName",
+            "technicalDefault": "|SubMapX name|",
+            "businessMeaning": "The unique identifier or key for the specific internal data map (SubMapX) attached to the entity that the user wishes to inspect.",
+            "validRange": "Any string value that corresponds to an existing SubMapX key on the target entity (e.g., specific script names or functional identifiers).",
+            "unit": "Text",
+            "affectsOutput": "Dictates which specific data set is retrieved. Only the map matching this name is written to the output file; if no match is found, the script reports an error and produces no file."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "FileExport",
+            "description": "A .dxx text file (formatted map) containing the key-value pairs of the requested SubMapX, saved to the current DWG directory.",
+            "appliedTo": "Local File System"
+          }
+        ]
+      },
+      "tokens_used": 4006,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched via Insert command or Execute Key",
+          "Check for valid Execute Key: if found, load catalog properties; if not, display Property Dialog for user to input 'SubMapX' name",
+          "Prompt user to select entities ('Select entities')",
+          "Loop through each selected entity",
+          "Create a new instance of the script for the specific entity (cloning parameters and coordinates)",
+          "Erase the original 'installer' instance",
+          "New instance validates that the linked entity is valid",
+          "Instance attempts to retrieve the SubMapX data map using the name provided in properties",
+          "If data is found, write the map content to a .dxx file in the current DWG directory (naming convention: subMapX-[Handle].dxx)",
+          "Report success or failure to the command line",
+          "Erase the processing instance (script does not remain in the drawing)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execute Key Availability",
+            "path1": {
+              "name": "Catalog Mode",
+              "steps": [
+                "Detect _kExecuteKey",
+                "Load properties directly from the specified catalog entry",
+                "Proceed to entity selection"
+              ]
+            },
+            "path2": {
+              "name": "Manual Mode",
+              "steps": [
+                "Detect missing or invalid _kExecuteKey",
+                "Show Properties Dialog",
+                "User enters SubMapX name",
+                "Save current settings to '_LastInserted' catalog",
+                "Proceed to entity selection"
+              ]
+            }
+          },
+          {
+            "condition": "SubMapX Existence on Entity",
+            "path1": {
+              "name": "Export Successful",
+              "steps": [
+                "SubMapX length > 0",
+                "Construct file path using DWG directory and Entity Handle",
+                "Write map data to .dxx file",
+                "Display success message with file path"
+              ]
+            },
+            "path2": {
+              "name": "Export Failed",
+              "steps": [
+                "SubMapX length == 0",
+                "Display error message 'No valid SubMapX found'",
+                "Terminate without creating a file"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Script checks `insertCycleCount() > 1` to prevent recursive loops; if true, it erases itself immediately."
+          },
+          {
+            "check": "Entity Input Count",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Script checks `_Entity.length() != 1`. If the spawned instance does not have exactly one entity attached, it erases itself."
+          },
+          {
+            "check": "Entity Validity",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Script checks `ent.bIsValid()`. If the attached entity is invalid or deleted, the script erases itself."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 5364,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_G-GetEntitySubMapX.mcr\n\n## Overview\nThis utility script extracts internal non-graphical data (SubMapX) from a selected entity and saves it to a text file. It is primarily used for debugging or inspecting hidden data structures attached to hsbCAD elements.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script runs in Model Space only. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required entities**: Any valid hsbCAD entity (e.g., Beam, Wall, or Custom Element) that contains internal SubMapX data.\n- **Minimum beam count**: 0 (Works on any entity type).\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the AutoCAD command line.\n2. Select `HSB_G-GetEntitySubMapX.mcr` from the list.\n3. The script instance is created, and the Properties palette (OPM) will open automatically.\n\n### Step 2: Configure Parameters\n1. In the Properties Palette, locate the **SubMapX** parameter.\n2. Enter the exact name (key) of the internal data map you wish to extract.\n   - *Note: This value is case-sensitive and must match the internal name used by the script that created the data.*\n\n### Step 3: Select Entity\n1. The command line will prompt: `Select entities`\n2. Click on the specific object in your drawing that holds the data.\n3. The script will process the selection.\n\n### Step 4: Locate Output\n1. If data matching the name is found, a `.dxx` file is created in the same folder as your current DWG.\n2. The filename format is: `subMapX-[EntityHandle].dxx`.\n3. The script instance will automatically erase itself from the drawing upon completion.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| SubMapX | Text | \\|SubMapX name\\| | The unique identifier (key) for the specific internal data map attached to the entity that you wish to inspect. |\n\n## Right-Click Menu Options\nThere are no specific right-click menu options added by this script.\n\n## Settings Files\n- No specific settings files are required for this script.\n\n## Tips\n- **Script Behavior**: This script is \"fire and forget.\" It creates the export file and then deletes itself from the drawing to avoid clutter.\n- **Finding the File**: Check the folder where your DWG is saved. The file name includes the entity handle to ensure it is unique.\n- **Usage**: This is an advanced tool. You generally need to know the specific \"SubMapX name\" defined by a developer or another script to get a result. If the name does not match, the export will fail.\n\n## FAQ\n\n- **Q: The script disappeared after I selected an entity. Is that normal?**\n  - A: Yes. The script is designed to perform the export and then automatically erase itself from the drawing.\n\n- **Q: Where can I find the exported data?**\n  - A: The script creates a `.dxx` file in the exact same directory where your current DWG drawing is saved.\n\n- **Q: I get a \"No valid SubMapX found\" message. What does that mean?**\n  - A: This means the entity you selected either does not have internal data attached, or the \"SubMapX\" name you entered in the Properties panel does not match the key stored on the entity.\n\n- **Q: What should I enter in the \"SubMapX\" property?**\n  - A: This depends entirely on what data you are looking for. It is often the name of a specific script or function (e.g., \"CalculationData\"). Consult the documentation for the script that created the entity to find the correct key."
+      },
+      "tokens_used": 4073,
+      "error": null
+    }
+  }
+}

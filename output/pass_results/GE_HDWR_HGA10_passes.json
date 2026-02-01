@@ -1,0 +1,296 @@
+{
+  "filename": "GE_HDWR_HGA10.mcr",
+  "status": "completed",
+  "total_tokens": 34577,
+  "processing_time": 298.83498764038086,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5121,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script constructs 3D geometry using Body() and PLine(), assigns material and model, and uses getBeam() for selection. No references to Viewport, sd_ prefixes, or paper space constructs."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4782,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getBeam",
+              "promptOriginal": "\n Select beam for back of connector.",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getBeam",
+              "promptOriginal": "\n Select beam for bottom of connector.",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "pFace",
+            "type": "PropString",
+            "displayName": "Connector Face",
+            "defaultValue": "Front",
+            "inputType": "dropdown",
+            "options": [
+              "Front",
+              "Back"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "pNailInfo",
+            "type": "PropString",
+            "displayName": "Nail Info",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4855,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates a 3D parametric model and CNC data for the Simpson Strong-Tie HGA10 hurricane tie connector, joining two perpendicular beams.",
+          "category": "Hardware/Connector",
+          "typicalUseCase": "Structural framing connections where a rim joist or header meets a floor joist or ledger, specifically requiring uplift resistance provided by the HGA10 bracket."
+        },
+        "parameters": [
+          {
+            "name": "pFace",
+            "technicalDefault": "Front",
+            "businessMeaning": "Determines the orientation of the bracket relative to the beams (Left/Right hand). Specifies which side of the bottom beam the vertical 'back plate' of the connector attaches to.",
+            "validRange": "Front, Back",
+            "unit": "Selection",
+            "affectsOutput": "Flips the geometry of the connector along the primary axis (vcX), effectively mirroring the part to the opposite side of the connection corner."
+          },
+          {
+            "name": "pNailInfo",
+            "technicalDefault": "",
+            "businessMeaning": "Custom text annotation for shop drawings to specify nailing schedules or special installation instructions not covered by standard BOM data.",
+            "validRange": "Alphanumeric String",
+            "unit": "Text",
+            "affectsOutput": "Updates the 'NailInfo' field in the Map object used for generating labels and dimensions in shop drawing layouts (e.g., '10d @ 2\" O.C.')."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Connector Face (pFace) changes",
+            "effect": "The insertion point is recalculated to snap to the opposite side of the beams, and the geometry is mirrored.",
+            "cascade": [
+              "_PtG[0]",
+              "vcX",
+              "vcMove"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "3D Body (MetalPart)",
+            "description": "A composite 3D body representing the galvanized steel bracket, consisting of a back plate, bottom plate, and angled gusset. Includes modeled through-holes for fasteners.",
+            "appliedTo": "Parent Element (The assembly containing the two selected beams)"
+          },
+          {
+            "type": "Hardware Component (BOM)",
+            "description": "Catalog entry for Simpson Strong-Tie HGA10 with Article Number K060523-00-0000400, assigned to the element for material lists.",
+            "appliedTo": "Parent Element"
+          }
+        ]
+      },
+      "tokens_used": 6562,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Initialization: Define units (Inch) and Properties (pFace, pNailInfo).",
+          "Check Insertion State: Determine if script is running for the first time (_bOnInsert).",
+          "Insert Cycle Check: If insertCycleCount > 1, erase instance and exit to prevent duplication.",
+          "User Input 1: Prompt user to select beam for 'back of connector' (stored as _Beam[0]).",
+          "User Input 2: Prompt user to select beam for 'bottom of connector' (stored as _Beam[1]).",
+          "Initialization of Point: Set initial insertion point (_PtG[0]) to the origin of the first beam (_Pt0).",
+          "Validation: Verify that exactly 2 beams were selected.",
+          "Context Setup: Identify parent element from beams and define local coordinate vectors (vcX, vcY, vcZ).",
+          "Orientation Logic: Check 'Connector Face' property to determine if coordinate vectors need flipping.",
+          "Geometry Construction: Generate PLine profiles for Back Plate, Bottom Plate, and Angled Extrusion.",
+          "Body Creation: Extrude profiles and merge into a single connector Body (bdConnector).",
+          "Subtractions: Drill holes into the body using cylindrical subtractions.",
+          "Visualization: Assign Display representations (Top, Model) and draw geometry.",
+          "Data Output: Assign Material ('Simpson HGA10'), Model, and Hardware Component (BOM data).",
+          "Map Export: Store point, vector, and nail info in _Map for shop drawings."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count check",
+            "path1": {
+              "name": "Re-insertion Detected",
+              "steps": [
+                "Erase current script instance",
+                "Return immediately (Exit)"
+              ]
+            },
+            "path2": {
+              "name": "First Run",
+              "steps": [
+                "Proceed to beam selection prompts"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Selection Count",
+            "path1": {
+              "name": "Insufficient Beams (< 2)",
+              "steps": [
+                "Report Error: 'Less than 2 beams selected.'",
+                "Erase script instance",
+                "Return immediately (Exit)"
+              ]
+            },
+            "path2": {
+              "name": "Valid Selection (2 Beams)",
+              "steps": [
+                "Assign beams to bm0 and bm1",
+                "Proceed to geometry generation"
+              ]
+            }
+          },
+          {
+            "condition": "Connector Face Property (pFace)",
+            "path1": {
+              "name": "Back",
+              "steps": [
+                "Invert vector vcX (vcX = -vcX)",
+                "Invert move vector vcMove (vcMove = -vcMove)",
+                "Recalculate insertion point and geometry on opposite side"
+              ]
+            },
+            "path2": {
+              "name": "Front (Default)",
+              "steps": [
+                "Keep standard vectors (vcX = _Y0, vcMove = _Y0)",
+                "Generate geometry on default side"
+              ]
+            }
+          },
+          {
+            "condition": "Property Change Trigger (_kNameLastChangedProp)",
+            "path1": {
+              "name": "Point (_PtG0) or Connector Face Changed",
+              "steps": [
+                "Snap _PtG[0] to closest point on line lnSnap",
+                "Regenerate geometry"
+              ]
+            },
+            "path2": {
+              "name": "Other Property Changed (e.g., NailInfo)",
+              "steps": [
+                "Skip snapping logic",
+                "Regenerate geometry/Update attributes"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Number of selected beams",
+            "errorMessage": "\n Less than 2 beams selected.",
+            "recovery": "User must restart the script and ensure they select two valid beams."
+          },
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": null,
+            "recovery": "Automatic script cleanup (eraseInstance) handles this without user intervention."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Flip Connector Orientation",
+            "how": "OPM Property 'Connector Face' (Dropdown: Front/Back)",
+            "effect": "Inverts the X-axis vector, moving the connector to the opposite side of the beam intersection and mirroring the geometry."
+          },
+          {
+            "action": "Update Shop Drawing Annotations",
+            "how": "OPM Property 'Nail Info' (Text Field)",
+            "effect": "Updates the 'NailInfo' string in the Map object, which can be used for labels or dimensions in layouts."
+          },
+          {
+            "action": "Move Connector",
+            "how": "Grip Edit (Drag _PtG0 Point)",
+            "effect": "The connector drags along the beam. The script includes a snap logic to constrain the movement to a specific axis (lnSnap) relative to the beams."
+          },
+          {
+            "action": "Update Geometry via Beam Movement",
+            "how": "Move/Rotate the connected beams in ModelSpace",
+            "effect": "Since the script references dynamic beam properties (_Pt0, _X0, _Y0, _Z0), the connector geometry and insertion point will automatically update to follow the beams."
+          }
+        ]
+      },
+      "tokens_used": 7682,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_HDWR_HGA10.mcr\n\n## Overview\nGenerates a 3D parametric model and CNC data for the Simpson Strong-Tie HGA10 hurricane tie connector. It joins two perpendicular beams, automatically creating the metal part geometry and assigning material data for manufacturing lists.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script constructs 3D geometry and requires beam selection. |\n| Paper Space | No | This script is for 3D modeling only. |\n| Shop Drawing | No | However, coordinate and nail info data is exported for potential use in layouts. |\n\n## Prerequisites\n- **Required Entities**: 2 `GenBeam` entities positioned perpendicularly (e.g., a rim joist and a floor joist).\n- **Minimum Beam Count**: 2.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n```\nCommand Line: TSLINSERT\nAction: Browse to the script location, select GE_HDWR_HGA10.mcr, and click Open.\n```\n\n### Step 2: Select Back Beam\n```\nCommand Line: Select beam for back of connector.\nAction: Click on the beam that will serve as the vertical backing (e.g., the rim joist or header).\n```\n\n### Step 3: Select Bottom Beam\n```\nCommand Line: Select beam for bottom of connector.\nAction: Click on the beam that will serve as the horizontal bottom support (e.g., the ledger or joist).\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Connector Face | Dropdown | Front | Determines the orientation of the bracket relative to the beams. Select \"Back\" to flip the connector to the opposite side of the corner. |\n| Nail Info | Text | [Empty] | Allows entry of custom text for shop drawings (e.g., \"10d Common @ 6\\\" o.c.\"). This text is exported to the element Map for labels. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not add custom items to the right-click context menu. Modify parameters via the Properties Palette. |\n\n## Settings Files\n- **Filename**: None.\n- **Location**: N/A.\n- **Purpose**: N/A (The script uses internal dimensions and standard catalog mapping for the Simpson HGA10).\n\n## Tips\n- **Flipping the Bracket**: If the connector appears on the wrong side of the connection, select the script instance and change the **Connector Face** property in the Properties Palette from \"Front\" to \"Back\".\n- **Moving the Connector**: Click and drag the insertion point grip to slide the connector along the beam. The movement is constrained to the beam's axis.\n- **Dynamic Updates**: If you move or stretch the connected beams in Model Space, the connector geometry will automatically update to follow the new beam positions.\n\n## FAQ\n- **Q: Can I use this on non-perpendicular beams?**\n  - A: The script is designed for perpendicular connections (90 degrees). Using it on acute or obtuse angles may result in incorrect geometry.\n- **Q: How do I specify nails for the Bill of Materials (BOM)?**\n  - A: The script generates the hardware part (HGA10) automatically. Use the **Nail Info** property to add text notes for the shop drawings, but ensure your BOM settings handle hardware quantities separately.\n- **Q: The script erased itself immediately after running. Why?**\n  - A: This likely happened because you did not select two valid beams. Ensure you click two distinct `GenBeam` entities during the prompts."
+      },
+      "tokens_used": 5575,
+      "error": null
+    }
+  }
+}

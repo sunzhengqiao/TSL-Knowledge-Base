@@ -1,0 +1,213 @@
+{
+  "filename": "hsb_CleanupOverlapWithRipStud.mcr",
+  "status": "completed",
+  "total_tokens": 25912,
+  "processing_time": 137.78374075889587,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "13.05.2010",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.2",
+            "date": "17.02.2011",
+            "author": null,
+            "changes": "Extended functionality to rip King studs sticking out of the wall when opening is close to a wall (will not rip cripples)"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5564,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity with ElementWallSF filter for selection. It manipulates Beam objects directly (transformBy, setD, dbErase) retrieved via Element.beam(). Contains no ShopDrawing API calls (sd_*) or Viewport handling."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWallSF"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing Wall Elements",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3758,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select one or More Elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "Unknown (showDialogOnce called but definition not in snippet)",
+            "trigger": "Insertion (_bOnInsert)",
+            "title": null,
+            "dataSource": "Unknown",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3234,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically trims or removes King Studs that overlap with other wall members or protrude beyond the wall boundary, specifically handling studs close to wall ends or intersecting members.",
+          "category": "Framing",
+          "typicalUseCase": "Used after wall generation to correct framing geometry around openings, particularly when openings are positioned near the ends of walls, ensuring King Studs do not conflict with the main wall structure."
+        },
+        "parameters": [],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "GeometryModification",
+            "description": "Adjusts the length (dD) and position (transformBy) of King Studs to resolve overlaps. If a King Stud lies entirely outside the wall profile, it is erased (dbErase). If it partially protrudes, it is shortened and centered relative to the interference.",
+            "appliedTo": "King Stud beams identified as modules (Beam.type()==_kKingStud) within the selected Wall Elements"
+          }
+        ]
+      },
+      "tokens_used": 3061,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script insertion initiated.",
+          "Check 'insertCycleCount' for duplicate insert protection.",
+          "Check '_kExecuteKey'; if empty, display initial configuration dialog.",
+          "Prompt user to select one or more Wall Elements (ElementWallSF).",
+          "Validate selection: if no elements selected, erase script instance and exit.",
+          "Begin loop through each selected Wall Element.",
+          "Retrieve Element geometry (Coordinate system, start/mid/end points).",
+          "Identify vertical beams within the element.",
+          "Classify beams into 'Modules' (King Studs) and 'Valids' (Standard members).",
+          "Begin loop through 'Modules' (King Studs).",
+          "Check for intersection with 'Valids' (Standard members).",
+          "If intersection detected: Shift and shorten the standard member to resolve overlap.",
+          "Check for intersection with Wall End zones (outside the wall profile).",
+          "[Branch] If Module is fully outside Wall End zone: Mark for erasure.",
+          "[Branch] If Module is partially outside Wall End zone: Shorten and re-center Module inside the wall.",
+          "Process erasure queue: Delete marked beams from database.",
+          "End loop.",
+          "Erase script instance from drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Beam classification (Module vs Valid)",
+            "path1": {
+              "name": "Module (King Stud)",
+              "steps": [
+                "Identified if 'bm.module()' is not empty AND 'bm.type()' equals '_kKingStud'.",
+                "Subject to boundary checking (erasure or trimming).",
+                "Used as a reference to push other beams away."
+              ]
+            },
+            "path2": {
+              "name": "Valid (Standard Beam)",
+              "steps": [
+                "Identified if it does not meet Module criteria.",
+                "If it intersects a Module, it is transformed (moved) and resized (shortened).",
+                "Not subject to boundary erasure logic."
+              ]
+            }
+          },
+          {
+            "condition": "Module location relative to Wall End ('ppOutside')",
+            "path1": {
+              "name": "Fully Outside",
+              "steps": [
+                "Intersection area with 'Outside Zone' is approximately equal to total beam area.",
+                "Beam added to 'bmToErase' array.",
+                "Beam is deleted from database."
+              ]
+            },
+            "path2": {
+              "name": "Partially Outside / Protruding",
+              "steps": [
+                "Intersection area is less than total beam area.",
+                "Calculate 'dWidthToReduce' based on protrusion.",
+                "Reduce beam length ('setD').",
+                "Move beam ('transformBy') to center remaining length within wall."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "User selects at least one ElementWallSF.",
+            "errorMessage": "None (Script simply terminates).",
+            "recovery": "User must run the script again and select valid wall elements."
+          },
+          {
+            "check": "Insertion cycle count.",
+            "errorMessage": "None (Internal safety).",
+            "recovery": "N/A (Prevents recursive execution)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Run script again on modified walls",
+            "how": "Command line / Toolbar",
+            "effect": "Re-evaluates the wall geometry. Useful if changes were made to the wall or openings that re-introduced overlaps."
+          }
+        ]
+      },
+      "tokens_used": 6006,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_CleanupOverlapWithRipStud.mcr\n\n## Overview\nThis script automatically cleans up King Studs within Wall Elements by trimming overlaps and removing studs that protrude outside the wall profile. It is particularly useful for correcting framing when wall openings are positioned close to the wall ends.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in the model where wall elements are located. |\n| Paper Space | No | Not supported for layouts or viewports. |\n| Shop Drawing | No | This script works on 3D model elements, not 2D drawings. |\n\n## Prerequisites\n- **Required Entities**: Wall Elements (`ElementWallSF`) containing King Studs.\n- **Minimum beam count**: 0 (The script scans entire elements, not specific collections of beams).\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command:** `TSLINSERT` → Select `hsb_CleanupOverlapWithRipStud.mcr`\n\n### Step 2: Select Wall Elements\n```\nCommand Line: Select one or More Elements\nAction: Click on the wall elements in the drawing that need cleanup. Press Enter when selection is complete.\n```\n\n### Step 3: Automatic Processing\nOnce the elements are selected, the script will automatically:\n1. Identify King Studs (Modules) within the walls.\n2. Check if King Studs intersect with standard wall members (Valids).\n3. Trim or shift standard members to resolve overlaps.\n4. Check if King Studs protrude beyond the wall ends.\n5. **Remove** King Studs that are completely outside the wall.\n6. **Rip/Trim** King Studs that are partially outside, shortening them and centering them within the wall boundary.\n\n*Note: The script instance will automatically erase itself from the drawing after processing is finished.*\n\n## Properties Panel Parameters\nThis script does not expose any editable parameters in the Properties Palette.\n\n## Right-Click Menu Options\nThis script does not add specific options to the entity right-click menu.\n\n## Settings Files\nNo external settings files are used by this script.\n\n## Tips\n- **Run after Wall Generation:** Use this script immediately after generating walls with openings to ensure framing is clean before detailing.\n- **King Stud Specifics:** The script specifically targets King Studs. It does not trim or remove cripple studs.\n- **Re-running:** Since the script deletes itself after running, simply run the command again if you modify wall geometry and need to re-apply the cleanup.\n- **Visual Check:** After running, visually inspect wall ends near openings to ensure the King Studs have been trimmed correctly to the wall boundary.\n\n## FAQ\n- **Q: Can I use this on roof beams or floors?**\n  - A: No, this script is designed specifically for Wall Elements (`ElementWallSF`).\n\n- **Q: Why did the script disappear after I used it?**\n  - A: This is normal behavior. The script is designed to run once, modify the geometry, and then delete itself to keep the drawing clean.\n\n- **Q: Will this delete cripple studs?**\n  - A: No, the logic specifically excludes cripples. It only acts on King Studs that overlap or protrude.\n\n- **Q: What happens if a King Stud overlaps a regular stud?**\n  - A: The regular stud will be moved (transformed) and shortened to resolve the conflict with the King Stud."
+      },
+      "tokens_used": 4289,
+      "error": null
+    }
+  }
+}

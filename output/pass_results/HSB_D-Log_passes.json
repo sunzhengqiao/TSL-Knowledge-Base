@@ -1,0 +1,298 @@
+{
+  "filename": "HSB_D-Log.mcr",
+  "status": "completed",
+  "total_tokens": 56728,
+  "processing_time": 271.50522804260254,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "24.09.2012",
+            "author": "AS",
+            "changes": "First revision"
+          },
+          {
+            "version": "1.01",
+            "date": "27.09.2012",
+            "author": "AS",
+            "changes": "Add angle"
+          },
+          {
+            "version": "1.02",
+            "date": "09.10.2012",
+            "author": "AS",
+            "changes": "Add Notch dimension"
+          },
+          {
+            "version": "1.03",
+            "date": "24.10.2012",
+            "author": "AS",
+            "changes": "Support Notch dimensions if Notch tsl is v2.00 or higher."
+          },
+          {
+            "version": "1.04",
+            "date": "07.05.2015",
+            "author": "AS",
+            "changes": "Add tools as dimension object. Drills, Aris & Doves are currently supported (FogBugzId 1266)."
+          },
+          {
+            "version": "1.05",
+            "date": "03.07.2018",
+            "author": "DR",
+            "changes": "Added use of HSB_G-FilterGenBeams.mcr"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": [
+          "HSB_G-FilterGenBeams.mcr",
+          "HSB_L-Notch.mcr"
+        ]
+      },
+      "tokens_used": 9010,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script calls getViewport() during insert, processes _Viewport array, calculates CoordSys ms2ps and transforms dimensions using ms2ps, specifically mentions 'Offset in paperspace units' property."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Layout with a Viewport looking at a model",
+          "requiredSettings": [
+            "HSB_G-FilterGenBeams.mcr (for filter definitions)"
+          ]
+        }
+      },
+      "tokens_used": 7809,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10494,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Automatically creates dimensions for log wall elements (Perimeter, Notches, or Tools) in Paper Space layouts, intelligently filtering beams and handling viewport scaling.\",\n    \"category\": \"ShopDrawing/Annotation\",\n    \"typicalUseCase\": \"Generating clean, automated wall outlines and machining dimensions on 2D production drawings, ensuring dimensions remain correctly scaled regardless of the viewport zoom level.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"genBeamFilterDefinition\",\n      \"technicalDefault\": \"\\\"\\\"\",\n      \"businessMeaning\": \"Selects a predefined catalog entry (from HSB_G-FilterGenBeams) to filter which specific beams within the wall are included in the dimension calculation.\",\n      \"validRange\": \"List of available filter catalog names\",\n      \"unit\": \"selection\",\n      \"affectsOutput\": \"Filters the beam collection used to generate the perimeter envelope or feature list.\"\n    },\n    {\n      \"name\": \"sFilterBC\",\n      \"technicalDefault\": \"\\\"\\\"\",\n      \"businessMeaning\": \"Excludes specific beams based on their Beam Code (e.g., excluding 'ST' studs or 'BLK' blocks).\",\n      \"validRange\": \"Semicolon-separated string of codes (e.g., \\\"ST;RL\\\")\",\n      \"unit\": \"string\",\n      \"affectsOutput\": \"Beams matching these codes are ignored in the dimension geometry.\"\n    },\n    {\n      \"name\": \"sFilterLabel\",\n      \"technicalDefault\": \"\\\"\\\"\",\n      \"businessMeaning\": \"Excludes beams or sheets that match specific Label names.\",\n      \"validRange\": \"Semicolon-separated string of labels\",\n      \"unit\": \"string\",\n      \"affectsOutput\": \"Removes labeled entities from the dimension calculation.\"\n    },\n    {\n      \"name\": \"sFilterMaterial\",\n      \"technicalDefault\": \"\\\"\\\"\",\n      \"businessMeaning\": \"Excludes elements made of specific Materials (e.g., 'C24', 'GL24h').\",\n      \"validRange\": \"Semicolon-separated string of material names\",\n      \"unit\": \"string\",\n      \"affectsOutput\": \"Elements of these materials are omitted from dimensioning.\"\n    },\n    {\n      \"name\": \"sFilterHsbID\",\n      \"technicalDefault\": \"\\\"\\\"\",\n      \"businessMeaning\": \"Excludes elements with specific hsbID identifiers.\",\n      \"validRange\": \"Semicolon-separated string of IDs\",\n      \"unit\": \"string\",\n      \"affectsOutput\": \"Specific elements are removed from calculation.\"\n    },\n    {\n      \"name\": \"sDimObject\",\n      \"technicalDefault\": \"Perimeter\",\n      \"businessMeaning\": \"Selects the primary feature to dimension: the outer wall envelope, individual Notches, or machining Tools.\",\n      \"validRange\": \"Perimeter, Notches, Tools\",\n      \"unit\": \"selection\",\n      \"affectsOutput\": \"Switches logic between calculating wall outline, iterating notch TSLs, or iterating tool TSLs.\"\n    },\n    {\n      \"name\": \"sWithAngle\",\n      \"technicalDefault\": \"Yes\",\n      \"businessMeaning\": \"Toggles the display of angular dimensions (degrees) for angled wall segments.\",\n      \"validRange\": \"Yes, No\",\n      \"unit\": \"boolean\",\n      \"affectsOutput\": \"If Yes, adds angle arc and text for non-horizontal/vertical perimeter segments.\"\n    },\n    {\n      \"name\": \"dSizeAngleSymbol\",\n      \"technicalDefault\": \"200\",\n      \"businessMeaning\": \"The size (radius) of the angle arc symbol drawn on the layout.\",\n      \"validRange\": \"50 - 1000\",\n      \"unit\": \"mm (Model units)\",\n      \"affectsOutput\": \"Visual scale of the angle annotation graphics.\"\n    },\n    {\n      \"name\": \"dAngleOffset\",\n      \"technicalDefault\": \"200\",\n      \"businessMeaning\": \"The distance from the dimension line midpoint to the vertex of the angle symbol.\",\n      \"validRange\": \"50 - 1000\",\n      \"unit\": \"mm (Model units)\",\n      \"affectsOutput\": \"Positions the angle symbol closer or further from the wall line.\"\n    },\n    {\n      \"name\": \"sScriptnameNotch\",\n      \"technicalDefault\": \"HSB_L-Notch\",\n      \"businessMeaning\": \"The specific TSL script name used to identify and extract geometry for Notch dimensions.\",\n      \"validRange\": \"Valid TSL names (must be v2.00+ compatible)\",\n      \"unit\": \"string\",\n      \"affectsOutput\": \"Determines which script instances are queried for notch dimensions.\"\n    },\n    {\n      \"name\": \"nColorDimension\",\n      \"technicalDefault\": \"-1\",\n      \"businessMeaning\": \"The color of the dimension lines and measurement text.\",\n      \"validRange\": \"AutoCAD Color Index (1-255) or -1 (ByLayer)\",\n      \"unit\": \"index\",\n      \"affectsOutput\": \"Visual color of linear dimensions.\"\n    },\n    {\n      \"name\": \"sDimStyle\",\n      \"technicalDefault\": \"\\\"\\\"\",\n      \"businessMeaning\": \"The AutoCAD Dimension Style applied to the linear dimensions.\",\n      \"validRange\": \"List of DimStyles in drawing\",\n      \"unit\": \"selection\",\n      \"affectsOutput\": \"Arrow style, text height, and precision of dimensions.\"\n    },\n    {\n      \"name\": \"nTextColorAngle\",\n      \"technicalDefault\": \"-1\",\n      \"businessMeaning\": \"The specific color for the angle measurement text.\",\n      \"validRange\": \"AutoCAD Color Index\",\n      \"unit\": \"index\",\n      \"affectsOutput\": \"Color of angle text only.\"\n    },\n    {\n      \"name\": \"nLineColorAngle\",\n      \"technicalDefault\": \"-1\",\n      \"businessMeaning\": \"The specific color for the angle arc and leader lines.\",\n      \"validRange\": \"AutoCAD Color Index\",\n      \"unit\": \"index\",\n      \"affectsOutput\": \"Color of angle graphics only.\"\n    },\n    {\n      \"name\": \"sDimStyleAngle\",\n      \"technicalDefault\": \"\\\"\\\"\",\n      \"businessMeaning\": \"The AutoCAD Dimension Style applied specifically to angle text.\",\n      \"validRange\": \"List of DimStyles in drawing\",\n      \"unit\": \"selection\",\n      \"affectsOutput\": \"Font and formatting of angle text.\"\n    },\n    {\n      \"name\": \"sPosition\",\n      \"technicalDefault\": \"Horizontal bottom\",\n      \"businessMeaning\": \"Determines the placement strategy of dimension lines relative to the wall geometry (e.g., always below, always left, or flush with angled corners).\",\n      \"validRange\": \"Horizontal bottom/top, Vertical left/right, Angled (4 quadrants)\",\n      \"unit\": \"selection\",\n      \"affectsOutput\": \"Calculates the vector offset for the dimension line.\"\n    },\n    {\n      \"name\": \"sUsePSUnits\",\n      \"technicalDefault\": \"Yes\",\n      \"businessMeaning\": \"If 'Yes', offset values are treated as physical millimeters on the paper (Plot scale independent). If 'No', they are model space millimeters.\",\n      \"validRange\": \"Yes, No\",\n      \"unit\": \"boolean\",\n      \"affectsOutput\": \"Scales offset values by the Viewport scale factor if Yes.\"\n    },\n    {\n      \"name\": \"dDimOff\",\n      \"technicalDefault\": \"100\",\n      \"businessMeaning\": \"The gap distance between the wall/log edge and the dimension line.\",\n      \"validRange\": \"10 - 500\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Moves dimension line outward from the geometry.\"\n    },\n    {\n      \"name\": \"sReference\",\n      \"technicalDefault\": \"Element\",\n      \"businessMeaning\": \"The structural entity referenced by the script (the Element inside the selected Viewport).\",\n      \"validRange\": \"Element\",\n      \"unit\": \"selection\",\n      \"affectsOutput\": \"Defines the context for the dimensioning.\"\n    }\n  ],\n  \"parameterDependencies\": [\n    {\n      \"trigger\": \"sDimObject changes\",\n      \"effect\": \"Activates specific logic blocks and relevant sub-parameters (Angle vs Notch Name).\",\n      \"cascade\": [\n        \"sWithAngle\",\n        \"dSizeAngleSymbol\",\n        \"sScriptnameNotch\"\n      ]\n    },\n    {\n      \"trigger\": \"sUsePSUnits = Yes\",\n      \"effect\": \"Multiplies distance parameters by Viewport Scale.\",\n      \"cascade\": [\n        \"dDimOff\",\n        \"dSizeAngleSymbol\",\n        \"dAngleOffset\"\n      ]\n    },\n    {\n      \"trigger\": \"sPosition = Angled (4-7)\",\n      \"effect\": \"Enables rotation of dimension line to match log slope.\",\n      \"cascade\": [\n        \"sWithAngle\"\n      ]\n    }\n  ],\n  \"outputEntities\": [\n    {\n      \"type\": \"Dimension (Linear)\",\n      \"description\": \"Standard AutoCAD dimensions representing wall length, notch depth, or tool positions.\",\n      \"appliedTo\": \"PaperSpace layout (transformed from ModelSpace geometry)\"\n    },\n    {\n      \"type\":"
+      },
+      "tokens_used": 10074,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Insertion triggered",
+          "Show Property Dialog (showDialogOnce)",
+          "Prompt user to select a Viewport (getViewport)",
+          "Prompt user to select a reference point for script name display (getPoint)",
+          "Store Viewport and Point in script instance",
+          "Retrieve Element associated with the selected Viewport",
+          "Check for 'Filter' context triggers (Right-click menu actions)",
+          "Validate Element and Viewport data",
+          "Initialize Display properties (Color, DimStyle, Scale)",
+          "Parse Filter Properties (BeamCode, Label, Material, hsbID) into exclusion lists",
+          "Determine Dimension Object type (Perimeter, Notches, Tools)",
+          "Calculate offset and scale factors based on 'sUsePSUnits'",
+          "Branch logic based on Dimension Object type",
+          "Generate geometry for selected object type",
+          "Transform dimensions from Model Space to Paper Space (ms2ps)",
+          "Draw dimensions in Paper Space"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "sDimObject == 'Perimeter' (Index 0)",
+            "path1": {
+              "name": "Perimeter Calculation",
+              "steps": [
+                "Filter beams within the Element based on exclusion lists",
+                "Collect beam envelopes into a PLine",
+                "Correct PLine orientation (ensure closed loop)",
+                "Segment PLine based on position relative to insertion point",
+                "Select segments based on 'sPosition' property (e.g., Horizontal Bottom)",
+                "Generate Linear Dimensions along segments",
+                "Check 'sWithAngle' property",
+                "If 'Yes' and 'sPosition' is Angled (4-7), generate Angle Dimensions"
+              ]
+            }
+          },
+          {
+            "condition": "sDimObject == 'Notches' (Index 1)",
+            "path1": {
+              "name": "Notch Dimensioning",
+              "steps": [
+                "Iterate through TSL instances attached to the Element",
+                "Check if TSL name matches 'sScriptnameNotch' (default HSB_L-Notch)",
+                "Validate TSL version is >= 2.00",
+                "Extract Notch geometry using TSL properties",
+                "Generate Horizontal and Vertical dimensions for each Notch"
+              ]
+            }
+          },
+          {
+            "condition": "sDimObject == 'Tools' (Index 2)",
+            "path1": {
+              "name": "Tools Dimensioning",
+              "steps": [
+                "Logic implies iterating tool TSLs (Drills, Aris, Doves)",
+                "Extract tool geometry points (truncated code shows collecting arPtTools)",
+                "Generate dimensions based on tool points"
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Trigger executed",
+            "path1": {
+              "name": "Filter this element",
+              "steps": [
+                "Get or Create 'FilterElements' Map in _Map",
+                "Add Element handle to map with status 'Element Filter'",
+                "Redraw script name in Red (Color 1) to indicate active filter",
+                "Skip dimension generation for this element"
+              ]
+            },
+            "path2": {
+              "name": "Remove filter for this element",
+              "steps": [
+                "Access 'FilterElements' Map",
+                "Remove Element handle from map",
+                "Redraw script name in Orange (Color 30)",
+                "Resume dimension generation"
+              ]
+            },
+            "path3": {
+              "name": "Remove filter for all elements",
+              "steps": [
+                "Delete 'FilterElements' Map entirely",
+                "Reset all instances to unfiltered state"
+              ]
+            }
+          },
+          {
+            "condition": "Check Element Validity",
+            "path1": {
+              "name": "Element Invalid",
+              "steps": [
+                "Terminate script execution (return)",
+                "No dimensions drawn"
+              ]
+            },
+            "path2": {
+              "name": "Element Valid",
+              "steps": [
+                "Proceed with Coordinate System extraction",
+                "Proceed with filtering and dimensioning"
+              ]
+            }
+          },
+          {
+            "condition": "sUsePSUnits == 'Yes'",
+            "path1": {
+              "name": "Use Paper Space Units",
+              "steps": [
+                "Multiply 'dDimOff' (offset) by Viewport Scale Factor",
+                "Multiply 'dSizeAngleSymbol' (size) by Viewport Scale Factor",
+                "Multiply 'dAngleOffset' by Viewport Scale Factor"
+              ]
+            },
+            "path2": {
+              "name": "Use Model Space Units",
+              "steps": [
+                "Use raw millimeter values for offsets and sizes"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Viewport has an associated Element",
+            "errorMessage": "Implicit (script terminates)",
+            "recovery": "Select a Viewport that contains a valid hsbCAD Element/Model"
+          },
+          {
+            "check": "Notch TSL Version compatibility",
+            "errorMessage": "'HSB_L-Notch v2.00 and higher.'",
+            "recovery": "Update the Notch TSL script to version 2.00 or higher"
+          },
+          {
+            "check": "Filter Definition Existence",
+            "errorMessage": "N/A (Empty string allowed)",
+            "recovery": "Ensure 'HSB_G-FilterGenBeams.mcr' is loaded to use named filters"
+          },
+          {
+            "check": "Correct orientation of Log Wall Envelope",
+            "errorMessage": "N/A (Auto-corrected in code)",
+            "recovery": "Code checks midpoint of segment against PLine profile and reverses if needed"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Dimension Object Type",
+            "how": "OPM Properties Palette",
+            "effect": "Switches between Perimeter, Notches, and Tools dimensioning logic"
+          },
+          {
+            "action": "Adjust Positioning",
+            "how": "OPM Properties Palette",
+            "effect": "Moves dimension lines (Top, Bottom, Left, Right, Angled)"
+          },
+          {
+            "action": "Filter Element",
+            "how": "Right-click context menu -> 'Filter this element'",
+            "effect": "Script instance turns Red, dimensions for this element are hidden"
+          },
+          {
+            "action": "Unfilter Element",
+            "how": "Right-click context menu -> 'Remove filter for this element'",
+            "effect": "Script instance turns Orange, dimensions regenerate"
+          },
+          {
+            "action": "Modify Offsets and Scale",
+            "how": "OPM Properties Palette",
+            "effect": "Updates the distance of dimension lines from geometry"
+          },
+          {
+            "action": "Toggle Paper Space Units",
+            "how": "OPM Properties Palette",
+            "effect": "Toggles whether offsets scale with the viewport zoom or stay fixed on paper"
+          }
+        ]
+      },
+      "tokens_used": 11193,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_D-Log.mcr Documentation\n\n## Overview\nThis script automatically creates dimensions for log wall elements in Paper Space. It can dimension wall perimeters, notches, or machining tools, with intelligent filtering and scaling options to suit production drawings.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | The script must be inserted in a Layout (Paper Space). |\n| Paper Space | Yes | Dimensions are drawn directly in the layout, linked to a Viewport. |\n| Shop Drawing | Yes | Designed for generating 2D production drawings with correct scaling. |\n\n## Prerequisites\n- **Required Entities**: A Layout containing a Viewport that displays a valid hsbCAD Element (Log Wall).\n- **Minimum Beam Count**: 0 (Processes existing geometry).\n- **Required Settings Files**: \n  - `HSB_G-FilterGenBeams.mcr` (Required if using named beam filters).\n  - `HSB_L-Notch.mcr` (Required for Notch dimensioning, version 2.00 or higher).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_D-Log.mcr`\n\n### Step 2: Configure Properties\n```\nDialog: Properties Palette\nAction: \n1. Select the 'DimObject' (Perimeter, Notches, or Tools).\n2. Set 'Filter' properties if you need to exclude specific beams.\n3. Adjust 'Position' and 'Offset' settings as needed.\n```\n\n### Step 3: Select Viewport\n```\nCommand Line: Select viewport:\nAction: Click inside the viewport boundary that shows the log wall you want to dimension.\n```\n\n### Step 4: Place Script Reference\n```\nCommand Line: Select point for script name:\nAction: Click a location in Paper Space to place the script name tag. \nNote: This tag acts as a handle; right-click it later to access menu options.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Dimension Settings** |\n| sDimObject | dropdown | Perimeter | Choose what to dimension: **Perimeter** (wall outline), **Notches**, or **Tools** (Drills/Aris/Doves). |\n| sPosition | dropdown | Horizontal bottom | Position of dimensions relative to wall: Horizontal (bottom/top), Vertical (left/right), or Angled (4 quadrants). |\n| sUsePSUnits | dropdown | Yes | **Yes**: Offsets are fixed paper size (mm). **No**: Offsets are model size (scale with viewport zoom). |\n| dDimOff | number | 100 | Distance between the wall edge and the dimension line. |\n| **Angle Dimensions** |\n| sWithAngle | dropdown | Yes | Show angular dimensions for angled wall segments. |\n| dSizeAngleSymbol | number | 200 | Radius size of the angle arc symbol. |\n| dAngleOffset | number | 200 | Distance from the dimension line to the angle vertex. |\n| **Visual Style** |\n| sDimStyle | string | (empty) | AutoCAD Dimension Style to use for linear dimensions. |\n| sDimStyleAngle | string | (empty) | AutoCAD Dimension Style to use for angle text. |\n| nColorDimension | number | -1 | Color of linear dimensions (-1 = ByLayer). |\n| nTextColorAngle | number | -1 | Color of angle text. |\n| nLineColorAngle | number | -1 | Color of angle lines/arc. |\n| **Beam Filtering** |\n| genBeamFilterDefinition | dropdown | (empty) | Select a predefined filter catalog entry (requires HSB_G-FilterGenBeams). |\n| sFilterBC | string | (empty) | Exclude beams by Beam Code (e.g., \"ST;BLK\"). Use semicolons to separate codes. |\n| sFilterLabel | string | (empty) | Exclude beams/sheets by Label name. |\n| sFilterMaterial | string | (empty) | Exclude elements by Material name (e.g., \"C24\"). |\n| sFilterHsbID | string | (empty) | Exclude elements by specific hsbID. |\n| **Advanced** |\n| sScriptnameNotch | string | HSB_L-Notch | The script name to look for when dimensioning notches (must be v2.00+). |\n\n## Right-Click Menu Options\n*Access these by right-clicking the Script Name point placed in Step 4.*\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Filter this element** | Hides dimensions for this specific element. The script name turns **Red**. |\n| **Remove filter for this element** | Shows dimensions for this element again. The script name turns **Orange**. |\n| **Remove filter for all elements** | Resets all instances of this script in the drawing to unfiltered state. |\n\n## Settings Files\n- **Filename**: `HSB_G-FilterGenBeams.mcr`\n- **Location**: hsbCAD Company or Install path\n- **Purpose**: Provides named filter definitions to easily select groups of beams for dimensioning.\n\n## Tips\n- **Paper Space vs. Model Units**: Keep `sUsePSUnits` set to **Yes** if you want the dimension line to stay a fixed distance from the wall on your printed drawing, regardless of how much you zoom in the viewport.\n- **Visibility**: If dimensions disappear, check if the script name tag is Red (Filtered). Right-click and select \"Remove filter for this element\".\n- **Notch Compatibility**: Ensure your project uses `HSB_L-Notch` version 2.00 or higher; otherwise, notch dimensions may not generate correctly.\n- **Updating Views**: If you change the wall geometry in Model Space, run `_REGEN` in the Layout to update the dimensions.\n\n## FAQ\n- **Q: Why are my dimensions huge or tiny?**\n  - A: Check the `sUsePSUnits` property. If it is **No**, the offset distance is treated as Model Space millimeters. Changing the viewport scale will make the offset look different. Set it to **Yes** for consistent paper output.\n  \n- **Q: Can I dimension just the floor logs and exclude the wall logs?**\n  - A: Yes. Use the `sFilterBC` or `sFilterLabel` properties to exclude the specific codes or labels used for your wall logs.\n\n- **Q: The script places dimensions, but they are in the wrong spot.**\n  - A: Change the `sPosition` property. For angled walls, try one of the \"Angled\" options to align the dimension line parallel to the wall slope."
+      },
+      "tokens_used": 8148,
+      "error": null
+    }
+  }
+}

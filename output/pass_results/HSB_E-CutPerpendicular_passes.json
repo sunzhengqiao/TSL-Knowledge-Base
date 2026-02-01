@@ -1,0 +1,205 @@
+{
+  "filename": "HSB_E-CutPerpendicular.mcr",
+  "status": "completed",
+  "total_tokens": 39027,
+  "processing_time": 483.34837198257446,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7324,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly creates instances using '_kModelSpace' in the dbCreate function. It operates on '_Element' and 'Beam' objects to modify 3D geometry (adding cuts). It utilizes '_bOnElementConstructed', a trigger specific to element regeneration in the 3D model. There is no usage of '_Viewport', '_kPaperSpace', or 'Sheet' entities, and the filename does not use the 'sd_' or 'Multipage' prefixes."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": [
+            "sBmCodeToCut property must be set (script self-erases if empty)",
+            "Catalog definitions (optional but used for execute keys and DSP integration)"
+          ]
+        }
+      },
+      "tokens_used": 4891,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select one or more elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "_bOnInsert (if no ExecuteKey provided)",
+            "title": "Properties",
+            "dataSource": "Internal PropString variables",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sSeparator01",
+            "type": "PropString",
+            "displayName": "|Perpendicular cut|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sCutBL",
+            "type": "PropString",
+            "displayName": "     |Cut-type bottom/left|",
+            "defaultValue": "|Shortest point|",
+            "inputType": "dropdown",
+            "options": [
+              "|Shortest point|",
+              "|Longest point|",
+              "|No cut|"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 2,
+            "variable": "sCutTR",
+            "type": "PropString",
+            "displayName": "     |Cut-type top/right|",
+            "defaultValue": "|Shortest point|",
+            "inputType": "dropdown",
+            "options": [
+              "|Shortest point|",
+              "|Longest point|",
+              "|No cut|"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 3,
+            "variable": "sBmCodeToCut",
+            "type": "PropString",
+            "displayName": "     |Beamcode to cut|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6587,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically simplifies complex beam intersections into perpendicular cuts (90-degree ends) based on existing geometry.",
+          "category": "Framing/Geometry",
+          "typicalUseCase": "Used to trim wall studs or joists to be flat/perpendicular where they meet a roof plane or another beam, rather than leaving a complex angled or intersection cut. Commonly applied via DSP detailing to standardize connections."
+        },
+        "parameters": [
+          {
+            "name": "sSeparator01",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Visual grouping label in the Properties Palette to organize the script settings.",
+            "validRange": "N/A (Read-only text)",
+            "unit": "String",
+            "affectsOutput": "None. Visual only."
+          },
+          {
+            "name": "sCutBL",
+            "technicalDefault": "\"|Shortest point|\"",
+            "businessMeaning": "Defines the cut logic for the Bottom/Left side of the element (relative to the element coordinate system). 'Shortest point' cuts the beam at the deepest point of the existing intersection (shortest resulting length), while 'Longest point' cuts at the outermost edge of the intersection.",
+            "validRange": "Dropdown: |Shortest point|, |Longest point|, |No cut|",
+            "unit": "Selection",
+            "affectsOutput": "Determines the position and existence of a perpendicular cut at the beam's start/end relative to the element origin."
+          },
+          {
+            "name": "sCutTR",
+            "technicalDefault": "\"|Shortest point|\"",
+            "businessMeaning": "Defines the cut logic for the Top/Right side of the element (relative to the element coordinate system). Functions identically to 'sCutBL' but for the opposite side of the assembly.",
+            "validRange": "Dropdown: |Shortest point|, |Longest point|, |No cut|",
+            "unit": "Selection",
+            "affectsOutput": "Determines the position and existence of a perpendicular cut at the opposite end of the beam."
+          },
+          {
+            "name": "sBmCodeToCut",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Filter that specifies which beams within the element should be processed. If left empty, the script does nothing. Supports wildcards (e.g., 'STUD*' or '*PLATE').",
+            "validRange": "Valid beam codes or wildcard strings from the project (e.g., 'STUD', 'RAFTER', 'WAL*').",
+            "unit": "String",
+            "affectsOutput": "Controls which specific beams in the element receive the cut. Beams not matching this code are ignored."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sBmCodeToCut is empty",
+            "effect": "Script self-erases and performs no action.",
+            "cascade": []
+          },
+          {
+            "trigger": "sCutBL or sCutTR set to '|No cut|'",
+            "effect": "Script ignores cuts on that specific side of the element/beam.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Cut",
+            "description": "A planar, perpendicular cut (saw cut) applied to the beam end.",
+            "appliedTo": "Beams within the selected Element whose beam codes match 'sBmCodeToCut'."
+          }
+        ]
+      },
+      "tokens_used": 6912,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8886,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-CutPerpendicular.mcr\n\n## Overview\nThis script automatically simplifies complex beam intersections into perpendicular (90-degree) cuts based on existing geometry. It is typically used to trim wall studs or joists flat where they meet a roof plane or another beam, standardizing connections without manual editing.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D Elements in the model. |\n| Paper Space | No | Not applicable for layouts or drawings. |\n| Shop Drawing | No | This is a detailing/modeling tool, not a drawing generator. |\n\n## Prerequisites\n- **Required Entities**: An existing `Element` (e.g., a wall or roof assembly).\n- **Minimum Beam Count**: The Element must contain beams, though the script is applied to the Element container.\n- **Required Settings**: The `Beamcode to cut` property must be populated; the script will self-erase and do nothing if this field is left empty.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse to the location of `HSB_E-CutPerpendicular.mcr`, select the file, and click **Open**.\n\n### Step 2: Select Elements\n```\nCommand Line: Select one or more elements\nAction: Click on the desired Element(s) in the Model Space and press Enter.\n```\n*Note: The script is attached to the element. You can then adjust properties via the Properties Palette.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Cut-type bottom/left | Dropdown | Shortest point | Determines how the cut is calculated on the start/left side of the beam. <br>- **Shortest point**: Cuts the beam to the deepest part of the intersection (shortest length).<br>- **Longest point**: Cuts the beam to the outermost edge of the intersection (longest length).<br>- **No cut**: Skips cutting this side. |\n| Cut-type top/right | Dropdown | Shortest point | Determines how the cut is calculated on the end/right side of the beam. Options are identical to the bottom/left setting. |\n| Beamcode to cut | Text | [Empty] | The filter used to select which beams within the Element are processed. <br>*Example: Enter \"STUD\" to only cut beams with the code \"STUD\". Supports wildcards (e.g., \"STUD*\").* |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu options are added by this script. All modifications are done via the Properties Palette. |\n\n## Settings Files\n- **Filename**: N/A\n- **Location**: N/A\n- **Purpose**: This script relies on internal properties and standard hsbCAD catalogs. No external XML settings file is strictly required for basic operation.\n\n## Tips\n- **Script Self-Erases**: If you insert the script and it disappears immediately, check if `sBmCodeToCut` (Beamcode to cut) is empty. The script requires a target beam code to function.\n- **Wildcards**: You can use `*` in the Beamcode field to affect multiple beam types at once (e.g., `*RAFTER*`).\n- **Opposing Sides**: Use \"No cut\" on one side and \"Shortest point\" on the other if you only want to trim the start or end of a beam, not both.\n- **DSP Integration**: This script is often used within DSP (Detailing Standard Processing) rules to automatically apply standard perpendicular cuts during the generation of framing elements.\n\n## FAQ\n- **Q: Why didn't the script cut my beams?**\n- **A:** Ensure the `Beamcode to cut` property matches the exact code of the beams in your Element (check the General properties of the individual beams to see their codes). If the property is empty, the script will not run.\n\n- **Q: What is the difference between Shortest and Longest point?**\n- **A:** Imagine a stud hitting a sloped roof. **Shortest point** cuts the stud at the peak of the roof (making it shorter). **Longest point** cuts the stud at the eave of the roof (leaving it longer). Choose the one that fits your structural detailing requirements."
+      },
+      "tokens_used": 4427,
+      "error": null
+    }
+  }
+}

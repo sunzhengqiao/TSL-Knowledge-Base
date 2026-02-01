@@ -1,0 +1,267 @@
+{
+  "filename": "FLR_SQUASH_BLOCKING.mcr",
+  "status": "completed",
+  "total_tokens": 41862,
+  "processing_time": 201.6494436264038,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6116,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script collects entities using _kModelSpace, generates 3D Bodies via the Body class, and creates Beam objects using dbCreate. It targets Element and TrussEntity types which are 3D model constructs. No sd_ prefixes, Viewport handling, or ShopDrawing specific (#Type E + _Entity[]) patterns are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element (Floor/Roof)",
+            "Beam or TrussEntity (for joist detection)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Must be run in Model Space on an existing floor/roof element.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4618,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getElementRoof",
+              "promptOriginal": "Select Floor Element",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "Select reference point",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "PrPoint",
+              "promptOriginal": "Select direction",
+              "condition": "_bOnInsert",
+              "required": false
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "On Insert (showDialogOnce)",
+            "title": "Properties",
+            "dataSource": "OPM Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "prBsize",
+            "type": "PropString",
+            "displayName": "Size",
+            "defaultValue": "|2x4 Blocks|",
+            "inputType": "dropdown",
+            "options": [
+              "|2x4 Blocks|",
+              "|2x6 Blocks|",
+              "|2x8 Blocks|",
+              "|2x10 Blocks|",
+              "|2x12 Blocks|"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "prOrient",
+            "type": "PropString",
+            "displayName": "Blocking orientation",
+            "defaultValue": "|X-axis|",
+            "inputType": "dropdown",
+            "options": [
+              "|X-axis|",
+              "|Y-axis|"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 2,
+            "variable": "bmNum",
+            "type": "PropInt",
+            "displayName": "Number of Blocks",
+            "defaultValue": 1,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 3,
+            "variable": "strMethod",
+            "type": "PropString",
+            "displayName": "Insertion method",
+            "defaultValue": "|One block|",
+            "inputType": "dropdown",
+            "options": [
+              "|One block|",
+              "|Multiple blocks|"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 4,
+            "variable": "prBlockingType",
+            "type": "PropString",
+            "displayName": "Blocking type",
+            "defaultValue": " ",
+            "inputType": "dropdown",
+            "options": [
+              " ",
+              "|Upper blocking|",
+              "|Lower blocking|",
+              "|Upper & Lower blocking|"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "Commit Beams to Dwg",
+            "handler": "_kExecuteKey",
+            "action": "Generates Beam entities from the temporary Body objects and assigns them to the Element group, then erases the TSL instance.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 6402,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates lumber blocking (squash blocks) for floor or roof elements to stiffen the structure and provide nailing surfaces, supporting both manual single-point insertion and automatic joist bay detection.",
+          "category": "Framing",
+          "typicalUseCase": "Installing solid blocking between floor trusses or joists at load-bearing points or mid-span to prevent rotation (squash) and transfer loads."
+        },
+        "parameters": [
+          {
+            "name": "prBsize",
+            "technicalDefault": "|2x4 Blocks|",
+            "businessMeaning": "The nominal dimension of the lumber used for the blocking (e.g., 2x4, 2x6). This determines the physical thickness and width of the blocking members.",
+            "validRange": "2x4 to 2x12 Nominal Lumber Sizes",
+            "unit": "Inches (Nominal)",
+            "affectsOutput": "Changes the cross-sectional dimensions (Width and Height) of the generated 3D Body and resulting Beam entity."
+          },
+          {
+            "name": "prOrient",
+            "technicalDefault": "|X-axis|",
+            "businessMeaning": "Determines the plan orientation of the blocking lumber relative to the floor's local coordinate system. It controls which axis the 'wide' face of the lumber aligns with.",
+            "validRange": "X-axis, Y-axis",
+            "unit": "Direction",
+            "affectsOutput": "Rotates the blocking geometry 90 degrees in the horizontal plane. If set to Y-axis, the block is oriented perpendicular to the floor's X-axis."
+          },
+          {
+            "name": "bmNum",
+            "technicalDefault": 1,
+            "businessMeaning": "The number of blocking pieces to generate in a single stack or grouping at the insertion point.",
+            "validRange": "1 to 6",
+            "unit": "Count",
+            "affectsOutput": "Creates multiple adjacent blocks along the direction of orientation defined by the Blocking Orientation parameter."
+          },
+          {
+            "name": "strMethod",
+            "technicalDefault": "|One block|",
+            "businessMeaning": "Defines the insertion strategy: placing a single manual stack versus automatically calculating blocking along a user-defined path intersecting joists.",
+            "validRange": "One block, Multiple blocks",
+            "unit": "Mode",
+            "affectsOutput": "In 'Multiple blocks' mode, the script analyzes the line defined by the user and places blocks at every intersection with floor joists/rafters."
+          },
+          {
+            "name": "prBlockingType",
+            "technicalDefault": " ",
+            "businessMeaning": "Specifies a specialized mode for continuous solid blocking between joists (Upper, Lower, or Both), often used as rim blocking or bridging rather than single squash blocks.",
+            "validRange": "Standard, Upper blocking, Lower blocking, Upper & Lower blocking",
+            "unit": "Mode",
+            "affectsOutput": "When active, it overrides orientation/number settings and generates solid blocking pieces filling the bays between detected joists at the specified height (top or bottom chord)."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "prBlockingType is set to anything other than blank (Standard)",
+            "effect": "Forces the script into 'Multiple blocks' mode, sets orientation to 'X-axis', and sets the number of blocks to 1 to calculate spans between joists.",
+            "cascade": [
+              "prOrient",
+              "bmNum",
+              "strMethod"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam",
+            "description": "Standard lumber beams representing the blocking, created with type '_kBlocking' and named according to the selected size (e.g., '2x4').",
+            "appliedTo": "The selected Floor/Roof Element group."
+          }
+        ]
+      },
+      "tokens_used": 8303,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. Script launched via command or palette.\",\n    \"2. ShowDynamicDialog displays Properties dialog for initial parameter configuration.\",\n    \"3. User is prompted to select a Floor/Roof Element (getElementRoof).\",\n    \"4. User is prompted to select a Reference Point (getPoint).\",\n    \"5. User is prompted to select a Direction Point (PrPoint loop) defining the blocking line.\",\n    \"6. Script projects points onto the Element plane and calculates direction vector.\",\n    \"7. Script scans Element Group for TrussEntities or Beams parallel to Element Y-axis (Joists).\",\n    \"8. [Decision] Script checks prBlockingType and strMethod to determine geometry generation logic.\",\n    \"9. Preview Bodies (bdSq) are generated and drawn.\",\n    \"10. User modifies OPM properties or adjusts grips (Reference/Direction points) to refine layout.\",\n    \"11. User right-clicks and selects 'Commit Beams to Dwg'.\",\n    \"12. Script converts preview Bodies to Beam entities, assigns attributes (Name, Type, HSBID), and assigns to Element Group.\",\n    \"13. Script instance is erased (eraseInstance).\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"prBlockingType is not blank (i.e., Upper, Lower, or Upper & Lower blocking)\",\n      \"path1\": {\n        \"name\": \"Advanced/Rim Blocking Mode\",\n        \"steps\": [\n          \"Force prOrient to 'X-axis'.\",\n          \"Force bmNum (Number of Blocks) to 1.\",\n          \"Force strMethod to 'Multiple blocks'.\",\n          \"Calculate intersection of user line with Joists.\",\n          \"Validate that at least 2 joists are intersected; otherwise report error.\",\n          \"Loop through intersected joists to calculate bays.\",\n          \"Generate blocking bodies filling the span between joists (dist - deductions).\",\n          \"Adjust Z-height based on 'Upper' (align top) or 'Lower' (align bottom) selection.\",\n          \"If 'Upper & Lower', generate a second block offset vertically.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Standard Squash Blocking Mode (Default)\",\n        \"steps\": [\n          \"Use user-defined prOrient (X or Y-axis).\",\n          \"Use user-defined bmNum (Number of Blocks).\",\n          \"Follow strMethod logic (One vs Multiple).\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"strMethod == 'Multiple blocks' (Standard Mode)\",\n      \"path1\": {\n        \"name\": \"Linear Intersecting Mode\",\n        \"steps\": [\n          \"Create a search line/segment from Reference Point to Direction Point.\",\n          \"Find Joists that intersect this search line.\",\n          \"Sort joists by position along the line.\",\n          \"Identify intersection points (Up and Down faces of joists relative to line).\",\n          \"Filter points outside the user-defined segment.\",\n          \"At each valid intersection point, place a stack of blocks based on bmNum.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Single Point Mode\",\n        \"steps\": [\n          \"Ignore detected Joists.\",\n          \"Place a single stack of blocks (count = bmNum) at the Reference Point.\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"prOrient selection\",\n      \"path1\": {\n        \"name\": \"X-axis orientation\",\n        \"steps\": [\n          \"Set Block Thickness (bmW) to Lumber Height (e.g., 3.5\\\" for 2x4).\",\n          \"Set Block Width (bmH) to Lumber Width (e.g., 1.5\\\").\",\n          \"Blocks align lengthwise along Element X-axis.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Y-axis orientation\",\n        \"steps\": [\n          \"Set Block Thickness (bmW) to Lumber Width (e.g., 1.5\\\").\",\n          \"Set Block Width (bmH) to Lumber Height (e.g., 3.5\\\" for 2x4).\",\n          \"Blocks align lengthwise along Element Y-axis (Rotated 90 deg).\"\n        ]\n      }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"Number of Joists intersected in Advanced Blocking Mode\",\n      \"errorMessage\": \"Less then 2 joist between selected boundaries\",\n      \"recovery\": \"Move the direction grip to span across at least two joists or switch Blocking Type back to Standard.\"\n    },\n    {\n      \"check\": \"Element Selection\",\n      \"errorMessage\": \"Standard hsbCAD Element selection prompt\",\n      \"recovery\": \"User must select a valid Element to proceed.\"\n    }\n  ],\n  \"postInsertionActions\": [\n    {\n      \"action\": \"Modify Properties\",\n      \"how\": \"AutoCAD Properties Palette (OPM)\",\n      \"effect\": \"Changing Size, Orientation, Count, Method, or Blocking Type triggers a script recalculation and updates the 3D preview geometry immediately.\"\n    },\n    {\n      \"action\": \"Adjust Geometry\",\n      \"how\": \"Grip Edit (Drag Reference Point or Direction Point)\",\n      \"effect\": \"Moving the Reference Point relocates the blocking start. Moving the Direction Point changes the angle and length of the search line, updating which joists are intersected in 'Multiple blocks' mode.\"\n    },\n    {\n      \"action\": \""
+      },
+      "tokens_used": 10125,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# FLR_SQUASH_BLOCKING.mcr\n\n## Overview\nGenerates lumber blocking (squash blocks) for floor or roof elements to stiffen the structure and provide nailing surfaces. It supports manual insertion of single blocks or automatic detection of joist bays for multiple blocks, including specialized rim blocking options.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run on an existing 3D Floor or Roof element. |\n| Paper Space | No | Not applicable for layout generation. |\n| Shop Drawing | No | This script generates model geometry, not 2D drawing views. |\n\n## Prerequisites\n- **Required Entities**: A Floor or Roof Element (Element). For automatic insertion, the element must contain Joists or Rafters (Beams or TrussEntities).\n- **Minimum Beam Count**: 0 (Manual mode), or 2 (for automatic Joist bay detection).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `FLR_SQUASH_BLOCKING.mcr`\n\n### Step 2: Select Floor Element\n```\nCommand Line: Select Floor Element\nAction: Click on the desired Floor or Roof element in the model to which the blocking will be applied.\n```\n\n### Step 3: Set Reference Point\n```\nCommand Line: Select reference point\nAction: Click in the model to set the starting location for the blocking (e.g., at a load-bearing wall or specific joist bay).\n```\n\n### Step 4: Define Direction\n```\nCommand Line: Select direction\nAction: Click a second point to define the direction and length of the blocking line. In \"Multiple blocks\" mode, this line defines the path along which the script searches for joists.\n```\n\n### Step 5: Configure and Preview\nOnce the points are placed, the script generates a preview.\n- **Action**: Open the **Properties Palette** (Ctrl+1) to adjust parameters like Size, Orientation, or Blocking Type. The preview updates automatically as you change values.\n- **Action**: Drag the Reference or Direction point grips in the model to adjust the location or angle.\n\n### Step 6: Commit to Drawing\n```\nAction: Right-click on the script instance and select \"Commit Beams to Dwg\".\nResult: The preview blocks are converted into actual Beam entities and added to the Element group. The script instance is removed.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Size | Dropdown | \\|2x4 Blocks\\| | Select the nominal lumber size for the blocking (e.g., 2x4, 2x6, up to 2x12). |\n| Blocking orientation | Dropdown | \\|X-axis\\| | Sets the plan orientation of the blocking relative to the element's local coordinate system. Choose X-axis or Y-axis. |\n| Number of Blocks | Number | 1 | Defines how many blocks to create in a stack at the insertion location. |\n| Insertion method | Dropdown | \\|One block\\| | **One block**: Places blocks only at the reference point. **Multiple blocks**: Places blocks at every intersection between the defined direction line and the floor joists. |\n| Blocking type | Dropdown | (Blank) | **Standard**: Uses settings above. **Upper/Lower/Upper & Lower**: Specialized mode for rim blocking that fills joist bays entirely at the top or bottom chord. Overrides Orientation and Number of Blocks settings. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Commit Beams to Dwg | Converts the temporary preview bodies into permanent Beam entities and assigns them to the Element group. The script instance is then deleted. |\n\n## Settings Files\nNone required.\n\n## Tips\n- **Automatic Bay Detection**: For fastest results, set **Insertion method** to \"Multiple blocks\" and draw your direction line across several joists. The script will calculate intersection points automatically.\n- **Rim Blocking**: Use the **Blocking type** parameter to generate solid blocking between joists (e.g., for rim boards). Note that this option forces the script to use \"Multiple blocks\" mode and aligns orientation to the X-axis.\n- **Visual Feedback**: If the blocking appears rotated incorrectly, toggle the **Blocking orientation** parameter between X-axis and Y-axis.\n- **Grip Editing**: You can adjust the reference and direction points after insertion to fine-tune the blocking line before committing.\n\n## FAQ\n- **Q: Why did my settings change when I selected \"Upper blocking\"?**\n  A: When using specialized Blocking types (Upper, Lower, etc.), the script automatically overrides Orientation and Number of Blocks to ensure the geometry is calculated correctly for rim joist applications.\n- **Q: I see an error \"Less then 2 joist between selected boundaries\".**\n  A: This occurs in \"Multiple blocks\" or \"Blocking type\" modes if your defined direction line does not cross at least two joists. Extend your line or move it to intersect the structural members.\n- **Q: Can I edit the blocks after I commit them?**\n  A: Once \"Commit Beams to Dwg\" is selected, the script is removed. The blocks become standard Beam entities and can be edited individually using normal hsbCAD beam editing tools."
+      },
+      "tokens_used": 6298,
+      "error": null
+    }
+  }
+}

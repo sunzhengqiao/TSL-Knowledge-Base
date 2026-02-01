@@ -1,0 +1,172 @@
+{
+  "filename": "FLR_LADDER.mcr",
+  "status": "completed",
+  "total_tokens": 50150,
+  "processing_time": 225.947448015213,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6515,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script creates physical 3D Beams using dbCreate() and assigns them to Element Groups using assignToElementGroup(). It explicitly references _kModelSpace in collectEntities() calls. The insert routine uses PrEntity to select floor elements (ElementRoof) and calculates geometry based on Beam and TrussEntity coordinates, indicating 3D model processing. No Viewport or Paper Space handling logic is present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element (Floor)",
+            "Beam",
+            "TrussEntity"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing at least one valid Floor Element with associated structural members (Beams or Trusses). If 'Automatic bay boundaries detection' is used, the element must contain perpendicular beams/trusses to define the bay.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7050,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10568,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates various types of blocking (joist, squash, ladder) between floor joists/trusses within a specified bay, with options for automatic or manual boundary detection and distribution.",
+          "category": "Framing",
+          "typicalUseCase": "Used during floor layout to add structural stability between joists, create openings, or prepare for vertical loads (squash blocking) on upper levels."
+        },
+        "parameters": [
+          {
+            "name": "strType",
+            "technicalDefault": "0",
+            "businessMeaning": "Specifies the configuration of the blocking to be generated. Options include standard joist bridging, full-depth 'squash' blocks for load transfer, or specific vertical/horizontal orientations.",
+            "validRange": "Joist Blocking | Upper & Lower Flat Blocking | Upper Flat Blocking | Lower Flat Blocking | Squash Blocking | Squash Blocking (double sided) | Lower Block With Squash Blocking | Upper Blocking | Selection",
+            "unit": "Enum",
+            "affectsOutput": "Determines the number, position, and orientation of the blocking beams created. 'Selection' triggers a mode to copy an existing beam's properties."
+          },
+          {
+            "name": "nNrOfBlocks",
+            "technicalDefault": "1",
+            "businessMeaning": "Sets the exact quantity of blocking pieces to install. A value of 0 switches to 'unlimited' mode, where blocks are spaced based on the 'Distrubution' parameter.",
+            "validRange": "0 to 50",
+            "unit": "Count",
+            "affectsOutput": "Controls the count of generated blocking entities if > 0. If 0, it disables the count constraint and enables spacing logic."
+          },
+          {
+            "name": "dDistrib",
+            "technicalDefault": "16",
+            "businessMeaning": "Defines the maximum center-to-center spacing between blocking pieces when 'Number of Blocks' is set to 0 (unlimited).",
+            "validRange": "12 (305mm) to 24 (610mm)",
+            "unit": "inches",
+            "affectsOutput": "Calculates the exact positions of blocks along the joist span to ensure spacing does not exceed this value."
+          },
+          {
+            "name": "strSize",
+            "technicalDefault": "TwoByFour",
+            "businessMeaning": "Selects the lumber size for the blocking material.",
+            "validRange": "2x4 | 2x6",
+            "unit": "Lumber Size",
+            "affectsOutput": "Sets the width and depth dimensions of the generated blocking beams."
+          },
+          {
+            "name": "dSqH",
+            "technicalDefault": "0",
+            "businessMeaning": "An additional height adjustment specifically for squash blocks, ensuring they extend sufficiently to transfer loads between the lower and upper floor joists.",
+            "validRange": "0 to 6 (0 to 150mm)",
+            "unit": "inches",
+            "affectsOutput": "Increases the height of squash blocks to fill gaps or account for sheathing thickness/crown."
+          },
+          {
+            "name": "strMethod",
+            "technicalDefault": "Full bay length",
+            "businessMeaning": "Determines how the span for blocking is defined. Automatic uses the full distance between limit beams; Manual allows picking specific start and end points.",
+            "validRange": "Full bay length | Manual distribution limits",
+            "unit": "Enum",
+            "affectsOutput": "Changes the logic for calculating the start and end points of the blocking array."
+          },
+          {
+            "name": "strDetect",
+            "technicalDefault": "Automatic bay boundaries detection",
+            "businessMeaning": "Controls how the script identifies the parallel joists that define the 'bay' where blocking is placed.",
+            "validRange": "Automatic bay boundaries detection | Manualy select limit beams",
+            "unit": "Enum",
+            "affectsOutput": "If Automatic, script finds nearest perpendicular beams. If Manual, user must explicitly select the two bounding beams."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "nNrOfBlocks > 0",
+            "effect": "Disables distribution spacing logic; divides the total length by the count to find even spacing.",
+            "cascade": [
+              "dDistrib"
+            ]
+          },
+          {
+            "trigger": "strType == 'Selection'",
+            "effect": "Hides standard size generation and prompts user to pick an existing beam to clone properties (size/material).",
+            "cascade": [
+              "strSize"
+            ]
+          },
+          {
+            "trigger": "strDetect == 'Manualy select limit beams'",
+            "effect": "Requires user input via PrEntity dialog to define the bay boundaries; ignores automatic geometric search.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam",
+            "description": "Creates individual blocking beams between the limit joists. Attributes include Type=_kBlocking, Material based on selection, and dimensions based on strSize or copied beam.",
+            "appliedTo": "Model Space (assigned to the Element Group of the selected Floor)"
+          }
+        ]
+      },
+      "tokens_used": 8280,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. Launch Script (Insert or Context Menu Trigger)\",\n    \"2. Validate Insertion Cycle: eraseInstance() if cycle count > 1\",\n    \"3. Select Floor Element: Prompt user to select 'ElementRoof' (primary and optional secondary)\",\n    \"4. Define Distribution Limits: [Conditional] Prompt for 1 point (Auto) or 2 points (Manual) based on strMethod\",\n    \"5. Define Bay Boundaries: [Conditional] Prompt for limit beams (Manual) or calculate nearest perpendicular beams (Auto)\",\n    \"6. Handle 'Selection' Mode: If strType is 'Selection', prompt user to pick a beam/truss to copy properties from\",\n    \"7. Process Limit Beams: Compile list of candidate beams from elements, filter perpendiculars, sort by position\",\n    \"8. Handle Regeneration: If triggered, erase existing beams stored in internal map (_Map)\",\n    \"9. Check Beam Codes: Inspect limit beam codes; if 'X' detected, set defaults and flag script for deletion\",\n    \"10. Calculate Block Positions: Generate array of Point3d coordinates based on start/end limits and distribution rules (Fixed count or max spacing)\",\n    \"11. Generate Blocking: Iterate through positions and create Beams (dbCreate) based on strType (Squash, Upper, etc.)\",\n    \"12. Finalize: Assign new beams to Element Group or Layer, delete script instance if flagged\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"strMethod (Distribution method)\",\n      \"path1\": {\n        \"name\": \"Full bay length\",\n        \"steps\": [\n          \"Prompt user for single insertion point (_Pt0)\",\n          \"Calculate bounds based on limit beam positions relative to _Pt0\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Manual distribution limits\",\n        \"steps\": [\n          \"Prompt user for start point (_PtG[0])\",\n          \"Prompt user for end point (_PtG[1])\",\n          \"Calculate bounds strictly between these two points\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"strDetect (Limit method)\",\n      \"path1\": {\n        \"name\": \"Automatic bay boundaries\",\n        \"steps\": [\n          \"Collect all Beams and TrussEntities from selected Elements\",\n          \"Filter for entities perpendicular to Element X-axis\",\n          \"Sort entities by position along Element X-axis\",\n          \"Identify the two beams that sandwich the insertion point\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Manualy select limit beams\",\n        \"steps\": [\n          \"Prompt user to select two limit beams/trusses using PrEntity\",\n          \"Use these two entities explicitly as boundaries\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"nNrOfBlocks (Distribution logic)\",\n      \"path1\": {\n        \"name\": \"Fixed Count (> 0)\",\n        \"steps\": [\n          \"Calculate spacing = Total Length / (nNrOfBlocks - 1)\",\n          \"Distribute blocks evenly along the vector\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Unlimited (0)\",\n        \"steps\": [\n          \"Calculate max number of blocks = Ceiling(Total Length / dDistrib)\",\n          \"Calculate spacing = Total Length / Calculated Count\",\n          \"Distribute blocks ensuring spacing <= dDistrib\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"strType (Source)\",\n      \"path1\": {\n        \"name\": \"Selection\",\n        \"steps\": [\n          \"Pause execution to prompt user (getEntity)\",\n          \"Copy size/material from picked beam to internal map\",\n          \"Generate blocking using copied properties\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Standard Types (Joist, Squash, etc.)\",\n        \"steps\": [\n          \"Use standard script properties (strSize, dSqH)\",\n          \"Generate blocking based on hard-coded logic for specific type\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Limit Beam Code\",\n      \"path1\": {\n        \"name\": \"Code is 'X'\",\n        \"steps\": [\n          \"Set strType to Joist Blocking\",\n          \"Modify dDistrib property\",\n          \"Set nDeleteScript flag to 1\",\n          \"Erase Instance (Self-destruct)\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Other\",\n        \"steps\": [\n          \"Proceed with normal generation logic\"\n        ]\n      }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"Element Selection\",\n      \"errorMessage\": \"(None, implicit erase)\",\n      \"recovery\": \"Script calls eraseInstance() if no ElementRoof is selected.\"\n    },\n    {\n      \"check\": \"Structural Members Exist\",\n      \"errorMessage\": \"(None, implicit return)\",\n      \"recovery\": \"Script returns early if selected Element contains no Beams or TrussEntities.\"\n    },\n    {\n      \"check\": \"Limit Beams Found\",\n      \"errorMessage\": \"Bay limit beams not found\",\n      \"recovery\": \"Text is drawn in model space at _Pt0. User must adjust detection method or select valid floor boundaries.\"\n    },\n    {\n      \"check\": \"Manual Limits vs Spacing\",\n      \"errorMessage\": \"Manual limits smaller then distribution value\",\n      \"recovery\": \"Script reports error. User must increase manual limit distance or decrease dDistrib value.\"\n    }\n  ],\n  \"postInsertionActions\":"
+      },
+      "tokens_used": 11229,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# FLR_LADDER.mcr\n\n## Overview\nThis script generates various types of blocking (joist, squash, and ladder blocking) between floor joists or trusses. It supports automatic or manual selection of bay boundaries and allows for distribution by specific count or maximum spacing.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Creates physical 3D Beams assigned to Element Groups. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Entities**: A Floor Element (`ElementRoof`) containing structural members (Beams or TrussEntities).\n- **Minimum Requirements**: The floor must have joists/trusses to define the bay.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `FLR_LADDER.mcr`\n\n### Step 2: Select Floor Element\n```\nCommand Line: Select element:\nAction: Click on the floor element (ElementRoof) where you want to add blocking.\n```\n\n### Step 3: Define Distribution Limits\n*The prompt here depends on the \"Distribution method\" property.*\n\n*   **If Full bay length (Default):**\n    ```\n    Command Line: Give insertion point:\n    Action: Click a point within the bay to define the start and end based on the nearest perpendicular joists.\n    ```\n*   **If Manual distribution limits:**\n    ```\n    Command Line: Give start point:\n    Action: Click the start point for the blocking array.\n    Command Line: Give end point:\n    Action: Click the end point for the blocking array.\n    ```\n\n### Step 4: Define Bay Boundaries\n*The prompt here depends on the \"Limit beams detection\" property.*\n\n*   **If Automatic bay boundaries detection (Default):** The script automatically finds the nearest perpendicular beams/trusses to act as limits. No user input required.\n*   **If Manualy select limit beams:**\n    ```\n    Command Line: Select first limit beam/truss:\n    Action: Click the first joist or truss forming the edge of the bay.\n    Command Line: Select second limit beam/truss:\n    Action: Click the opposite joist or truss forming the other edge of the bay.\n    ```\n\n### Step 5: Select Source (If applicable)\n*Only appears if the \"Blocking type\" property is set to \"Selection\".*\n```\nCommand Line: Select beam to copy attributes:\nAction: Click on an existing beam in the model. The script will copy the material and size of this beam for the new blocking.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Blocking type** | Enum | Joist Blocking | Selects the configuration: Joist Blocking, Upper & Lower Flat, Upper Flat, Lower Flat, Squash, Squash (double sided), Lower Block with Squash, Upper Blocking, or Selection (to copy from an existing beam). |\n| **Number of blocks** | Integer | 1 | Sets the exact quantity of blocking pieces. Set to **0** to use unlimited mode (spacing is then determined by \"Distribution\"). |\n| **Distribution** | Double | 16 | Maximum center-to-center spacing (in inches) when \"Number of blocks\" is 0. |\n| **Size** | Enum | TwoByFour | Selects the lumber size (e.g., 2x4, 2x6). |\n| **Squash H** | Double | 0 | Additional height adjustment (in inches) for Squash blocks to ensure proper load transfer or fit. |\n| **Distribution method** | Enum | Full bay length | **Full bay length**: Uses the distance between limit beams. **Manual distribution limits**: Allows picking specific start/end points. |\n| **Limit beams detection** | Enum | Automatic bay boundaries detection | **Automatic**: Script finds nearest perpendicular beams. **Manual**: User explicitly selects two limit beams. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Update | Recalculates and regenerates the blocking based on current property changes or model changes. |\n\n## Settings Files\n- None detected.\n\n## Tips\n- **Switching modes**: If the automatic boundary detection selects the wrong joists (common in complex floors), change **Limit beams detection** to \"Manualy select limit beams\" to explicitly pick the correct edges.\n- **Spacing vs. Count**: To ensure blocks never exceed a certain distance (e.g., 12\" O.C.), set **Number of blocks** to `0` and adjust **Distribution** to `12`.\n- **Squash Blocks**: Use the **Squash H** parameter to account for sheathing thickness or camber when creating load-transfer blocks between floors.\n\n## FAQ\n- **Q: The script reports \"Manual limits smaller then distribution value\".**\n  - A: The distance between your selected start and end points (in Manual mode) is shorter than the spacing defined in the **Distribution** property. Increase the distance or decrease the **Distribution** value.\n- **Q: Why did no blocking generate?**\n  - A: Ensure the selected floor element contains Beams or TrussEntities. If using \"Automatic\" detection, ensure there are perpendicular beams to define the bay; otherwise, switch to Manual detection.\n- **Q: How do I use a specific material or size not listed in \"Size\"?**\n  - A: Set **Blocking type** to \"Selection\". The script will pause to let you click an existing beam in the model that has the desired properties and dimensions."
+      },
+      "tokens_used": 6508,
+      "error": null
+    }
+  }
+}

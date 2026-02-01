@@ -1,0 +1,230 @@
+{
+  "filename": "hsb_FrameWallsByCode.mcr",
+  "status": "completed",
+  "total_tokens": 22586,
+  "processing_time": 566.668196439743,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "04.04.2011",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3584,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select Element objects and casts them to ElementWallSF (a 3D model entity). It pushes the command '-Hsb_GenerateConstruction'. No _Viewport, sd_ prefixes, or ShopDrawing specific entities (#Type E) are found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2710,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "psExtType",
+            "type": "PropString",
+            "displayName": "Code wall to generate",
+            "defaultValue": "M;",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4651,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Filters wall elements by their 'Code' property and automatically initiates the construction generation process for the matching elements.",
+          "category": "Automation / Framing",
+          "typicalUseCase": "Generating framing for specific types of walls (e.g., only external or fire-rated walls) identified by a code, without processing all walls in the model."
+        },
+        "parameters": [
+          {
+            "name": "psExtType",
+            "technicalDefault": "M;",
+            "businessMeaning": "A list of wall classification codes used to filter which elements should be processed. Only walls whose 'Code' property matches one of these entries will be generated.",
+            "validRange": "Semicolon-separated text string (e.g., 'EXT;INT;FIRE;').",
+            "unit": "Text (String)",
+            "affectsOutput": "Determines the subset of selected walls that will receive the 'Generate Construction' command. Walls with codes not listed are ignored."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Construction Generation Command",
+            "description": "The script pushes the '-Hsb_GenerateConstruction' command to the stack, triggering hsbCAD to calculate and build the framing (studs, plates, etc.) for the filtered walls.",
+            "appliedTo": "ElementWallSF entities matching the specified codes."
+          }
+        ]
+      },
+      "tokens_used": 3345,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script initiated via command or catalog.",
+          "Check insert cycle count; if > 1, erase instance to prevent recursion.",
+          "Display properties dialog (if not executed via catalog key).",
+          "Prompt user to select a set of Element entities from the model.",
+          "Store selected elements in internal _Element array and pause execution.",
+          "System recycles script for calculation phase.",
+          "Validate that elements were selected; if list is empty, erase instance.",
+          "Parse the 'Code wall to generate' (psExtType) string into an array of valid codes.",
+          "Iterate through all selected elements.",
+          "Cast element to ElementWallSF; check validity.",
+          "Compare element's 'Code' property against the parsed list of valid codes.",
+          "If code matches, add wall to a processing list and collect its unique wall number.",
+          "If any matching walls were found, push '-Hsb_GenerateConstruction' command to the stack with the wall numbers.",
+          "Erase script instance from the database."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert cycle count > 1",
+            "path1": {
+              "name": "Recursive Trigger",
+              "steps": [
+                "Erase script instance immediately",
+                "Return (Exit)"
+              ]
+            },
+            "path2": {
+              "name": "First Run",
+              "steps": [
+                "Proceed to User Input Phase"
+              ]
+            }
+          },
+          {
+            "condition": "User Selection (PrEntity.go())",
+            "path1": {
+              "name": "Selection Successful",
+              "steps": [
+                "Append entities to _Element",
+                "Continue to Calculation Phase"
+              ]
+            },
+            "path2": {
+              "name": "Selection Cancelled/Empty",
+              "steps": [
+                "Element list remains empty",
+                "Script detects empty list in calculation phase",
+                "Erase instance"
+              ]
+            }
+          },
+          {
+            "condition": "Wall Code Match (Element.Code found in psExtType string)",
+            "path1": {
+              "name": "Match Found",
+              "steps": [
+                "Add wall to processing list",
+                "Add wall number to command string"
+              ]
+            },
+            "path2": {
+              "name": "No Match",
+              "steps": [
+                "Ignore specific wall",
+                "Continue to next element"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection Count",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Script erases itself. User must re-run and select valid elements."
+          },
+          {
+            "check": "Element Type",
+            "errorMessage": "None",
+            "recovery": "Selected elements are cast to 'ElementWallSF'. Elements that are not valid walls are implicitly skipped during the iteration."
+          },
+          {
+            "check": "Wall Code Existence",
+            "errorMessage": "None",
+            "recovery": "If no wall codes match the 'Code wall to generate' property, the generation command is not triggered. User must update the 'psExtType' property or wall codes and re-run."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "The script executes once and calls 'eraseInstance()' at the end, removing itself from the drawing. It cannot be edited or modified post-insertion."
+          }
+        ]
+      },
+      "tokens_used": 4209,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_FrameWallsByCode.mcr\n\n## Overview\nAutomatically filters selected wall elements based on their 'Code' property and initiates the construction generation process for only those matching walls.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D model elements. |\n| Paper Space | No | Not designed for layout views. |\n| Shop Drawing | No | Not intended for manufacturing details. |\n\n## Prerequisites\n- **Required entities**: `Element` (Wall entities specifically).\n- **Minimum beam count**: N/A (Selects Elements, not beams).\n- **Required settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Browse to and select `hsb_FrameWallsByCode.mcr`\n\n### Step 2: Configure Properties\n**Action**: Before selecting elements, you may adjust the filter criteria in the Properties Palette (Ctrl+1) if necessary. By default, the script looks for the code \"M;\".\n\n### Step 3: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the wall elements (ElementWallSF) you wish to process and press Enter.\n```\n\n**Result**: The script filters the selected walls based on the codes defined in the properties. Only walls with matching codes will have their construction generated. The script instance will then delete itself automatically.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Code wall to generate | Text | M; | A list of wall classification codes used to filter elements. Separate multiple codes with a semicolon (e.g., `EXT;INT;FIRE;`). Only walls with a matching 'Code' property will be processed. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| *None* | This script does not add specific items to the right-click context menu. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Semicolons Matter**: When entering multiple codes in the \"Code wall to generate\" property, ensure you end with a semicolon or separate codes strictly with semicolons (e.g., `A;B;C`).\n- **Verify Wall Codes**: Ensure your wall elements actually have the 'Code' property assigned in hsbCAD before running this script; otherwise, the filter will find no matches.\n- **Script Deletion**: This script is designed to run once and remove itself from the drawing. Do not try to edit it after insertion; simply run the command again if you need to generate more walls.\n\n## FAQ\n- **Q: I selected walls, but nothing happened. Why?**\n  A: Check the \"Code wall to generate\" property. It likely does not match the 'Code' property assigned to your specific walls. Also, ensure you selected `Element` entities, not raw beams or lines.\n- **Q: Can I use this to generate floors or roofs?**\n  A: No, this script is specifically designed to filter and process Wall elements (`ElementWallSF`).\n- **Q: Do I need to run the \"Generate Construction\" command manually after this?**\n  A: No, this script automatically pushes the \"Generate Construction\" command for the filtered walls."
+      },
+      "tokens_used": 4087,
+      "error": null
+    }
+  }
+}

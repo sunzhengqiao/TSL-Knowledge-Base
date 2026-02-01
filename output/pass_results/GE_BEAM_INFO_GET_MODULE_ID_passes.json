@@ -1,0 +1,220 @@
+{
+  "filename": "GE_BEAM_INFO_GET_MODULE_ID.mcr",
+  "status": "completed",
+  "total_tokens": 19365,
+  "processing_time": 207.182452917099,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "v1.2",
+            "date": "25-sep-2013",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Mispelling corrected"
+          },
+          {
+            "version": "v1.1",
+            "date": "30-ago-2013",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Added display for information field"
+          },
+          {
+            "version": "v1.0",
+            "date": "16-jul-2013",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3206,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select Beam objects and accesses model properties directly (name, handle). It reports information to the command line (reportNotice) rather than generating graphical entities in layouts. No sd_ prefixes, Viewport handling, or #Type E definitions found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing Beams",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2617,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "select a set of other beams",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2001,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Retrieves and displays metadata (Module ID, Information, Type, and Handle) for selected beams in the command line.",
+          "category": "Reporting/Query",
+          "typicalUseCase": "An engineer or detailer needs to verify which production module specific beams belong to or check custom 'information' fields assigned to groups of elements without manually inspecting each beam's properties."
+        },
+        "parameters": [
+          {
+            "name": "ssE",
+            "technicalDefault": "Beam()",
+            "businessMeaning": "The set of structural timber beams selected by the user to be queried for their Module ID and Information attributes.",
+            "validRange": "1 to N Beams",
+            "unit": "count",
+            "affectsOutput": "Directly determines the content of the text report generated via reportNotice. If no beams are selected, the script produces no output and erases itself."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": []
+      },
+      "tokens_used": 3587,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script insertion triggered (_bOnInsert = true)",
+          "Check insert cycle count (insertCycleCount)",
+          "If cycle count > 1, script erases itself and exits immediately",
+          "Prompt user to select a set of beams (PrEntity)",
+          "User confirms selection or cancels",
+          "Validate selection: Check if _Beam array length is greater than 0",
+          "If validation fails (0 beams), script erases itself and exits",
+          "Iterate through each selected beam in the array",
+          "Retrieve Module ID and Information attributes from beam properties",
+          "Check if individual beam is valid (bm.bIsValid())",
+          "Replace empty attribute strings with 'EMPTY'",
+          "Format data string including Beam ID (Handle), Type, Module, and Information",
+          "Output final compiled string to command line via reportNotice",
+          "Script erases itself (cleanup)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count",
+            "path1": {
+              "name": "Subsequent Recalc",
+              "steps": [
+                "Detect insertCycleCount > 1",
+                "Execute eraseInstance()",
+                "Exit script"
+              ]
+            },
+            "path2": {
+              "name": "Initial Insert",
+              "steps": [
+                "Detect insertCycleCount = 1",
+                "Execute PrEntity prompt",
+                "Continue to selection validation"
+              ]
+            }
+          },
+          {
+            "condition": "User Selection Validation",
+            "path1": {
+              "name": "Selection Successful",
+              "steps": [
+                "User selects 1 or more beams",
+                "Populate _Beam array",
+                "Proceed to data extraction loop"
+              ]
+            },
+            "path2": {
+              "name": "Selection Empty/Cancelled",
+              "steps": [
+                "User selects nothing or cancels prompt",
+                "_Beam.length() is 0",
+                "Execute eraseInstance()",
+                "Exit script"
+              ]
+            }
+          },
+          {
+            "condition": "Individual Beam Validity",
+            "path1": {
+              "name": "Valid Beam",
+              "steps": [
+                "bm.bIsValid() returns true",
+                "Extract properties (Handle, Type, Module, Information)",
+                "Append data to output string"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Beam",
+              "steps": [
+                "bm.bIsValid() returns false",
+                "Skip beam (do not append to string)",
+                "Continue loop to next beam"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam Selection Count",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "User must run the command again and ensure at least one beam is selected before confirming."
+          },
+          {
+            "check": "Entity Type",
+            "errorMessage": "None (Filtered by PrEntity(Beam()))",
+            "recovery": "User must select entities of type 'Beam' via the prompt."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 4100,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_BEAM_INFO_GET_MODULE_ID.mcr\n\n## Overview\nRetrieves and displays metadata (Module ID, Information field, Type, and Handle) for selected beams directly in the AutoCAD command line. This tool is designed for quick verification of production module assignments and custom data without manually opening properties for each element.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in the model where beams are located. |\n| Paper Space | No | Not intended for layout views. |\n| Shop Drawing | No | Not intended for shop drawing generation. |\n\n## Prerequisites\n- **Required Entities**: At least one structural Beam (`GenBeam`) must exist in the drawing.\n- **Minimum Beam Count**: 1 (Script exits silently if nothing is selected).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_BEAM_INFO_GET_MODULE_ID.mcr`\n\n### Step 2: Select Beams\n```\nCommand Line: select a set of other beams\nAction: Click on one or more beams in the 3D model or 2D plan and press Enter.\n```\n\n### Step 3: Review Output\n```\nCommand Line: [Output list]\nAction: Look at the command line to see the Module ID, Information, Type, and Handle for each selected beam.\nNote: Press F2 to open the full text history if the list runs off the screen.\n```\n\n### Step 4: Completion\nThe script will automatically erase itself from the drawing after displaying the data.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| None | N/A | N/A | This script runs as a query tool and does not create persistent entities with editable properties. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not create elements that remain in the drawing; thus, no context menu options are available. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Check Full History**: If you select a large number of beams, the output may scroll past the visible command line area. Press **F2** to open the AutoCAD Text Window to see the full report.\n- **Empty Fields**: If a beam has no specific Module ID or Information assigned, the script will report it as \"EMPTY\".\n- **Re-running**: Since the script deletes itself immediately after running, you must launch `TSLINSERT` again to query different beams.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I used it?**\n  - A: This is intended behavior. The script is a \"query tool\" that performs a check and then cleans itself up to keep your drawing clean. It does not leave any geometry behind.\n\n- **Q: I see \"EMPTY\" in the output. What does that mean?**\n  - A: It means the selected beam does not have a value assigned to the \"Module ID\" or \"Information\" attributes in its properties.\n\n- **Q: Can I use this on elements other than beams?**\n  - A: No, this script is specifically designed to read data from Beam entities (`GenBeam`). Selecting other object types will result in no data being displayed."
+      },
+      "tokens_used": 3854,
+      "error": null
+    }
+  }
+}

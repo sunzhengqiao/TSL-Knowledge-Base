@@ -1,0 +1,250 @@
+{
+  "filename": "HSB_E-EraseGenBeams.mcr",
+  "status": "completed",
+  "total_tokens": 27412,
+  "processing_time": 521.6513404846191,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "18-10-2019",
+            "author": "RP",
+            "changes": "Pilot version."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": [
+          "HSB_G-FilterGenBeams"
+        ]
+      },
+      "tokens_used": 4418,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Entity collection uses explicit `_kModelSpace` filter (`el.elementGroup().collectEntities(..., _kModelSpace, ...)`). Performs `dbErase()` on GenBeam objects which modifies the 3D model. Attached to `Element` (`_Element`) but operates as a utility on the 3D geometry rather than generating 2D views. No `_Viewport` or ShopDrawing generation patterns found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "HSB_G-FilterGenBeams",
+            "Catalog entries for Filter Definitions"
+          ]
+        }
+      },
+      "tokens_used": 3768,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select element(s)|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "Insertion without explicit ExecuteKey (calls showDialog())",
+            "title": "Script Properties",
+            "dataSource": "OPM Properties defined in script",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "genBeamFilterDefinition",
+            "type": "PropString",
+            "displayName": "|Filter definition for GenBeams|",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": [
+              "Catalog entries from HSB_G-FilterGenBeams"
+            ],
+            "category": "|General|",
+            "description": "|Filter definition for GenBeams.| (|Will be combined with custom filters|) |Use| HSB_G-FilterGenBeams |to define the filters|."
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "ManualInsert",
+            "handler": "ManualInsert",
+            "action": "Executes the beam erasing logic based on the selected filter definition.",
+            "alsoTriggeredBy": "_bOnElementConstructed"
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 4299,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A batch deletion utility that selectively removes generic beams from selected elements based on property criteria defined in an external filter catalog.",
+          "category": "Model Management / Utility",
+          "typicalUseCase": "Cleaning up temporary construction elements, removing specific types of bracing or formwork, or deleting incorrectly generated beams in bulk from a structural element."
+        },
+        "parameters": [
+          {
+            "name": "genBeamFilterDefinition",
+            "technicalDefault": "",
+            "businessMeaning": "Selects the specific criteria or rule set used to identify which beams should be deleted. This leverages pre-defined filters (e.g., beam name, material, size) to target specific groups of beams within the element.",
+            "validRange": "List of catalog entries defined in the 'HSB_G-FilterGenBeams' script.",
+            "unit": "N/A (Text Selection)",
+            "affectsOutput": "Determines exactly which Generic Beam entities are erased from the 3D model. If no beams match the filter, nothing is deleted."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of 'genBeamFilterDefinition'",
+            "effect": "The script passes this value to the 'HSB_G-FilterGenBeams' script to evaluate the beam list. The result of that evaluation dictates which beams are erased.",
+            "cascade": [
+              "genBeamFilterDefinition"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "GenBeam",
+            "description": "Erasure of specific Generic Beam entities from the model.",
+            "appliedTo": "Generic Beams located within the ModelSpace of the selected Element(s) that match the defined filter criteria."
+          }
+        ]
+      },
+      "tokens_used": 4720,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User launches script (either from catalog/execute key or manual command).",
+          "2. System checks '_kExecuteKey' to determine property source.",
+          "3. If '_kExecuteKey' is empty, display 'ShowDynamicDialog' for user to select 'genBeamFilterDefinition'.",
+          "4. If '_kExecuteKey' is present, verify it against catalog entries and load properties (fallback to '_LastInserted' if invalid).",
+          "5. Prompt user for Element selection using 'PrEntity'.",
+          "6. Iterate through selected Elements.",
+          "7. For each Element, create a new script instance (dbCreate) attached to that Element, passing the 'ManualInsert' execute key and selected properties.",
+          "8. Original controller instance erases itself.",
+          "9. New instance validates Element reference exists.",
+          "10. New instance collects all Beams within the Element's group in Model Space.",
+          "11. New instance calls external script 'HSB_G-FilterGenBeams' to filter the collected beam list based on the selected definition.",
+          "12. New instance validates that the filter operation was successful.",
+          "13. New instance iterates through the filtered beam entities and executes 'dbErase()' on them.",
+          "14. New instance erases itself."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Launch Method / Execute Key Status",
+            "path1": {
+              "name": "Interactive / Dialog",
+              "steps": [
+                "_kExecuteKey is empty",
+                "Open Properties Dialog",
+                "User selects Filter Definition",
+                "Save properties to '_LastInserted'",
+                "Proceed to Element Selection"
+              ]
+            },
+            "path2": {
+              "name": "Automated / Catalog",
+              "steps": [
+                "_kExecuteKey is set",
+                "Check if key matches a Catalog Name",
+                "If match: Load properties from specific Catalog",
+                "If no match: Load properties from '_LastInserted'",
+                "Proceed to Element Selection"
+              ]
+            }
+          },
+          {
+            "condition": "Dependency Check (HSB_G-FilterGenBeams)",
+            "path1": {
+              "name": "Filter Loaded",
+              "steps": [
+                "callMapIO returns success (1)",
+                "Retrieve filtered beam list",
+                "Execute dbErase() on beams",
+                "Erase script instance"
+              ]
+            },
+            "path2": {
+              "name": "Filter Missing",
+              "steps": [
+                "callMapIO returns failure (0)",
+                "Report Warning: 'GenBeams could not be filtered! Make sure that the tsl HSB_G-FilterGenBeams is loaded in the drawing.'",
+                "Erase script instance"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "N/A (Silent failure)",
+            "recovery": "Script erases itself if insertCycleCount() > 1 to prevent re-execution on regen."
+          },
+          {
+            "check": "Element Reference",
+            "errorMessage": "|Element reference not found.|",
+            "recovery": "Script erases itself immediately. User must run the script again and ensure valid elements are selected."
+          },
+          {
+            "check": "External Script Dependency",
+            "errorMessage": "|GenBeams could not be filtered!| |Make sure that the tsl| HSB_G-FilterGenBeams |is loaded in the drawing|.",
+            "recovery": "User must load/compile the 'HSB_G-FilterGenBeams' script into the current drawing and re-run the erase operation."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 5368,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-EraseGenBeams\n\n## Overview\nA batch deletion utility that selectively removes Generic Beams (GenBeams) from selected Elements based on predefined filter criteria. This tool is ideal for cleaning up specific types of temporary or incorrect beams (e.g., formwork, bracing) within a structural element in bulk.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D model entities. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | Not designed for detail drawing generation. |\n\n## Prerequisites\n- **Required Entities**: Element (to define the scope of the search) and GenBeam (entities to be deleted).\n- **Minimum Beam Count**: 0 (The script searches for beams to delete; it does not require existing beams to run).\n- **Required Settings**:\n  - The script `HSB_G-FilterGenBeams` must be loaded and compiled in the current drawing.\n  - Filter definitions must be configured in the catalog used by `HSB_G-FilterGenBeams`.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_E-EraseGenBeams.mcr`\n\n### Step 2: Configure Filter (if applicable)\n```\nDialog: Script Properties\nAction: If running manually (without a preset Execute Key), a dialog appears. Select the desired 'Filter definition for GenBeams' from the dropdown list to specify which beams to target.\n```\n\n### Step 3: Select Element\n```\nCommand Line: Select element(s)\nAction: Click on the Element(s) in the model that contain the beams you wish to erase. Press Enter to confirm selection.\n```\n\n### Step 4: Execution\nThe script will automatically apply the filter, identify matching beams, and erase them from the model.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Filter definition for GenBeams | Dropdown | [Empty] | Selects the specific criteria (rule set) used to identify which beams should be deleted. Options are populated from the external filter script (e.g., filtering by beam name, material, or size). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| ManualInsert | Re-runs the beam erasing logic using the currently selected filter properties on the attached Element. |\n\n## Settings Files\n- **Dependency**: `HSB_G-FilterGenBeams.tsl`\n- **Location**: Must be loaded in the current hsbCAD drawing environment.\n- **Purpose**: Provides the logic and catalog entries for filtering beam entities.\n\n## Tips\n- **Verify Dependencies**: Ensure `HSB_G-FilterGenBeams` is loaded; otherwise, this script will fail with a warning.\n- **Undo**: You can use the standard AutoCAD `UNDO` command to restore beams if you accidentally delete the wrong ones.\n- **Catalog Setup**: Check your Filter catalog to ensure the definition correctly targets the beams you intend to delete before running the script on large assemblies.\n\n## FAQ\n- **Q: The script reports \"GenBeams could not be filtered!\" What do I do?**\n  A: This means the script `HSB_G-FilterGenBeams` is not loaded in your drawing. You need to insert and compile `HSB_G-FilterGenBeams` first.\n- **Q: No beams were deleted even though I selected an element.**\n  A: Check your \"Filter definition for GenBeams\" setting. It is likely that no beams within the selected element currently match the criteria defined in that filter.\n- **Q: Can I use this to delete structural beams?**\n  A: Yes, if a filter definition exists that matches those structural beams. Use with caution and ensure your filter is specific enough to avoid unintended data loss."
+      },
+      "tokens_used": 4839,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,207 @@
+{
+  "filename": "hsb_DSP-SeatCut.mcr",
+  "status": "completed",
+  "total_tokens": 19255,
+  "processing_time": 334.310350894928,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "18.05.2015",
+            "author": "Chirag Sawjani (csawjani@itw-industry.com)",
+            "changes": "Release Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3451,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script processes Element and Beam objects directly without using sd_* prefixes, Viewport logic, or ShopDrawing entities (_Entity[]). It acts on the 3D construction model by applying static cuts to beams."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Map"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D Construction Model)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1283,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 1697,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically applies a vertical static cut to specific beams within an element based on a matching Beam Code, then self-destructs.",
+          "category": "Machining",
+          "typicalUseCase": "Creating a seat cut or notch at a specific insertion point for a group of beams (e.g., joists or rafters) that share a common Beam Code property."
+        },
+        "parameters": [],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Cut",
+            "description": "A vertical machining cut defined along the negative World Z-axis at the script's insertion point. The cut is applied statically (stretching with beam updates).",
+            "appliedTo": "Beams within the selected Element where the first token of the Beam Code matches the 'BEAMCODE' value stored in the script's Map."
+          }
+        ]
+      },
+      "tokens_used": 4200,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launches (Insertion or Recalculation event).",
+          "Check if the script is currently being inserted (_bOnInsert).",
+          "If _bOnInsert is true, the script immediately returns without performing any actions (waiting for the next update trigger).",
+          "If _bOnInsert is false, proceed to execution logic.",
+          "Retrieve the insertion point origin (ptOrigin) from coordinate system origin (_Pt0).",
+          "Retrieve the first Element attached to the script instance (_Element[0]).",
+          "Retrieve the Map attached to the script instance (_Map).",
+          "Check if the Map contains the specific string key \"BEAMCODE\".",
+          "If \"BEAMCODE\" is missing, erase the script instance and terminate.",
+          "If \"BEAMCODE\" exists, retrieve its value and convert it to uppercase.",
+          "Collect all beams contained within the selected Element.",
+          "Iterate through all collected beams.",
+          "For each beam, extract the first token of its BeamCode property and convert it to uppercase.",
+          "Compare the beam's code token with the script's \"BEAMCODE\" value.",
+          "If they match, add the beam to a list of target beams.",
+          "After filtering all beams, iterate through the list of target beams.",
+          "For each target beam, create a vertical Cut operation starting at ptOrigin and directed along negative Z-axis.",
+          "Add this Cut to the beam as a static tool with 'stretch on insert' behavior.",
+          "After processing all target beams, erase the script instance from the model."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Check Insertion State (_bOnInsert)",
+            "path1": {
+              "name": "Initial Insertion",
+              "steps": [
+                "Script detects _bOnInsert is true.",
+                "Script returns immediately.",
+                "No geometry or cuts are generated."
+              ]
+            },
+            "path2": {
+              "name": "Execution / Recalculation",
+              "steps": [
+                "Script detects _bOnInsert is false.",
+                "Proceeds to map validation and beam processing logic."
+              ]
+            }
+          },
+          {
+            "condition": "Validation of Element and Map Data",
+            "path1": {
+              "name": "Data Valid",
+              "steps": [
+                "Element exists (length check passed).",
+                "Map contains 'BEAMCODE' key.",
+                "Proceed to beam filtering loop."
+              ]
+            },
+            "path2": {
+              "name": "Data Invalid / Missing",
+              "steps": [
+                "Element check fails OR 'BEAMCODE' missing from Map.",
+                "Execute eraseInstance().",
+                "Script removes itself from drawing."
+              ]
+            }
+          },
+          {
+            "condition": "Beam Code Matching",
+            "path1": {
+              "name": "Code Match",
+              "steps": [
+                "Beam's first token (uppercase) equals Script 'BEAMCODE' (uppercase).",
+                "Add beam to 'beamsWithCode' array.",
+                "Beam receives the static cut in subsequent loop."
+              ]
+            },
+            "path2": {
+              "name": "Code Mismatch",
+              "steps": [
+                "Beam code does not match.",
+                "Beam is ignored.",
+                "No cut is applied to this specific beam."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Existence of the 'BEAMCODE' key in the script's Map.",
+            "errorMessage": "No explicit user error message. Script self-destructs silently.",
+            "recovery": "User must ensure the script instance has a Map attached containing the key 'BEAMCODE' with a valid string value before inserting or updating."
+          },
+          {
+            "check": "Attachment of an Element to the script.",
+            "errorMessage": "No explicit user error message. Script self-destructs silently.",
+            "recovery": "User must ensure an Element is selected or the script is anchored to an Element during insertion."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Cut Location",
+            "how": "The script instance is immediately erased after execution. Therefore, post-insertion modification of the script itself is not possible. The cut is static.",
+            "effect": "The cut location is determined by the initial insertion point (_Pt0). To change the cut, the user would typically need to delete the cut from the beam manually or re-insert the script at the correct location."
+          }
+        ]
+      },
+      "tokens_used": 3315,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_DSP-SeatCut.mcr\n\n## Overview\nThis script automatically applies a vertical static seat cut to specific beams within a construction element. Once the cut is applied, the script instance deletes itself from the model.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Operates on 3D construction elements. |\n| Paper Space | No | Not designed for layout views. |\n| Shop Drawing | No | Not designed for manufacturing drawings. |\n\n## Prerequisites\n- **Required Entities:** An Element (e.g., a wall or floor assembly) containing structural beams.\n- **Configuration:** The script instance requires a **Map** property attached to it with a specific key `BEAMCODE`.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\n1. Run the command in AutoCAD.\n2. Browse and select `hsb_DSP-SeatCut.mcr`.\n\n### Step 2: Define Location\n1. **Command Line:** `Specify insertion point:`\n2. **Action:** Click in the model where you want the vertical seat cut to originate (the top of the cut).\n\n### Step 3: Attach Element (If required)\n*Note: Depending on your hsbCAD version settings, you may need to manually attach the script to an Element if it is not automatically detected.*\n1. Select the script instance if it remains visible.\n2. Use the hsbCAD function to add the script to the relevant Element (e.g., via Element properties or context menu).\n3. Ensure the target beams are inside this Element.\n\n### Step 4: Configure the Beam Code\nSince this script has no input dialogs, you must configure the target beam code via the Properties Palette:\n1. Select the script instance.\n2. Open the **Properties** palette (Ctrl+1).\n3. Locate the **Map** property.\n4. Add a Key-Value pair:\n   - **Key:** `BEAMCODE`\n   - **Value:** The Beam Code you wish to target (e.g., \"JST\" or \"RAFTER\").\n5. *Note: The script checks the first part of the beam's code against this value.*\n\n### Step 5: Execute the Cut\n1. Trigger a recalculation. You can do this by running `TSLUPDATEALL` or using `TSLUPDATESINGLE` on the script instance.\n2. The script will process the beams, apply the vertical cut to matches, and then **erase itself**.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Map** | Map | - | A collection of Key-Value pairs. Must contain the key `BEAMCODE` to function. |\n\n*Note: This script does not expose standard numeric or text properties; it relies entirely on the Map entry for configuration.*\n\n## Right-Click Menu Options\n\nThis script has no custom right-click menu options. Standard hsbCAD context menus apply.\n\n## Settings Files\n- **Filename:** None\n- **Location:** N/A\n- **Purpose:** This script operates independently of external XML settings files.\n\n## Tips\n- **Self-Destructing:** Do not be alarmed if the script icon disappears after updating. This is intended behavior; the cut becomes a permanent part of the beam geometry.\n- **Cut Direction:** The cut is always vertical downwards (Negative World Z-axis) from the insertion point.\n- **Beam Matching:** The script looks for an exact match (case-insensitive) between the `BEAMCODE` value and the *first token* of the beam's property code. For example, if `BEAMCODE` is \"RF\", beams named \"RF-100\" and \"RF-200\" will be cut.\n- **Undo:** If the cut is applied incorrectly, you can use the AutoCAD `UNDO` command to remove the script and the cuts, then try again.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I inserted it?**\n  - A: The script is designed to run once (upon the first update/refresh after insertion) and then delete itself. If it disappeared before you could configure the `BEAMCODE`, the check ran and failed (finding no code), or the system updated automatically.\n- **Q: The script is still there, but no cuts appeared.**\n  - A: Check the **Map** property in the Properties Palette. Ensure the key `BEAMCODE` exists and matches the start of your target beams' codes. Also, ensure the beams are actually inside the Element attached to the script.\n- **Q: Can I move the cut after it is applied?**\n  - A: No. This script applies a \"static\" cut. Unlike a parametric connection, it does not maintain a link to the original script (since the script deletes itself). To move the cut, you must delete the machining from the beam manually and re-run the script."
+      },
+      "tokens_used": 5309,
+      "error": null
+    }
+  }
+}

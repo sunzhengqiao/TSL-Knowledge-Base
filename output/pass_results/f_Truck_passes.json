@@ -1,0 +1,345 @@
+{
+  "filename": "f_Truck.mcr",
+  "status": "completed",
+  "total_tokens": 49125,
+  "processing_time": 303.2708866596222,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9418,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses Display objects (dpTruck) with vector arguments (vecX, vecY, vecZ) and Point3d coordinates for drawing blocks and text. It calculates physical properties like Weight and Center of Gravity (ptCOG) and performs CoordSys transformations. The script writes to _Map and setSubMapX for instance data persistence. History indicates interaction with 'f_Item' and physical stacking logic, characteristic of Model Space production tools."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam",
+            "hsbPivotSchedule"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D environment)",
+          "requiredSettings": [
+            "XML configuration file containing truck designs, axle definitions, and 'SubDesign' properties"
+          ]
+        }
+      },
+      "tokens_used": 7775,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": [
+          {
+            "filename": "Truck.xml (implied)",
+            "searchPaths": [
+              "hsbCompany",
+              "hsbInstall"
+            ],
+            "purpose": "Contains truck designs, axle definitions, SubDesign properties, and configuration data (referenced in script logic and comments).",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 6201,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the calculation, visualization, and documentation of loading timber packages onto trucks or logistics grids. It optimizes stacking arrangements, calculates axle loads and center of gravity, and generates transport drawings.",
+          "category": "Logistics/Production",
+          "typicalUseCase": "Used during the production planning phase to determine how packages (Element/GenBeam/Body) fit onto specific truck profiles, ensuring transport safety regarding weight limits and stability."
+        },
+        "parameters": [
+          {
+            "name": "Design",
+            "technicalDefault": "0",
+            "businessMeaning": "The mode of operation for the script (e.g., Truck view, Grid view, Individual configuration). It determines if the script calculates based on a truck profile or a stacking grid.",
+            "validRange": "0 to N (Integer, defined in XML)",
+            "unit": "Index",
+            "affectsOutput": "Switches the visualization between a physical truck representation (including axles) and an abstract stacking grid. Changes how COG and load calculations are applied."
+          },
+          {
+            "name": "sTruckName",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "User-defined name of the truck or transport configuration (e.g., 'Truck_24t', 'KLH_Standard').",
+            "validRange": "String",
+            "unit": "Text",
+            "affectsOutput": "Used to retrieve specific geometry and axle configuration data from the linked XML file. Affects displayed dimensions and load limits."
+          },
+          {
+            "name": "bIsKlh",
+            "technicalDefault": "false",
+            "businessMeaning": "Flag indicating if the stacking logic is optimized for KLH (cross-laminated timber) panels, often involving specific alignment and wrapping rules.",
+            "validRange": "true/false",
+            "unit": "Boolean",
+            "affectsOutput": "Alters the coordinate transformation logic (Layer2Truck), handles panel orientation differently, and manages specific KLH properties like 'Package wrapped' and 'Layer separation'."
+          },
+          {
+            "name": "nApplyLayerSeparation",
+            "technicalDefault": "0",
+            "businessMeaning": "Specifies if and how layers of the package are separated, often for stability or handling reasons (e.g., using battens).",
+            "validRange": "0/1",
+            "unit": "Boolean (0=No, 1=Yes)",
+            "affectsOutput": "Modifies the stacking data map to add separation layers between timber elements, potentially affecting total package height and arrangement."
+          },
+          {
+            "name": "nPackageWrapped",
+            "technicalDefault": "0",
+            "businessMeaning": "Indicates if the package is weather-protected with foil or wrapping.",
+            "validRange": "0/1",
+            "unit": "Boolean (0=No, 1=Yes)",
+            "affectsOutput": "Updates the map data to reflect the wrapping status, which may be exported to production labels or ERP systems."
+          },
+          {
+            "name": "RowOffset",
+            "technicalDefault": "0",
+            "businessMeaning": "Vertical distance between stacked rows (top-to-top or bottom-to-bottom depending on configuration).",
+            "validRange": "0mm to 2000mm",
+            "unit": "mm",
+            "affectsOutput": "Physically separates layers in the 3D stack visualization and adjusts the calculated total height of the load."
+          },
+          {
+            "name": "vecX, vecY, vecZ",
+            "technicalDefault": "World UCS",
+            "businessMeaning": "Coordinate system defining the orientation of the truck/grid relative to the world coordinates.",
+            "validRange": "3D Vectors",
+            "unit": "Direction",
+            "affectsOutput": "Rotates the entire truck visualization and the stacked entities to align with the intended transport direction."
+          },
+          {
+            "name": "dWeight",
+            "technicalDefault": "0",
+            "businessMeaning": "Total calculated weight of the loaded truck or specific package.",
+            "validRange": "0kg to 40000kg",
+            "unit": "kg",
+            "affectsOutput": "Displayed on the drawing block. Used to validate against the truck's maximum load capacity defined in the XML."
+          },
+          {
+            "name": "ptCOG",
+            "technicalDefault": "Origin",
+            "businessMeaning": "The Center of Gravity point for the entire load.",
+            "validRange": "3D Coordinates",
+            "unit": "Point3d (mm)",
+            "affectsOutput": "Visualized in the drawing to check stability and balance relative to the truck axles."
+          },
+          {
+            "name": "FrontDistance",
+            "technicalDefault": "0",
+            "businessMeaning": "The distance from the truck's front/reference point to the start of the load.",
+            "validRange": "0mm to Max Truck Length",
+            "unit": "mm",
+            "affectsOutput": "Shifts the position of the stacked elements along the truck's longitudinal axis to optimize axle load distribution."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing sTruckName",
+            "effect": "Loads a new configuration set from the XML, including axle positions and max load limits.",
+            "cascade": [
+              "Design",
+              "FrontDistance",
+              "AxleLoads",
+              "Dimensions"
+            ]
+          },
+          {
+            "trigger": "Setting bIsKlh to true",
+            "effect": "Activates KLH-specific coordinate transformations and property handling.",
+            "cascade": [
+              "CoordinateSystem",
+              "LayerSeparation",
+              "PackageWrapped"
+            ]
+          },
+          {
+            "trigger": "Modifying RowOffset",
+            "effect": "Recalculates the total height and may trigger a re-stack if height limits are exceeded.",
+            "cascade": [
+              "TotalHeight",
+              "StackingArrangement"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Display (Visualization)",
+            "description": "A graphical representation of the truck frame, wheels, axles, and the stacked timber load in 3D Model Space.",
+            "appliedTo": "Model Space (instance of f_Truck)"
+          },
+          {
+            "type": "Map/Property Data",
+            "description": "Stores calculated metrics like Weight, COG, and StackingData (SubMapX) on the instance and child entities.",
+            "appliedTo": "f_Truck instance and stacked Elements/Beams"
+          },
+          {
+            "type": "hsbPivotSchedule",
+            "description": "A schedule entity generated for plotting/viewports, often used to list package weights per layer or truck.",
+            "appliedTo": "Drawing/Model Space"
+          },
+          {
+            "type": "Dimension/Annotation",
+            "description": "Draws dimensions for package length, width, height, and axle distances based on the 'Layout Block' XML configuration.",
+            "appliedTo": "Truck instance visualization"
+          }
+        ]
+      },
+      "tokens_used": 8783,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script launched via insertion or recalculation trigger.",
+          "2. Initialize properties and load default values from internal XML configuration (e.g., Truck.xml).",
+          "3. Parse XML to retrieve geometry settings, axle definitions, and 'SubDesign' constraints based on the 'Design' index.",
+          "4. Establish Coordinate System (CS): Determine origin and vectors (vecX/Y/Z or KLH-specific _XW/_YW/_ZW).",
+          "5. Collect Entities: Gather GenBeams, Elements, or Bodies assigned to the truck/grid (either previously linked or selected via prompt if inserting).",
+          "6. Calculate Package Geometry: Determine bounding box and orientation of the loaded items.",
+          "7. Execute Branch Logic based on 'Design' (Truck Mode vs. Grid Mode): Calculate stacking positions and check physical constraints.",
+          "8. Calculate Physics: Compute Total Weight and Center of Gravity (ptCOG) relative to the truck/grid CS. If Truck mode, calculate specific axle loads.",
+          "9. Visualise: Generate Display objects for the truck frame, wheels (if applicable), and stacked load shadows.",
+          "10. Draw Layout Block: Execute block drawing routine, iterating through defined XML tags to display dynamic properties (Text, Dimensions).",
+          "11. Publish Data: Write calculated metrics (Weight, ptCOG, StackingData) to _Map and SubMapX (e.g., 'Hsb_Grid2Truck').",
+          "12. Finalise: Update instance and exit."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "bIsKlh (KLH Mode Flag)",
+            "path1": {
+              "name": "KLH Panel Logic",
+              "steps": [
+                "Use specific coordinate vectors (_XW, _YW, _ZW) for transformations.",
+                "Apply 'Layer2Truck' transformations optimized for cross-laminated timber.",
+                "Read specific net weights from property sets.",
+                "Draw Layout Block using KLH-specific orientation logic."
+              ]
+            },
+            "path2": {
+              "name": "Standard Timber Logic",
+              "steps": [
+                "Use standard coordinate vectors (vecX, vecY, vecZ).",
+                "Apply standard stacking transformations.",
+                "Calculate weight based on volume/material density.",
+                "Draw Layout Block using standard orientation."
+              ]
+            }
+          },
+          {
+            "condition": "Design Property (0=Truck, 1=Grid, etc.)",
+            "path1": {
+              "name": "Truck Mode",
+              "steps": [
+                "Load axle definitions from XML.",
+                "Calculate and validate axle loads against limits.",
+                "Visualize truck chassis and wheels.",
+                "Calculate COG relative to axles."
+              ]
+            },
+            "path2": {
+              "name": "Grid/Package Mode",
+              "steps": [
+                "Load grid dimensions/contours from XML.",
+                "Ignore axle calculations.",
+                "Visualize abstract grid or storage area.",
+                "Focus on package footprint and stacking height."
+              ]
+            }
+          },
+          {
+            "condition": "Layout Block XML Configuration",
+            "path1": {
+              "name": "Configured Block Found",
+              "steps": [
+                "Read block name and transformation settings.",
+                "Draw the CAD block at the specified location.",
+                "Iterate through 'Tag[]' map to find and display property values (Project info, Truck Name, Weight)."
+              ]
+            },
+            "path2": {
+              "name": "No Configuration",
+              "steps": [
+                "Skip block drawing.",
+                "Skip dynamic annotation generation."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "XML Configuration Availability",
+            "errorMessage": "Cannot find configuration for selected Truck Name or Design index.",
+            "recovery": "Select a valid 'sTruckName' or ensure the correct XML file exists in the hsbCompany/hsbInstall folder."
+          },
+          {
+            "check": "Axle Load Limits (Truck Mode)",
+            "errorMessage": "Calculated axle load exceeds maximum legal limit.",
+            "recovery": "Adjust 'FrontDistance' to shift the load, reduce package weight, or select a different truck design."
+          },
+          {
+            "check": "Package Dimensions vs. Grid/Truck Size",
+            "errorMessage": "Package exceeds maximum length or width of the truck/grid.",
+            "recovery": "Rotate the package elements or select a truck design with a larger loading area."
+          },
+          {
+            "check": "Property Mapping (Tags)",
+            "errorMessage": "Tag property not found on entity.",
+            "recovery": "Ensure the required Property Sets are attached to the truck instance or that the tag name matches an existing AutoProperty."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Edit Truck Properties",
+            "how": "AutoCAD Properties Palette (OPM)",
+            "effect": "Changing 'sTruckName', 'FrontDistance', or 'RowOffset' triggers a recalc, immediately updating the visualization, COG, and axle loads."
+          },
+          {
+            "action": "Generate Plot Viewports",
+            "how": "Right-click Context Menu (if implemented in triggers)",
+            "effect": "Creates 'hsbPivotSchedule' entities and viewports for detailing the load arrangement."
+          },
+          {
+            "action": "Apply Layer Separation",
+            "how": "Command line or Context Menu (KLH mode)",
+            "effect": "Modifies the stacking data to insert separation layers (battens) between timber panels, updating height and weight calculations."
+          },
+          {
+            "action": "Move Truck Instance",
+            "how": "Grip Edit / Move Command",
+            "effect": "Moves the entire visualization and updates the 'ptOrg' (Origin) in the coordinate system."
+          }
+        ]
+      },
+      "tokens_used": 10405,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# f_Truck.mcr\n\n## Overview\nAutomates the calculation, visualization, and documentation of loading timber packages onto trucks or logistics grids. It optimizes stacking arrangements, calculates axle loads and center of gravity, and generates transport drawings to ensure safety and compliance.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for 3D visualization and spatial calculations. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Entities**: Elements, GenBeams, or Bodies representing the timber package to be loaded.\n- **Required Settings Files**: An XML configuration file (e.g., `Truck.xml`) containing truck profiles, axle definitions, and design constraints.\n- **Minimum Beam Count**: 0 (The script can calculate an empty truck frame).\n\n## Usage Steps\n\n### Step 1: Launch Script\n```\nCommand: TSLINSERT\nAction: Select 'f_Truck.mcr' from the file list and click Open.\n```\n\n### Step 2: Configure Truck Profile\n```\nAction: After insertion, select the new f_Truck instance in the model. Open the Properties Palette (Ctrl+1).\nAction: Locate the 'sTruckName' property and select a valid truck profile from your XML configuration (e.g., \"Truck_24t\").\n```\n*The truck visualization and axle data will load automatically based on this selection.*\n\n### Step 3: Assign and Adjust Load\n```\nAction: Link your timber package (Elements/Beams) to the truck instance (method depends on specific company workflow tools).\nAction: In the Properties Palette, adjust the 'FrontDistance' to shift the load forward or backward along the truck bed.\n```\n*Watch the 'AxleLoads' and COG visualization update to find the optimal balance.*\n\n### Step 4: Finalize Settings\n```\nAction: Set 'bIsKlh' to True if loading CLT/KLH panels to use specific orientation logic.\nAction: Toggle 'nPackageWrapped' to Yes if the load will be foil-wrapped.\nAction: Set 'nApplyLayerSeparation' to Yes if battens are required between layers.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Design** | Integer | 0 | Selects the operation mode (e.g., 0 = Truck View, 1 = Grid View). Determines the visual representation and calculation rules. |\n| **sTruckName** | String | \"\" | The name of the truck configuration to use. Must match a key defined in your XML settings file. |\n| **bIsKlh** | Boolean | false | If 'True', activates logic optimized for cross-laminated timber (KLH) panels, including specific coordinate transformations. |\n| **FrontDistance** | Double | 0 | The distance from the front of the truck to the start of the load. Use this to optimize axle weight distribution. |\n| **RowOffset** | Double | 0 | The vertical distance between stacked rows (layers). Increasing this adds to the total height of the load. |\n| **nApplyLayerSeparation** | Integer | 0 | Specifies if separation layers (like battens) are added between timber layers (0 = No, 1 = Yes). |\n| **nPackageWrapped** | Integer | 0 | Indicates if the package is weather-protected/wrapped (0 = No, 1 = Yes). Used for documentation. |\n| **vecX / vecY / vecZ** | Vector | World | Defines the orientation of the truck in the 3D model. Usually set by the insertion point. |\n| **dWeight** | Double | 0 | (Read-only) Displays the total calculated weight of the loaded truck. |\n| **ptCOG** | Point3d | 0,0,0 | (Read-only) Displays the calculated Center of Gravity for the load. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Recalculate** | Refreshes the script to update the visualization and load calculations after changing properties or linked entities. |\n| **Generate Plot Viewports** | Creates hsbPivotSchedule entities and viewports for detailing the load arrangement in drawings. |\n| **Apply Layer Separation** | (KLH Mode) Forces the script to recalculate the stack assuming battens/spacers exist between layers. |\n\n## Settings Files\n- **Filename**: `Truck.xml` (or equivalent defined in script).\n- **Location**: `hsbCompany` or `hsbInstall` directory.\n- **Purpose**: Defines the geometry of available trucks (length, width, axle positions), maximum load limits, and visual block properties.\n\n## Tips\n- **Balancing Loads**: If an axle turns red or exceeds the limit in the visualization, increase or decrease the **FrontDistance** to shift the Center of Gravity (COG) over the axles.\n- **Height Limits**: Monitor the total height when increasing **RowOffset** or applying layer separation to ensure the load fits under bridges or into transport tunnels.\n- **KLH Panels**: Always toggle **bIsKlh** to 'True' for cross-laminated timber to ensure correct orientation and property handling.\n- **Visualization**: The script draws a \"shadow\" of the load on the truck bed. If your timber elements are missing, check that they are correctly assigned to the truck instance.\n\n## FAQ\n- **Q: Why do I see an error or no truck appears after insertion?**\n- A: Check that the **sTruckName** property matches an entry exactly as written in your configuration XML file. If the file is missing from your `hsbCompany` folder, the script cannot load the geometry.\n\n- **Q: How do I check if my truck is legally loaded?**\n- A: Look at the displayed dimensions and the **dWeight** property. The script visualizes the COG; ensure it falls within the safe zone relative to the axles. Use the properties to verify individual axle loads against legal limits.\n\n- **Q: Can I use this for storage planning instead of transport?**\n- A: Yes. Change the **Design** parameter to \"Grid\" mode (if configured in your XML) to visualize an abstract stacking grid without truck axles or chassis limitations."
+      },
+      "tokens_used": 6543,
+      "error": null
+    }
+  }
+}

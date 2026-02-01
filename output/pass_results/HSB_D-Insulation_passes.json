@@ -1,0 +1,362 @@
+{
+  "filename": "HSB_D-Insulation.mcr",
+  "status": "completed",
+  "total_tokens": 47955,
+  "processing_time": 254.8162202835083,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8534,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Viewport vp = getViewport(T(\"|Select a viewport|\")); _Viewport.append(vp); CoordSys ms2ps = vp.coordSys(); CoordSys ps2ms = ms2ps; ps2ms.invert(); dim.transformBy(ms2ps);"
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Paper Space (Layout) with an active Viewport linked to a model Element",
+          "requiredSettings": [
+            "HSB_G-FilterGenBeams.mcr"
+          ]
+        }
+      },
+      "tokens_used": 6334,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9245,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically dimensions the voids (gaps) between structural members (e.g., studs or rafters) in Paper Space to represent insulation widths, with options to add allowance for compression.",
+          "category": "ShopDrawing / Annotation",
+          "typicalUseCase": "Generating production drawings for walls or roofs where the specific spacing between studs needs to be dimensioned for insulation cutting or ordering, including a tolerance for over-filling."
+        },
+        "parameters": [
+          {
+            "name": "genBeamFilterDefinition",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Selects a predefined filter script to determine which structural members define the insulation boundaries (e.g., ignoring cripple studs or trimmers).",
+            "validRange": "List of available catalog instances of 'HSB_G-FilterGenBeams'",
+            "unit": "Selection",
+            "affectsOutput": "Controls which beams are subtracted from the wall profile to identify insulation voids."
+          },
+          {
+            "name": "sFilterBC",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Excludes beams based on their Beam Code (e.g., exclude 'ST' if only 'RW' rafters should be measured).",
+            "validRange": "Semicolon-separated list of beam codes",
+            "unit": "String",
+            "affectsOutput": "Removes matching beams from the calculation, effectively merging adjacent voids."
+          },
+          {
+            "name": "sFilterLabel",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Excludes beams or sheets based on their assigned Label.",
+            "validRange": "Semicolon-separated list of labels",
+            "unit": "String",
+            "affectsOutput": "Removes matching labeled entities from the boundary calculation."
+          },
+          {
+            "name": "sFilterMaterial",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Excludes beams based on their material name.",
+            "validRange": "Semicolon-separated list of materials",
+            "unit": "String",
+            "affectsOutput": "Removes matching material entities from the boundary calculation."
+          },
+          {
+            "name": "dAddExtraSize",
+            "technicalDefault": "5",
+            "businessMeaning": "Adds a fixed allowance (tolerance) to the measured insulation width to account for compression or manufacturing variances.",
+            "validRange": "-10 to 50",
+            "unit": "mm",
+            "affectsOutput": "Increases the numerical value displayed on the dimension line."
+          },
+          {
+            "name": "dMinimumSize",
+            "technicalDefault": "5",
+            "businessMeaning": "Defines the smallest gap width to dimension; gaps smaller than this are ignored.",
+            "validRange": "0 to 100",
+            "unit": "mm",
+            "affectsOutput": "Suppresses dimension lines for minor gaps or slivers."
+          },
+          {
+            "name": "sUsePSUnits",
+            "technicalDefault": "No",
+            "businessMeaning": "Determines if the offset distances are defined in Paper Space (1:1 plotting) units or Model Space (real world) units.",
+            "validRange": "Yes / No",
+            "unit": "Boolean",
+            "affectsOutput": "Scales the `dDimLineOffset` and `dTextOffset` based on the Viewport scale."
+          },
+          {
+            "name": "dDimLineOffset",
+            "technicalDefault": "300",
+            "businessMeaning": "The distance between the insulation edge and the dimension line.",
+            "validRange": "10 to 1000",
+            "unit": "mm (if Model) or Paper Space mm",
+            "affectsOutput": "Moves the dimension line closer to or further from the element."
+          },
+          {
+            "name": "dTextOffset",
+            "technicalDefault": "100",
+            "businessMeaning": "The distance the dimension text is shifted from the dimension line.",
+            "validRange": "0 to 500",
+            "unit": "mm (if Model) or Paper Space mm",
+            "affectsOutput": "Moves the text label horizontally relative to the dimension line."
+          },
+          {
+            "name": "sPosition",
+            "technicalDefault": "Horizontal bottom",
+            "businessMeaning": "Selects whether dimensions are placed at the bottom or top edge of the element envelope.",
+            "validRange": "Horizontal bottom / Horizontal top",
+            "unit": "Selection",
+            "affectsOutput": "Changes the vertical placement of the dimension chain."
+          },
+          {
+            "name": "sDeltaOnTop",
+            "technicalDefault": "No",
+            "businessMeaning": "Toggles the dimension tick/text orientation (e.g., forcing the value to be above the line).",
+            "validRange": "Yes / No",
+            "unit": "Boolean",
+            "affectsOutput": "Flips the visual presentation of the dimension value."
+          },
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "1",
+            "businessMeaning": "Selects the CAD dimension style (arrow style, text font, etc.) to use.",
+            "validRange": "List of available dimension styles in the drawing",
+            "unit": "Selection",
+            "affectsOutput": "Alters the graphical appearance of lines, arrows, and font."
+          },
+          {
+            "name": "sDimMethod",
+            "technicalDefault": "Delta perpendicular",
+            "businessMeaning": "Sets the dimensioning orientation relative to the beams or element.",
+            "validRange": "Delta perpendicular / Delta parallel",
+            "unit": "Selection",
+            "affectsOutput": "Determines if the dimension measures the orthogonal distance or the projected distance along an axis."
+          },
+          {
+            "name": "sDescription",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Custom text annotation placed alongside the dimensions.",
+            "validRange": "Any text string",
+            "unit": "String",
+            "affectsOutput": "Adds a text label near the dimension lines."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sUsePSUnits set to 'Yes'",
+            "effect": "The logic multiplies offset values by the Viewport Scale.",
+            "cascade": [
+              "dDimLineOffset",
+              "dTextOffset"
+            ]
+          },
+          {
+            "trigger": "genBeamFilterDefinition changed",
+            "effect": "The list of beams used to calculate voids is updated, potentially adding or removing dimensions.",
+            "cascade": [
+              "Insulation void calculations"
+            ]
+          },
+          {
+            "trigger": "sPosition changed",
+            "effect": "The base point for dimensioning moves from the bottom bounding box edge to the top.",
+            "cascade": [
+              "Dimension placement"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "DimLine (Annotation)",
+            "description": "2D dimension lines drawn in Paper Space showing the width of insulation gaps between studs/rafters.",
+            "appliedTo": "Viewport (Paper Space)"
+          },
+          {
+            "type": "Text (Annotation)",
+            "description": "Labels indicating the script name, filter status, and custom description.",
+            "appliedTo": "Viewport (Paper Space)"
+          }
+        ]
+      },
+      "tokens_used": 7859,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User runs script.",
+          "2. [On Insert] User selects a Viewport.",
+          "3. [On Insert] User picks a position for the script label.",
+          "4. Property Dialog displays for configuration (Filters, Dimensions, Style).",
+          "5. Script verifies if a Viewport is stored; if not, instance is erased.",
+          "6. Script checks Context Menu Triggers to update internal Filter Map (Filter/Unfilter Element).",
+          "7. [Conditional] Check if current Element exists in the Filter Map.",
+          "8. Retrieve Element and Viewport coordinate systems.",
+          "9. Parse custom filter strings (Beam Code, Label, Material).",
+          "10. Calculate Paper Space vs. Model Space scaling for offsets.",
+          "11. Retrieve all GenBeams from the Element.",
+          "12. Execute external script 'HSB_G-FilterGenBeams.mcr'.",
+          "13. Apply internal string filters to remaining beams.",
+          "14. Create 'Insulation' profile by subtracting beam envelopes from Element Brutto profile.",
+          "15. Identify openings (voids) in the profile.",
+          "16. Loop through identified voids.",
+          "17. [Conditional] Check if void width > Minimum Size.",
+          "18. Calculate dimension text (Width + Extra Size).",
+          "19. Create and Transform Dimension entities to Paper Space.",
+          "20. Draw Description text."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "External Filter Script Execution",
+            "path1": {
+              "name": "Success",
+              "steps": [
+                "Receive filtered beam list.",
+                "Proceed to internal filtering."
+              ]
+            },
+            "path2": {
+              "name": "Failure",
+              "steps": [
+                "Report warning: 'GenBeams could not be filtered!'.",
+                "Erase script instance.",
+                "Stop execution."
+              ]
+            }
+          },
+          {
+            "condition": "Element in Exclusion Map (Context Menu Filter)",
+            "path1": {
+              "name": "Element Filtered",
+              "steps": [
+                "Draw Script Name in Red.",
+                "Draw 'Active filter' text.",
+                "Stop execution (No dimensions calculated)."
+              ]
+            },
+            "path2": {
+              "name": "Element Not Filtered",
+              "steps": [
+                "Draw Script Name in Cyan (if Map exists).",
+                "Continue calculation."
+              ]
+            }
+          },
+          {
+            "condition": "Insulation Void Width",
+            "path1": {
+              "name": "Width <= Minimum Size",
+              "steps": [
+                "Skip dimension creation.",
+                "Continue to next void."
+              ]
+            },
+            "path2": {
+              "name": "Width > Minimum Size",
+              "steps": [
+                "Add Extra Size tolerance.",
+                "Generate Dimension Line.",
+                "Draw Dimension."
+              ]
+            }
+          },
+          {
+            "condition": "Positioning Setting",
+            "path1": {
+              "name": "Horizontal Bottom",
+              "steps": [
+                "Set base point to Bottom-Left of envelope.",
+                "Set offset vector downwards."
+              ]
+            },
+            "path2": {
+              "name": "Horizontal Top",
+              "steps": [
+                "Set base point to Top-Left of envelope.",
+                "Set offset vector upwards."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Viewport Availability",
+            "errorMessage": "None (Implicit)",
+            "recovery": "Script erases instance automatically if no viewport is linked (_Viewport.length()==0)."
+          },
+          {
+            "check": "Element Validity",
+            "errorMessage": "None (Implicit)",
+            "recovery": "Script stops processing if el.bIsValid() returns false."
+          },
+          {
+            "check": "Geometry Existence",
+            "errorMessage": "None (Implicit)",
+            "recovery": "Script returns if no projection points are found for beams (arPtGBmX/length == 0)."
+          },
+          {
+            "check": "External Filter Dependency",
+            "errorMessage": "ReportWarning: 'GenBeams could not be filtered! Make sure that the tsl HSB_G-FilterGenBeams is loaded in the drawing.'",
+            "recovery": "Load the required TSL 'HSB_G-FilterGenBeams.mcr' into the drawing or select 'None' in properties if allowed (though default implies strict requirement)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Toggle Element Filter",
+            "how": "Right-click Context Menu -> 'Filter this element' or 'Remove filter for this element'",
+            "effect": "Adds/Removes the element to a hidden exclusion list, disabling dimensioning for this specific instance (Visual feedback: Name turns Red)."
+          },
+          {
+            "action": "Clear All Filters",
+            "how": "Right-click Context Menu -> 'Remove filter for all elements'",
+            "effect": "Clears the entire exclusion map, re-enabling dimensions for all instances associated with this script."
+          },
+          {
+            "action": "Adjust Dimensions",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changing 'dAddExtraSize', 'dMinimumSize', or 'sUsePSUnits' immediately redraws dimensions with new values/distances."
+          },
+          {
+            "action": "Modify Beam Selection",
+            "how": "Properties Palette (OPM) -> Filter settings",
+            "effect": "Updating 'sFilterBC', 'sFilterLabel', or 'Material' excludes/includes specific beams in the void calculation."
+          }
+        ]
+      },
+      "tokens_used": 9893,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_D-Insulation\n\n## Overview\nThis script automatically dimensions the gaps between structural members (e.g., studs or rafters) in Paper Space to represent insulation widths. It supports adding allowances for compression and filtering specific members to ensure accurate dimensioning for production.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script operates exclusively in Paper Space. |\n| Paper Space | Yes | Requires a Viewport linked to a model Element. |\n| Shop Drawing | No | Designed for Layout/Production drawings. |\n\n## Prerequisites\n- **Required Entities**: A Viewport in Paper Space linked to a valid model Element (Wall or Roof).\n- **Minimum Beam Count**: N/A (depends on the structure inside the Element).\n- **Required Settings**: The script `HSB_G-FilterGenBeams.mcr` must be loaded in the drawing to filter beams correctly.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_D-Insulation.mcr` from the catalog.\n\n### Step 2: Select Viewport\n```\nCommand Line: Select a viewport\nAction: Click inside the viewport that displays the element (wall/roof) you wish to dimension.\n```\n\n### Step 3: Pick Script Position\n```\nCommand Line: Give a point\nAction: Click in Paper Space to place the script label. This label identifies the script instance and displays its status.\n```\n\n### Step 4: Configure Properties\nThe Properties Palette (Ctrl+1) will open automatically. Adjust the Filters, Dimensions, and Style settings as needed. The drawing will update automatically when values are changed.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| genBeamFilterDefinition | Script | (Empty) | Select a predefined filter (e.g., `HSB_G-FilterGenBeams`) to control which structural members define the insulation boundaries. |\n| sFilterBC | String | (Empty) | Beam Codes to exclude (semicolon-separated). Beams matching these codes are ignored (e.g., `ST;RW`). |\n| sFilterLabel | String | (Empty) | Labels to exclude (semicolon-separated). Entities with these labels are ignored. |\n| sFilterMaterial | String | (Empty) | Materials to exclude (semicolon-separated). Beams made of these materials are ignored. |\n| dAddExtraSize | Number | 5 | Fixed allowance (tolerance) added to the measured width (in mm). Use this for insulation compression. |\n| dMinimumSize | Number | 5 | Minimum gap width to dimension. Gaps smaller than this (in mm) are ignored. |\n| sUsePSUnits | Yes/No | No | If **Yes**, offsets are calculated in Paper Space units (1:1). If **No**, they use Model Space units (scaled by Viewport). |\n| dDimLineOffset | Number | 300 | Distance from the insulation edge to the dimension line. |\n| dTextOffset | Number | 100 | Distance the dimension text is shifted from the dimension line. |\n| sPosition | Selection | Horizontal bottom | Places dimensions at the **Horizontal bottom** or **Horizontal top** of the element envelope. |\n| sDeltaOnTop | Yes/No | No | Toggles the dimension tick/text orientation (e.g., forcing value above the line). |\n| sDimStyle | Selection | 1 | Selects the CAD Dimension Style to use (controls arrows, font, etc.). |\n| sDimMethod | Selection | Delta perpendicular | Sets measurement orientation: **Delta perpendicular** (orthogonal) or **Delta parallel** (projected). |\n| sDescription | String | (Empty) | Custom text annotation placed alongside the dimensions. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Filter this element | Adds the current element to an exclusion list. Dimensions are hidden, and the script label turns Red. |\n| Remove filter for this element | Removes the current element from the exclusion list, re-enabling dimensions. |\n| Remove filter for all elements | Clears the exclusion list entirely, re-enabling dimensions for all instances of this script. |\n\n## Settings Files\n- **Filename**: `HSB_G-FilterGenBeams.mcr`\n- **Location**: hsbCAD installation directory or Company Standards folder.\n- **Purpose**: This external script provides the logic to determine which beams (studs/rafters) form the boundaries for the insulation voids. It must be loaded for the main script to function.\n\n## Tips\n- **Compression Allowance**: If your insulation requires friction fit, increase `dAddExtraSize` (e.g., 10mm) so the dimension reflects the cut width slightly larger than the gap.\n- **Clean Drawings**: Use `sFilterBC` to exclude trimmers or cripple studs so you only dimension the main bays.\n- **Plotting Scale**: If you want the distance between the wall and the dimension line to look consistent on paper regardless of the Viewport scale, set `sUsePSUnits` to **Yes**.\n\n## FAQ\n- **Q: I ran the script, but no dimensions appeared.**\n  **A**: Check the command line for the warning \"GenBeams could not be filtered!\". Ensure `HSB_G-FilterGenBeams.mcr` is loaded in your drawing. Also, check if `dMinimumSize` is set too high for the gaps in your wall.\n- **Q: The script instance disappeared after I selected the viewport.**\n  **A**: This usually happens if the selected Viewport is not linked to a valid Element or if the external filter script failed to load. Check the Entity Properties of the viewport.\n- **Q: The dimension text is huge or tiny.**\n  **A**: Check the `sDimStyle` setting to ensure it uses a style intended for your current scale. If using `sUsePSUnits`=No, the offset scales with the viewport zoom."
+      },
+      "tokens_used": 6090,
+      "error": null
+    }
+  }
+}

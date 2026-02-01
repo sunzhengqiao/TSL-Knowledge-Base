@@ -1,0 +1,258 @@
+{
+  "filename": "GE_WDET_VERTICAL_BLOCK.mcr",
+  "status": "completed",
+  "total_tokens": 55560,
+  "processing_time": 563.3743155002594,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.4",
+            "date": "23.jun.2013",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Erasing code but bOnInsert, now everything will be handled by construction directive\n- Erasing OPM, change _bOnInsert to warn user cannot use this TSL manually but on Defaults Editor"
+          },
+          {
+            "version": "1.3",
+            "date": "30.jul.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Description added\n- Thumbnail added"
+          },
+          {
+            "version": "1.2",
+            "date": "30.jul.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Updated keys for reading values from _Map"
+          },
+          {
+            "version": "1.1",
+            "date": "27.jul.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Reorder distribution items in OPM dropdown to make them consistent with ladder tsl props.\n- Thumbnail added\n- Change name from GE_WALL_VERTICAL_BLOCKING to GE_WDET_VERTICAL_BLOCK"
+          },
+          {
+            "version": "1.0",
+            "date": "27.jul.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "- Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7870,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script operates on the _Element object, specifically casting it to ElementWallSF. It performs 3D geometric calculations using CoordSys, Vector3d, and Point3d. It generates physical 3D objects using Beam.dbCreate() and assigns them to element groups via assignToElementGroup. There are no references to sd_ prefixes, _Viewport, or 2D drawing generation logic."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "ElementWallSF"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D environment)",
+          "requiredSettings": [
+            "hsbFramingDefaults.Inventory.dll (located in hsbInstall\\Utilities\\hsbFramingDefaultsEditor)",
+            "Construction Directive configuration (script executes via _Map/Defaults, not manual insert)"
+          ]
+        }
+      },
+      "tokens_used": 7158,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10393,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Generates vertical blocking (nogs) within a wall frame, typically at wall intersections or T-connections, configured via construction directives.\",\n    \"category\": \"Framing\",\n    \"typicalUseCase\": \"Automatically inserting vertical blocking at structural connection points (like wall T-junctions) to provide stiffness and nailing surfaces for sheathing or drywall, driven by the Defaults Editor.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"nEdgeFlat\",\n      \"technicalDefault\": \"0 (Edge)\",\n      \"businessMeaning\": \"Determines the orientation of the blocking timber relative to the wall face. 'Edge' stands the timber on its narrow side, 'Flat' lays it on its wide side.\",\n      \"validRange\": \"0 (Edge), 1 (Flat)\",\n      \"unit\": \"Enumeration\",\n      \"affectsOutput\": \"Determines the width and height of the physical beam created in 3D space and the volume used to cut obstructing studs.\"\n    },\n    {\n      \"name\": \"nDistribution\",\n      \"technicalDefault\": \"0 (Bottom of wall)\",\n      \"businessMeaning\": \"Defines the pattern used to stack the vertical blocking pieces along the height of the wall.\",\n      \"validRange\": \"0 (Bottom-up), 1 (Top-down), 2 (Middle-out), 3 (Evenly spaced with end blocks)\",\n      \"unit\": \"Enumeration\",\n      \"affectsOutput\": \"Calculates the center point coordinates (ptCenters) for every blocking piece.\"\n    },\n    {\n      \"name\": \"dSpacing\",\n      \"technicalDefault\": \"U(800, 32)\",\n      \"businessMeaning\": \"The maximum distance allowed between the centers (or edges, depending on logic) of consecutive blocking pieces.\",\n      \"validRange\": \"300mm to 1200mm (12\\\" to 48\\\")\",\n      \"unit\": \"mm/inches\",\n      \"affectsOutput\": \"In 'Even' distribution mode, it controls the number of blocks inserted. In other modes, it acts as the step increment.\"\n    },\n    {\n      \"name\": \"dStartOffset\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"The gap from the bottom of the wall (or top plate bottom) to the first piece of blocking.\",\n      \"validRange\": \"0mm to wall height\",\n      \"unit\": \"mm/inches\",\n      \"affectsOutput\": \"Shifts the start point (ptMinHeight) upwards, skipping the bottom area.\"\n    },\n    {\n      \"name\": \"dEndOffset\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"The gap from the top of the wall (or bottom plate top) to the last piece of blocking.\",\n      \"validRange\": \"0mm to wall height\",\n      \"unit\": \"mm/inches\",\n      \"affectsOutput\": \"Shifts the end point (ptMaxHeight) downwards, skipping the top area.\"\n    },\n    {\n      \"name\": \"dBlockLength\",\n      \"technicalDefault\": \"U(300, 12)\",\n      \"businessMeaning\": \"The vertical length of each individual blocking piece.\",\n      \"validRange\": \"200mm to 1200mm (8\\\" to 48\\\")\",\n      \"unit\": \"mm/inches\",\n      \"affectsOutput\": \"Determines the Y-dimension of the generated Beam and is used in spacing calculations.\"\n    },\n    {\n      \"name\": \"sBmLumberItem\",\n      \"technicalDefault\": \"First item in Inventory\",\n      \"businessMeaning\": \"Selects a predefined timber size (e.g., 2x4, 45x90) from the hsb inventory database.\",\n      \"validRange\": \"Any valid Inventory Key\",\n      \"unit\": \"String/Reference\",\n      \"affectsOutput\": \"Sets the default Width, Height, Material, and Grade properties unless manually overwritten.\"\n    },\n    {\n      \"name\": \"dBlockWidthOPM\",\n      \"technicalDefault\": \"U(35, 1.5)\",\n      \"businessMeaning\": \"Manual override for the timber width (thickness) when 'Manual size' is selected in Lumber Item.\",\n      \"validRange\": \"20mm to 300mm\",\n      \"unit\": \"mm/inches\",\n      \"affectsOutput\": \"Sets the width of the generated beam if sBmLumberItem is set to Manual.\"\n    },\n    {\n      \"name\": \"dBlockHeightOPM\",\n      \"technicalDefault\": \"U(42, 3.5)\",\n      \"businessMeaning\": \"Manual override for the timber height (depth) when 'Manual size' is selected in Lumber Item.\",\n      \"validRange\": \"40mm to 300mm\",\n      \"unit\": \"mm/inches\",\n      \"affectsOutput\": \"Sets the height of the generated beam if sBmLumberItem is set to Manual.\"\n    },\n    {\n      \"name\": \"nBlockColorOPM\",\n      \"technicalDefault\": \"2\",\n      \"businessMeaning\": \"The display color of the blocking elements in the CAD model.\",\n      \"validRange\": \"0-255 (AutoCAD Color Index)\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Visual appearance only.\"\n    },\n    {\n      \"name\": \"sBlockNameOPM\",\n      \"technicalDefault\": \"Empty\",\n      \"businessMeaning\": \"User-defined name for the blocking part (e.g., 'V_Block_L1').\",\n      \"validRange\": \"String\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Entity property 'Name'.\"\n    },\n    {\n      \"name\": \"sBlockMaterialOPM\",\n      \"technicalDefault\": \"Empty (Uses Inventory)\",\n      \"businessMeaning\": \"Specific timber material designation (e.g., 'SPF', 'C24'). Overwrites Inventory setting.\",\n      \"validRange\": \"String\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Entity property 'Material', useful for billing/listing.\"\n    },\n    {\n      \"name\": \"sBlockGradeOPM\",\n      \"technicalDefault\": \"Empty (Uses Inventory)\",\n      \"businessMeaning\": \"Structural grade of the timber (e.g., 'SS', 'No. 2'). Overwrites Inventory setting.\",\n      \"validRange\": \"String\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Entity property 'Grade', useful for structural analysis.\"\n    },\n    {\n      \"name\": \"sBlockInformationOPM\",\n      \"technicalDefault\": \"Empty\",\n      \"businessMeaning\": \"Additional metadata or comments attached to the blocking.\",\n      \"validRange\": \"String\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Entity property 'Information'.\"\n    },\n    {\n      \"name\": \"sBlockLabelOPM\",\n      \"technicalDefault\": \"Empty\",\n      \"businessMeaning\": \"Label text for shop drawings or CAM output.\",\n      \"validRange\": \"String\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Entity property 'Label'.\"\n    },\n    {\n      \"name\": \"sBlockSubLabelOPM\",\n      \"technicalDefault\": \"Empty\",\n      \"businessMeaning\": \"Secondary label text.\",\n      \"validRange\": \"String\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Entity property 'Sublabel'.\"\n    },\n    {\n      \"name\": \"sBlockSubLabel2OPM\",\n      \"technicalDefault\": \"Empty\",\n      \"businessMeaning\": \"Tertiary label text.\",\n      \"validRange\": \"String\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Entity property 'Sublabel2'.\"\n    },\n    {\n      \"name\": \"sBlockBeamCodeOPM\",\n      \"technicalDefault\": \"Empty\",\n      \"businessMeaning\": \"Code for manufacturing or export purposes.\",\n      \"validRange\": \"String\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Entity property 'BeamCode'.\"\n    }\n  ],\n  \"parameterDependencies\": [\n    {\n      \"trigger\": \"sBmLumberItem == '|Manual size|'\",\n      \"effect\": \"The dimensions of the blocking are taken from dBlockWidthOPM and dBlockHeightOPM instead of the Inventory database.\",\n      \"cascade\": [\n        \"dBlockWidthOPM\",\n        \"dBlockHeightOPM\",\n        \"sBlockMaterialOPM\",\n        \"sBlockGradeOPM\"\n      ]\n    },\n    {\n      \"trigger\": \"nEdgeFlat changes (Edge vs Flat)\",\n      \"effect\": \"The physical orientation of the beam swaps Width and Height dimensions for visual and collision calculation purposes.\",\n      \"cascade\": [\n        \"dBlockWidthOPM\",\n        \"dBlockHeightOPM\"\n      ]\n    },\n    {\n      \"trigger\": \"_Map contains keys (e.g., 'Width', 'Height')\",\n      \"effect\": \"Values passed via the Construction Directive (Map) override both OPM values and Inventory values.\",\n      \"cascade\": [\n        \"dBlockWidth\",\n        \"dBlockHeight\",\n        \"dBlockLength\",\n        \"nEdgeFlat\",\n        \"nDistribution\"\n      ]\n    }\n  ],\n  \"outputEntities\": [\n    {\n      \"type\": \"Beam\",\n      \"description\": \"Vertical blocking elements (noggin) inserted between top and bottom plates within the wall.\",\n      \"appliedTo\": \"ElementWallSF (The containing wall element)\"\n    },\n    {\n      \""
+      },
+      "tokens_used": 9973,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Initialization: Script triggered (usually via Defaults Editor/Construction Directive, not manual command).",
+          "2. Security Check: System checks if _bOnInsert is true (manual command-line invocation).",
+          "3. Element Validation: Script checks if it is attached to a valid ElementWallSF.",
+          "4. Data Loading: Loads lumber inventory data from external DLL (hsbFramingDefaults.Inventory.dll).",
+          "5. Parameter Resolution: Determines dimensions and material by checking (1) Lumber Item selection (Inventory vs Manual), (2) OPM Overwrites, and (3) Construction Directive (_Map) overrides.",
+          "6. Geometry Analysis: Identifies the highest bottom plate and lowest top plate to define the vertical working zone.",
+          "7. Offset Application: Applies Start Offset and End Offset to shrink the vertical working zone.",
+          "8. Distribution Calculation: Calculates the center points (ptCenters) for blocking based on the selected Distribution pattern (Bottom-up, Top-down, Middle-out, or Even).",
+          "9. Clash Volume Definition: Defines a 'Body' (bdErase) representing the volume of the blocking to detect collisions.",
+          "10. Generation Loop: For each calculated center point:",
+          "    a. Adjust position based on Orientation (Edge/Flat) and Wall Side.",
+          "    b. Create the Blocking Beam.",
+          "    c. Assign properties (Name, Material, Grade, etc.).",
+          "    d. Check for intersections with existing studs/headers within the bdErase volume.",
+          "    e. Erase intersecting existing beams (clash resolution).",
+          "11. Termination: Script erases its own instance (_ThisInst), leaving only the generated beams in the model."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script Insertion Method",
+            "path1": {
+              "name": "Manual Insertion",
+              "steps": [
+                "User attempts to run script via command line.",
+                "_bOnInsert is true.",
+                "Script reports error: 'cannot be manually inserted... defined on Defaults Editor'.",
+                "eraseInstance() is called.",
+                "Script terminates immediately."
+              ]
+            },
+            "path2": {
+              "name": "System Execution",
+              "steps": [
+                "Script executed via Construction Directive/Defaults.",
+                "_bOnInsert is false.",
+                "Proceeds to Element Validation."
+              ]
+            }
+          },
+          {
+            "condition": "Lumber Item Selection",
+            "path1": {
+              "name": "Inventory Item Selected",
+              "steps": [
+                "sBmLumberItem index is valid (not 'Manual size').",
+                "Read Width, Height, Material, and Grade from the Inventory Map returned by the DLL."
+              ]
+            },
+            "path2": {
+              "name": "Manual Size Selected",
+              "steps": [
+                "sBmLumberItem is set to '|Manual size|'.",
+                "Read Width from dBlockWidthOPM.",
+                "Read Height from dBlockHeightOPM.",
+                "Material and Grade default to empty or OPM overwrites."
+              ]
+            }
+          },
+          {
+            "condition": "Orientation (nEdgeFlat)",
+            "path1": {
+              "name": "Edge (0)",
+              "steps": [
+                "Beam stands on narrow edge.",
+                "Erase Body Width = dBlockWidth.",
+                "Block Y-vector = Wall X-vector.",
+                "Center point offset by dBlockHeight * 0.5."
+              ]
+            },
+            "path2": {
+              "name": "Flat (1)",
+              "steps": [
+                "Beam lays flat.",
+                "Erase Body Width = dBlockHeight.",
+                "Block Y-vector = Wall Z-vector.",
+                "Center point offset by dBlockWidth * 0.5."
+              ]
+            }
+          },
+          {
+            "condition": "Distribution Pattern (nDistribution)",
+            "path1": {
+              "name": "Bottom of wall (0)",
+              "steps": [
+                "Start at ptMinHeight + offset.",
+                "Loop upwards adding (dBlockLength + dSpacing)."
+              ]
+            },
+            "path2": {
+              "name": "Top of wall (1)",
+              "steps": [
+                "Start at ptMaxHeight - offset.",
+                "Loop downwards subtracting (dBlockLength + dSpacing)."
+              ]
+            },
+            "path3": {
+              "name": "Middle of wall (2)",
+              "steps": [
+                "Place one block at exact center.",
+                "Loop upwards from center.",
+                "Loop downwards from center."
+              ]
+            },
+            "path4": {
+              "name": "Even with top and bottom blocks (3)",
+              "steps": [
+                "Place mandatory bottom and top blocks.",
+                "Calculate remaining distance.",
+                "Calculate required number of intermediate blocks to satisfy spacing max.",
+                "Distribute remaining blocks evenly."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Attachment",
+            "errorMessage": "None (Silent fail)",
+            "recovery": "Script erases itself if _Element is not a valid ElementWallSF."
+          },
+          {
+            "check": "Dimension Validity",
+            "errorMessage": "ReportNotice: 'Data incomplete, check values for selected lumber item... Width/Height...'",
+            "recovery": "User must fix the Inventory selection or Manual OPM values in the Defaults Editor and recalculate the wall."
+          },
+          {
+            "check": "Wall Structure",
+            "errorMessage": "Potential Crash or Incorrect Placement",
+            "recovery": "Script assumes existence of bottom and top plates. If beams are missing, the script attempts to access array indices that may not exist or have zero length."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Regenerate/Recalculate",
+            "how": "Change settings in Defaults Editor / Construction Directive and Recalculate the element.",
+            "effect": "The script instance runs again, erasing old blocks and generating new ones based on new parameters."
+          },
+          {
+            "action": "Direct Geometry Edit",
+            "how": "Standard AutoCAD/hsbCAD grips on the generated Blocking Beams.",
+            "effect": "Modifies the individual beam geometry directly. Note: Recalculating the wall will overwrite these manual changes as the script regenerates the blocks from scratch."
+          }
+        ]
+      },
+      "tokens_used": 12107,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_WDET_VERTICAL_BLOCK.mcr\n\n## Overview\nThis script automatically generates vertical blocking (nogs) within wall frames, typically at structural connection points like T-junctions. It is designed to run exclusively via Construction Directives in the Defaults Editor to automate wall detailing.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Generates 3D Beam entities within the wall element. |\n| Paper Space | No | Not applicable for 2D drawing generation. |\n| Shop Drawing | No | Not applicable for shop drawing layouts. |\n\n## Prerequisites\n- **Required Entities**: A valid Wall Element (`ElementWallSF`).\n- **Minimum Beam Count**: 0 (Script operates on the wall element as a whole).\n- **Required Settings**: \n    - `hsbFramingDefaults.Inventory.dll` (located in `hsbInstall\\Utilities\\hsbFramingDefaultsEditor`).\n    - A Construction Directive configured in the Defaults Editor.\n\n## Usage Steps\n\n### Step 1: Configure via Defaults Editor (Primary Method)\n```\nAction: \n1. Open the hsbCAD Defaults Editor.\n2. Select the desired Wall Element or Material Class.\n3. Add or Edit a Construction Directive.\n4. Select 'GE_WDET_VERTICAL_BLOCK.mcr' from the script list.\n5. Adjust parameters (e.g., Lumber Item, Distribution, Spacing) in the Properties Panel.\n6. Click OK to save the Defaults.\n```\n\n### Step 2: Generate or Recalculate the Wall\n```\nAction: \n1. Draw a new Wall Element using the configured Defaults, OR\n2. Select an existing Wall Element and right-click -> 'Recalculate'.\nResult: The script inserts vertical blocking based on the configuration and removes any obstructing parts of existing studs.\n```\n\n### Step 3: Manual Insertion (Blocked)\n```\nCommand Line: TSLINSERT -> Select GE_WDET_VERTICAL_BLOCK.mcr\nResult: A warning message appears stating: \"This script cannot be manually inserted... It must be defined on the Defaults Editor.\"\nAction: The script will immediately cancel and erase itself. You must use Step 1 to use this tool.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Lumber Item** | Dropdown | (First Inventory Item) | Selects the timber size from your inventory. Choose `|Manual size|` to enter dimensions manually. |\n| **Distribution** | Int | 0 (Bottom of wall) | Sets the layout pattern: 0=Bottom-up, 1=Top-down, 2=Middle-out, 3=Evenly spaced with end blocks. |\n| **Edge/Flat** | Int | 0 (Edge) | Orientation of the blocking: 0=Standing on narrow edge, 1=Laying flat on wide face. |\n| **Spacing** | Double | U(800, 32) | Maximum distance allowed between blocks. |\n| **Block Length** | Double | U(300, 12) | Vertical length of each individual blocking piece. |\n| **Start Offset** | Double | 0 | Gap from the bottom of the wall before the first block starts. |\n| **End Offset** | Double | 0 | Gap from the top of the wall after the last block ends. |\n| **Block Width** | Double | U(35, 1.5) | Manual width (thickness) of the timber (Only active if 'Lumber Item' is set to Manual). |\n| **Block Height** | Double | U(42, 3.5) | Manual height (depth) of the timber (Only active if 'Lumber Item' is set to Manual). |\n| **Material** | String | (From Inventory) | Timber material designation (e.g., \"C24\"). Overrides Inventory if entered. |\n| **Grade** | String | (From Inventory) | Structural grade of the timber. Overrides Inventory if entered. |\n| **Name** | String | Empty | User-defined name for the blocking part (e.g., \"VertBlock_T1\"). |\n| **Color** | Int | 2 | AutoCAD color index for the blocking elements. |\n| **Information** | String | Empty | Additional metadata or comments for the part. |\n| **Label** | String | Empty | Label text for shop drawings or CAM output. |\n\n## Right-Click Menu Options\n> **Note**: This script executes via the Defaults Editor and automatically erases its own instance (`_ThisInst`) after generating the blocking beams. Therefore, specific TSL right-click menu options (like \"Show Dynamic Dialog\") are not available on the final wall elements. To modify settings, update the Construction Directive in the Defaults Editor and Recalculate the wall.\n\n## Settings Files\n- **Filename**: `hsbFramingDefaults.Inventory.dll`\n- **Location**: `hsbInstall\\Utilities\\hsbFramingDefaultsEditor`\n- **Purpose**: Provides the database of available timber sizes (Width, Height, Material, Grade) used by the \"Lumber Item\" dropdown parameter.\n\n## Tips\n- **Clash Resolution**: This script automatically detects collisions with existing studs. It will erase the volume of the stud that intersects with the blocking to ensure a clean fit.\n- **Full Coverage**: Use Distribution mode `3 (Evenly spaced with end blocks)` to ensure blocks are placed at both the very bottom and very top of the wall height, filling the gap evenly in between.\n- **Orientation**: Changing \"Edge/Flat\" affects how the block sits relative to the wall face. \"Flat\" (1) creates a wider face against the wall sheathing, while \"Edge\" (0) provides more depth for nailing.\n\n## FAQ\n- **Q: Why do I get an error when trying to run this script?**\n- **A**: This script is designed for automated wall generation only. If you try to insert it manually via `TSLINSERT`, it will warn you that it must be configured in the Defaults Editor.\n- **Q: How do I change the size of the blocks?**\n- **A**: You do not select the block and change properties. Instead, go to the Defaults Editor, find the Construction Directive using this script, change the \"Lumber Item\" or manual \"Block Width/Height\", and Recalculate the wall.\n- **Q: Can I control exactly where the blocks go?**\n- **A**: You can control the pattern (Bottom, Top, Middle, Even) and the spacing/offsets. For specific placement, use the \"Start Offset\" and \"End Offset\" to exclude areas (like for windows or doors)."
+      },
+      "tokens_used": 8059,
+      "error": null
+    }
+  }
+}

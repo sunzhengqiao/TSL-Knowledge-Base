@@ -1,0 +1,301 @@
+{
+  "filename": "FLR_HangerList.mcr",
+  "status": "completed",
+  "total_tokens": 44475,
+  "processing_time": 151.67330765724182,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7611,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No sd_*, Multipage*, or _Viewport references found. No #Type E + _Entity[] patterns found. The script performs a one-time data population via _bOnInsert and calls eraseInstance() immediately, typical of a setup/configuration utility script rather than a modeling or drawing script."
+        },
+        "prerequisites": {
+          "requiredEntities": [],
+          "minimumBeams": 0,
+          "requiredSpace": "ModelSpace (used for script insertion context to initialize the MapObject)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5997,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowNotice",
+            "trigger": "Post-insertion",
+            "title": null,
+            "dataSource": "Script code",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6446,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Populates the CAD environment database with a catalog of predefined joist hanger specifications (Simpson/USP). It is a one-time setup utility script that stores dimensional and nailing data for various hardware models.",
+          "category": "Hardware/Configuration",
+          "typicalUseCase": "Run this script once to initialize or update the 'Hangers' database with the latest library of standard connector properties (width, height, type, and nail patterns) for use by other modeling scripts."
+        },
+        "parameters": [
+          {
+            "name": "stLastDwgRun",
+            "technicalDefault": "\"\" (Empty string, usually resolves to current DWG path)",
+            "businessMeaning": "Stores the file path of the drawing last accessed by this script. Used for tracking file context or relative path references within the hanger database.",
+            "validRange": "Valid file system path string",
+            "unit": "String (Path)",
+            "affectsOutput": "Internal database metadata; does not directly affect geometry."
+          },
+          {
+            "name": "dWidth",
+            "technicalDefault": "varies (e.g., U(1.8) for HU14)",
+            "businessMeaning": "The actual width of the hanger hardware. This dimension represents the thickness or breadth the hanger occupies on the carrying member (header).",
+            "validRange": "1.0\" - 6.0\" (typically 1.5\" to 4.0\" for standard I-joist hangers)",
+            "unit": "Inches (Internal unit)",
+            "affectsOutput": "Determines the spatial envelope of the hanger when applied in later modeling scripts; prevents geometric clashes."
+          },
+          {
+            "name": "dJoistHeight",
+            "technicalDefault": "varies (e.g., U(13.6875) for HU14)",
+            "businessMeaning": "The nominal or specific height of the joist that the hanger is designed to support. Used for matching hardware to the member size.",
+            "validRange": "9.5\" - 24.0\" (standard floor joist depths)",
+            "unit": "Inches (Internal unit)",
+            "affectsOutput": "Used for filtering and selecting the correct hanger based on the supported member's height."
+          },
+          {
+            "name": "dHangerHeight",
+            "technicalDefault": "varies (e.g., U(13.6875) for HU14)",
+            "businessMeaning": "The vertical height of the hanger's back or face. This is often slightly different from the joist height due to top flanges or seat depth.",
+            "validRange": "9.0\" - 26.0\" (often taller than joist for top-flange styles)",
+            "unit": "Inches (Internal unit)",
+            "affectsOutput": "Defines the physical vertical envelope of the hardware in the model."
+          },
+          {
+            "name": "stType",
+            "technicalDefault": "\"F\", \"TT\", \"TF\", \"S\"",
+            "businessMeaning": "Categorizes the hanger profile type: Face (F), Top Tab (TT), Top Flange (TF), or Skewable (S). This dictates the geometric shape and installation method.",
+            "validRange": "\"F\", \"TT\", \"TF\", \"S\"",
+            "unit": "Enum (String)",
+            "affectsOutput": "Controls the 3D geometry generation of the hanger (e.g., presence of a tab on top, or side wings)."
+          },
+          {
+            "name": "stWebStiff",
+            "technicalDefault": "\"N\" or \"Y\"",
+            "businessMeaning": "Indicates if the hanger includes web stiffeners (reinforcement plates). This affects the internal clearances and thickness of the hanger sides.",
+            "validRange": "\"Y\", \"N\"",
+            "unit": "Boolean (String)",
+            "affectsOutput": "Modifies the hanger's internal geometry to account for stiffener plates."
+          },
+          {
+            "name": "stSingleJoist",
+            "technicalDefault": "Comma-separated string (e.g., \"16 BCI 4500s 1.8--...\")",
+            "businessMeaning": "A list of compatible single joist profiles (e.g., BCI, VERSA-LAM, Lumber) that this specific hanger model fits.",
+            "validRange": "N/A (List of valid material profiles)",
+            "unit": "String (List)",
+            "affectsOutput": "Filters valid hanger options in UI based on the currently selected joist material."
+          },
+          {
+            "name": "stDoubleJoist",
+            "technicalDefault": "\"N/A\" or List of profiles",
+            "businessMeaning": "List of compatible double joist profiles.",
+            "validRange": "N/A (List of valid material profiles)",
+            "unit": "String (List)",
+            "affectsOutput": "Filters valid hanger options when the member is a double (2-ply) beam."
+          },
+          {
+            "name": "stTripleJoist",
+            "technicalDefault": "\"N/A\" or List of profiles",
+            "businessMeaning": "List of compatible triple joist profiles.",
+            "validRange": "N/A (List of valid material profiles)",
+            "unit": "String (List)",
+            "affectsOutput": "Filters valid hanger options when the member is a triple (3-ply) beam."
+          },
+          {
+            "name": "stQuadJoist",
+            "technicalDefault": "\"N/A\" or List of profiles",
+            "businessMeaning": "List of compatible quad joist profiles.",
+            "validRange": "N/A (List of valid material profiles)",
+            "unit": "String (List)",
+            "affectsOutput": "Filters valid hanger options when the member is a quad (4-ply) beam."
+          },
+          {
+            "name": "stFaceNails",
+            "technicalDefault": "String (e.g., \"10-10d\")",
+            "businessMeaning": "Specifies the nailing schedule for the face of the hanger (into the header). Format: 'Quantity-NailSize'.",
+            "validRange": "N/A (Hardware specific)",
+            "unit": "String (Count + Size)",
+            "affectsOutput": "Generates nail points/hole markings on the header side of the connection in shop drawings or data."
+          },
+          {
+            "name": "stTopNails",
+            "technicalDefault": "\"N/A\" or String (e.g., \"4-10d\")",
+            "businessMeaning": "Specifies the nailing schedule for the top flange or tab (into the top of the header).",
+            "validRange": "N/A (Hardware specific)",
+            "unit": "String (Count + Size)",
+            "affectsOutput": "Generates nail points on the top surface of the header."
+          },
+          {
+            "name": "stJoistNails",
+            "technicalDefault": "\"N/A\" or String",
+            "businessMeaning": "Specifies the nailing schedule for the joist side (into the web of the joist).",
+            "validRange": "N/A (Hardware specific)",
+            "unit": "String (Count + Size)",
+            "affectsOutput": "Generates nail points on the sides of the joist being supported."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "stType = \"F\" (Face)",
+            "effect": "Top nailing is usually disabled.",
+            "cascade": [
+              "stTopNails"
+            ]
+          },
+          {
+            "trigger": "stType = \"TT\" (Top Tab) or \"TF\" (Top Flange)",
+            "effect": "Top nailing parameters are populated and active.",
+            "cascade": [
+              "stTopNails"
+            ]
+          },
+          {
+            "trigger": "stType = \"S\" (Skewable)",
+            "effect": "Implies compatibility with angled connections, often mapped in stAngleJoist.",
+            "cascade": [
+              "stAngleJoist"
+            ]
+          },
+          {
+            "trigger": "dWidth changes",
+            "effect": "May filter compatibility for certain engineered joist widths (e.g., 1.8\" vs 3.5\" wide flanges).",
+            "cascade": [
+              "stSingleJoist",
+              "stDoubleJoist"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "MapObject Entry",
+            "description": "Creates a data entry in the 'Hangers' database (MapObject) for each hanger model defined.",
+            "appliedTo": "Global hsbCAD MapObject database (persistent configuration data)."
+          }
+        ]
+      },
+      "tokens_used": 9755,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User inserts script 'FLR_HangerList.mcr' into ModelSpace",
+          "Script checks execution context: is this an insertion event? (_bOnInsert)",
+          "Initialize MapObject 'Hangers' with key 'Simpson'",
+          "Initialize empty Map (mpHangers) to store entries",
+          "Set metadata property 'stLastDwgRun' to current drawing path",
+          "Populate mpTemp with dimensions and properties for Hanger Model #1 (HU14)",
+          "Add mpTemp to mpHangers under key 'HU14'",
+          "Repeat population for all subsequent hanger models (IUS1.81/11.88, MIU1.81/11, etc.)",
+          "Check if the MapObject 'Hangers' already exists in the database",
+          "[Branch 1] If MapObject does not exist: Create the MapObject using the populated mpHangers data",
+          "[Branch 2] If MapObject exists: Update the existing MapObject with the populated mpHangers data",
+          "Display message to user indicating total number of entries loaded",
+          "Script executes eraseInstance() to remove itself from the drawing",
+          "Workflow ends. Database is updated for use by other scripts."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Check validity of MapObject 'Hangers'",
+            "path1": {
+              "name": "New Installation",
+              "steps": [
+                "Detect !mo.bIsValid()",
+                "Call mo.dbCreate(mpHangers)",
+                "Initialize the database structure"
+              ]
+            },
+            "path2": {
+              "name": "Update / Re-run",
+              "steps": [
+                "Detect mo.bIsValid()",
+                "Call mo.setMap(mpHangers)",
+                "Overwrite existing data with new definitions"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "_bOnInsert status",
+            "errorMessage": "None (Script simply does nothing if not on insert)",
+            "recovery": "Re-insert the script from the catalog to trigger execution."
+          },
+          {
+            "check": "MapObject write permissions",
+            "errorMessage": "None explicitly handled in code",
+            "recovery": "Ensure user has write access to the hsbCAD configuration/database."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "The script instance is immediately deleted (eraseInstance). There are no persistent entities to modify."
+          }
+        ]
+      },
+      "tokens_used": 8950,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# FLR_HangerList.mcr\n\n## Overview\nThis script is a database setup utility that populates the hsbCAD environment with a library of standard Simpson/USP joist hanger definitions. It runs automatically upon insertion, loads dimensional and nailing data into the project's internal database, and then removes itself from the drawing.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be inserted here to run. |\n| Paper Space | No | Not applicable for this utility. |\n| Shop Drawing | No | This script does not create geometry or drawings. |\n\n## Prerequisites\n- **Required entities**: None.\n- **Minimum beam count**: 0.\n- **Required settings**: None. This script is self-contained.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the AutoCAD command line.\n2. Browse to the location of `FLR_HangerList.mcr` and select it.\n3. Click **Open**.\n\n### Step 2: Execute Script\n1. Click anywhere in the Model Space to insert the script instance.\n2. The script will execute immediately.\n3. A popup notice will appear confirming the total number of hanger entries loaded (e.g., \"Loaded 60 entries\").\n4. Click **OK** to close the notice.\n\n### Step 3: Verification\n- The script instance will automatically delete itself from the drawing.\n- The hanger data is now available for use by other modeling scripts (e.g., joist insertion tools).\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not create a persistent object; therefore, there are no properties to edit in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | The script instance is removed immediately after execution, so no right-click menu is available. |\n\n## Settings Files\n- **Filename**: None.\n- **Location**: N/A.\n- **Purpose**: All hanger data (widths, heights, nail patterns, types) is compiled directly inside this script.\n\n## Tips\n- **One-Time Use**: You typically only need to run this script once per project or when updating to a new version of the hanger library.\n- **Updates**: If you run the script multiple times, it will overwrite the existing hanger database with the definitions contained in this specific version of the script.\n- **No Geometry**: Do not expect to see lines or 3D objects after running this. It works entirely in the background to configure other tools.\n\n## FAQ\n- **Q: I inserted the script, but it disappeared immediately. Did it fail?**\n  - A: No. This is the expected behavior. The script is designed to load data and then delete its own instance to keep the drawing clean.\n- **Q: Where can I see the hangers that were loaded?**\n  - A: The hangers are now part of the internal database. They will appear as options in other scripts that require joist hanger selection (e.g., floor generation or beam connection tools).\n- **Q: Can I edit the hanger sizes?**\n  - A: Not through this script. To modify dimensions, you would need to edit the source code of `FLR_HangerList.mcr` or manually adjust the resulting MapObject entries using advanced database tools."
+      },
+      "tokens_used": 5716,
+      "error": null
+    }
+  }
+}

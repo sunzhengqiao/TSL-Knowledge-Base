@@ -1,0 +1,258 @@
+{
+  "filename": "HSB_E-CreateModule.mcr",
+  "status": "completed",
+  "total_tokens": 26375,
+  "processing_time": 894.2816672325134,
+  "passes": {
+    "1": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "Request timeout after retries"
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script operates directly on Element and GenBeam 3D entities (el.genBeam(), envelopeBody(), shadowProfile()). It modifies model properties (genBeam.setModule, genBeam.setColor) and assigns to element groups. No ShopDrawing specific classes (_Sheet, _View, _Viewport) or sd_* prefixes are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": [
+            "HSB_G-FilterGenBeams TSL script must be loaded in the drawing",
+            "Catalog definitions for HSB_G-FilterGenBeams"
+          ]
+        }
+      },
+      "tokens_used": 4412,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select element(s)|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "filterGenBeamCatalog",
+            "type": "PropString",
+            "displayName": "|GenBeam filter catalog|",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": [
+              "",
+              "<Dynamic list from HSB_G-FilterGenBeams catalogs>"
+            ],
+            "category": "|General|",
+            "description": "|Select the catalog to filter the genbeams from the element|"
+          },
+          {
+            "index": 0,
+            "variable": "color",
+            "type": "PropDouble",
+            "displayName": "|Color|",
+            "defaultValue": 2,
+            "inputType": "number",
+            "options": [],
+            "category": "|General|",
+            "description": null
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "ManualInsert",
+            "handler": "ManualInsert",
+            "action": "Execute script insertion using properties from catalog (if found) or last inserted settings, then erase instance.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 6437,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Automatically groups specific generic beams within a construction element into 'Modules' based on a filter catalog, assigns them a specific naming convention, and applies a color for visual identification.\",\n    \"category\": \"Project Management / Logical Grouping\",\n    \"typicalUseCase\": \"Used to organize subsets of beams (e.g., rafters only, or specific lengths) within a wall or floor element into logical modules for production planning, assembly sequencing, or export filtering.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"filterGenBeamCatalog\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Selects the specific logic rule set (from the HSB_G-FilterGenBeams library) to determine which beams inside the element belong to this specific module group.\",\n      \"validRange\": \"N/A (Dynamic list of available catalogs in the drawing)\",\n      \"unit\": \"CatalogName\",\n      \"affectsOutput\": \"Determines the subset of beams that will receive the module name and color change. If the catalog filters for 'TopChords', only top chords are affected.\"\n    },\n    {\n      \"name\": \"color\",\n      \"technicalDefault\": \"2\",\n      \"businessMeaning \"sets the visual display color of the beams assigned to the module to distinguish them from other structural elements in the 3d model.\",\n      \"validRange\": \"0-255 (Autodesk Color Index)\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Changes the graphical color of the filtered beams in the CAD environment for visual verification or drawing styles.\"\n    },\n    {\n      \"name\": \"shrinkDistance\",\n      \"technicalDefault\": \"5\",\n      \"businessMeaning\": \"A clearance offset applied to the geometric boundary used to define the module, ensuring beams that are merely touching or slightly overlapping are correctly grouped or separated.\",\n      \"validRange\": \"0.0 - 20.0 mm\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Influences how the script calculates the module boundary (shadow profile). If set too high, beams close to the edge might be excluded; if too low, distinct modules might accidentally merge.\"\n    }\n  ],\n  \"parameterDependencies\": [\n    {\n      \"trigger\": \"filterGenBeamCatalog selection\",\n      \"effect\": \"The list of beams to be processed is defined by the external catalog.\",\n      \"cascade\": [\n        \"moduleName\",\n        \"color\"\n      ]\n    },\n    {\n      \"trigger\": \"Element Selection\",\n      \"effect\": \"The script scope is limited to the beams contained within the selected architectural elements.\",\n      \"cascade\": [\n        \"filterGenBeamCatalog\"\n      ]\n    }\n  ],\n  \"outputEntities\": [\n    {\n      \"type\": \"GenBeam Property Modification\",\n      \"description\": \"Updates the 'Module' property of the beam to the format 'ElementNumber_Index' (e.g., '1000_1') and changes the beam's color index.\",\n      \"appliedTo\": \"Generic Beams (GenBeams) that match the filter criteria within the selected Elements.\"\n    }\n  ]\n}\n```"
+      },
+      "tokens_used": 4275,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Start & Initialization",
+          "2. [Condition: _bOnInsert] Check if script is being inserted",
+          "3. [Insert Branch] Property initialization via ExecuteKey, LastInserted, or Dialog",
+          "4. [Insert Branch] Prompt user to select Element(s) via PrEntity",
+          "5. [Insert Branch] Prepare TSL instance parameters (Coordinate system, props, map)",
+          "6. [Insert Branch] Loop through selected Elements",
+          "7. [Insert Branch] Clone script instance for each Element (dbCreate)",
+          "8. [Insert Branch] Erase original instance",
+          "9. [Execution Branch] Validate Element reference (_Element[0])",
+          "10. Retrieve GenBeams from the assigned Element",
+          "11. Filter GenBeams using HSB_G-FilterGenBeams catalog (TslInst().callMapIO)",
+          "12. Calculate Shadow Profiles of filtered GenBeams on Element Plane",
+          "13. Union profiles to create overall Module boundary (shrinkDistance applied)",
+          "14. Identify closed rings (potential modules) from the overall profile",
+          "15. Loop through identified module rings",
+          "16. Check which filtered GenBeams are inside each ring (pointInProfile)",
+          "17. Set Module Name (ElementNumber_Index) and Color for matching GenBeams",
+          "18. [Condition: ExecuteKey check] Erase instance if run via 'ManualInsert' or Element Construction"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script Mode (_bOnInsert)",
+            "path1": {
+              "name": "Insertion Flow",
+              "steps": [
+                "Load properties from ExecuteKey/LastInserted or showDialog",
+                "Prompt PrEntity for Elements",
+                "Clone instance per Element",
+                "Erase instance"
+              ]
+            },
+            "path2": {
+              "name": "Execution Flow",
+              "steps": [
+                "Validate Element existence",
+                "Filter GenBeams via Catalog",
+                "Calculate geometry profiles",
+                "Assign Module properties",
+                "Erase instance if transient"
+              ]
+            }
+          },
+          {
+            "condition": "Insert Cycle Count",
+            "path1": {
+              "name": "First Cycle",
+              "steps": [
+                "Proceed with properties and element selection"
+              ]
+            },
+            "path2": {
+              "name": "Subsequent Cycles (>1)",
+              "steps": [
+                "EraseInstance and return immediately"
+              ]
+            }
+          },
+          {
+            "condition": "Execute Key Presence (_kExecuteKey)",
+            "path1": {
+              "name": "Key Exists",
+              "steps": [
+                "Check if Key is a valid catalog name",
+                "Yes: Load properties from Key catalog",
+                "No: Load properties from '_LastInserted' catalog"
+              ]
+            },
+            "path2": {
+              "name": "Key Empty",
+              "steps": [
+                "Show Properties Dialog (showDialog)"
+              ]
+            }
+          },
+          {
+            "condition": "GenBeam Filter Success",
+            "path1": {
+              "name": "Success",
+              "steps": [
+                "Process filtered entities array",
+                "Calculate module profiles"
+              ]
+            },
+            "path2": {
+              "name": "Failure",
+              "steps": [
+                "Report Warning (Check if HSB_G-FilterGenBeams is loaded)",
+                "EraseInstance",
+                "Return"
+              ]
+            }
+          },
+          {
+            "condition": "Execution Context",
+            "path1": {
+              "name": "Manual Insert / Element Constructed",
+              "steps": [
+                "EraseInstance",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "Standard Edit/Update",
+              "steps": [
+                "Keep instance active (Script finishes execution)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Reference Existence",
+            "errorMessage": "|Element reference not found.|",
+            "recovery": "Script erases itself. Ensure script is attached to an Element or inserted correctly."
+          },
+          {
+            "check": "GenBeam Filter Operation",
+            "errorMessage": "|GenBeam could not be filtered!| |Make sure that the tsl| HSB_G-FilterGenBeams |is loaded in the drawing.|",
+            "recovery": "Load the HSB_G-FilterGenBeams TSL script into the drawing and ensure catalogs are available."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Filter Catalog or Color",
+            "how": "Properties Palette (OPM)",
+            "effect": "Re-running the script (via context menu or trigger) updates which beams are grouped and their color."
+          },
+          {
+            "action": "Context Menu: ManualInsert",
+            "how": "Right-click instance",
+            "effect": "Re-runs the grouping logic using current properties, then erases the script instance."
+          },
+          {
+            "action": "Element Construction Event",
+            "how": "System Event (Element rebuild)",
+            "effect": "Script re-evaluates GenBeam positions and updates module assignments based on current geometry."
+          }
+        ]
+      },
+      "tokens_used": 5935,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-CreateModule.mcr\n\n## Overview\nThis script automatically groups specific generic beams (GenBeams) within a selected construction Element into logical \"Modules\" based on a filter catalog. It assigns a specific naming convention and a visual color to the beams to organize them for production planning or export filtering.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates on 3D Elements and GenBeams. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | This is a model management tool. |\n\n## Prerequisites\n- **Required Entities**: At least one Element (Wall/Floor/Roof) containing Generic Beams (GenBeams).\n- **Required Settings**: The script `HSB_G-FilterGenBeams` must be loaded in the drawing, and the relevant Filter Catalogs must be defined.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command:** `TSLINSERT`\n**Action:** Browse and select `HSB_E-CreateModule.mcr`.\n\n### Step 2: Configure Properties\n**Action:** A configuration dialog will appear (or you can configure later via the Properties palette).\n1.  **GenBeam filter catalog**: Select the filter rule set (e.g., \"TopChords\", \"Rafters\") from the dropdown. This determines which beams inside the element are included in the module.\n2.  **Color**: Set the desired AutoCAD Color Index (e.g., 2 for Yellow) to visually highlight the grouped beams.\n3.  Click **OK** to confirm.\n\n### Step 3: Select Element\n```\nCommand Line: Select element(s)\n```\n**Action:** Click on the Element(s) in the model that contain the beams you wish to group.\n**Result:** The script processes the selection, identifies the relevant beams, assigns them a Module Name (e.g., `ElementNumber_Index`), and changes their color.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **GenBeam filter catalog** | Dropdown | \"\" | Selects the logic rule set (from `HSB_G-FilterGenBeams`) to determine which beams belong to this module. |\n| **Color** | Number | 2 | Sets the visual display color (AutoCAD Color Index 0-255) of the beams assigned to the module. |\n| **ShrinkDistance** | Number | 5 | A clearance offset (in mm) applied to the geometric boundary to ensure touching or slightly overlapping modules are distinct. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **ManualInsert** | Re-runs the grouping logic using the currently selected properties and element geometry to update the module assignments, then erases the script instance. |\n\n## Settings Files\n- **Dependency**: `HSB_G-FilterGenBeams.tsl`\n- **Location**: Must be loaded in the current hsbCAD drawing.\n- **Purpose**: Provides the filtering logic (Catalogs) required to select which specific beams are grouped into the module.\n\n## Tips\n- **Visual Verification**: Use the **Color** property to quickly verify if the correct beams are being grouped by the selected filter catalog.\n- **Dependency Check**: If the script fails to group beams, ensure `HSB_G-FilterGenBeams` is loaded in the drawing.\n- **Boundary Issues**: If separate groups of beams are accidentally merging into one module, try increasing the **ShrinkDistance** value slightly.\n\n## FAQ\n- **Q: Why didn't the beams change color or get a name?**\n  A: Ensure that the `HSB_G-FilterGenBeams` script is loaded in the drawing and that the selected \"GenBeam filter catalog\" actually matches beams within your element.\n- **Q: How do I undo the grouping?**\n  A: You can select the beams and manually clear the Module property, or run the script again with a different configuration to overwrite the previous assignment.\n- **Q: What does the Module Name look like?**\n  A: The script automatically generates a name in the format `ElementNumber_Index` (e.g., `1005_1`)."
+      },
+      "tokens_used": 5316,
+      "error": null
+    }
+  }
+}

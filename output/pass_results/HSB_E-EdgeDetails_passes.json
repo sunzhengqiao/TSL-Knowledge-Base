@@ -1,0 +1,244 @@
+{
+  "filename": "HSB_E-EdgeDetails.mcr",
+  "status": "completed",
+  "total_tokens": 26174,
+  "processing_time": 469.85260558128357,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 0,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "16.01.2017",
+            "author": "AS",
+            "changes": "Pilot version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4762,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses `getViewport()` and `_Viewport[]` to capture user selection of a viewport. It explicitly calculates the Model Space to Paper Space transformation (`ms2ps = vp.coordSys()`) and transforms geometry (outline, envelope) using `transformBy(ms2ps)`. It interacts with an Element (`vp.element()`) but visualizes the data relative to the viewport context."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "ElementRoof"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Paper Space containing a Viewport assigned to an hsbCAD Roof Element.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3766,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getViewport",
+              "promptOriginal": "|Select a viewport|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDialog",
+            "trigger": "_bOnInsert",
+            "title": null,
+            "dataSource": "Default Property Dialog (Empty)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3665,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6023,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Instance Created",
+          "Check Insertion Flag (_bOnInsert)",
+          "[Insertion Mode] Check Insertion Cycle Count",
+          "[Insertion Mode] Show Default Property Dialog",
+          "[Insertion Mode] Prompt User: 'Select a viewport'",
+          "User Selects Viewport",
+          "Verify Viewport Array Length > 0",
+          "Extract Viewport and Retrieve Element",
+          "Validate Element contains hsbCAD data",
+          "Calculate Model-to-Paper Space Transformations",
+          "Retrieve Element Outline and Envelope",
+          "Visualize Element Brutto Profile (Red) and Envelope (Green) in Paper Space",
+          "Attempt Cast to ElementRoof",
+          "[If Roof Element] Iterate through all Roof Edges",
+          "[For each Edge] Visualize Edge Line (Blue) in Paper Space",
+          "[For each Edge] Calculate Section Coordinate System based on Edge Midpoint",
+          "[For each Edge] Create Detail Section Plane aligned with Edge",
+          "[For each Edge] Intersect Plane with all Element GenBeams",
+          "[For each Edge] Slice and Transform resulting segments to Detail View",
+          "Draw Sliced Beam Geometry in Detail View"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "_bOnInsert is true (Script Insertion Phase)",
+            "path1": {
+              "name": "Duplicate Cycle",
+              "steps": [
+                "If insertCycleCount() > 1",
+                "Erase Instance",
+                "Terminate Script"
+              ]
+            },
+            "path2": {
+              "name": "First Cycle",
+              "steps": [
+                "Show Dialog",
+                "Prompt for Viewport",
+                "Wait for Recalculation (User Selection)"
+              ]
+            }
+          },
+          {
+            "condition": "_Viewport Array Length",
+            "path1": {
+              "name": "No Viewport Selected",
+              "steps": [
+                "If _Viewport.length() == 0",
+                "Erase Instance",
+                "Terminate Script"
+              ]
+            },
+            "path2": {
+              "name": "Viewport Selected",
+              "steps": [
+                "Process Viewport Data",
+                "Continue to Validation"
+              ]
+            }
+          },
+          {
+            "condition": "Viewport Element Validity",
+            "path1": {
+              "name": "Invalid Element",
+              "steps": [
+                "If vp.element().bIsValid() is false",
+                "Silent Exit (Return)"
+              ]
+            },
+            "path2": {
+              "name": "Valid Element",
+              "steps": [
+                "Get Element Coordinate System",
+                "Visualize Brutto Profile and Envelope",
+                "Check for ElementRoof type"
+              ]
+            }
+          },
+          {
+            "condition": "Element Type (ElementRoof Check)",
+            "path1": {
+              "name": "Non-Roof Element",
+              "steps": [
+                "Skip Loop",
+                "End Drawing"
+              ]
+            },
+            "path2": {
+              "name": "Valid ElementRoof",
+              "steps": [
+                "Get GenBeam[] array",
+                "Get ElemRoofEdge[] array",
+                "Loop Edges to Generate Details"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insertion Cycle Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script prevents re-insertion logic duplication automatically."
+          },
+          {
+            "check": "Viewport Selection",
+            "errorMessage": "None (Script erases self)",
+            "recovery": "User must re-insert the script and select a valid viewport."
+          },
+          {
+            "check": "hsbCAD Element Data in Viewport",
+            "errorMessage": "None (Silent Exit)",
+            "recovery": "Select a viewport that contains a valid hsbCAD Element (Roof)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Viewport",
+            "how": "Currently not supported dynamically via grips/properties after initial insert (no properties defined for viewport selection).",
+            "effect": "The script is static after insertion; changing the underlying viewport requires erasing and re-inserting."
+          },
+          {
+            "action": "Modify Roof Geometry",
+            "how": "Edit the source hsbCAD Roof Element in Model Space.",
+            "effect": "The script relies on the link `_Viewport[0]`. Changing the roof geometry *should* trigger an update of the element data, refreshing the detail view upon recalculation."
+          },
+          {
+            "action": "View Detail Size",
+            "how": "Edit variable `detail_size` in the script code (Hardcoded).",
+            "effect": "Changes the area of the cross-section detail extracted."
+          }
+        ]
+      },
+      "tokens_used": 3935,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-EdgeDetails.mcr\n\n## Overview\nThis script automates the creation of cross-section details for hsbCAD Roof Elements directly in Paper Space. It visualizes the element's profile and automatically generates detailed section views for every roof edge associated with a selected viewport.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script must be run in a Layout tab. |\n| Paper Space | Yes | This is the primary environment for the script. |\n| Shop Drawing | No | It functions as a detailing utility in Paper Space. |\n\n## Prerequisites\n- A layout tab (Paper Space) containing at least one viewport.\n- A viewport that is currently linked to a valid hsbCAD Roof Element (`ElementRoof`).\n- The hsbCAD Roof Element must contain valid geometry (beams).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Browse and select `HSB_E-EdgeDetails.mcr`\n\n### Step 2: Select Viewport\n```\nCommand Line: Select a viewport\nAction: Click on the viewport in Paper Space that displays the Roof Element you wish to detail.\n```\n\n### Step 3: Automatic Generation\nOnce the viewport is selected, the script will automatically:\n1. Draw a red outline indicating the Element's Brutto profile.\n2. Draw a green outline indicating the Element's Envelope.\n3. Draw blue lines representing the Roof Edges.\n4. Generate cross-section detail views for each edge, showing the intersected beam geometry.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| *N/A* | *N/A* | *N/A* | This script does not expose any user-editable properties in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| *N/A* | No custom context menu options are available for this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Updating Details**: If you modify the Roof Element in Model Space (e.g., change beam sizes or pitches), return to Paper Space and run a recalculation (or reopen the drawing) to update the edge details automatically.\n- **Selecting the Correct Viewport**: Ensure you select a viewport that actually displays a Roof Element. If the script cannot find valid roof data, it will erase itself silently.\n- **Detail Size**: The size of the cross-section detail views is fixed by the script code. If you need larger or smaller detail views, this must be adjusted by a script administrator in the code variable `detail_size`.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I selected a viewport?**\n- **A:** The selected viewport likely does not contain a valid hsbCAD Roof Element, or the element data is missing. The script automatically erases itself if it cannot find valid data to process.\n  \n- **Q: How do I change which roof is detailed after the script is already inserted?**\n- **A:** Currently, you cannot dynamically switch the viewport link after insertion. You must erase the script instance and re-insert it, selecting the correct viewport.\n  \n- **Q: Can I move the generated detail views?**\n- **A:** Yes, once the script generates the geometry in Paper Space, the lines and polylines are standard CAD objects and can be moved or copied using standard AutoCAD commands. However, they will not update dynamically if moved; updates are based on the original insertion logic."
+      },
+      "tokens_used": 4023,
+      "error": null
+    }
+  }
+}

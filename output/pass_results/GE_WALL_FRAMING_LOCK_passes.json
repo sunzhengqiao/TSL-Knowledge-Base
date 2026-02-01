@@ -1,0 +1,328 @@
+{
+  "filename": "GE_WALL_FRAMING_LOCK.mcr",
+  "status": "completed",
+  "total_tokens": 47877,
+  "processing_time": 469.6999762058258,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.2",
+            "date": "28.oct.2013",
+            "author": "David Rueda",
+            "changes": "Avoided deletion of other TSL instances, it was deleting for other openings"
+          },
+          {
+            "version": "1.1",
+            "date": "11.oct.2013",
+            "author": "David Rueda",
+            "changes": "Added work with sheething"
+          },
+          {
+            "version": "1.0",
+            "date": "12.jul.2013",
+            "author": "David Rueda",
+            "changes": "Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7994,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses `PrEntity` to select `Element` (Wall) or `Opening` directly from the model. It manipulates `Beam` and `Sheet` objects using methods like `dbErase`, `setColor`, and `setPanhand`. It utilizes `_bOnElementConstructed` and `assignToElementGroup` which are specific to element interaction in the model. No `sd_` prefixes, `sdDrawing`, or `_Viewport` usage found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element (Wall)",
+            "Opening"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing a framed wall or opening",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6838,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getInt",
+              "promptOriginal": "\n|Lock framing of:| [0]|Complete walls| [1]|Openings only| [2]|Walls and not openings|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "\n|Select wall(s) to lock|",
+              "condition": "_bOnInsert && nChoice!=1",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "\n|Select wall(s) containing openings and/or individual opening(s)|",
+              "condition": "_bOnInsert && nChoice==1",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sUnlock",
+            "type": "PropString",
+            "displayName": "|Unlock framing|",
+            "defaultValue": "No",
+            "inputType": "dropdown",
+            "options": [
+              "No",
+              "|Unlock|"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "|Erase locked beams and TSL|",
+            "handler": "_kExecuteKey==strDelete",
+            "action": "Erases all beams associated with the TSL instance, all associated sheets, and the TSL instance itself.",
+            "alsoTriggeredBy": "OPM Property 'Unlock framing' set to '|Unlock|'"
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 8321,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Locks specific wall framing members (beams and sheets) to preserve manual adjustments or custom configurations during automatic wall regeneration.",
+          "category": "Framing/Design Management",
+          "typicalUseCase": "Used when a detailer has manually modified studs, headers, or sheathing in a wall (e.g., adding a beam pocket, custom stud spacing, or opening reinforcement) and wants to ensure these changes are not overwritten when the wall is recalculated due to dimension changes or other model updates."
+        },
+        "parameters": [
+          {
+            "name": "nChoice",
+            "technicalDefault": "0",
+            "businessMeaning": "Defines the scope of the lock—specifically which parts of the wall structure (general wall framing vs. opening trimmers/cripples) should be protected from being overwritten by the auto-framer.",
+            "validRange": "0 to 2",
+            "unit": "Index",
+            "affectsOutput": "Determines which set of beams are tagged as 'Locked' and linked to the TSL instance. 0 = Locks all beams in the wall (wall structure + openings). 1 = Locks only beams associated with openings (headers, trimmers, cripples). 2 = Locks only the main wall structure (studs/plates), leaving openings free to regenerate."
+          },
+          {
+            "name": "sUnlock",
+            "technicalDefault": "\"No\"",
+            "businessMeaning": "A trigger mechanism to permanently remove the lock and delete the preserved framing geometry, effectively resetting the wall to a state where the auto-framer has full control.",
+            "validRange": "\"No\", \"|Unlock|\"",
+            "unit": "String",
+            "affectsOutput": "When set to \"|Unlock|\", the script erases the TSL instance, all beams currently under its control (the locked beams), and all associated locked sheets. This restores the wall to an empty or partially empty state so that a subsequent regeneration creates fresh framing."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sUnlock set to \"|Unlock|\"",
+            "effect": "The TSL instance and its controlled geometry are erased. The value of nChoice becomes irrelevant as the lock is removed.",
+            "cascade": []
+          },
+          {
+            "trigger": "nChoice",
+            "effect": "Determines which beams are stored in the internal _Beam array and tagged with the 'Locked' subMapX.",
+            "cascade": [
+              "Internal _Beam array",
+              "Visual colors of beams (4 for locked, 32 for unlocked)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "TslInst",
+            "description": "An instance of the script attached to the Wall or Opening that acts as the controller for the lock.",
+            "appliedTo": "Selected Element (Wall) or Opening entity."
+          },
+          {
+            "type": "Visual Attribute (Color)",
+            "description": "Beams are colored Cyan (index 4) to indicate they are locked, or Green (index 32) to indicate they are excluded from the lock. Sheets are colored Blue (index 5).",
+            "appliedTo": "Beams and Sheets within the target Element."
+          },
+          {
+            "type": "Logic Filter (Deletion)",
+            "description": "During wall re-calculation, any newly generated beams that intersect with 'Locked' beams are automatically erased to preserve the original design.",
+            "appliedTo": "Newly generated Beams and Sheets during element construction."
+          },
+          {
+            "type": "Metadata (SubMapX)",
+            "description": "Internal map tags applied to beams to identify them as 'Locked' for future reference by the script.",
+            "appliedTo": "Locked Beams."
+          }
+        ]
+      },
+      "tokens_used": 8602,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Launch: User executes command (Insert).",
+          "2. Insertion Cycle Check: If insertCycleCount > 1, instance is erased immediately to prevent duplication.",
+          "3. Mode Selection: User is prompted via command line to choose Lock Type [0] Complete walls, [1] Openings only, or [2] Walls and not openings.",
+          "4. Entity Selection: User selects Wall(s) or Opening(s). Allowed classes are filtered based on Mode Selection (e.g., 'Openings only' allows selecting Opening entities directly).",
+          "5. Selection Validation: If no entities selected, the instance is erased.",
+          "6. Entity Distribution: The script acts as a launcher. It iterates through selected entities and spawns a new TSL instance (dbCreate) specifically for each target Wall or Opening.",
+          "7. Launcher Termination: The original 'launcher' instance is erased. Control passes to the spawned instances.",
+          "8. Initialization (ExecutionMode 0): Spawned instances retrieve their attached Element.",
+          "9. Prerequisite Check: Script verifies if the Element contains beams (framing). If not, a notice is displayed and the instance is erased.",
+          "10. Cleanup Conflicts: Script erases any other instances of itself attached to the same Element (or Opening) to ensure uniqueness.",
+          "11. Beam Classification: Script analyzes all beams in the Element, identifying them as either 'Around Openings' (based on module name) or 'Not Around Openings'.",
+          "12. Lock Application: Based on the Lock Type stored in Map, specific beams are designated as 'Locked'.",
+          "13. Visual & Logical Tagging: Locked beams are colored Cyan (4) and tagged with SubMapX. Unlocked beams are colored Green (32). All sheets are locked and colored Blue (5).",
+          "14. State Transition: Internal 'ExecutionMode' is set to 1 (Maintenance Phase).",
+          "15. Event Monitoring: Script waits for _bOnElementConstructed (Wall Recalculation).",
+          "16. Reconstruction Conflict Resolution: On recalc, new beams generated by the system are checked against the 'Locked' list. Any new beam intersecting a locked beam is erased to preserve the manual design."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Trigger: User selects 'Erase locked beams and TSL' from context menu OR sets OPM property 'Unlock framing' to '|Unlock|'.",
+            "path1": {
+              "name": "Unlock Path",
+              "steps": [
+                "Iterate through internal _Beam array and dbErase() all locked beams.",
+                "Iterate through internal _Sheet array and dbErase() all locked sheets.",
+                "Erase the TSL instance itself.",
+                "Return (Terminate)."
+              ]
+            },
+            "path2": {
+              "name": "Standard Execution",
+              "steps": [
+                "Proceed to Insertion or Maintenance logic."
+              ]
+            }
+          },
+          {
+            "condition": "Insertion: User input for nChoice (Lock Type).",
+            "path1": {
+              "name": "Choice 0 (Complete Walls)",
+              "steps": [
+                "Select Wall(s).",
+                "Create TSL instance on Wall.",
+                "Logic: Locks ALL beams (structure + openings) in the target wall."
+              ]
+            },
+            "path2": {
+              "name": "Choice 1 (Openings Only)",
+              "steps": [
+                "Select Wall(s) containing openings OR individual Opening entities.",
+                "Extract Opening objects.",
+                "Create TSL instance on each Opening.",
+                "Logic: Locks ONLY beams belonging to the opening modules (headers/trimmers)."
+              ]
+            },
+            "path3": {
+              "name": "Choice 2 (Walls and not openings)",
+              "steps": [
+                "Select Wall(s).",
+                "Create TSL instance on Wall.",
+                "Logic: Locks ONLY main wall structure, ignores beams around openings."
+              ]
+            }
+          },
+          {
+            "condition": "Validation: Element Framing Status.",
+            "path1": {
+              "name": "Framing Exists",
+              "steps": [
+                "Proceed to classify and lock beams."
+              ]
+            },
+            "path2": {
+              "name": "No Framing",
+              "steps": [
+                "Display notice: 'Wall [number] must be framed prior this operation.'",
+                "Erase instance.",
+                "Return."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Input integer `nChoice` range.",
+            "errorMessage": "|Invalid value, default will be used|: |Complete walls|",
+            "recovery": "Script defaults `nChoice` to 0 and continues."
+          },
+          {
+            "check": "Entity selection array `_Entity` length.",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "If length is 0, `eraseInstance()` is called immediately."
+          },
+          {
+            "check": "Element beam count `el.beam().length()`.",
+            "errorMessage": "|Message from| [ScriptName] TSL : |Wall| [Number] |must be framed prior this operation.|",
+            "recovery": "Script erases itself and exits."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Remove Lock / Reset Wall",
+            "how": "Right-click context menu -> '|Erase locked beams and TSL|' OR OPM Property '|Unlock framing|' -> Select '|Unlock|'",
+            "effect": "All beams and sheets currently locked by this script are permanently deleted. The TSL instance is removed. The wall is effectively stripped of that specific framing, allowing the auto-framer to regenerate it from scratch."
+          },
+          {
+            "action": "Regeneration Protection",
+            "how": "Automatic (Triggered by Wall Element modification/re-calculation)",
+            "effect": "When the wall updates, the script detects the `_bOnElementConstructed` event. It automatically deletes any new beams generated by the system that conflict with the positions of the locked beams, preserving the manual modifications."
+          },
+          {
+            "action": "Visual Feedback Update",
+            "how": "Automatic (On Recalculation)",
+            "effect": "Locked beams are set to Color 4 (Cyan). Unlocked beams are set to Color 32 (Green). Sheets are set to Color 5 (Blue)."
+          }
+        ]
+      },
+      "tokens_used": 10426,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_WALL_FRAMING_LOCK.mcr\n\n## Overview\nLocks specific wall framing members (studs, plates, headers) and sheathing to preserve manual adjustments, preventing them from being overwritten during automatic wall regeneration.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Operates on Walls and Openings in the 3D model. |\n| Paper Space | No | Not applicable for drawings. |\n| Shop Drawing | No | Not applicable for drawings. |\n\n## Prerequisites\n- **Required Entities:** An existing Wall Element or Opening.\n- **Minimum Beam Count:** The Wall must already be framed (contain beams/sheets) before running this script.\n- **Required Settings:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_WALL_FRAMING_LOCK.mcr`\n\n### Step 2: Select Lock Mode\n```\nCommand Line: |Lock framing of:| [0]|Complete walls| [1]|Openings only| [2]|Walls and not openings|\n```\n**Action:** Type the number corresponding to your desired scope and press Enter.\n- **[0] Complete walls:** Locks every beam and sheet in the selected wall.\n- **[1] Openings only:** Locks only the framing around openings (headers, trimmers, cripples).\n- **[2] Walls and not openings:** Locks the main wall structure (studs/plates) but leaves openings free to regenerate.\n\n### Step 3: Select Elements\n```\nCommand Line: |Select wall(s) to lock|\n(Or: |Select wall(s) containing openings and/or individual opening(s)| if Mode 1 was selected)\n```\n**Action:** Click on the Wall(s) or Opening(s) in the model that you wish to protect, then press Enter.\n\n---\n\n**Note:** The script will automatically verify if the wall is framed. If the wall is empty, a message will appear, and the script will cancel.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Unlock framing** | dropdown | No | Allows you to remove the lock. Selecting `|Unlock|` will delete this TSL instance **and** erase all beams and sheets currently locked by it, allowing the wall to be re-framed from scratch. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **|Erase locked beams and TSL|** | Deletes the protection script and removes all beams and sheets that were currently locked. This restores the wall to an empty state for that specific framing area. |\n\n## Settings Files\nNone\n\n## Tips\n- **Visual Feedback:** After insertion, check the colors of your beams to verify the lock:\n  - **Cyan (Color 4):** Beams are **Locked** (safe from regeneration).\n  - **Green (Color 32):** Beams are **Unlocked** (will regenerate if the wall changes).\n  - **Blue (Color 5):** Sheets are **Locked**.\n- **Workflow:** Perform your manual edits to the wall (e.g., add a beam pocket or adjust a header) *before* running this script.\n- **Partial Locking:** Use Mode [1] or [2] if you want to allow the main wall layout to update automatically while keeping custom opening details fixed.\n\n## FAQ\n- **Q: I changed the wall length, but the studs didn't update.**\n- A: The studs are likely locked (Cyan). Use the \"Unlock framing\" property or the Right-Click menu to erase the lock, then recalculate the wall.\n- **Q: What happens to my custom framing if I click \"Unlock\"?**\n- A: The locked beams are **deleted**. You will need to recalculate the wall to generate new framing. Ensure you have saved or documented critical custom dimensions if you need to recreate them.\n- **Q: Can I use this on a single door opening?**\n- A: Yes. Select Mode [1] (Openings only) during insertion, and you can select individual Opening entities to lock just the frame around that door."
+      },
+      "tokens_used": 5696,
+      "error": null
+    }
+  }
+}

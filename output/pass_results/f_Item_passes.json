@@ -1,0 +1,299 @@
+{
+  "filename": "f_Item.mcr",
+  "status": "completed",
+  "total_tokens": 48599,
+  "processing_time": 259.8125066757202,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9278,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script creates a 'stackable item' representation and aligns it to World XY coordinates (_XE, _YE, _ZE). It draws 3D coordinate axes for visualization. The logic handles MapRequests for drawing PLines, Blocks, and Text in 3D space. The filename 'f_Item.mcr' and the lack of sd_ prefix or _Viewport usage confirm it is a Model Space functional script for logistics/stacking generation."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element",
+            "MassElement",
+            "RoofElement"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": [
+            "Stacking Settings",
+            "Item/SurfaceQuality",
+            "Catalog Entries"
+          ]
+        }
+      },
+      "tokens_used": 7326,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getEntity",
+              "promptOriginal": "Select entity, select properties or catalog entry and press OK",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "RecalcKey",
+            "handler": "|RecalcKey|",
+            "action": "Recalculates the script instance.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Rotate 90° X-Axis",
+            "handler": "|Rotate 90° X-Axis|",
+            "action": "Rotates the item visualization 90 degrees around the X-axis.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "Stacking Settings",
+            "searchPaths": [
+              "kPathHsbCompany",
+              "kPathHsbInstall"
+            ],
+            "purpose": "Provides configuration for selection sets, max heights, and surface qualities.",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 6476,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates a logistics representation (stack item) from a model entity, allowing it to be visualized, labeled, and positioned in a stacking or transport plan.",
+          "category": "Logistics/Stacking",
+          "typicalUseCase": "Used during the production planning phase to generate truck load plans or package lists by converting structural timber elements into manageable stack items."
+        },
+        "parameters": [
+          {
+            "name": "Source Entity",
+            "technicalDefault": "null",
+            "businessMeaning": "The physical timber element (wall, floor, roof) that serves as the template for the stack item, providing geometry, weight, and material data.",
+            "validRange": "Any GenBeam, Element, MassElement, RoofElement, or TslInst in the model.",
+            "unit": "Entity Reference",
+            "affectsOutput": "Determines the bounding box, weight, and default label of the stack item. Changes to the entity geometry trigger automatic recalculation of the item."
+          },
+          {
+            "name": "Stack Rotation",
+            "technicalDefault": "0°",
+            "businessMeaning": "The orientation of the item within the stack, manipulated via the 'Rotate 90° X-Axis' command to fit items into specific transport spaces.",
+            "validRange": "Increments of 90° around the X-axis (relative to the stacking plane).",
+            "unit": "Degrees",
+            "affectsOutput": "Rotates the 3D visualization and the calculated footprint, enabling dense packing or aligning with truck bed constraints."
+          },
+          {
+            "name": "Logistics Configuration",
+            "technicalDefault": "'Stacking Settings' file content",
+            "businessMeaning": "External rules defining selection filters, maximum stacking heights, surface quality mappings (colors), and label formatting strings.",
+            "validRange": "Predefined values in the company's 'Stacking Settings' configuration file.",
+            "unit": "N/A",
+            "affectsOutput": "Controls visibility (selection sets), display style (surface colors/quality), and text content (formatting) of the generated item."
+          },
+          {
+            "name": "Maximum Height",
+            "technicalDefault": "Defined in Configuration",
+            "businessMeaning": "A constraint defining the maximum vertical dimension allowed for the item based on its selection set category (e.g., 'LongElements' vs 'Panels').",
+            "validRange": "Typically 2000mm to 4000mm depending on transport limits.",
+            "unit": "mm",
+            "affectsOutput": "Validates if an item can be stacked in a specific configuration; may split elements or generate warnings if exceeded."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Source Entity Modification",
+            "effect": "Invalidates current item dimensions and weight.",
+            "cascade": [
+              "Item Geometry",
+              "Weight Calculation",
+              "Bounding Box"
+            ]
+          },
+          {
+            "trigger": "Change in Stacking Settings",
+            "effect": "Updates formatting rules and selection eligibility globally.",
+            "cascade": [
+              "Surface Quality Colors",
+              "Label Text Format",
+              "Item Visibility"
+            ]
+          },
+          {
+            "trigger": "Context Menu: Rotate 90° X-Axis",
+            "effect": "Updates the transformation matrix of the item visualization.",
+            "cascade": [
+              "Item Footprint",
+              "Stacking Compatibility"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "MapX Data Packet",
+            "description": "Exports the entity's Unique ID (UID) and relative transformation to the global map, allowing parent scripts (like TruckLoaders) to track the item.",
+            "appliedTo": "hsbCAD Internal Data Structure"
+          },
+          {
+            "type": "Visualization Graphics",
+            "description": "Generates 3D Polylines (contours), Text (labels), and Blocks (symbols) in response to MapRequests from other scripts to render the item in the stack layout.",
+            "appliedTo": "Model Space (Stacking Layout)"
+          },
+          {
+            "type": "Coordinate Axes",
+            "description": "Draws local X, Y, Z axes at the item's centroid to visualize its original orientation relative to the stacking plane.",
+            "appliedTo": "Model Space (Item Visualization)"
+          }
+        ]
+      },
+      "tokens_used": 9457,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initialization: Triggered by insert or recalculation event.",
+          "2. Entity Acquisition (Insert Only): User selects a source entity (GenBeam, Element, MassElement, RoofElement, or TslInst) via command line prompt.",
+          "3. Configuration Load: Script reads 'Stacking Settings' file to determine selection sets, formatting strings, and surface quality mappings.",
+          "4. Geometry Calculation: Calculates the bounding box, centroid, and volume of the source entity.",
+          "5. Validation Phase: Checks for element relations (parent/child stacking conflicts) and validates against selection set constraints (e.g., max height).",
+          "6. MapRequest Loop (Execution): Iterates through all active MapRequests from the system.",
+          "7. Request Filtering: Skips requests if the requester's 'ParentUID' does not match the current entity's handle, or if the 'AllowedView' direction does not match the item's orientation.",
+          "8. Branching & Rendering: Based on request content, draws 3D Polylines (footprint), Blocks (symbols), or Text (labels) into the active viewport/model space.",
+          "9. Finalization: Updates MapX with entity UIDs and relative coordinates, draws local XYZ axes for visual reference."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "MapRequest Content Type",
+            "path1": {
+              "name": "Draw PLine (Footprint)",
+              "steps": [
+                "Extract PLine from request",
+                "Check for 'ptScale' and apply scaling transformation if present",
+                "Check 'Transparency' (nt) and 'DrawFilled' (nDrawFilled) flags",
+                "Draw as Filled Profile (with/without transparency) or Wireframe"
+              ]
+            },
+            "path2": {
+              "name": "Draw Block",
+              "steps": [
+                "Extract Block Name, Location, and Orientation Vectors",
+                "Construct Coordinate System from vectors",
+                "Draw Block reference at specific location"
+              ]
+            },
+            "path3": {
+              "name": "Draw Text",
+              "steps": [
+                "Extract text string, location, and style parameters (dimStyle, textHeight, color)",
+                "Check 'deviceMode' parameter",
+                "Branch: Use World Coordinates if deviceMode is active, otherwise use Request Vectors",
+                "Workaround: Ensure text orientation vector cross-product logic prevents mirrored text"
+              ]
+            }
+          },
+          {
+            "condition": "Request View Validity (Inside Loop)",
+            "path1": {
+              "name": "Proceed to Draw",
+              "steps": [
+                "Check if 'AllowedView' vector is parallel to item Z-axis (_ZE)",
+                "Check if 'AlsoReverseDirection' flag allows opposite views",
+                "If valid, continue to Content Type branch"
+              ]
+            },
+            "path2": {
+              "name": "Skip Request",
+              "steps": [
+                "Condition fails (View angle mismatch)",
+                "Execute 'continue' statement (skip to next MapRequest)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Relations Stacking Conflict",
+            "errorMessage": "Item creation prevented if parent or child entities of element relations are stacked.",
+            "recovery": "User must ensure the selected entity is not part of an existing hierarchical assembly that is already stacked, or select the root element instead."
+          },
+          {
+            "check": "Selection Set Max Height",
+            "errorMessage": "Implicit error/warning if entity dimension exceeds 'maxHeight' defined in 'Stacking Settings'.",
+            "recovery": "Adjust the 'maxHeight' setting in the configuration file or select a different entity/classification."
+          },
+          {
+            "check": "MapRequest View Direction",
+            "errorMessage": "Item is not visible in the current view/layout.",
+            "recovery": "Rotate the view to align with the item's World XY plane or modify the requesting script's 'AllowedView' parameter."
+          },
+          {
+            "check": "KLH Specific Properties",
+            "errorMessage": "Property warnings related to 'klhLiftingDeviceAdditional' or 'BeddingRequested' flags.",
+            "recovery": "Use specific context commands to ignore checks or ensure the source entity has the required KLH properties set."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Rotate Item Orientation",
+            "how": "Context Menu -> 'Rotate 90° X-Axis'",
+            "effect": "Updates the internal rotation matrix. The next recalculation changes the orientation of the PLine footprint and text relative to the stacking plane."
+          },
+          {
+            "action": "Recalculate Item",
+            "how": "Context Menu -> 'RecalcKey' or Automatic Trigger",
+            "effect": "Re-acquires geometry from the source entity. If the source beam/element has been modified (stretched, trimmed), the stack item updates its bounding box and weight."
+          },
+          {
+            "action": "Modify Properties (OPM)",
+            "how": "AutoCAD Properties Palette",
+            "effect": "Updates Tags, MP-Text, or other formatted strings immediately upon recalculation. KLH specific properties (e.g., CoatingCode) may trigger color changes in the visualization."
+          },
+          {
+            "action": "DataLink Reference",
+            "how": "Script Internal Logic",
+            "effect": "Updates the reference link to the source entity. If the source entity is deleted, the item may lose its data reference."
+          }
+        ]
+      },
+      "tokens_used": 9869,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# f_Item.mcr\n\n## Overview\nThis script creates a logistics representation (stackable item) from a structural entity, allowing it to be visualized, labeled, and positioned in a stacking or transport plan. It is typically used to generate truck load plans or package lists by converting structural timber elements into manageable stack items with calculated dimensions and weight.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script operates in the 3D model to generate stacking layouts. |\n| Paper Space | No | Not intended for 2D drawing annotations. |\n| Shop Drawing | Yes/No | Not a shop drawing generation script (no `sd_` prefix), but uses model data. |\n\n## Prerequisites\n- **Required Entities**: At least one structural entity (GenBeam, Element, MassElement, RoofElement, or TslInst) existing in the model.\n- **Minimum Beam Count**: 1.\n- **Required Settings**: A configuration file named `Stacking Settings` must exist in the Company or Install path.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `f_Item.mcr` from the list.\n\n### Step 2: Select Source Entity\n```\nCommand Line: Select entity, select properties or catalog entry and press OK\nAction: Click on a timber element (e.g., a wall panel, floor beam, or roof element) in the model that you want to add to a stack.\n```\n\n### Step 3: Position and Orient\nOnce selected, the script calculates the item's bounding box and generates a visualization.\n- The item is aligned to the World XY coordinates.\n- Use the **Right-Click Menu** to rotate the item if necessary for the stacking layout.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Source Entity | Entity Reference | *Selected Entity* | The physical timber element linked to this stack item. Changes to this entity trigger automatic updates. |\n| Note: Specific rotation parameters are modified via the Context Menu rather than the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| RecalcKey | Forces the script to recalculate. Use this if the source entity has been modified (e.g., trimmed or stretched) and the stack item needs to update its dimensions. |\n| Rotate 90° X-Axis | Rotates the item visualization 90 degrees around the X-axis. Use this to change the item's orientation to fit within truck bed constraints or stacking rules. |\n\n## Settings Files\n- **Filename**: `Stacking Settings` (usually `.xml` or `.ini`)\n- **Location**: Searches in `kPathHsbCompany` (Company folder) or `kPathHsbInstall` (hsbCAD Installation folder).\n- **Purpose**: Provides configuration rules for selection sets, maximum stacking heights, surface quality mappings (colors), and text formatting strings for labels.\n\n## Tips\n- **Dense Packing**: Use the \"Rotate 90° X-Axis\" context menu option frequently to toggle orientations and achieve optimal packing density in your truck load plan.\n- **Source Updates**: If you modify a wall or beam in the model, simply use \"RecalcKey\" on the stack item to update its volume and weight without recreating it.\n- **Visibility**: If an item is not visible in a specific layout view, check that the view direction matches the item's orientation relative to the stacking plane.\n\n## FAQ\n- **Q: Why does the script fail to create an item for my wall?**\n  **A:** This usually happens if the wall is part of an \"Element Relation\" hierarchy. You cannot stack individual parts of an assembly if the parent or child is already stacked. Try selecting the root element of the assembly instead.\n- **Q: Why is my item showing up as a specific color?**\n  **A:** The color is determined by the \"Surface Quality\" mapping in your `Stacking Settings` file. Check the configuration file to see which quality code is assigned to your entity.\n- **Q: The text label on my item is mirrored or unreadable.**\n  **A:** This can occur depending on the device mode and view vectors. The script includes logic to prevent mirrored text, but if it persists, try using the \"RecalcKey\" command after changing the view angle."
+      },
+      "tokens_used": 6193,
+      "error": null
+    }
+  }
+}

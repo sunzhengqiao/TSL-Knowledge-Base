@@ -1,0 +1,340 @@
+{
+  "filename": "hsb_CheckModularStuds.mcr",
+  "status": "completed",
+  "total_tokens": 35449,
+  "processing_time": 190.87967371940613,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "03.04.2012",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.1",
+            "date": "12.07.2013",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Added option for showing circle insead of creating a beam, and added extrusion profile to new beams created"
+          },
+          {
+            "version": "1.2",
+            "date": "31.10.2018",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Addition of Units for dia of circle in metric & imperial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4712,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses PrEntity to select Element objects and casts them to ElementWallSF. It manipulates 3D geometry by retrieving GenBeam and Opening arrays directly from the wall element. It creates physical beams using Beam.dbCreate or draws geometry using Display.draw. There is no usage of sd_ classes, Viewports, or 2D Sheet entities."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element (ElementWallSF)",
+            "GenBeam (contained within the element)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5276,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDialogOnce",
+            "trigger": "if(_bOnInsert)",
+            "title": null,
+            "dataSource": "Internal OPM",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "strOptions",
+            "type": "PropString",
+            "displayName": "Select Option",
+            "defaultValue": "Create Stud",
+            "inputType": "dropdown",
+            "options": [
+              "Create Stud",
+              "Show Circle"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "nColor",
+            "type": "PropInt",
+            "displayName": "Circle Colour",
+            "defaultValue": 1,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6656,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Analyzes wall elements to detect gaps where stud spacing exceeds the defined modular spacing, offering the option to either automatically generate filler studs or visually indicate the locations.",
+          "category": "Framing / Automation",
+          "typicalUseCase": "Validating and correcting wall panels during detailing where openings or manual edits may have created stud spacings larger than engineering requirements or standard module rules (e.g., 600mm)."
+        },
+        "parameters": [
+          {
+            "name": "strOptions",
+            "technicalDefault": "Create Stud",
+            "businessMeaning": "Determines the action taken when a stud spacing violation is detected. 'Create Stud' physically modifies the model to fix the issue, while 'Show Circle' creates a visual report of the error locations without altering the geometry.",
+            "validRange": "Dropdown: \"Create Stud\", \"Show Circle\"",
+            "unit": "Selection",
+            "affectsOutput": "If 'Create Stud' is selected, new GenBeam entities (studs) are added to the wall. If 'Show Circle' is selected, vector geometry (circles) is drawn to visualize the error gaps."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "1",
+            "businessMeaning": "Specifies the CAD color index for the visual error markers (circles) drawn when the 'Show Circle' option is active.",
+            "validRange": "0 - 255 (Integer Color Index)",
+            "unit": "Integer",
+            "affectsOutput": "Changes the display color of the warning circles. Has no physical effect on the timber structure and is ignored if 'Create Stud' is selected."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "strOptions is set to 'Create Stud'",
+            "effect": "The visual marking logic is skipped, rendering the nColor parameter irrelevant.",
+            "cascade": [
+              "nColor"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "GenBeam (Stud)",
+            "description": "Vertical studs inserted at the midpoint of detected spacing gaps. They are stretched between the top and bottom plates, assigned the material and grade of surrounding studs, and set to type '_kStud'.",
+            "appliedTo": "Selected Wall Elements (ElementWallSF)"
+          },
+          {
+            "type": "Visual Geometry (Circle)",
+            "description": "Temporary graphic circles drawn in the model view at the location of spacing errors to alert the user.",
+            "appliedTo": "Screen/Model Space (Visual only)"
+          }
+        ]
+      },
+      "tokens_used": 5948,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch / Start",
+          "Initialization of Properties (strOptions, nColor)",
+          "Check Insertion State: Is this the initial run (_bOnInsert)?",
+          "[If Initial] Validate Cycle Count (insertCycleCount)",
+          "[If Initial & Valid] Show Dialog (ShowDialogOnce) if no execute key",
+          "[If Initial] Prompt User for Entity Selection (PrEntity: Select Wall Elements)",
+          "[If Initial] Iterate Selected Elements: Search for and Remove existing instances of this script on the element",
+          "[If Initial] Prepare Script Parameters (Vector3d UCS, Property Arrays)",
+          "[If Initial] For each Element: Create a new persistent instance of the script attached to the element using dbCreate",
+          "[If Initial] Erase the temporary 'launcher' instance and return",
+          "[Post-Creation / Calculation Instance Starts] Check: Is the attached element valid (_Element.length > 0)?",
+          "[If Valid] Cast Element to ElementWallSF",
+          "[If Valid] Retrieve Element Geometry (CoordSys, Plane, Outline, Length)",
+          "[If Valid] Retrieve Openings and create a PlaneProfile (ppOp) representing the wall volume subtracted by openings",
+          "[If Valid] Retrieve GenBeams from zone 0 of the element",
+          "[If Valid] Filter Beams into Categories: Top Plates, Bottom Plates, Blocking, and Vertical/Perpendicular Beams",
+          "[If Valid] Determine Beam Dimensions (Width/Height) and Spacing (dSpacing + Tolerance)",
+          "Loop through sorted Vertical Beams to check gaps against neighbors",
+          "Logic: Is the distance between current beam and next beam > dSpacing?",
+          "[If Gap > Spacing] Check if the gap midpoint is inside the Opening Profile (ppOp)",
+          "[If Midpoint NOT in Openings] Add location to 'ptToCreate' list (Identifies missing stud location)",
+          "All gaps checked. Analyze User Option (strOptions)",
+          "Branch: Execute 'Create Stud' or 'Show Circle' workflow based on option",
+          "Finish: Assign instance to Element Group",
+          "Cleanup: Erase the calculation instance (_bOnDbCreated) and return"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script State: _bOnInsert (Launcher) vs _bOnDbCreated (Worker)",
+            "path1": {
+              "name": "Launcher Flow",
+              "steps": [
+                "Check cycle count",
+                "Show Dialog",
+                "Select Elements",
+                "Clean up old scripts",
+                "Spawn Worker Instances (dbCreate)",
+                "Erase Self"
+              ]
+            },
+            "path2": {
+              "name": "Worker Flow",
+              "steps": [
+                "Validate Element",
+                "Build Opening Profile",
+                "Filter Beams",
+                "Calculate Spacing Violations",
+                "Execute Fix or Visual Warning",
+                "Erase Self"
+              ]
+            }
+          },
+          {
+            "condition": "Selection Logic: Spacing Violation Detected",
+            "path1": {
+              "name": "Inside Opening",
+              "steps": [
+                "Identify Gap > Spacing",
+                "Check Midpoint against Opening Profile (ppOp)",
+                "Point is INSIDE profile (opening area)",
+                "Ignore location (Do not add stud)"
+              ]
+            },
+            "path2": {
+              "name": "Solid Wall Area",
+              "steps": [
+                "Identify Gap > Spacing",
+                "Check Midpoint against Opening Profile (ppOp)",
+                "Point is OUTSIDE profile (solid area)",
+                "Add location to 'ptToCreate' list"
+              ]
+            }
+          },
+          {
+            "condition": "User Option: strOptions",
+            "path1": {
+              "name": "Create Stud (Option 0)",
+              "steps": [
+                "Iterate through 'ptToCreate' points",
+                "Create new GenBeam at midpoint",
+                "Set Attributes (Name, Material, Grade, Type, Extrusion Profile)",
+                "Stretch new beam to Top and Bottom plates",
+                "Split intersecting Blocking beams around new stud",
+                "Set flag to erase script instance"
+              ]
+            },
+            "path2": {
+              "name": "Show Circle (Option 1)",
+              "steps": [
+                "Check if any errors found ('ptToCreate' length)",
+                "If no errors, erase instance immediately",
+                "If errors exist, iterate 'ptToCreate' points",
+                "Draw Circle (PLine) at midpoint location",
+                "Report notice to command line",
+                "Set flag to keep instance (for visual persistence)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Cycle Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script self-erases if insertCycleCount > 1 to prevent loops during regeneration."
+          },
+          {
+            "check": "Element Selection",
+            "errorMessage": "None (Silent)",
+            "recovery": "If PrEntity selection fails or is cancelled, the script ends without creating instances."
+          },
+          {
+            "check": "Attached Element Validity",
+            "errorMessage": "None (Silent)",
+            "recovery": "Worker instance checks if _Element[0] is valid. If not, it erases itself."
+          },
+          {
+            "check": "Beam Availability",
+            "errorMessage": "None (Silent)",
+            "recovery": "If no beams are found in zone 0, or no perpendicular beams exist, the script returns without action."
+          },
+          {
+            "check": "Visual Mode Error Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "If 'Show Circle' is selected but no spacing errors are found, the instance erases itself immediately to avoid clutter."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Regenerate Script",
+            "how": "Model Update / Regenerate Command",
+            "effect": "Re-runs the worker logic. If 'Create Stud' was used, it checks for new gaps. If 'Show Circle' was used, it redraws circles."
+          },
+          {
+            "action": "Modify Properties (OPM)",
+            "how": "Select Script Instance (if persistent) -> Properties Palette",
+            "effect": "Changing 'strOptions' allows switching between visualizing errors and fixing them. Changing 'nColor' changes the circle color."
+          },
+          {
+            "action": "Edit Wall Geometry",
+            "how": "Standard CAD editing of the Wall Element or Openings",
+            "effect": "Alters the input data. Requires the script to be re-run (e.g., via a catalog re-trigger or re-insertion) to update stud placement based on new dimensions."
+          }
+        ]
+      },
+      "tokens_used": 7115,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_CheckModularStuds.mcr\n\n## Overview\nThis script analyzes wall elements to detect gaps where stud spacing exceeds the defined modular spacing. It offers the option to either automatically generate filler studs to fix the issue or draw visual markers (circles) to indicate where the spacing violations occur.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D wall elements and beams. |\n| Paper Space | No | Not intended for 2D layout or detailing views. |\n| Shop Drawing | No | Does not interact with shop drawing views or dimensions. |\n\n## Prerequisites\n- **Required Entities**: Wall elements (ElementWallSF) containing existing structural beams (studs).\n- **Minimum Beam Count**: 0 (The script will check and report, but requires existing plates/studs to calculate spacing correctly).\n- **Required Settings Files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or select from your hsbCAD TSL Catalog) → Select `hsb_CheckModularStuds.mcr`\n\n### Step 2: Configure Options\n```\nDialog: TSL Properties\nAction: Choose the desired operation mode:\n- \"Create Stud\": Automatically inserts new studs where gaps are too wide.\n- \"Show Circle\": Draws red circles (or selected color) to mark gaps without changing geometry.\nSet the \"Circle Colour\" if using the visual mode, then click OK.\n```\n\n### Step 3: Select Walls\n```\nCommand Line: Select a set of elements\nAction: Click on the wall elements you wish to check. Press Enter to confirm selection.\n```\n\n### Step 4: Review Results\n- **If Create Stud**: New studs will be generated at the midpoint of detected gaps. The script will remove itself from the walls automatically.\n- **If Show Circle**: Colored circles will appear in the model at locations where spacing is incorrect. The script remains attached to the wall to maintain these visuals.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Select Option | Dropdown | Create Stud | Determines the action taken when a spacing violation is found.<br>- **Create Stud**: Physically adds a new stud to the model.<br>- **Show Circle**: Draws a visual marker only. |\n| Circle Colour | Number | 1 | Specifies the color index (ACI) for the warning circles when \"Show Circle\" is active. (e.g., 1 = Red). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not add specific items to the right-click context menu. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Openings are Ignored**: The script intelligently detects window and door openings. It will not place filler studs or draw warning circles inside the clear opening area, even if the gap between jambs is large.\n- **Modifying Results**: If you use \"Show Circle\" mode, you can later change the option to \"Create Stud\" via the Properties palette. Select the script instance attached to the wall, change the property, and the script will execute the creation logic.\n- **Removing Visuals**: To remove the warning circles, select the script instance on the wall and delete it, or change the wall geometry to fix the spacing and regenerate.\n- **Splitting Blocking**: If the script creates a new stud, it will automatically split any blocking/bracing beams that intersect with the new stud location.\n\n## FAQ\n- Q: I selected \"Create Stud\", but no new studs appeared.\n- A: Ensure there are actual gaps larger than the defined modular spacing in the selected walls. Also, verify that the gap midpoint is not located within an opening (window/door).\n- Q: Why did the script disappear from the wall after I ran it?\n- A: When using the \"Create Stud\" option, the script performs a one-time modification to the model and then self-deletes to prevent duplicate studs on future regenerations.\n- Q: How do I change the color of the warning circles?\n- A: Select the wall, double-click the script instance (or access via Properties), and change the \"Circle Colour\" integer value."
+      },
+      "tokens_used": 5742,
+      "error": null
+    }
+  }
+}

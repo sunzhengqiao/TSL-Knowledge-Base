@@ -1,0 +1,239 @@
+{
+  "filename": "hsb_DimemsionAngleStuds.mcr",
+  "status": "completed",
+  "total_tokens": 30186,
+  "processing_time": 198.3348364830017,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "03.02.2010",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4226,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly calls _Viewport.append(getViewport()) during insert, iterates through the _Viewport array, uses vp.coordSys() to obtain Model-to-Paper space transformations (ms2ps), and transforms geometry using .transformBy(ms2ps) before drawing."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Paper Space (Layout). The user must select a Viewport that displays a valid Element with beams.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4416,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getViewport",
+              "promptOriginal": "Select a viewport",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sDimStyle",
+            "type": "PropString",
+            "displayName": "Dimension Style",
+            "defaultValue": "_DimStyles",
+            "inputType": "dropdown",
+            "options": null,
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "nColor",
+            "type": "PropInt",
+            "displayName": "Color",
+            "defaultValue": "5",
+            "inputType": "number",
+            "options": null,
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5568,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically generates 2D annotations in a layout view displaying the cut angle of the left and right vertical studs (or angled wall members) relative to the vertical axis.",
+          "category": "ShopDrawing/Annotation",
+          "typicalUseCase": "When detailing wall frames with sloped tops, gable ends, or raked walls where the end studs are not rectangular, requiring dimensioning of the manufacturing angle."
+        },
+        "parameters": [
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "_DimStyles",
+            "businessMeaning": "Selects the specific CAD Dimension Style (standard) to use for formatting the angle text and arrowheads. This controls how the angle measurement (e.g., degrees, precision) appears on the drawing.",
+            "validRange": "List of available Dimension Styles defined in the CAD drawing (e.g., 'Standard', 'ISO-25').",
+            "unit": "String (Style Name)",
+            "affectsOutput": "Changes the visual appearance of the dimension text and tick marks (font, text height, arrow style, decimal precision of the angle)."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "5",
+            "businessMeaning": "Sets the display color of the generated dimension lines and text.",
+            "validRange": "0-255 (AutoCAD Color Index), typically 1-7 for standard colors (Default 5 is Blue).",
+            "unit": "Color Index (Integer)",
+            "affectsOutput": "Alters the color of the geometry drawn in Paper Space without changing the position or size of the annotation."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "AnnotationGeometry",
+            "description": "Creates dimension lines (LineSeg) and angle text (String) in Paper Space representing the tilt angle of the end studs.",
+            "appliedTo": "Paper Space Layout (via the selected Viewport)."
+          }
+        ]
+      },
+      "tokens_used": 4691,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User executes the script (hsb_DimemsionAngleStuds) via the hsbCAD menu or command line.",
+          "Script invokes getViewport(), prompting the user to 'Select a viewport' in Paper Space.",
+          "User selects a layout viewport containing an hsbCAD element (e.g., a wall).",
+          "Script validates the viewport and retrieves the associated Element and active Zone.",
+          "Script filters all beams in the element, selecting those perpendicular to the Element's X-axis (studs/joists) and sorts them.",
+          "Script evaluates the first beam in the list (potential left stud) to see if it is non-vertical (angled).",
+          "Script evaluates the last beam in the list (potential right stud) to see if it is non-vertical.",
+          "Script calculates geometry for any angled studs found (intersection points, angle measurement, rotation).",
+          "Script transforms the geometry coordinates from Model Space to Paper Space using the Viewport's coordinate system.",
+          "Script draws the final dimension lines and text in Paper Space using the specified Color and Dimension Style."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Is the Leftmost Beam Angled?",
+            "path1": {
+              "name": "Draw Left Dimension",
+              "steps": [
+                "Check if the dot product of the beam vector and Element Z-axis is less than 0.98 (indicates tilt).",
+                "Determine beam orientation (width vs height) and side (front/back) to calculate dimension placement.",
+                "Construct lines representing the vertical reference and the angled stud surface.",
+                "Calculate the angle in degrees and format the text string.",
+                "Draw the dimension geometry to the left side of the wall."
+              ]
+            },
+            "path2": {
+              "name": "Skip Left Dimension",
+              "steps": [
+                "Determine the beam is effectively vertical (dot product >= 0.98).",
+                "Skip the drawing block for the left side."
+              ]
+            }
+          },
+          {
+            "condition": "Is the Rightmost Beam Angled?",
+            "path1": {
+              "name": "Draw Right Dimension",
+              "steps": [
+                "Check if the dot product of the last beam's vector and Element Z-axis is less than 0.98.",
+                "Calculate geometry specific to the right side orientation (flipping coordinate offsets).",
+                "Draw the dimension geometry to the right side of the wall."
+              ]
+            },
+            "path2": {
+              "name": "Skip Right Dimension",
+              "steps": [
+                "Determine the beam is effectively vertical.",
+                "Skip the drawing block for the right side."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Viewport Selection",
+            "errorMessage": "None (Script exits silently).",
+            "recovery": "The user must ensure a valid viewport is selected during the command prompt phase; otherwise, the script terminates immediately."
+          },
+          {
+            "check": "Element Validity",
+            "errorMessage": "None (Script exits silently).",
+            "recovery": "The selected viewport must display a valid hsbCAD Element (beams). If the viewport is empty or contains non-hsbCAD data, the script terminates."
+          },
+          {
+            "check": "Beam Availability",
+            "errorMessage": "None (Script exits silently).",
+            "recovery": "The Element must contain at least one beam that is perpendicular to the Element's local X-axis. If no such beams exist (e.g., empty wall), the script terminates."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Dimension Style",
+            "how": "AutoCAD Properties Palette (OPM) - 'Dimension Style' property.",
+            "effect": "Updates the text formatting (e.g., decimal places, units symbol) of the existing angle annotation in the drawing."
+          },
+          {
+            "action": "Change Color",
+            "how": "AutoCAD Properties Palette (OPM) - 'Color' property.",
+            "effect": "Changes the color index of the dimension lines and text immediately upon update."
+          }
+        ]
+      },
+      "tokens_used": 7124,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_DimemsionAngleStuds\n\n## Overview\nThis script automatically generates angle dimensions in Paper Space for the left and right end studs of a wall. It is specifically designed to annotate the cut angle of gable ends, raked walls, or any wall where the vertical studs are not perfectly rectangular.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script does not operate in Model Space. |\n| Paper Space | Yes | Dimensions are drawn directly onto the Layout. |\n| Shop Drawing | Yes | Used for 2D detailing and annotation. |\n\n## Prerequisites\n- **Required Entities**: A Layout Viewport displaying a valid hsbCAD Element (e.g., a wall).\n- **Minimum Beam Count**: The element must contain at least one beam.\n- **Required Settings**: None. However, an AutoCAD Dimension Style must exist in the drawing to format the text correctly.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse and select `hsb_DimemsionAngleStuds.mcr` from the script list.\n\n### Step 2: Select Viewport\n```\nCommand Line: Select a viewport\nAction: Click on the border of the layout viewport that displays the wall you wish to annotate.\n```\n**Note:** The script will automatically analyze the wall shown in that viewport.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Dimension Style | dropdown | _DimStyles | Selects the CAD Dimension Style (e.g., Standard, ISO-25) to control text font, height, and arrow style for the angle. |\n| Color | number | 5 | Sets the AutoCAD Color Index for the dimension lines and text (Default 5 is Blue). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu options are available for this script. |\n\n## Settings Files\n- **None**: This script does not use external settings files.\n\n## Tips\n- **Vertical Walls**: If the wall end studs are perfectly vertical (90°), the script will not draw a dimension for that side, as there is no angle to mark.\n- **Dimension Precision**: To change how many decimal places are shown (e.g., 90.00° vs 90°), change the Dimension Style property to a style configured with your desired precision, or modify the style in the Dimension Style Manager.\n- **Viewport Orientation**: Ensure your viewport is oriented correctly before running the script, as the dimensions are placed based on the view direction.\n\n## FAQ\n- **Q: Why did the script not draw anything?**\n  A: The script only draws dimensions if the left or right studs are angled. If the wall is rectangular, or if the selected viewport does not contain a valid hsbCAD element, no dimensions will appear.\n- **Q: Can I change the color of the dimensions after inserting?**\n  A: Yes. Select the script instance in the drawing and change the \"Color\" property in the Properties palette.\n- **Q: Where do the dimensions appear?**\n  A: The dimensions are created directly in Paper Space (on your Layout), not in the Model Space view."
+      },
+      "tokens_used": 4161,
+      "error": null
+    }
+  }
+}

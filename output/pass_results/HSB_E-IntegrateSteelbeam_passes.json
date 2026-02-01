@@ -1,0 +1,422 @@
+{
+  "filename": "HSB_E-IntegrateSteelbeam.mcr",
+  "status": "completed",
+  "total_tokens": 43548,
+  "processing_time": 299.0358176231384,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 1,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "07.05.2014",
+            "author": "AS",
+            "changes": "Pilot version"
+          },
+          {
+            "version": "1.01",
+            "date": "16.10.2014",
+            "author": "AS",
+            "changes": "Draw in zones where steel intersects. Add gap under steelbeam. Cut sheeting"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7719,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Explicit usage of `_kModelSpace` in `tsl.dbCreate`. Script performs 3D geometric operations (calculating intersections using `Body`, `PlaneProfile`, modifying geometry with `BeamCut` and `addMeToGenBeamsIntersect`). No `sd_` prefix, `_Viewport` logic, or 2D drawing generation commands."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5903,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select a set of steelbeams",
+              "condition": "_bOnInsert && insertCycleCount() <= 1",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "Select a set of elements",
+              "condition": "_bOnInsert && insertCycleCount() <= 1",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "On Insert (if _kExecuteKey is empty or not found in catalog)",
+            "title": "Properties",
+            "dataSource": "OPM Properties (PropString, PropDouble)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sSeperator01",
+            "type": "PropString",
+            "displayName": "|Selection|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sFilterType",
+            "type": "PropString",
+            "displayName": "|Filter type|",
+            "defaultValue": "|Include|",
+            "inputType": "dropdown",
+            "options": [
+              "|Include|",
+              "|Exclude|"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 2,
+            "variable": "sFilterBC",
+            "type": "PropString",
+            "displayName": "     |Filter beams with beamcode|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 3,
+            "variable": "sSeperator02",
+            "type": "PropString",
+            "displayName": "|Cut out|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "dGap",
+            "type": "PropDouble",
+            "displayName": "     |Gap|",
+            "defaultValue": "5",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "dGapUnderSteelBm",
+            "type": "PropDouble",
+            "displayName": "     |Gap under steel beam|",
+            "defaultValue": "0",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 4,
+            "variable": "sSeperator03",
+            "type": "PropString",
+            "displayName": "|Visualization|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6414,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically cuts notches or pockets in timber studs, plates, and sheeting to accommodate intersecting steel beams within a timber element.",
+          "category": "Machining",
+          "typicalUseCase": "Used when a steel transfer beam or girder passes through a timber floor or roof wall, requiring the timber joists and sheathing to be cut back to fit around the steel profile."
+        },
+        "parameters": [
+          {
+            "name": "sFilterType",
+            "technicalDefault": "|Include|",
+            "businessMeaning": "Determines whether the beam code filter acts as a whitelist (only cut specified beams) or blacklist (cut all except specified beams).",
+            "validRange": "Dropdown: |Include|, |Exclude|",
+            "unit": "enum",
+            "affectsOutput": "Controls which internal timber beams are selected for the cutting operation based on their BeamCode property."
+          },
+          {
+            "name": "sFilterBC",
+            "technicalDefault": "",
+            "businessMeaning": "List of Beam Codes used to filter which timber beams within the element should be cut by the steel beam integration.",
+            "validRange": "String (semicolon separated), supports wildcards (e.g., 'STUD;BLOCK')",
+            "unit": "text",
+            "affectsOutput": "If 'Include' is selected, only beams with these codes are cut. If 'Exclude', beams with these codes are ignored."
+          },
+          {
+            "name": "dGap",
+            "technicalDefault": 5,
+            "businessMeaning": "Horizontal clearance allowance on each side of the steel beam to ensure easy fit or account for manufacturing tolerances.",
+            "validRange": "0 to 20 mm",
+            "unit": "mm",
+            "affectsOutput": "Widens the cut notch in the timber beams by twice this value (Gap per side)."
+          },
+          {
+            "name": "dGapUnderSteelBm",
+            "technicalDefault": 0,
+            "businessMeaning": "Vertical clearance added below the steel beam bottom flange.",
+            "validRange": "0 to 50 mm",
+            "unit": "mm",
+            "affectsOutput": "Lowers the bottom surface of the cut notch, creating extra space beneath the steel beam."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sFilterType is set to |Include|",
+            "effect": "sFilterBC acts as a whitelist; only timber beams with matching codes are processed.",
+            "cascade": [
+              "sFilterBC"
+            ]
+          },
+          {
+            "trigger": "sFilterType is set to |Exclude|",
+            "effect": "sFilterBC acts as a blacklist; timber beams with matching codes are ignored, all others are processed.",
+            "cascade": [
+              "sFilterBC"
+            ]
+          },
+          {
+            "trigger": "dGap is increased",
+            "effect": "The width of the notch in the timber beams increases (Steel Width + 2 * Gap).",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "BeamCut",
+            "description": "A volumetric notch or pocket subtracted from the timber beams.",
+            "appliedTo": "Filtered internal GenBeams within the selected Element that intersect the steel beam."
+          },
+          {
+            "type": "SheetCut",
+            "description": "A cut operation applied to the sheeting material (sheathing) in zones where the steel beam passes through.",
+            "appliedTo": "Element sheeting layers (Zone 1 and Zone -1)."
+          },
+          {
+            "type": "Visualization",
+            "description": "2D representation of the steel beam profile drawn in the element zones for visualization in drawings.",
+            "appliedTo": "Element Zones (1 and -1)."
+          }
+        ]
+      },
+      "tokens_used": 7665,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Launch",
+          "2. Check Insertion Cycle: If cycleCount > 1, erase instance and exit.",
+          "3. Check Execute Key: If valid, load catalog properties; if invalid/empty, show Properties Dialog (OPM).",
+          "4. User Selection: Prompt user to select Steel Beams.",
+          "5. Filter Input: Process selected beams (remove those belonging to elements or with rectangular profiles).",
+          "6. User Selection: Prompt user to select Elements.",
+          "7. Pair Processing: Loop through every selected Element against every valid Steel Beam.",
+          "8. Intersection Check: Verify if Steel Beam body intersects Element vertical and horizontal profiles.",
+          "9. Housekeeping: Check if script instance already exists for this (Element, SteelBeam) pair. If yes, erase old instance.",
+          "10. Satellite Instantiation: Calculate insertion point and spawn new script instance (dbCreate) attached to the Element.",
+          "11. Cleanup: Erase the 'Master' script instance used for selection.",
+          "12. Satellite Execution: Load properties passed from Master.",
+          "13. Entity Check: If Element or Steel Beam references are invalid, erase satellite.",
+          "14. Beam Filtering: Iterate all GenBeams in Element. Filter by BeamCode (wildcards) and Include/Exclude rule.",
+          "15. Validation: Re-verify geometric intersection between Steel Beam and Element profiles. Report warning if invalid.",
+          "16. Cut Definition: Create BeamCut object using Steel Beam dimensions + Gaps (horizontal) + UnderSteelBeam gap (vertical).",
+          "17. Apply Timber Cuts: Execute addMeToGenBeamsIntersect on the filtered GenBeam list.",
+          "18. Zone Processing: Check if Steel Beam passes through Element Zone 1 or Zone -1.",
+          "19. Visualization & Sheeting Cuts: If intersecting Zone 1/-1, cut sheets and draw Steel Beam profile in the zone display."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count",
+            "path1": {
+              "name": "Cycle > 1",
+              "steps": [
+                "Erase Instance",
+                "Return (Exit)"
+              ]
+            },
+            "path2": {
+              "name": "Cycle == 1",
+              "steps": [
+                "Continue to Execute Key Check"
+              ]
+            }
+          },
+          {
+            "condition": "Steel Beam Selection Filter",
+            "path1": {
+              "name": "Valid Steel Beam",
+              "steps": [
+                "Beam has no parent element",
+                "Profile is NOT Rectangular",
+                "Added to processing list"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Steel Beam",
+              "steps": [
+                "Beam belongs to an element OR has Rectangular profile",
+                "Ignored (Skipped)"
+              ]
+            }
+          },
+          {
+            "condition": "Internal Beam Filter (sFilterType)",
+            "path1": {
+              "name": "Include Mode",
+              "steps": [
+                "Check if BeamCode matches sFilterBC",
+                "Match: Process Beam (Cut)",
+                "No Match: Ignore Beam"
+              ]
+            },
+            "path2": {
+              "name": "Exclude Mode",
+              "steps": [
+                "Check if BeamCode matches sFilterBC",
+                "Match: Ignore Beam",
+                "No Match: Process Beam (Cut)"
+              ]
+            }
+          },
+          {
+            "condition": "Zone Intersection (Sheeting)",
+            "path1": {
+              "name": "Steel Beam intersects Zone (1 or -1)",
+              "steps": [
+                "Apply BeamCut to Element Sheets in that zone",
+                "Draw Steel Beam Profile in Zone Visualization"
+              ]
+            },
+            "path2": {
+              "name": "Steel Beam does NOT intersect Zone",
+              "steps": [
+                "Skip Cutting sheets for this zone",
+                "Skip Drawing in this zone"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Vertical Intersection (ppBmVert vs ppElVert)",
+            "errorMessage": "|Invalid connection|",
+            "recovery": "Script stops execution and reports warning. User needs to ensure the steel beam actually overlaps the element in plan view (or 3D projection) before running."
+          },
+          {
+            "check": "Horizontal Intersection (ppBmHor vs ppElHor)",
+            "errorMessage": "|Invalid connection|",
+            "recovery": "Script stops execution. User needs to check alignment relative to element's wall outline."
+          },
+          {
+            "check": "Entity Existence",
+            "errorMessage": "None (Silent)",
+            "recovery": "If _Element or _Beam arrays are empty, the satellite instance automatically erases itself."
+          },
+          {
+            "check": "Input Selection (Master)",
+            "errorMessage": "None (Dialog Loop)",
+            "recovery": "If user cancels the PrEntity prompts, the Master script erases itself without creating satellites."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Adjust Cut Dimensions",
+            "how": "Modify 'dGap' or 'dGapUnderSteelBm' via OPM Properties",
+            "effect": "Recalculates the size of the notch cut into timber beams and sheets."
+          },
+          {
+            "action": "Filter Affected Beams",
+            "how": "Modify 'sFilterBC' or 'sFilterType' via OPM Properties",
+            "effect": "Changes which internal beams are cut (e.g., exclude plates, only cut studs)."
+          },
+          {
+            "action": "Move Steel Beam",
+            "how": "Grip edit or Move command on the reference Steel Beam",
+            "effect": "The linked script instance detects the change, recalculates intersection point, and updates the notch position and sheeting cuts dynamically."
+          },
+          {
+            "action": "Change Element Geometry",
+            "how": "Modify wall length/height/width",
+            "effect": "Script recalculates intersection and validity. If intersection is lost, script reports warning and stops processing."
+          }
+        ]
+      },
+      "tokens_used": 9486,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-IntegrateSteelbeam.mcr\n\n## Overview\nThis script automatically generates pockets and cuts in timber elements (walls, floors) to accommodate intersecting steel beams. It handles the modification of internal timber studs, plates, and sheeting layers while allowing for specific clearance gaps and filtering of which beams are cut.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D model elements only. |\n| Paper Space | No | Not designed for 2D drawing generation. |\n| Shop Drawing | No | Machining logic is applied in the model. |\n\n## Prerequisites\n- **Required Entities**: \n  - At least one Steel Beam.\n  - At least one Timber Element (e.g., Wall or Floor).\n- **Minimum Beam Count**: 1 Steel Beam and 1 Timber Element.\n- **Required Settings**: None required for basic operation, but Properties Panel parameters may need adjustment for specific tolerances.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command:** `TSLINSERT`\n**Action:** Browse and select `HSB_E-IntegrateSteelbeam.mcr` from the script directory.\n\n### Step 2: Select Steel Beams\n```\nCommand Line: Select a set of steelbeams\nAction: Click on the steel beam(s) that pass through the timber structure. Press Enter to confirm selection.\n```\n*Note: The script filters out steel beams that are already part of another element or have a rectangular profile.*\n\n### Step 3: Select Timber Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the timber element(s) (walls/floors) that intersect or touch the steel beams. Press Enter to confirm.\n```\n*Note: The script will automatically spawn instances on these elements to handle the integration.*\n\n### Step 4: Adjust Parameters (Optional)\n**Action:** Select the newly created script instance (often found by selecting the element and looking for the script entity or via Quick Select). Open the **Properties Palette (Ctrl+1)** to adjust gaps or filters if the default cuts are not sufficient.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **\\|Filter type\\|** | Dropdown | \\|Include\\| | Determines how the Beam Code filter works. <br>**Include**: Only cuts beams matching the code.<br>**Exclude**: Cuts all beams EXCEPT those matching the code. |\n| **Filter beams with beamcode** | Text | (Empty) | Enter beam codes to filter (e.g., `STUD;BLOCK`). Use semicolons for multiple codes. |\n| **Gap** | Number | 5 mm | Horizontal clearance added on each side of the steel beam. Ensures easy fit or accounts for manufacturing tolerances. |\n| **Gap under steel beam** | Number | 0 mm | Vertical clearance added below the bottom flange of the steel beam. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| *None* | This script does not add custom context menu items. Use the Properties Palette to modify settings. |\n\n## Settings Files\n- **Filename:** None\n- **Location:** N/A\n- **Purpose:** N/A\n\n## Tips\n- **Protect Specific Beams:** If you want to cut studs but *not* the top or bottom plates, set **Filter type** to `|Exclude|` and enter the beam code for your plates in the filter field.\n- **Tolerances:** If the timber is tight against the steel, increase the **Gap** property slightly (e.g., to 10mm) to ensure the assembly fits without forcing.\n- **Dynamic Updates:** If you move the steel beam or change the element dimensions, the cuts will automatically recalculate and update to the new position.\n\n## FAQ\n- **Q: Why didn't my steel beam get selected?**\n  **A:** The script ignores steel beams that are \"Grouped\" inside another Element or have a rectangular profile. Ensure your steel beam is a standalone free beam with a profile (like IPE or HEA).\n  \n- **Q: How do I add space for insulation or plasterboard below the steel beam?**\n  **A:** Increase the **Gap under steel beam** property. This lowers the cut in the timber below the steel member.\n\n- **Q: The cut is not appearing in the 3D model.**\n  **A:** Ensure the steel beam actually physically intersects the timber element's volume. If the steel beam is just touching the edge or is completely outside, the script will report an \"Invalid connection\" warning and skip the cut."
+      },
+      "tokens_used": 6361,
+      "error": null
+    }
+  }
+}

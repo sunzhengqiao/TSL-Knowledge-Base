@@ -1,0 +1,364 @@
+{
+  "filename": "GE_WALL_FRAMING_COPY.mcr",
+  "status": "completed",
+  "total_tokens": 34604,
+  "processing_time": 351.94355177879333,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "v1.0",
+            "date": "11.oct.2013",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "- Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": [
+          "GE_WALL_FRAMING_LOCK"
+        ]
+      },
+      "tokens_used": 5128,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script operates on ElementWall, Beam, and Sheet entities using 3D transformations (CoordSys, vecX/Y/Z, transformBy). It performs dbCopy and assignToElementGroup to modify the physical model. No 'sd_' prefixes, ShopDrawing API calls, or Viewport interactions are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "ElementWall",
+            "Beam",
+            "Sheet"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space containing framed ElementWall entities",
+          "requiredSettings": [
+            "GE_WALL_FRAMING_LOCK"
+          ]
+        }
+      },
+      "tokens_used": 4916,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getElement",
+              "promptOriginal": "\n|Select wall to copy FROM|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "\n|Select element(s) to apply copy|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sColor",
+            "type": "PropString",
+            "displayName": "|New color for framing|",
+            "defaultValue": "|No color| (32)",
+            "inputType": "dropdown",
+            "options": [
+              "|No color| (32)",
+              "|Dark Brown| (32)",
+              "|Light Brown| (40)",
+              "|White|",
+              "|Red|",
+              "|Yellow|",
+              "|Green|",
+              "|Cyan|",
+              "|Blue|",
+              "|Magenta|",
+              "|Black|"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4609,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Duplicates the framing configuration (studs, plates, and sheets) from a master wall panel to multiple target wall panels of identical geometry.",
+          "category": "Framing / Automation",
+          "typicalUseCase": "Used when a building design contains multiple identical wall panels. After manually detailing or generating framing for one wall, this tool propagates that design to other matching walls to save time and ensure consistency."
+        },
+        "parameters": [
+          {
+            "name": "sColor",
+            "technicalDefault": "|No color| (32)",
+            "businessMeaning": "Intended to define the visual display color of the copied framing members (studs and plates) and sheeting materials in the CAD model.",
+            "validRange": "List of predefined AutoCAD colors (No color, White, Red, Yellow, Green, Cyan, Blue, Magenta, Black, Dark Brown, Light Brown).",
+            "unit": "Index/Enum",
+            "affectsOutput": "Visual appearance of the timber beams and sheets in the model view. (Note: The calculated color index is determined but may not be explicitly applied in the provided code snippet)."
+          },
+          {
+            "name": "Source Wall (Prompt: Select wall to copy FROM)",
+            "technicalDefault": "null",
+            "businessMeaning": "The reference wall panel that contains the desired framing layout. This wall must already be fully framed with beams and sheets.",
+            "validRange": "Any valid ElementWall entity in the model containing Beams and/or Sheets.",
+            "unit": "Entity",
+            "affectsOutput": "Serves as the geometry and component template. All framing dimensions, spacing, and material properties are derived from this selection."
+          },
+          {
+            "name": "Target Walls (Prompt: Select element(s) to apply copy)",
+            "technicalDefault": "null",
+            "businessMeaning": "The destination wall panels that will receive the copied framing. These walls must match the source wall's dimensions, shape, and opening layout.",
+            "validRange": "One or more ElementWall entities that match the source wall geometry.",
+            "unit": "Entity Set",
+            "affectsOutput": "Determines the location and orientation of the new framing. Existing framing on these walls is erased and replaced."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Script Execution",
+            "effect": "Geometric validation between Source and Target walls.",
+            "cascade": [
+              "Target Wall Length",
+              "Target Wall Width",
+              "Target Wall Height",
+              "Target Wall Shape",
+              "Target Wall Opening Count"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam",
+            "description": "Structural timber members (studs, plates, nogs) copied from the source wall, transformed to match the target wall's position and rotation.",
+            "appliedTo": "Selected Target ElementWall entities"
+          },
+          {
+            "type": "Sheet",
+            "description": "Sheeting materials (e.g., OSB, Plywood) copied from the source wall, transformed to match the target wall.",
+            "appliedTo": "Selected Target ElementWall entities"
+          },
+          {
+            "type": "TslInst",
+            "description": "An instance of the 'GE_WALL_FRAMING_LOCK' script is created on the target wall to manage the copied framing.",
+            "appliedTo": "Selected Target ElementWall entities"
+          }
+        ]
+      },
+      "tokens_used": 7130,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution begins (Insertion mode triggered).",
+          "User prompts: Select source wall ('Select wall to copy FROM').",
+          "User prompts: Select target wall(s) ('Select element(s) to apply copy').",
+          "Script stores selections and entity data in internal Map, then returns to trigger calculation.",
+          "Calculation phase starts: Script retrieves Source Wall entity from Map.",
+          "Script extracts geometric data from Source Wall (Length, Width, Height, Coordinate System, Openings, Beams, Sheets).",
+          "Script iterates through each selected Target Wall.",
+          "For each Target Wall: Compare geometry (Length, Width, Height) against Source Wall within tolerance.",
+          "For each Target Wall: Compare shape (Vertex count) against Source Wall.",
+          "For each Target Wall: Compare Opening count against Source Wall.",
+          "For each Target Wall: Detailed comparison of individual Openings (Width, Height, Position, Shape).",
+          "If validation passes: Erase existing Beams and Sheets on Target Wall.",
+          "Copy Beams from Source Wall: Create database copy, assign to Target Wall, apply rotation and translation transform.",
+          "Copy Sheets from Source Wall: Create database copy, assign to Target Wall, apply rotation and translation transform.",
+          "Insert new instance of 'GE_WALL_FRAMING_LOCK' script onto Target Wall.",
+          "Report 'Success' message for the Target Wall.",
+          "Loop repeats for next Target Wall.",
+          "Script finishes and erases itself."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script State (_bOnInsert flag)",
+            "path1": {
+              "name": "Insertion Phase",
+              "steps": [
+                "Check if insertCycleCount > 1 (Duplicate run prevention).",
+                "Prompt for Source Wall.",
+                "Prompt for Target Walls.",
+                "Store entities in Map.",
+                "Return (End execution)."
+              ]
+            },
+            "path2": {
+              "name": "Calculation Phase",
+              "steps": [
+                "Retrieve stored entities.",
+                "Perform geometric validation.",
+                "Execute copy logic.",
+                "Erase script instance."
+              ]
+            }
+          },
+          {
+            "condition": "Source Wall Content Check",
+            "path1": {
+              "name": "Valid Framing",
+              "steps": [
+                "Proceed to loop through Target Walls.",
+                "Execute copy operations."
+              ]
+            },
+            "path2": {
+              "name": "Empty/Invalid Source",
+              "steps": [
+                "Report 'Wall must be framed prior this operation'.",
+                "Erase script instance.",
+                "Stop execution."
+              ]
+            }
+          },
+          {
+            "condition": "Target Wall Geometric Match (Length/Width/Height)",
+            "path1": {
+              "name": "Size Match",
+              "steps": [
+                "Proceed to Shape validation."
+              ]
+            },
+            "path2": {
+              "name": "Size Mismatch",
+              "steps": [
+                "Report 'Failed - Size mismatch'.",
+                "Skip current Target Wall (continue loop)."
+              ]
+            }
+          },
+          {
+            "condition": "Target Wall Shape Match (Vertex Count)",
+            "path1": {
+              "name": "Shape Match",
+              "steps": [
+                "Proceed to Opening Count validation."
+              ]
+            },
+            "path2": {
+              "name": "Shape Mismatch",
+              "steps": [
+                "Report 'Failed - Shape mismatch'.",
+                "Skip current Target Wall (continue loop)."
+              ]
+            }
+          },
+          {
+            "condition": "Target Wall Opening Count Match",
+            "path1": {
+              "name": "Count Match",
+              "steps": [
+                "Proceed to Detailed Opening validation."
+              ]
+            },
+            "path2": {
+              "name": "Count Mismatch",
+              "steps": [
+                "Report 'Failed - Opening count mismatch'.",
+                "Skip current Target Wall (continue loop)."
+              ]
+            }
+          },
+          {
+            "condition": "Detailed Opening Match (Dimensions, Position, Shape)",
+            "path1": {
+              "name": "Openings Match",
+              "steps": [
+                "Erase existing framing on Target.",
+                "Copy new framing.",
+                "Apply Transforms.",
+                "Insert Lock script."
+              ]
+            },
+            "path2": {
+              "name": "Opening Mismatch",
+              "steps": [
+                "Report 'Failed - Opening mismatch'.",
+                "Skip current Target Wall (continue loop)."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Source Wall has framing (Beams or Sheets)",
+            "errorMessage": "Message from GE_WALL_FRAMING_COPY.mcr TSL: Wall [Number] must be framed prior this operation.",
+            "recovery": "User must frame the source wall using another tool before running this script."
+          },
+          {
+            "check": "Target Wall Dimensions vs Source Wall (Length, Width, Height)",
+            "errorMessage": "Copy to wall [Code]-[Number]: Failed - Size mismatch",
+            "recovery": "Ensure target wall is geometrically identical to the source wall (within 0.1 inch tolerance)."
+          },
+          {
+            "check": "Target Wall Shape (Vertex Count of Envelope)",
+            "errorMessage": "Copy to wall [Code]-[Number]: Failed - Shape mismatch",
+            "recovery": "Ensure target wall has the same polygonal shape (e.g., gable, rectangular) as the source."
+          },
+          {
+            "check": "Target Wall Opening Count",
+            "errorMessage": "Copy to wall [Code]-[Number]: Failed - Opening count mismatch",
+            "recovery": "Ensure target wall has the exact same number of openings (windows/doors)."
+          },
+          {
+            "check": "Target Wall Openings (Width, Height, Position, Vertex Count)",
+            "errorMessage": "Copy to wall [Code]-[Number]: Failed - Opening mismatch",
+            "recovery": "Ensure all openings match in size, type, and location relative to the wall origin."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Color Property",
+            "how": "OPM (Object Properties Manager)",
+            "effect": "Allows selection of a new color for the framing (Note: Calculation logic determines index, but explicit application in the snippet is not visible; typically handled by hsbCAD framework or subsequent update)."
+          }
+        ]
+      },
+      "tokens_used": 7355,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_WALL_FRAMING_COPY.mcr\n\n## Overview\nThis script duplicates the framing configuration (studs, plates, and sheets) from a master \"source\" wall to multiple \"target\" walls. It is designed to ensure consistency across identical wall panels by automatically verifying geometry and propagating the design.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D model entities. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | This script modifies the physical model, not drawing annotations. |\n\n## Prerequisites\n- **Required Entities**: An existing `ElementWall` with framing (Beams/Sheets) to serve as the source, and one or more target `ElementWall` entities.\n- **Minimum beam count**: 0 (Source wall must be pre-framed).\n- **Required settings files**: `GE_WALL_FRAMING_LOCK` (Must be available in the search path).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_WALL_FRAMING_COPY.mcr` from the file dialog.\n\n### Step 2: Select Source Wall\n```\nCommand Line: Select wall to copy FROM\nAction: Click on the wall element that contains the framing layout you wish to duplicate.\n```\n\n### Step 3: Select Target Walls\n```\nCommand Line: Select element(s) to apply copy\nAction: Click on one or more wall elements where you want the framing to be applied. Press Enter to confirm selection.\n```\n\n### Step 4: Processing\nThe script will automatically validate the geometry of the target walls against the source.\n- **Success**: The framing is copied, transformed, and the script reports success on the command line.\n- **Failure**: If walls do not match (size, shape, or openings), an error message is displayed for the specific wall number, and that wall is skipped.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| New color for framing | dropdown | \\|No color\\| (32) | Selects the visual display color for the copied timber beams and sheets. Options include standard colors like White, Red, Blue, etc. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not add specific persistent context menu items. It runs once and then erases itself. |\n\n## Settings Files\n- **Dependency**: `GE_WALL_FRAMING_LOCK`\n- **Purpose**: This required script is automatically inserted onto the target walls to manage the newly copied framing elements.\n\n## Tips\n- **Geometric Precision**: The target walls must be geometrically identical to the source wall. Ensure length, width, height, and polygon shape match exactly.\n- **Openings**: The script checks the number, size, and position of all openings (windows/doors). If the target wall has a different door configuration, the copy will fail.\n- **Source Framing**: Ensure your source wall is completely framed (including sheets if applicable) before running this script. If the source is empty, the script will abort.\n- **One-Time Use**: This script instance erases itself after execution. Re-run the script to copy to additional walls.\n\n## FAQ\n- **Q: Why did I get a \"Size mismatch\" error?**\n  A: The target wall's length, width, or height differs from the source wall by more than the allowed tolerance (approx. 0.1 inch). Check your wall dimensions.\n- **Q: Why did I get a \"Shape mismatch\" error?**\n  A: The target wall has a different polygonal shape than the source (e.g., source is rectangular, target is a gable end).\n- **Q: Can I copy framing from a wall to a wall of different lengths?**\n  A: No. This tool requires exact geometric matches. It does not stretch or adjust framing dimensions; it performs a rigid transformation (copy/rotate/move).\n- **Q: What happens to existing framing on the target wall?**\n  A: Any existing beams or sheets on the target wall are erased and replaced by the copied framing from the source wall."
+      },
+      "tokens_used": 5466,
+      "error": null
+    }
+  }
+}

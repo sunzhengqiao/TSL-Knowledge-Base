@@ -1,0 +1,255 @@
+{
+  "filename": "HSB_E-SquareBeamCut.mcr",
+  "status": "completed",
+  "total_tokens": 27928,
+  "processing_time": 273.09340476989746,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 1,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "16/07/2025",
+            "author": "Robert Pol",
+            "changes": "Rename prop"
+          },
+          {
+            "version": "1.0",
+            "date": "06/03/2024",
+            "author": "Robert Pol",
+            "changes": "First Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5037,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses `Element()` selection and interacts with `GenBeam` objects within the 3D model context. It does not use `sd_` prefixes, `_Viewport`, or `_kPaperSpace`. It assigns to element groups using `assignToElementGroup` which is typical for 3D model processing. The logic involves cloning TSL instances (`dbCreate`) onto elements and processing beam geometries, which occurs in Model Space."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "The script must be run in the 3D Model Space where Elements and Beams exist.",
+          "requiredSettings": [
+            "HSB_T-SquareBeamCut"
+          ]
+        }
+      },
+      "tokens_used": 2287,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select element(s)|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "sKey.length() == 0 (during _bOnInsert)",
+            "title": null,
+            "dataSource": "Instance Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "pBeamCodesBeamCutBeam",
+            "type": "PropString",
+            "displayName": "|BeamCode(s)|",
+            "defaultValue": "FREES",
+            "inputType": "text",
+            "options": [],
+            "category": "|General|",
+            "description": "|Specify the beamcodes using ; as seperator|."
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5103,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Filters beams within an element based on their BeamCode and triggers a square-cutting operation on the selected members via a sub-script.",
+          "category": "Framing/Machining",
+          "typicalUseCase": "Applying end-squaring cuts or trimming operations to specific groups of timber members (e.g., joists or rafters) within a wall or roof element, identified by their beam code."
+        },
+        "parameters": [
+          {
+            "name": "pBeamCodesBeamCutBeam",
+            "technicalDefault": "FREES",
+            "businessMeaning": "Identifies which specific beams within the selected element should be processed. It acts as a filter based on the 'BeamCode' property assigned to beams.",
+            "validRange": "Any string matching existing Beam Codes in the project. Multiple codes can be separated by a semicolon (;).",
+            "unit": "String",
+            "affectsOutput": "Determines the subset of beams passed to the 'HSB_T-SquareBeamCut' script. Only beams with codes matching this list will have the square cut applied; others are ignored."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Modification of pBeamCodesBeamCutBeam",
+            "effect": "Updates the list of beams targeted for machining during the next recalculation.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Machining/Cut",
+            "description": "Geometric cuts applied to the ends or faces of beams, calculated by the dependent script 'HSB_T-SquareBeamCut'.",
+            "appliedTo": "Beams within the selected Element whose BeamCode matches the list provided in the parameters."
+          }
+        ]
+      },
+      "tokens_used": 4157,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script launch and insertion cycle check (>1 results in abort).",
+          "2. Determine insertion mode based on Execute Key (_kExecuteKey).",
+          "3. If Execute Key is present: Load properties from Catalog or 'LastInserted' defaults.",
+          "4. If Execute Key is missing: Open Properties Dialog (showDialog), user edits settings, then save to 'LastInserted'.",
+          "5. Prompt user to select Element(s) from the model.",
+          "6. Iterate through selected Elements and clone the script instance onto each one using dbCreate.",
+          "7. Erase the original (insert) script instance.",
+          "8. Executed on each Element: Verify Element reference exists.",
+          "9. Parse the 'pBeamCodesBeamCutBeam' property string by semicolon (;).",
+          "10. Retrieve all beams belonging to the Element.",
+          "11. Filter beams: Keep only those whose BeamCode matches the parsed list.",
+          "12. Create a Map containing the filtered beams.",
+          "13. Call the external script 'HSB_T-SquareBeamCut' passing the beam Map.",
+          "14. Verify if the script call was successful.",
+          "15. Check persistence condition (Is 'ManualInsert' OR 'ElementConstructed').",
+          "16. Erase the cloned script instance (Script is transient)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Is an Execute Key provided during insertion?",
+            "path1": {
+              "name": "Silent Insert (Catalog/LastInserted)",
+              "steps": [
+                "Load properties from matching Catalog name.",
+                "If no matching catalog, load from '_LastInserted' defaults.",
+                "Skip dialog display."
+              ]
+            },
+            "path2": {
+              "name": "Interactive Insert",
+              "steps": [
+                "Execute showDialog() to display OPM palette.",
+                "User inputs parameters manually.",
+                "Save values to '_LastInserted' catalog."
+              ]
+            }
+          },
+          {
+            "condition": "Does the beam code exist in the property string?",
+            "path1": {
+              "name": "Match Found",
+              "steps": [
+                "Beam is added to the 'beamCutBeams' array.",
+                "Beam is passed to the square cut sub-script."
+              ]
+            },
+            "path2": {
+              "name": "No Match / Invalid Beam",
+              "steps": [
+                "Beam is skipped/ignored during filtering.",
+                "No operations are performed on this specific beam."
+              ]
+            }
+          },
+          {
+            "condition": "Is the dependent sub-script 'HSB_T-SquareBeamCut' successfully called?",
+            "path1": {
+              "name": "Success",
+              "steps": [
+                "Beam data is processed by the sub-script.",
+                "Script proceeds to cleanup/erasure phase."
+              ]
+            },
+            "path2": {
+              "name": "Failure",
+              "steps": [
+                "Display Warning: 'Beams could not be processed! Make sure that the tsl... is loaded'.",
+                "Erase script instance."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Reference Validity",
+            "errorMessage": "Element reference not found.",
+            "recovery": "Ensure the script is correctly attached to an Element. The script will self-delete if this check fails."
+          },
+          {
+            "check": "Dependent Script Availability ('HSB_T-SquareBeamCut')",
+            "errorMessage": "Beams could not be processed! Make sure that the tsl HSB_T-SquareBeamCut is loaded in the drawing.",
+            "recovery": "Load the missing TSL file ('HSB_T-SquareBeamCut') into the drawing and re-run the operation."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Re-run Insertion",
+            "how": "Command Line / Script Palette",
+            "effect": "Because the script erases itself after execution (Transient behavior), modifying parameters requires re-inserting the script on the elements with the new settings."
+          }
+        ]
+      },
+      "tokens_used": 6610,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-SquareBeamCut\n\n## Overview\nThis script identifies specific beams within a selected element (based on their BeamCode) and automatically applies a square-cutting operation to their ends using a sub-script.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be run in the 3D model where elements and beams exist. |\n| Paper Space | No | Not applicable for 2D drawings. |\n| Shop Drawing | No | Not applicable for shop drawings. |\n\n## Prerequisites\n- **Required Entities**: An Element containing GenBeams.\n- **Minimum Beam Count**: 1 (The element must contain at least one beam).\n- **Required Settings/Scripts**: The script `HSB_T-SquareBeamCut` must be loaded in the drawing.\n\n## Usage Steps\n\n### Step 1: Launch Script\n```\nCommand Line: TSLINSERT\nAction: Select HSB_E-SquareBeamCut.mcr from the list and press Enter.\n```\n\n### Step 2: Configure Beam Codes\n```\nDialog: Properties Palette\nAction: In the \"General\" category, locate the \"BeamCode(s)\" field. \nEnter the beam code(s) you wish to process. If entering multiple codes, separate them with a semicolon (e.g., FREES;RAFTER).\n```\n\n### Step 3: Select Elements\n```\nCommand Line: Select element(s)\nAction: Click on the element(s) (wall or floor) in the model that contain the beams you want to cut. Press Enter to confirm selection.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| BeamCode(s) | Text | FREES | Specify the beam codes to target for the square cut. Use a semicolon (;) to separate multiple codes. |\n\n## Right-Click Menu Options\nNone. The script is transient and does not remain on the element for right-click context menu modification.\n\n## Settings Files\nNone specified for this script.\n\n## Tips\n- **Multiple Codes**: You can target different types of beams at once by separating their codes with a semicolon (e.g., `FREES;STUD`).\n- **Script Dependency**: Ensure the tool script `HSB_T-SquareBeamCut` is loaded in your drawing, or the script will fail to process the beams.\n- **Re-running**: This script erases itself after running (Transient behavior). If you need to change the beam codes or re-run the operation, simply insert the script again on the desired elements.\n\n## FAQ\n- **Q: The script disappeared after I ran it. Is this normal?**\n  - A: Yes. This is a \"transient\" script designed to perform a one-time action and then delete itself.\n  \n- **Q: I got a warning \"Beams could not be processed!\"**\n  - A: This usually means the required sub-script (`HSB_T-SquareBeamCut`) is not loaded in your drawing. Please load this file and try again.\n\n- **Q: Nothing happened to my beams.**\n  - A: Check the \"BeamCode(s)\" property. The beams in your selected element must match the codes exactly (excluding the semicolon). If the codes do not match, the script will ignore them."
+      },
+      "tokens_used": 4734,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,300 @@
+{
+  "filename": "HipRafterBirdsmouth.mcr",
+  "status": "completed",
+  "total_tokens": 35291,
+  "processing_time": 258.1092162132263,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6768,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Direct manipulation of Beam objects using addTool(), BeamCut(), and ParHouse() to modify 3D geometry. Input is gathered via PrEntity() and getBeam() prompting for Beams. No usage of sd_ functions, _Viewport, or 2D drawing logic typical of ShopDrawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 3,
+          "requiredSpace": "Model Space (3D environment)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4094,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select plates",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getBeam",
+              "promptOriginal": "Select hip rafter",
+              "condition": "_bOnInsert && prPla.go()",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowNotice",
+            "trigger": "Invalid selection of plates (less than 2 or parallel)",
+            "title": null,
+            "dataSource": "Script logic",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sMinToolY",
+            "type": "PropString",
+            "displayName": "Minimal Tooling Y",
+            "defaultValue": "No",
+            "inputType": "dropdown",
+            "options": [
+              "No",
+              "Yes"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sMinToolZ",
+            "type": "PropString",
+            "displayName": "Minimal Tooling Z",
+            "defaultValue": "No",
+            "inputType": "dropdown",
+            "options": [
+              "No",
+              "Yes"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 2,
+            "variable": "sRelief",
+            "type": "PropString",
+            "displayName": "Relief",
+            "defaultValue": "not rounded",
+            "inputType": "dropdown",
+            "options": [
+              "not rounded",
+              "rounded",
+              "relief",
+              "rounded with small diameter",
+              "relief with small diameter",
+              "rounded",
+              "relief K1"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5760,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates a birdsmouth joint on a hip rafter to accommodate the intersection of two mitred plates or eaves rafters.",
+          "category": "Framing/Joinery",
+          "typicalUseCase": "Used during roof framing to seat a hip rafter onto the top plates or common rafters at the eaves intersection."
+        },
+        "parameters": [
+          {
+            "name": "sMinToolY",
+            "technicalDefault": "No",
+            "businessMeaning": "Determines if the cutting tool width is restricted to the beam's actual width. When set to 'No', the tool is oversized (10x width) to ensure a clean through-cut, but may intersect adjacent beams. 'Yes' restricts the cut to the beam's exact volume to protect nearby geometry.",
+            "validRange": "No, Yes",
+            "unit": "Option",
+            "affectsOutput": "If 'No', the birdsmouth cut extends significantly beyond the beam width. If 'Yes', the cut stops precisely at the beam's vertical sides."
+          },
+          {
+            "name": "sMinToolZ",
+            "technicalDefault": "No",
+            "businessMeaning": "Determines if the cutting tool height is restricted to the beam's actual height. When set to 'No', the tool is oversized (10x height) to ensure a full-depth cut. 'Yes' restricts the cut to the beam's exact height.",
+            "validRange": "No, Yes",
+            "unit": "Option",
+            "affectsOutput": "If 'No', the cut extends infinitely upwards relative to the beam. If 'Yes', the cut stops exactly at the top surface of the beam."
+          },
+          {
+            "name": "sRelief",
+            "technicalDefault": "not rounded",
+            "businessMeaning": "Defines the corner treatment (easing/relief) for the inside corner of the birdsmouth. This is specifically critical for acute angles (< 90°) where a sharp corner would be structurally weak or difficult to machine.",
+            "validRange": "not rounded, rounded, relief, rounded with small diameter, relief with small diameter, rounded, relief K1",
+            "unit": "GeometryStyle",
+            "affectsOutput": "Adds a fillet (round) or chamfer (relief) to the internal vertex of the birdsmouth cut, preventing sharp points in the timber."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Angle between selected plates is acute (< 90 degrees)",
+            "effect": "The script switches from standard BeamCut to ParHouse logic. The 'sRelief' parameter becomes active to handle the sharp internal corner geometry.",
+            "cascade": [
+              "sRelief"
+            ]
+          },
+          {
+            "trigger": "Minimal Tooling (Y or Z) is set to 'Yes' in acute angles",
+            "effect": "The script generates two separate ParHouse tools instead of one large tool to strictly adhere to the minimal volume defined by the beam dimensions.",
+            "cascade": [
+              "sMinToolY",
+              "sMinToolZ"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Cut/Tool",
+            "description": "Standard orthogonal cuts or ParHouse (complex) cuts forming the birdsmouth seat.",
+            "appliedTo": "Hip Rafter (The 3rd beam selected)"
+          },
+          {
+            "type": "VisualDisplay",
+            "description": "A 2D graphic representation (profile and circle marker) of the intersection on the reference plane.",
+            "appliedTo": "ModelSpace"
+          }
+        ]
+      },
+      "tokens_used": 6501,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches HipRafterBirdsmouth script",
+          "Prompt user to 'Select plates' (PrEntity for Beams)",
+          "Validate selection: Must have >= 2 beams and they must not be parallel",
+          "If invalid: Show 'Invalid selection' notice, erase instance, and exit",
+          "Prompt user to 'Select hip rafter' (getBeam)",
+          "Calculate angle between the two selected plates",
+          "Determine tool dimensions based on sMinToolY and sMinToolZ properties (10x multiplier if 'No')",
+          "Generate Cuts: Branch based on calculated angle (< 90° vs >= 90°)",
+          "Apply Relief logic (if acute angle) using sRelief property",
+          "Add generated tools to the Hip Rafter (Beam 2)",
+          "Generate visual display (profile and circle marker) on reference plane"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Plate selection validation",
+            "path1": {
+              "name": "Valid Selection",
+              "steps": [
+                "Verify 2 or more beams selected",
+                "Verify beams 0 and 1 are not parallel (isParallelTo check fails)",
+                "Proceed to Hip Rafter selection"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Selection",
+              "steps": [
+                "Detect < 2 beams OR beams are parallel",
+                "Show ReportNotice: 'Invalid selection'",
+                "Call eraseInstance()",
+                "Exit script"
+              ]
+            }
+          },
+          {
+            "condition": "Angle between Plates (Acute vs Standard)",
+            "path1": {
+              "name": "Acute Angle (< 90° - dEps)",
+              "steps": [
+                "Set bAddParHouse flag to true",
+                "Calculate intersection points for ParHouse geometry",
+                "Check Minimal Tooling properties (sMinToolY/sMinToolZ)",
+                "If Minimal Tooling is Yes: Generate two ParHouse tools (5*dX and 5*dY dimensions)",
+                "If Minimal Tooling is No: Generate one large ParHouse tool (5*dX by 5*dY)",
+                "Apply RoundType based on sRelief property",
+                "Add tools to Hip Rafter"
+              ]
+            },
+            "path2": {
+              "name": "Standard Angle (>= 90°)",
+              "steps": [
+                "Set bAddParHouse flag to false",
+                "Calculate tool dimensions (multiply by 10 if sMinTool is 'No')",
+                "Generate two standard BeamCut tools",
+                "Add tools to Hip Rafter"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Plate Beam Quantity",
+            "errorMessage": "Invalid selection",
+            "recovery": "User must select at least 2 beams when prompted for plates."
+          },
+          {
+            "check": "Plate Orientation (Parallelism)",
+            "errorMessage": "Invalid selection",
+            "recovery": "User must ensure the two selected plates are not parallel (they must form a corner)."
+          },
+          {
+            "check": "Recalculation Integrity",
+            "errorMessage": "(Silent failure - Erase instance)",
+            "recovery": "Ensure linked entities (_Beam array) still exist in the drawing. If beams are deleted, the script removes itself."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Minimal Tooling Settings",
+            "how": "OPM Properties (AutoCAD Properties Palette)",
+            "effect": "Changes the size of the cutting tools. 'No' creates oversized tools (10x size) to ensure clean cuts; 'Yes' restricts tools to beam dimensions. In acute angles, toggling these switches between one complex tool and two distinct complex tools."
+          },
+          {
+            "action": "Adjust Relief Type",
+            "how": "OPM Properties -> Relief dropdown",
+            "effect": "Changes the geometry of the internal corner in the birdsmouth (e.g., square, rounded, or relieved). Only active/visible if the angle between plates is acute (< 90°)."
+          },
+          {
+            "action": "Update Geometry",
+            "how": "Modify OPM Properties",
+            "effect": "The script recalculates, removes old tools, and adds the new Birdsmouth cut to the Hip Rafter based on new settings."
+          }
+        ]
+      },
+      "tokens_used": 7066,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HipRafterBirdsmouth.mcr\n\n## Overview\nThis script automates the creation of a birdsmouth joint on a hip rafter. It calculates the necessary cuts based on the intersection of two selected plates or eaves rafters, handling both standard and acute roof angles.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in the 3D model environment to cut beam geometry. |\n| Paper Space | No | Not applicable for 2D drawings. |\n| Shop Drawing | No | Not applicable for shop drawing generation. |\n\n## Prerequisites\n- **Required entities**: At least 3 beams (2 plates/eaves beams and 1 hip rafter).\n- **Minimum beam count**: 3\n- **Required settings**: None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HipRafterBirdsmouth.mcr`\n\n### Step 2: Select Plates\n```\nCommand Line: Select plates\nAction: Click on the two plates (or eaves rafters) that form the corner intersection.\nNote: You must select at least 2 beams, and they must not be parallel to each other.\n```\n\n### Step 3: Select Hip Rafter\n```\nCommand Line: Select hip rafter\nAction: Click on the hip rafter beam that needs to be notched (birdsmouthed) to sit on the plates.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Minimal Tooling Y | Dropdown | No | Determines if the cutting tool width matches the beam width exactly.<br>**No**: Tool is 10x wider (ensures clean through-cut).<br>**Yes**: Tool is restricted to beam width (prevents interference with adjacent beams). |\n| Minimal Tooling Z | Dropdown | No | Determines if the cutting tool height matches the beam height exactly.<br>**No**: Tool is 10x taller (ensures full depth).<br>**Yes**: Tool is restricted to beam height. |\n| Relief | Dropdown | not rounded | Defines the corner treatment for the birdsmouth (useful for acute angles). Options include: `not rounded`, `rounded`, `relief`, `rounded with small diameter`, `relief with small diameter`, and `relief K1`. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| (None) | This script does not add custom items to the right-click context menu. Modifications are made via the Properties Panel. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Acute Angles**: If the angle between your plates is less than 90°, the script automatically switches to \"ParHouse\" logic. In this mode, the `Relief` parameter is critical to prevent creating a sharp, weak point inside the birdsmouth.\n- **Interference Detection**: If the birdsmouth cut is interfering with other nearby beams, change `Minimal Tooling Y` or `Minimal Tooling Z` to \"Yes\". This restricts the cut volume to the exact dimensions of the hip rafter.\n- **Visual Markers**: The script draws a profile and circle marker on the reference plane to indicate exactly where the cut is applied.\n\n## FAQ\n- **Q: I received an \"Invalid selection\" notice. Why?**\n- **A:** Ensure you selected at least two beams in the first step, and that those two beams are not parallel. They must form a corner.\n- **Q: What is the difference between \"rounded\" and \"relief\" in the properties?**\n- **A:** \"Rounded\" applies a curved fillet to the internal corner of the cut. \"Relief\" typically applies a straight chamfer or specific material removal to ease the corner.\n- **Q: Why does the cut extend so far beyond my beam?**\n- **A:** By default, `Minimal Tooling Y` and `Z` are set to \"No\", which creates a large virtual tool (10x size) to ensure the cut goes completely through the material. Change these to \"Yes\" to limit the cut to the beam's boundary."
+      },
+      "tokens_used": 5102,
+      "error": null
+    }
+  }
+}

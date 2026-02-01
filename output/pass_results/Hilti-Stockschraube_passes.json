@@ -1,0 +1,342 @@
+{
+  "filename": "Hilti-Stockschraube.mcr",
+  "status": "completed",
+  "total_tokens": 51184,
+  "processing_time": 291.2940595149994,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9427,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses 'dbCreate(..., _kModelSpace, ...)' for insertion. Adds Drill tools to GenBeams ('bmStexon.addTool(drill)'), which is a Model Space operation. Filename does not start with 'sd_' or 'Multipage'."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "Selected Beams must have 'Hilti' or 'Stexon' (if projectSpecial is Baufritz) in their Information field"
+          ]
+        }
+      },
+      "tokens_used": 7185,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select element(s)|, |<Enter> to pick points|",
+              "condition": "_bOnInsert",
+              "required": false
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select intersecting joist(s)|, |<Enter> to pick points|",
+              "condition": "_bOnInsert && bHasElements",
+              "required": false
+            },
+            {
+              "step": 3,
+              "function": "PrEntity",
+              "promptOriginal": "|Select joist(s)|",
+              "condition": "_bOnInsert && !bHasElements",
+              "required": false
+            },
+            {
+              "step": 4,
+              "function": "PrPoint",
+              "promptOriginal": "|Select point|",
+              "condition": "_bOnInsert && bIsParallel",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dOffsetX",
+            "type": "PropDouble",
+            "displayName": "|X-Axis Offset|",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": "|Offset|",
+            "description": "|Defines the Offset in X-direction|"
+          },
+          {
+            "index": 1,
+            "variable": "dOffsetY",
+            "type": "PropDouble",
+            "displayName": "|Y-Axis Offset|",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": "|Offset|",
+            "description": "|Defines the Offset in Y-direction|"
+          },
+          {
+            "index": 0,
+            "variable": "sVersion",
+            "type": "PropString",
+            "displayName": "|Ausführung|",
+            "defaultValue": "Holzdolle",
+            "inputType": "dropdown",
+            "options": [
+              "Holzdolle",
+              "Setzschraube"
+            ],
+            "category": "|Offset|",
+            "description": "|Specifies the version of the tool.|",
+            "condition": "nBaufritz (projectSpecial == 'BAUFRITZ')"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "Randabstand prüfen",
+            "handler": "sTriggerAllow50mmRadius",
+            "action": "Toggles checking of edge distance (Allow50)",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Randabstand nicht prüfen",
+            "handler": "sTriggerAllow50mmRadius",
+            "action": "Toggles checking of edge distance (Allow50)",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Hilti Export|",
+            "handler": "sTriggerExportStexon",
+            "action": "Exports stexon data to a .dxx file in the parent folder",
+            "alsoTriggeredBy": "Double-Click"
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 9521,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Inserts Hilti HSW hanger bolts (Stexons) to anchor wood structures, calculating drill positions based on intersections or manual points, and exports production data.",
+          "category": "Hardware",
+          "typicalUseCase": "Connecting perpendicular joists to walls or beams using Hilti screws, specifically for generating CNC machine data (.dxx export) and material lists."
+        },
+        "parameters": [
+          {
+            "name": "dOffsetX",
+            "technicalDefault": 0,
+            "businessMeaning": "Shifts the screw position along the length of the joist (longitudinal adjustment).",
+            "validRange": "-500 to 500",
+            "unit": "mm",
+            "affectsOutput": "Moves the drill hole and visual representation along the joist's X-axis relative to the calculated insertion point."
+          },
+          {
+            "name": "dOffsetY",
+            "technicalDefault": 0,
+            "businessMeaning": "Lateral shift of the screw position relative to the joist center, used to align with specific construction requirements or避开 obstacles.",
+            "validRange": "-200 to 200 (Limited by joist width/height)",
+            "unit": "mm",
+            "affectsOutput": "Moves the drill hole laterally. If the value places the hole too close to the edge (default < 25mm radius constraint), the script automatically clamps it to the maximum valid distance unless edge checking is disabled via the context menu."
+          },
+          {
+            "name": "sVersion",
+            "technicalDefault": "Holzdolle",
+            "businessMeaning": "Selects the specific fastening hardware type required for the Baufritz project standard.",
+            "validRange": "Holzdolle, Setzschraube",
+            "unit": "enum",
+            "affectsOutput": "Determines the drill geometry: 'Holzdolle' creates a Ø15mm x 30mm deep hole, while 'Setzschraube' creates a Ø5mm x 70mm deep hole. Defaults to standard Hilti (Ø4.5mm x 140mm) for other projects."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sVersion selection",
+            "effect": "Modifies internal constants for Drill Radius (dRadius) and Drill Depth (dDepth).",
+            "cascade": [
+              "dRadius",
+              "dDepth"
+            ]
+          },
+          {
+            "trigger": "dOffsetY user input",
+            "effect": "Validates the resulting point against a shrunken profile of the beam cross-section to maintain minimum edge distances.",
+            "cascade": [
+              "dOffsetY"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Drill",
+            "description": "Cylindrical machining hole. Standard Hilti: Ø4.5mm x 140mm. Baufritz Setzschraube: Ø5mm x 70mm. Baufritz Holzdolle: Ø15mm x 30mm.",
+            "appliedTo": "Selected Joist (GenBeam)"
+          },
+          {
+            "type": "HardwareComponent",
+            "description": "BOM entry for Hilti Hanger bolt HSW M12x220/60 8.8 (Art. 2316491), linked to the element group.",
+            "appliedTo": "BOM / Material List"
+          },
+          {
+            "type": "ModelMap File",
+            "description": "Exports geometry and tool info of all Stexon instances to 'HiltiExport.dxx' for CNC production.",
+            "appliedTo": "Disk (Parent folder of DWG)"
+          }
+        ]
+      },
+      "tokens_used": 7931,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Initialize: Check 'Baufritz' project special to load specific properties (sVersion) and drill dimensions.",
+          "2. Selection Phase: Prompt user to select Elements (Walls/Floors) or <Enter> to skip.",
+          "3. Selection Phase: Prompt user to select Joists (Beams).",
+          "4. Filtering: Remove joists from selection that lack 'Hilti' or 'Stexon' (Baufritz) in their Information field.",
+          "5. Geometry Check: Determine scenario based on selection (Parallel, Intersecting, or Manual placement).",
+          "6. Branch Execution:",
+          "   - Parallel (1 Wall + 1 Joist): Calculate intersection profile and prompt for manual points inside it.",
+          "   - Intersecting (>1 Entity): Automatically calculate intersection points between element outlines and joist planes.",
+          "   - Manual: Calculate bounding box of selected entities and prompt for manual points within it.",
+          "7. Instance Creation: Generate TSL instance at calculated point(s) with reference to Element and Joist.",
+          "8. Calculation: Apply dOffsetX and dOffsetY to determine exact drill center point.",
+          "9. Validation: Check if calculated point is within the 'Safe Zone' (Edge Distance). Clamp dOffsetY if it violates constraints.",
+          "10. Visuals: Draw graphical representation (Circle). Color Red if edge distance is critical (and checking enabled).",
+          "11. Machining: Add Drill tool to the Joist.",
+          "12. BOM: Add Hardware component (Hilti HSW) to the Element or Group."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Selection Composition (1 Element + 1 Joist with Parallel Vectors)",
+            "path1": {
+              "name": "Parallel Placement Mode",
+              "steps": [
+                "Build intersection profile of Wall and Joist shadow.",
+                "Loop: Prompt user to pick points.",
+                "Validate point lies strictly inside intersection profile.",
+                "Create instance."
+              ]
+            },
+            "path2": {
+              "name": "Not Parallel (or count mismatch)",
+              "steps": [
+                "Proceed to Intersection or Manual branch logic."
+              ]
+            }
+          },
+          {
+            "condition": "Has Elements AND Has Joists (Auto-Intersect)",
+            "path1": {
+              "name": "Auto-Intersection",
+              "steps": [
+                "Iterate through all selected Elements and Joists.",
+                "Calculate geometric intersection between Element contour and Joist plane.",
+                "Create instance at every found intersection point automatically."
+              ]
+            },
+            "path2": {
+              "name": "Manual/Single Entity",
+              "steps": [
+                "If Elements only: Find beams inside elements marked 'Hilti'.",
+                "Create bounding box of relevant entities.",
+                "Loop: Prompt user to pick points within bounding box.",
+                "Create instance."
+              ]
+            }
+          },
+          {
+            "condition": "Project Special == 'BAUFRITZ'",
+            "path1": {
+              "name": "Baufritz Configuration",
+              "steps": [
+                "Show 'Ausführung' property (Holzdolle/Setzschraube).",
+                "Set Drill Radius/Depth based on selection (e.g., Holzdolle = R15, D30).",
+                "Accept 'Stexon' keyword in beam info."
+              ]
+            },
+            "path2": {
+              "name": "Standard Configuration",
+              "steps": [
+                "Hide 'Ausführung' property.",
+                "Use Standard Hilti dimensions (R4.5, D140).",
+                "Require 'Hilti' keyword in beam info."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam Information Keyword",
+            "errorMessage": "None (Silent removal from selection)",
+            "recovery": "User must ensure joists have 'Hilti' (or 'Stexon' for Baufritz) in their Information field."
+          },
+          {
+            "check": "Point Location (Parallel Mode)",
+            "errorMessage": "<scriptName>: location invalid",
+            "recovery": "User must pick a point inside the calculated intersection profile (the highlighted area)."
+          },
+          {
+            "check": "Edge Distance (Randabstand)",
+            "errorMessage": "<scriptName> <Y-Axis Offset> maximal zulässig: <value>",
+            "recovery": "Script automatically clamps the offset to the maximum valid value to ensure drill stays within safe zone."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Adjust Screw Position",
+            "how": "OPM Properties (dOffsetX, dOffsetY)",
+            "effect": "Recalculates drill position on the beam. Re-validates edge distance on every change."
+          },
+          {
+            "action": "Toggle Edge Distance Checking",
+            "how": "Right-click Context Menu -> 'Randabstand (nicht) prüfen'",
+            "effect": "Switches the red warning color on/off and allows/disallows overriding the edge distance safety clamp."
+          },
+          {
+            "action": "Export Production Data",
+            "how": "Right-click Context Menu -> 'Hilti Export' or Double-Click",
+            "effect": "Collects all instances of this script in the model, aggregates their geometry, and writes a 'HiltiExport.dxx' file to the parent folder."
+          },
+          {
+            "action": "Change Hardware Type (Baufritz only)",
+            "how": "OPM Property (sVersion)",
+            "effect": "Switches between 'Holzdolle' and 'Setzschraube', changing drill diameter and depth."
+          }
+        ]
+      },
+      "tokens_used": 10757,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Hilti-Stockschraube\n\n## Overview\nThis script automates the insertion of Hilti HSW hanger bolts (Stexons) to anchor wood structures. It calculates drill positions based on intersections between walls and joists or allows manual point placement, while also generating CNC export data for production.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script inserts drilling tools and BOM entries here. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Entities**: Structural Elements (Walls/Floors) and Joists (GenBeams).\n- **Minimum Beam Count**: 1.\n- **Required Settings**:\n  - Selected Joists must have **\"Hilti\"** in their Information field.\n  - *Note for Baufritz projects*: Joists must contain **\"Stexon\"** in their Information field.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `Hilti-Stockschraube.mcr`\n\n### Step 2: Select Main Elements\n```\nCommand Line: Select element(s), <Enter> to pick points\nAction: Select the wall or main structural element the joists connect to.\n        Press Enter if you only want to select joists and pick points manually.\n```\n\n### Step 3: Select Joists\n```\nCommand Line: Select intersecting joist(s), <Enter> to pick points\nOR\nCommand Line: Select joist(s)\nAction: Select the timber beams where the screws will be inserted.\n        Ensure these beams have \"Hilti\" (or \"Stexon\") in their properties.\n```\n\n### Step 4: Define Position (Manual Mode)\n```\nCommand Line: Select point\nAction: If the script detects a parallel scenario or you skipped element selection,\n        click inside the highlighted intersection area to place the bolt.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| X-Axis Offset | Number | 0 mm | Moves the screw position along the length of the joist. |\n| Y-Axis Offset | Number | 0 mm | Moves the screw laterally relative to the joist center. Automatically clamped to maintain safe edge distances. |\n| Ausführung | Dropdown | Holzdolle | *Visible for Baufritz projects only.* Selects hardware type: \"Holzdolle\" (Ø15mm) or \"Setzschraube\" (Ø5mm). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Randabstand prüfen | Enables edge distance checking. The screw will turn red and offset will be clamped if too close to the edge. |\n| Randabstand nicht prüfen | Disables edge distance checking. Allows manual overrides of safety limits. |\n| Hilti Export | Exports production data (geometry and tool info) to a `HiltiExport.dxx` file. Can also be triggered by Double-Clicking the instance. |\n\n## Settings Files\n- **None**: This script relies on Project Specials (e.g., \"BAUFRITZ\") and entity Information fields rather than external XML files.\n\n## Tips\n- **Beam Preparation**: Before running the script, ensure your joists have \"Hilti\" in their Information field, or they will be ignored.\n- **Visual Feedback**: If the screw circle turns **Red**, the placement violates the minimum edge distance. Adjust the Y-Axis Offset or disable edge checking via the right-click menu.\n- **CNC Export**: Double-click any instance of this script in the model to quickly generate the export file for the entire project.\n\n## FAQ\n- **Q: Why are my joists being skipped?**\n  A: Check the **Information** field of the beam. It must contain the keyword \"Hilti\" (or \"Stexon\" for Baufrix projects).\n- **Q: How do I place a screw exactly on the edge?**\n  A: By default, the script prevents this. Right-click the script instance and select \"Randabstand nicht prüfen\" to disable the safety clamp.\n- **Q: Where does the export file save?**\n  A: The `HiltiExport.dxx` file is saved in the parent folder of the current drawing."
+      },
+      "tokens_used": 6363,
+      "error": null
+    }
+  }
+}

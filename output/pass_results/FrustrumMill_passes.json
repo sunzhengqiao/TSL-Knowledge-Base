@@ -1,0 +1,204 @@
+{
+  "filename": "FrustrumMill.mcr",
+  "status": "completed",
+  "total_tokens": 51020,
+  "processing_time": 248.44394755363464,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl creates a fulcrum mill on a genbeam",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "11.11.2022",
+            "author": "Thorsten Huck",
+            "changes": "HSB-16528 bugfix rotation extrusion"
+          },
+          {
+            "version": "1.0",
+            "date": "11.11.2022",
+            "author": "Thorsten Huck",
+            "changes": "HSB-16528 initial version of frustrum mill"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 9147,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script operates on GenBeam objects using getGenBeam(). It adds PropellerSurfaceTool and Drill tools to the reference beam (gbRef), which are 3D model/CNC operations. No sd_ prefix, _Viewport usage, or #Type E definitions found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6752,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"getGenBeam\",\n        \"promptOriginal\": null,\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [],\n  \"opmProperties\":"
+      },
+      "tokens_used": 10323,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Creates a conical (frustum) milling operation on a timber beam, typically used to create a recess for seating hardware, conical washers, or brackets.\",\n    \"category\": \"Machining / Tooling\",\n    \"typicalUseCase\": \"Preparing a beam surface to receive a cast-in steel shoe or a conical connection anchor that requires a tapered counterbore.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"dDiameter1\",\n      \"technicalDefault\": \"100\",\n      \"businessMeaning\": \"The entry diameter of the mill (the size of the hole on the surface of the beam).\",\n      \"validRange\": \"20 - 500 mm\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Defines the width of the opening on the selected beam face. If different from Diameter 2, it determines the taper angle of the conical cut.\"\n    },\n    {\n      \"name\": \"dDiameter2\",\n      \"technicalDefault\": \"120\",\n      \"businessMeaning\": \"The base diameter of the mill (the size of the hole at the bottom of the cut depth).\",\n      \"validRange\": \"20 - 500 mm\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Defines the width of the cut at the specified depth. Larger than Diameter 1 creates an undercut/wider recess; smaller creates a tapered hole.\"\n    },\n    {\n      \"name\": \"dDepth\",\n      \"technicalDefault\": \"40\",\n      \"businessMeaning\":The distance the mill penetrates into the beam perpendicular to the selected face.\",\n      \"validRange\": \"1 - Beam Width/Height\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Controls how deep the conical recess is. Must be positive for tooling to be generated.\"\n    },\n    {\n      \"name\": \"sFace\",\n      \"technicalDefault\": \"Bottom Face\",\n      \"businessMeaning\": \"Specifies which side of the beam (Top or Bottom) the mill is applied to relative to the beam's local coordinate system.\",\n      \"validRange\": \"Top Face, Bottom Face\",\n      \"unit\": \"Enumeration\",\n      \"affectsOutput\": \"Determines the start plane for the depth calculation and flips the normal vector of the machining operation.\"\n    },\n    {\n      \"name\": \"nToolIndex\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"The identifier for the specific CNC tool (e.g., aggregate head or router bit) in the machine's tool library used to cut this shape.\",\n      \"validRange\": \"Integer (Machine specific)\",\n      \"unit\": \"count\",\n      \"affectsOutput\": \"Links the machining operation to the correct CNC instruction in the export file.\"\n    },\n    {\n      \"name\": \"dToolDiameter\",\n      \"technicalDefault\": \"40\",\n      \"businessMeaning\": \"The physical diameter of the cutting tool used to calculate the toolpath and material removal visualization.\",\n      \"validRange\": \"5 - 200 mm\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Adjusts the calculation for the PropellerSurfaceTool to ensure the tool fits within the defined diameters. Does not affect the final geometric dimensions of the hole, only the path generation.\"\n    }\n  ],\n  \"parameterDependencies\": [\n    {\n      \"trigger\": \"User executes 'Flip Side' context menu command\",\n      \"effect\": \"Toggles the 'sFace' property between 'Top Face' and 'Bottom Face' and recalculates the script.\",\n      \"cascade\": [\n        \"sFace\"\n      ]\n    },\n    {\n      \"trigger\": \"Changing 'dDiameter1' or 'dDiameter2'\",\n      \"effect\": \"Determines if the operation is a cylinder (diameters equal) or a cone (diameters different). If D1 < D2, it calculates specific inner radii for the tool body.\",\n      \"cascade\": [\n        \"bIsConic\",\n        \"bIsSmallOutside\",\n        \"bdTool\"\n      ]\n    }\n  ],\n  \"outputEntities\": [\n    {\n      \"type\": \"PropellerSurfaceTool\",\n      \"description\": \"A conical 3-axis or 5-axis milling operation applied to the beam face.\",\n      \"appliedTo\": \"The selected GenBeam (gbRef).\"\n    },\n    {\n      \"type\": \"Drill\",\n      \"description\": \"A drilling operation applied at the bottom of the mill depth (often used to clear the center point or finish the base).\",\n      \"appliedTo\": \"The selected GenBeam (gbRef) and intersecting beams.\"\n    },\n    {\n      \"type\": \"SolidSubtract\",\n      \"description\": \"A boolean subtraction used in the 3D model to visualize the material removal, specifically generated when the small diameter is outside (undercut scenario).\",\n      \"appliedTo\": \"The selected GenBeam (gbRef).\"\n    }\n  ]\n}\n```"
+      },
+      "tokens_used": 8778,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script initiated via command or catalog.",
+          "2. Script checks 'insertCycleCount'. If > 1, instance is erased.",
+          "3. Properties are initialized. If executed via catalog key, properties are loaded from catalog; otherwise, standard dialog is shown.",
+          "4. User prompted to select a GenBeam (getGenBeam).",
+          "5. Script retrieves beam geometry (vecX, vecY, vecZ) and envelope body.",
+          "6. Script determines valid insertion faces based on current view direction.",
+          "7. Visual Jig highlights selectable face (Top or Bottom) based on cursor position.",
+          "8. User selects face by clicking.",
+          "9. Visual Jig activates for location selection, displaying tool shadow and dimensions.",
+          "10. User clicks to set insertion point (_Pt0).",
+          "11. Script calculates tool profile (PLine circles) and intersects with beam face profile.",
+          "12. Script validates tool placement (must be within beam bounds).",
+          "13. Machining tools (PropellerSurfaceTool, Drill, SolidSubtract) are generated and added to the beam.",
+          "14. Script finishes."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Diameter 1 equals Diameter 2",
+            "path1": {
+              "name": "Cylindrical Hole",
+              "steps": [
+                "Set bIsConic to false.",
+                "Skip PropellerSurfaceTool generation.",
+                "Generate Drill operation only."
+              ]
+            },
+            "path2": {
+              "name": "Conical Mill",
+              "steps": [
+                "Set bIsConic to true.",
+                "Generate PropellerSurfaceTool (Milling operation).",
+                "Generate Drill operation."
+              ]
+            }
+          },
+          {
+            "condition": "Diameter 1 is smaller than Diameter 2",
+            "path1": {
+              "name": "Undercut (Tapered Out)",
+              "steps": [
+                "Set bIsSmallOutside to true.",
+                "Calculate inner radii and torus-like geometry for the undercut.",
+                "Generate SolidSubtract tool to handle the undercut volume.",
+                "Set PropellerSurfaceTool 'DoSolid' to false (rely on solid subtraction)."
+              ]
+            },
+            "path2": {
+              "name": "Standard Taper (Tapered In)",
+              "steps": [
+                "Set bIsSmallOutside to false.",
+                "Generate standard PropellerSurfaceTool.",
+                "No SolidSubtract required."
+              ]
+            }
+          },
+          {
+            "condition": "Tool profile intersects with beam profile",
+            "path1": {
+              "name": "Valid Placement",
+              "steps": [
+                "Set bOk to true.",
+                "Proceed to generate machining tools.",
+                "Display tool graphics in Yellow."
+              ]
+            },
+            "path2": {
+              "name": "Invalid Placement",
+              "steps": [
+                "Set bOk to false.",
+                "Display tool graphics in Red during drag.",
+                "If finalized, report error 'outside of reference contour, tool purged' and erase instance."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "GenBeam selection count",
+            "errorMessage": "Invalid selection set.",
+            "recovery": "User must select a valid GenBeam to run the script."
+          },
+          {
+            "check": "Selected face direction",
+            "errorMessage": "Insertion not supported.",
+            "recovery": "User must change view or pick a Top/Bottom face; side faces or specific SIP faces are rejected."
+          },
+          {
+            "check": "Tool location vs Beam envelope",
+            "errorMessage": "Outside of reference contour, tool purged",
+            "recovery": "User must move the insertion point closer to the center of the beam face so the tool fits entirely within the material."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Flip Side",
+            "how": "Context Menu (Right-click) or Double Click",
+            "effect": "Toggles the 'Face' property between Top and Bottom, recalculating the position from the opposite side."
+          },
+          {
+            "action": "Move Mill Location",
+            "how": "Grip Point Drag",
+            "effect": "Activates the 'JigPickLocation' visualizer, updating the insertion point (_Pt0) and recalculating intersections in real-time."
+          },
+          {
+            "action": "Modify Dimensions",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changing Diameters or Depth updates the geometry immediately; requires manual recalc if dependencies change."
+          }
+        ]
+      },
+      "tokens_used": 10700,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# FrustrumMill.mcr\n\n## Overview\nThis script creates a conical (frustum) milling operation on a selected timber beam. It is used to machine tapered counterbores or recesses, typically for seating hardware like cast-in steel shoes or conical anchors.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in the 3D model. |\n| Paper Space | No | Not applicable for layouts. |\n| Shop Drawing | No | This is a model/CNC tooling script. |\n\n## Prerequisites\n- **Required Entities**: A single GenBeam (structural timber beam).\n- **Minimum Beam Count**: 1.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n```\nCommand: TSLINSERT\nAction: Select FrustrumMill.mcr from the file dialog.\n```\n\n### Step 2: Select Reference Beam\n```\nCommand Line: Select GenBeam:\nAction: Click on the timber beam you want to apply the mill to.\n```\n\n### Step 3: Select Face\n```\nAction: Move your cursor over the Top or Bottom face of the beam. A preview highlights the valid face.\nClick to confirm the face (Top or Bottom) where the mill will be applied.\n```\n\n### Step 4: Set Location\n```\nAction: Move your cursor to position the mill on the face.\n- Yellow graphic: Valid position (within beam bounds).\n- Red graphic: Invalid position (outside beam bounds).\nClick to set the insertion point and finish the placement.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| dDiameter1 | Number | 100 mm | The entry diameter of the mill (width of the hole on the beam surface). |\n| dDiameter2 | Number | 120 mm | The base diameter at the bottom of the cut depth. If different from Diameter 1, it creates a conical shape. |\n| dDepth | Number | 40 mm | The distance the mill penetrates into the beam perpendicular to the selected face. |\n| sFace | String | Bottom Face | Specifies which side of the beam the mill is on (Top Face or Bottom Face). |\n| nToolIndex | Integer | 0 | The CNC tool identifier number from your machine's tool library. |\n| dToolDiameter | Number | 40 mm | The physical diameter of the cutter used to calculate the toolpath. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Flip Side | Instantly toggles the mill between the Top Face and Bottom Face of the beam. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Visual Feedback**: Pay attention to the color during placement. Yellow indicates the tool is fully inside the material; Red means it is partially or fully outside the beam contour and will be purged.\n- **Grip Editing**: You can select the inserted mill and drag the grip point to move it to a new location on the beam face.\n- **Undercuts**: Setting Diameter 2 smaller than Diameter 1 creates a tapered hole. Setting Diameter 2 larger than Diameter 1 creates an undercut (wider recess at the bottom).\n\n## FAQ\n- **Q: Why did the tool disappear after I placed it?**\n  A: The tool likely turned red during placement, indicating it was outside the beam's contour. Ensure the insertion point is placed sufficiently away from the beam edges so the entire diameter fits within the material.\n- **Q: Can I mill into the side of the beam?**\n  A: No, this script is designed to work only on the Top or Bottom faces relative to the beam's local coordinate system.\n- **Q: How do I change the mill from a cylinder to a cone?**\n  A: Change the value of `dDiameter2` so it is different from `dDiameter1`."
+      },
+      "tokens_used": 5320,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,337 @@
+{
+  "filename": "GE_TRUSS_EAVE_BLOCKING.mcr",
+  "status": "completed",
+  "total_tokens": 36626,
+  "processing_time": 401.3969397544861,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.3",
+            "date": "03.nov.2013",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Stickframe path added to mapIn when calling dll"
+          },
+          {
+            "version": "1.2",
+            "date": "28.jul.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Description added"
+          },
+          {
+            "version": "1.1",
+            "date": "11.apr.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Bugfix: not all trusses were been taken in list. Improper use of '+' operator on bodies. Replaced by Body.combine() Thumbnail added"
+          },
+          {
+            "version": "1.0",
+            "date": "23.mar.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6352,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script prompts for 3D entity selection using `PrEntity` (selecting `ElementWall`, `Beam`, and `TrussEntity`). It performs volumetric calculations using `Body` objects (e.g., `Body.combine()`, `bm.envelopeBody()`). It generates new 3D objects via `Beam.dbCreate()`. The script concludes with `eraseInstance()`, which is standard behavior for TSLs that generate construction elements in the 3D model rather than creating 2D details or views."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall",
+            "Beam (Rafter/Vertical)",
+            "TrussEntity"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "hsbFramingDefaults.Inventory.dll",
+            "Company Path (Inventory/Lumber data)"
+          ]
+        }
+      },
+      "tokens_used": 6014,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\n|Select beams and/or trusses|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "\n|Select wall|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sLumberItem",
+            "type": "PropString",
+            "displayName": "|Lumber item|",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": "sLumberItemNames",
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "nColor",
+            "type": "PropInt",
+            "displayName": "|Blocking color|",
+            "defaultValue": 32,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "dMinimumBlockLength",
+            "type": "PropDouble",
+            "displayName": "|Minimum block length|",
+            "defaultValue": "U(75,3)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5159,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically generates eave blocking pieces between roof members (rafters/trusses) and a wall to close the exterior envelope at the roof eave.",
+          "category": "Framing",
+          "typicalUseCase": "Used after roof trusses or rafters are placed over a wall panel to fill the gap between the roof members and the wall top plate for insulation, structural bracing, or nailing surfaces."
+        },
+        "parameters": [
+          {
+            "name": "sLumberItem",
+            "technicalDefault": "(First item from Inventory)",
+            "businessMeaning": "Specifies the lumber material, grade, and dimensions (Nominal Size) for the blocking pieces (e.g., 2x4 SPF).",
+            "validRange": "Any valid lumber item defined in the hsbFramingDefaults Inventory database.",
+            "unit": "N/A (Selection List)",
+            "affectsOutput": "Controls the physical width (dBmW), height (dBmH), material classification, and grade of the generated blocking beams."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "32",
+            "businessMeaning": "The display color of the generated blocking elements within the CAD model.",
+            "validRange": "0 to 255 (standard AutoCAD Color Index), or -1 for ByLayer.",
+            "unit": "Index",
+            "affectsOutput": "Visual representation of the beams in 3D views and 2D drawings. Does not affect geometry or CAM data."
+          },
+          {
+            "name": "dMinimumBlockLength",
+            "technicalDefault": "U(75,3)",
+            "businessMeaning": "The minimum allowable length for a blocking piece to be created. Spacing between rafters smaller than this will be skipped.",
+            "validRange": "50mm to 600mm (approx. 2\" to 24\"). Typically 75mm (3\") for stick framing, larger for prefab.",
+            "unit": "Length (mm/inch)",
+            "affectsOutput": "Determines whether a blocking piece is generated between two specific rafters based on the gap width."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sLumberItem selection",
+            "effect": "The script queries the Inventory DLL to retrieve the specific Width, Height, Material, and Grade associated with the selected key.",
+            "cascade": [
+              "dBmW",
+              "dBmH",
+              "sBmMaterial",
+              "sBmGrade"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam",
+            "description": "Timber blocking members oriented along the wall's X-axis, placed at the top of the wall height between the selected rafters/trusses.",
+            "appliedTo": "New elements inserted into the ModelSpace."
+          }
+        ]
+      },
+      "tokens_used": 5568,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Initialization: Load hsbFramingDefaults.Inventory.dll to populate lumber item lists (sLumberItemKeys, sLumberItemNames) based on Company and StickFrame paths.",
+          "Initialization: Define Properties: sLumberItem (dropdown), nColor, and dMinimumBlockLength.",
+          "Execution Trigger: Check if script is running in the database creation context (_bOnDbCreated) or standard insertion/execution context.",
+          "Insertion Workflow (_bOnInsert): Check insertCycleCount. If > 1, erase and exit (prevent duplicate execution).",
+          "User Input 1: Prompt user to select Roof Members (PrEntity) filtering for Beam and TrussEntity.",
+          "User Input 2: Prompt user to select a Wall (PrEntity) filtering for ElementWall.",
+          "Initial Validation: Verify at least one roof member (Beam or Truss) and one wall were selected. If not, erase instance and exit.",
+          "Configuration: Display properties dialog (showDialogOnce) to allow user to select Lumber Item, Color, and Min Length before generation.",
+          "Entity Validation: Check if valid internal references to Beams, Entities, and Elements exist. If empty, erase instance.",
+          "Wall Geometry Extraction: Extract ElementWall CoordSys, Origin (ptElOrg), X-vector (vx), Height, and Width.",
+          "Lumber Data Lookup: Retrieve Width (dBmW), Height (dBmH), Material, and Grade from the Inventory Map based on the selected sLumberItem name.",
+          "Lumber Data Validation: Check if Width and Height are non-zero. If zero, report error and erase instance.",
+          "Geometry Processing - Trusses: Iterate through selected TrussEntities. For each, get the definition, extract all internal beams, calculate their real bodies in model space, and combine them into a single body representing the truss.",
+          "Geometry Processing - Rafters: Iterate through selected Beams. Filter for Rafter types or Vertical beams. Add their envelope bodies to the collection.",
+          "Sorting: Sort all collected bodies (Truss bodies + Rafter bodies) based on their center point's projection onto the Wall's X-axis.",
+          "Spatial Filtering: Identify which bodies physically overlap the Wall's length (from ptElOrg to ptElEnd). Store these as 'bdBetween'. Identify neighbors (bdLeft, bdRight) based on the minimum block length constraint.",
+          "Blocking Calculation Loop: Iterate through the filtered/neighbor bodies on the wall.",
+          "Extremes Calculation: Find the extreme vertices of the left body in the -vx direction and the right body in the +vx direction.",
+          "Length Check: Calculate the distance between extremes along the wall's X-axis. If distance < dMinimumBlockLength, skip this gap.",
+          "Blocking Creation: Create a new Beam (dbCreate) spanning the gap. Set position on top of wall, align depth to wall edge. Assign type, material, grade, color, and label.",
+          "Cleanup: Erase the script instance, leaving only the generated blocking beams in the model."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle Count",
+            "path1": {
+              "name": "Cycle > 1 (Re-execution prevention)",
+              "steps": [
+                "eraseInstance()",
+                "return"
+              ]
+            },
+            "path2": {
+              "name": "Cycle = 1 (First Insert)",
+              "steps": [
+                "Prompt for Selections",
+                "Validate Inputs",
+                "Generate Blocking"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Selection Type",
+            "path1": {
+              "name": "TrussEntity Selected",
+              "steps": [
+                "Cast to TrussEntity",
+                "Access TrussDefinition",
+                "Loop internal beams",
+                "Transform and Combine realBodies into bdTruss"
+              ]
+            },
+            "path2": {
+              "name": "Beam Selected",
+              "steps": [
+                "Check if type is _kRafter or Vertical (Parallel to ZW)",
+                "Append envelopeBody to bdAll array"
+              ]
+            }
+          },
+          {
+            "condition": "Lumber Inventory Data",
+            "path1": {
+              "name": "Valid Dimensions Found",
+              "steps": [
+                "Use dBmW and dBmH for beam creation",
+                "Continue Geometry Processing"
+              ]
+            },
+            "path2": {
+              "name": "Invalid/Zero Dimensions",
+              "steps": [
+                "reportError('Data incomplete...')",
+                "eraseInstance()",
+                "return"
+              ]
+            }
+          },
+          {
+            "condition": "Gap Width Check",
+            "path1": {
+              "name": "Gap >= Minimum Length",
+              "steps": [
+                "Calculate Start/End Points",
+                "dbCreate Beam",
+                "Set Properties (Material, Color, etc.)"
+              ]
+            },
+            "path2": {
+              "name": "Gap < Minimum Length",
+              "steps": [
+                "continue (Skip creating block for this gap)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "User Selection Completeness",
+            "errorMessage": "No explicit message, but script erases itself.",
+            "recovery": "Select at least one Beam/Truss and one ElementWall when prompted."
+          },
+          {
+            "check": "Inventory Data Integrity",
+            "errorMessage": "Data incomplete, check values on inventory for selected lumber item [Material/Grade/Width/Height details]",
+            "recovery": "Select a different Lumber Item in properties or ensure the hsbFramingDefaults Inventory is correctly configured with non-zero dimensions."
+          },
+          {
+            "check": "Minimum Block Length",
+            "errorMessage": "None (Silent failure for small gaps).",
+            "recovery": "If no blocking is generated, check if rafters are too close together (less than dMinimumBlockLength) or reduce the Minimum block length property."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Parameters",
+            "how": "Object Properties Palette (OPM)",
+            "effect": "The script does not define `addRecalcTrigger`, so standard property edits in the OPM will not automatically update the geometry. The user would typically need to delete the generated blocking and re-run the script, or use a specific catalog update feature if implemented via `setCatalogFromPropValues`."
+          }
+        ]
+      },
+      "tokens_used": 7550,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_TRUSS_EAVE_BLOCKING\n\n## Overview\nAutomatically generates timber blocking pieces between roof members (rafters or trusses) and a supporting wall. This script fills the gaps at the roof eave to provide a nailing surface for siding or to close the building envelope.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in the 3D model to create physical beams. |\n| Paper Space | No | Not designed for 2D detailing. |\n| Shop Drawing | No | Generates model elements, not drawing views. |\n\n## Prerequisites\n- **Required Entities**: \n  - Roof members (Beams or TrussEntities)\n  - One ElementWall\n- **Minimum Count**: At least 1 roof member and 1 wall.\n- **Required Settings**: \n  - `hsbFramingDefaults.Inventory.dll` must be configured with valid lumber items.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_TRUSS_EAVE_BLOCKING.mcr`\n\n### Step 2: Select Roof Members\n```\nCommand Line: Select beams and/or trusses\nAction: Click on the rafters, beams, or trusses that run over the wall edge. Press Enter to confirm selection.\n```\n\n### Step 3: Select Wall\n```\nCommand Line: Select wall\nAction: Click on the wall plate or wall element where the blocking needs to be applied.\n```\n\n### Step 4: Configure Properties\n```\nAction: A dialog or the Properties Palette will appear. Select the desired Lumber Item (e.g., 2x4), set the Color, and define the Minimum Block Length.\n```\n*Note: The script instance will automatically disappear once the blocking is generated.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Lumber item | Dropdown | (First Available) | Select the material grade and size (e.g., 2x4 SPF) for the blocking pieces. Options are pulled from your Inventory. |\n| Blocking color | Number | 32 | Sets the AutoCAD color index for the new beams (e.g., 32 for construction timber). |\n| Minimum block length | Number | 75 mm (3\") | The shortest length of blocking allowed. If the gap between rafters is smaller than this, no block will be created. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not create persistent smart objects with update menus. Once generated, the blocking becomes standard beams. |\n\n## Settings Files\n- **Filename**: `hsbFramingDefaults.Inventory.dll` (referenced)\n- **Location**: Defined in your hsbCAD Company/Install path\n- **Purpose**: Provides the dimensions (Width/Height), Material, and Grade data for the selected Lumber Item.\n\n## Tips\n- **Selection Order**: It does not matter if you select the roof members or the wall first, but you must select both.\n- **Trusses vs. Rafters**: You can mix standard rafters and trusses in the same selection. The script calculates the combined volume to find the correct gap.\n- **Small Gaps**: If you see missing blocks in tight areas, try lowering the \"Minimum block length\" property.\n- **Re-running**: To modify the blocking after creation, delete the generated beams and run the script again.\n\n## FAQ\n- **Q: Why did the script disappear without creating any blocks?**\n  - A: Check that the roof members actually overlap the wall line in the Top view. Also, verify that the gap between rafters is larger than the \"Minimum block length\" setting.\n- **Q: I get an error \"Data incomplete...\"**\n  - A: The selected Lumber Item in your inventory might be missing dimension data (Width or Height is 0). Contact your administrator to check the Inventory settings."
+      },
+      "tokens_used": 5983,
+      "error": null
+    }
+  }
+}

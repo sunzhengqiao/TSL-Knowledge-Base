@@ -1,0 +1,176 @@
+{
+  "filename": "FLR_WebStiffenerNote.mcr",
+  "status": "completed",
+  "total_tokens": 32686,
+  "processing_time": 238.73120284080505,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4282,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script utilizes PrEntity and getPoint for insertion, which are Model Space interactions. It explicitly uses the _kModelSpace constant in the collectEntities method to find geometry. While it contains a Display configured for 'LayoutDisplay' (dpLay), the script logic attaches to Elements/Beams and executes in the 3D model environment to create annotations (Marks)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Beam",
+            "TrussEntity"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4618,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect a set of Beams/Trusses to Mark",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "\nSelect a point near the location to mark",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dOffEnd",
+            "type": "PropDouble",
+            "displayName": " Minimum Distance From End",
+            "defaultValue": "U(8)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "dTxtHeight",
+            "type": "PropDouble",
+            "displayName": "Text Height",
+            "defaultValue": "U(3)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3996,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates 'Web Stiffener' (WS) annotations on floor beams or trusses, categorizing the location as Start (Pos), End (Neg), or Mid-span based on user selection.",
+          "category": "ShopDrawing/Annotation",
+          "typicalUseCase": "A detailer runs this script to mark specific points on a floor system where engineering calculations require additional web reinforcement, ensuring the location data is captured for shop drawings and labels."
+        },
+        "parameters": [
+          {
+            "name": "dOffEnd",
+            "technicalDefault": "U(8)",
+            "businessMeaning": "Defines the 'End Zone' threshold. If the user clicks within this distance from the start or end of the beam, the note is classified as an end stiffener (Pos/Neg). Clicks further away are classified as mid-span (Mid).",
+            "validRange": "2\" to 24\" (50mm to 600mm)",
+            "unit": "inches/mm",
+            "affectsOutput": "Determines the string value written to the 'Location' map property ('Pos', 'Neg', or 'Mid'), which filters between support locations and point-load locations."
+          },
+          {
+            "name": "dTxtHeight",
+            "technicalDefault": "U(3)",
+            "businessMeaning": "Controls the visual size of the 'WS' text label in the drawing layout and the offset distance from the beam surface. It ensures the mark is visible and does not clash with the beam geometry.",
+            "validRange": "2\" to 6\" (50mm to 150mm)",
+            "unit": "inches/mm",
+            "affectsOutput": "Scales the text height of the annotation in the LayoutDisplay and physically moves the insertion point of the Mark away from the beam centerline."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Change in dTxtHeight",
+            "effect": "The script uses dTxtHeight as a search tolerance when finding the nearest beam if the explicit reference is lost. Increasing this value widens the search area for the nearest beam.",
+            "cascade": [
+              "Beam Selection Fallback Logic"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Mark",
+            "description": "Creates a mark with code 'WS' (Web Stiffener) and suppresses the leader line.",
+            "appliedTo": "The selected Beam or TrussEntity."
+          },
+          {
+            "type": "Map Property",
+            "description": "Writes a key-value pair 'Location' with a value of 'Pos', 'Neg', or 'Mid' to the Element/Entity map.",
+            "appliedTo": "The selected Element."
+          },
+          {
+            "type": "Display Geometry",
+            "description": "Draws the text 'WS' in the LayoutDisplay representation, sized according to dTxtHeight.",
+            "appliedTo": "Model Space (visual) and Paper Space (Layout)."
+          }
+        ]
+      },
+      "tokens_used": 5620,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. User launches script (Command: FLR_WebStiffenerNote).\",\n    \"2. Script enters 'Insert Mode' loop.\",\n    \"3. Prompt user to select a set of Beams or Trusses (PrEntity).\",\n    \"4. [Check] Did user select valid entities and press OK?\",\n    \"5. [Yes] Filter selection to valid Beam and TrussEntity objects.\",\n    \"6. [Yes] Prompt user to select a point near the location to mark (getPoint).\",\n    \"7. Batch Creation: Create a new script instance on the selected point for every valid beam found in the selection set.\",\n    \"8. Loop back to Step 2 (Repeat for next set of beams) or Break if user cancels.\",\n    \"9. Initial instance (Insert Stub) erases itself; control passes to the generated instances.\",\n    \"10. Generated Instance executes: Attempts to link to the specific Beam/Entity assigned during creation.\",\n    \"11. [Check] Is the linked Entity valid?\",\n    \"12. [No] Execute 'Safety Recovery': Search the Element's Group for the nearest beam to the insertion point.\",\n    \"13. [Recovery Success] Use found beam; [Recovery Fail] Erase instance.\",\n    \"14. Calculate geometry: Get Quader (bounding box) of the beam.\",\n    \"15. Calculate Offset: Snap the insertion point (_Pt0) to the side of the beam based on dTxtHeight.\",\n    \"16. Classification Logic: Compare snapped point to beam ends using dOffEnd.\",\n    \"17. Determine String: 'Pos' (Start), 'Neg' (End), or 'Mid' (Center).\",\n    \"18. Write 'Location' to Map Property, Draw 'WS' Text, and create Mark.\",\n    \"19. Set Dependency: Script updates automatically if the referenced beam changes.\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"User Input during PrEntity (Selection)\",\n      \"path1\": {\n        \"name\": \"Valid Selection\",\n        \"steps\": [\n          \"Proceeds to getPoint prompt.\",\n          \"Filters valid Beams/TrussEntities into array.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Cancel/Empty Selection\",\n        \"steps\": [\n          \"Breaks the insertion loop.\",\n          \"Script erases itself and exits.\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Entity Linkage on Instance Load\",\n      \"path1\": {\n        \"name\": \"Link Valid\",\n        \"steps\": [\n          \"Uses the attached Entity directly.\",\n          \"Skips 'Safety' search logic.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Link Missing/Invalid (_Entity.length()==0)\",\n        \"steps\": [\n          \"Attempts to recover by finding the Element Group.\",\n          \"Collects Beams/Trusses in the group.\",\n          \"Calculates closest beam to _Pt0 within dTxtHeight tolerance.\",\n          \"Success: Appends found beam to _Entity.\",\n          \"Failure: Erases Instance.\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Location Classification (Based on dOffEnd)\",\n      \"path1\": {\n        \"name\": \"End Zone (Start)\",\n        \"steps\": [\n          \"Condition: Distance to Start < dOffEnd.\",\n          \"Map Property 'Location' = 'Pos'.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"End Zone (End)\",\n        \"steps\": [\n          \"Condition: Distance to End < dOffEnd.\",\n          \"Map Property 'Location' = 'Neg'.\"\n        ]\n      },\n      \"path3\": {\n        \"name\": \"Mid-Span\",\n        \"steps\": [\n          \"Condition: Not within dOffEnd of either end.\",\n          \"Map Property 'Location' = 'Mid'.\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Text Readability Orientation\",\n      \"path1\": {\n        \"name\": \"Inverted View\",\n        \"steps\": [\n          \"Condition: Readable vector dot product < 0.\",\n          \"Flips Vector X (vx) and Y (vy) to ensure text is not upside down.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Standard View\",\n        \"steps\": [\n          \"Uses standard calculated vectors.\"\n        ]\n      }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"Selection Set Validity\",\n      \"errorMessage\": \"None (Loop breaks silently)\",\n      \"recovery\": \"User must re-run script and select valid Beams or Trusses.\"\n    },\n    {\n      \"check\": \"Entity Attachment / Recovery\",\n      \"errorMessage\": \"Internal reportMessage('\\nNo beams')\",\n      \"recovery\": \"Script attempts auto-recovery via Element Group search. If the beam is deleted or moved too far away (beyond search tolerance), the script instance self-destructs (eraseInstance).\"\n    },\n    {\n      \"check\": \"Geometric Search Tolerance (Safety Logic)\",\n      \"errorMessage\": \"Implicit (Failure to find beam)\",\n      \"recovery\": \"Script searches for beams where the distance from the point to the beam centerline is approximately `dTxtHeight` (text height). If no beam is found at this specific offset distance, the instance is erased.\"\n    }\n  ],\n  \"postInsertionActions\": [\n    {\n      \"action\": \"Modify Properties\",\n      \"how\": \"OPM (Object Properties Manager)\",\n      \"effect\": \"Changing 'Minimum Distance From End' (dOffEnd) updates the classification logic (Pos/Neg/Mid). Changing 'Text Height' (dTxtHeight) updates the visual size of the 'WS' text and the offset distance from the beam face.\"\n    },\n    {\n      \"action\": \"Move Script Instance\",\n      \"how\": \"Grip Edit / Move Command\",\n      \"effect\": \"Moving the script insertion point updates the 'Location' classification. Moving closer to ends toggles between Pos/Neg and Mid.\"\n    },\n    {\n      \"action\": \"Delete/Modify Referenced Beam\",\n      \"how\": \"Standard CAD operations\",\n      \"effect\": \"Script"
+      },
+      "tokens_used": 7987,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# FLR_WebStiffenerNote.mcr\n\n## Overview\nAutomates the creation of \"Web Stiffener\" (WS) annotations on floor beams or trusses. It intelligently categorizes the mark as Start (Pos), End (Neg), or Mid-span based on the click location relative to the beam ends.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script runs in the 3D model to attach data to beams. |\n| Paper Space | No | Output is visible in Layouts via the Display representation, but insertion is in Model Space. |\n| Shop Drawing | No | This is a model detailing script that generates data used by shop drawings. |\n\n## Prerequisites\n- **Required Entities**: Beams or TrussEntities.\n- **Minimum Beam Count**: 1.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `FLR_WebStiffenerNote.mcr` from the file dialog.\n\n### Step 2: Select Beams/Trusses\n```\nCommand Line: Select a set of Beams/Trusses to Mark\nAction: Click the beams or trusses you wish to annotate. You can select multiple beams at once to apply the mark to a group. Press Enter to confirm selection.\n```\n\n### Step 3: Mark Location\n```\nCommand Line: Select a point near the location to mark\nAction: Click on or near the beam where the web stiffener is required.\n```\n*Note: If you selected multiple beams in Step 2, the script will create a mark on every selected beam based on this single point location (relative to their individual geometry).*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Minimum Distance From End | Number | 8 (in/mm) | Defines the threshold for the \"End Zone.\" If you click within this distance from the start or end of the beam, the note is labeled \"Pos\" (Start) or \"Neg\" (End). Clicks outside this range are labeled \"Mid\" (Mid-span). |\n| Text Height | Number | 3 (in/mm) | Controls the visual size of the \"WS\" text label in the drawing. It also determines how far the label is offset from the beam surface to prevent clashing. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu options are defined in this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A (This script uses properties and geometric inputs only).\n\n## Tips\n- **Batch Marking**: You can select an entire row of joists or trusses in Step 2. By clicking a point in Step 3 (e.g., a point load location), a stiffener mark will be generated on *all* selected beams at that relative location.\n- **Dynamic Labeling**: If you move the script instance using the AutoCAD `Move` command or Grip Edit, the label (Pos/Neg/Mid) will automatically update based on the new position relative to the beam ends.\n- **Adjusting End Zones**: If your \"Mid\" marks are appearing too close to the supports, increase the \"Minimum Distance From End\" property.\n- **Recovery**: If you delete or modify the referenced beam, the script will attempt to find the nearest beam in the current group to reattach itself. If it cannot find one, the instance will delete itself to prevent errors.\n\n## FAQ\n- **Q: What does \"Pos\", \"Neg\", and \"Mid\" mean?**\n  **A:** These represent the stiffener location relative to the beam's local coordinate system:\n  - **Pos**: Positive/Start side of the beam.\n  - **Neg**: Negative/End side of the beam.\n  - **Mid**: Mid-span (between the end zones).\n\n- **Q: I clicked near the end, but it says \"Mid\". Why?**\n  **A:** Your click was likely further away than the \"Minimum Distance From End\" setting. Increase this value in the Properties Palette or click closer to the beam end.\n\n- **Q: Can I use this on single beams or only groups?**\n  **A:** You can use it on a single beam or select multiple beams to process them all at once.\n\n- **Q: What happens if I delete the beam the note is attached to?**\n  **A:** The script attempts to find a replacement beam nearby. If no beam is found, the note instance will be automatically removed from the drawing."
+      },
+      "tokens_used": 6183,
+      "error": null
+    }
+  }
+}

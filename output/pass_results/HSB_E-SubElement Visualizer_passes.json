@@ -1,0 +1,232 @@
+{
+  "filename": "HSB_E-SubElement Visualizer.mcr",
+  "status": "completed",
+  "total_tokens": 20323,
+  "processing_time": 268.4469153881073,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "13.09.2013",
+            "author": "AS",
+            "changes": "First revision"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4572,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses getViewport() and stores the result in the _Viewport list. It retrieves the Viewport object using Viewport vp = _Viewport[0]; and extracts the Element from it via vp.element(). It transforms geometry from Model Space to Paper Space using ms2ps = vp.coordSys()."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "Element",
+            "SubElement",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "A layout with a viewport that references a valid element containing SubElements.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1410,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 1798,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Visualizes 3D sub-elements (such as window/door assemblies or modular wall sections) on a 2D layout sheet by projecting them from the model view.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Used when creating production drawings to show detailed sub-structures (like jambs, headers, or pre-fab modules) that exist within a larger wall or floor element directly on the paper space layout."
+        },
+        "parameters": [
+          {
+            "name": "_Viewport",
+            "technicalDefault": "null (User input required)",
+            "businessMeaning": "The specific layout window (View) that looks at the building part (Element) containing the sub-elements to be visualized.",
+            "validRange": "Any valid Viewport entity present on the current CAD layout.",
+            "unit": "Selection",
+            "affectsOutput": "Determines the source data. If the viewport shows 'Wall 1', the script will visualize the sub-elements belonging to Wall 1. If the viewport is empty or invalid, the script outputs nothing."
+          },
+          {
+            "name": "_Pt0",
+            "technicalDefault": "0,0,0 (User input required)",
+            "businessMeaning": "The anchor point on the 2D drawing sheet (Paper Space) where the script label and the sub-element visualization will be placed.",
+            "validRange": "Any coordinate within the printable area of the current paper size.",
+            "unit": "mm (Paper Space)",
+            "affectsOutput": "Shifts the position of the drawn geometry and the script name label on the drawing page."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User changes _Viewport selection",
+            "effect": "The content of the visualization changes completely to match the sub-elements found in the new viewport's element.",
+            "cascade": []
+          },
+          {
+            "trigger": "User modifies _Pt0",
+            "effect": "The visual representation moves to the new location on the sheet.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Visual Geometry / Drafting Lines",
+            "description": "2D projection of the GenBeams (Timber parts) contained within the SubElements. This effectively draws a 'snapshot' of sub-modules like window frames or connection boxes onto the layout.",
+            "appliedTo": "Paper Space (Current Layout)"
+          }
+        ]
+      },
+      "tokens_used": 3326,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script execution triggered by user insert or recalculation.",
+          "2. [If Insert Mode] Prompt user to select a Viewport entity from the current layout.",
+          "3. [If Insert Mode] Prompt user to click a point (_Pt0) to position the visualization on the sheet.",
+          "4. [If Insert Mode] Terminate execution (save inputs) and wait for recalculation.",
+          "5. [If Recalculation] Draw the script name label at the selected insertion point.",
+          "6. Check if a valid Viewport is stored in properties.",
+          "7. Retrieve the Element associated with the selected Viewport.",
+          "8. Validate that the Element exists and is valid.",
+          "9. Retrieve the coordinate transformation matrix (Model Space to Paper Space) from the Viewport.",
+          "10. Iterate through the SubElement map found within the main Element.",
+          "11. [Loop Start] Filter for valid 'SubElement' entities within the map.",
+          "12. Retrieve all GenBeams (timber parts) belonging to the current SubElement.",
+          "13. [Nested Loop] Transform each GenBeam's 3D body to Paper Space coordinates.",
+          "14. [Nested Loop] Draw the transformed 2D projection of the GenBeam on the layout.",
+          "15. Repeat until all SubElements and their GenBeams are processed."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script insertion state (_bOnInsert)",
+            "path1": {
+              "name": "Initial Insertion",
+              "steps": [
+                "Prompt for Viewport selection",
+                "Prompt for Insertion Point",
+                "Save inputs and Exit (Return)"
+              ]
+            },
+            "path2": {
+              "name": "Recalculation/Update",
+              "steps": [
+                "Execute visualization logic",
+                "Draw geometry and labels",
+                "Validate existing data"
+              ]
+            }
+          },
+          {
+            "condition": "Viewport Selection Validation (_Viewport.length())",
+            "path1": {
+              "name": "Valid Viewport",
+              "steps": [
+                "Retrieve Viewport object",
+                "Proceed to Element extraction"
+              ]
+            },
+            "path2": {
+              "name": "No/Invalid Viewport",
+              "steps": [
+                "Report Warning: 'No viewport selected'",
+                "Execute eraseInstance() (Removes script from drawing)",
+                "Stop execution"
+              ]
+            }
+          },
+          {
+            "condition": "Element Validity (el.bIsValid())",
+            "path1": {
+              "name": "Valid Element",
+              "steps": [
+                "Calculate Model-to-Paper Space transformation",
+                "Iterate SubElements"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Element",
+              "steps": [
+                "Stop execution (Silent failure)",
+                "No geometry drawn"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Presence of a Viewport in the _Viewport list.",
+            "errorMessage": "TN(\"|No viewport selected|\")",
+            "recovery": "The script automatically deletes itself (eraseInstance) if this condition is met immediately after drawing the name label. The user must re-insert the script and ensure a viewport is selected."
+          },
+          {
+            "check": "Validity of the Element inside the selected Viewport.",
+            "errorMessage": "(Silent - No specific warning text in code)",
+            "recovery": "User must select a Viewport that actually views a valid 3D Element in the model. Changing the Viewport property in the OPM to a valid one will fix this."
+          },
+          {
+            "check": "SubElement Entity Map keys",
+            "errorMessage": "(N/A - Internal Filter)",
+            "recovery": "N/A"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Viewport",
+            "how": "Properties Palette (OPM) - Click 'Viewport' property, pick a different viewport on screen.",
+            "effect": "The script clears the current geometry and re-projects the sub-elements found in the new Viewport's Element."
+          },
+          {
+            "action": "Move Visualization",
+            "how": "Grip Edit - Drag the script insertion point grip, or OPM - change _Pt0 coordinates.",
+            "effect": "Moves the entire group of projected lines and the script label to the new location on the Paper Space layout."
+          }
+        ]
+      },
+      "tokens_used": 4262,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-SubElement Visualizer\n\n## Overview\nThis script visualizes 3D sub-elements (such as window/door assemblies or modular wall sections) on a 2D layout sheet. It creates a 2D projection of the detailed timber structure found within a selected model viewport, allowing for clear documentation of sub-components in production drawings.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | The script runs in Layouts and reads data from Model Space via a Viewport. |\n| Paper Space | Yes | This is the primary workspace for this script. It draws directly on the layout sheet. |\n| Shop Drawing | Yes | Used to generate detailed views of specific sub-assemblies on production sheets. |\n\n## Prerequisites\n- **Required Entities**: A Layout (Paper Space) containing at least one Viewport that is linked to an Element with SubElements (e.g., a wall containing a window sub-assembly).\n- **Minimum Beam Count**: 0.\n- **Required Settings Files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_E-SubElement Visualizer.mcr`\n\n### Step 2: Select Viewport\n```\nCommand Line: Select viewport:\nAction: Click on the viewport window in your layout that displays the element (e.g., a wall or floor) containing the sub-elements you wish to visualize.\n```\n\n### Step 3: Set Insertion Point\n```\nCommand Line: Insertion point:\nAction: Click anywhere on the Paper Space layout to define where the sub-element visualization and label should be placed.\n```\n\n### Step 4: Automatic Execution\nOnce the point is clicked, the script will immediately project the sub-elements from the selected viewport onto the sheet at the chosen location.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| _Viewport | Entity (Viewport) | *Null* (User Selected) | The specific layout viewport that references the model element containing the sub-elements. Changing this updates the visualization to show a different element. |\n| _Pt0 | Point (Coords) | *User Clicked* | The anchor point on the 2D sheet where the visualization is drawn. Modifying the X, Y, Z values moves the drawing. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Refreshes the visualization based on the current state of the model or updated properties. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Quick Updates**: To visualize sub-elements from a different wall or view, simply select the script instance, open the **Properties Palette (Ctrl+1)**, click the `_Viewport` property, and select a different viewport on the screen.\n- **Moving the View**: You can drag the script grip (the insertion point) to move the entire visualization to a cleaner spot on the drawing.\n- **Validation**: If the script deletes itself immediately after insertion, it means the selected viewport did not contain a valid Element or the selection was cancelled. Re-run the script and ensure you click a viewport that is actively viewing a 3D building part.\n\n## FAQ\n- **Q: Why does the script disappear after I place it?**\n  A: The script automatically deletes itself if it detects an invalid Viewport selection or if the selected Viewport does not contain a valid Element. Ensure you select a Viewport that is currently viewing a model element.\n- **Q: Can I use this in Model Space?**\n  A: No, this script is designed specifically for Paper Space (Layouts) to create 2D projections of 3D sub-elements.\n- **Q: Nothing is drawn even though the script exists. Why?**\n  A: The Element inside the selected Viewport may be invalid, or it may not contain any SubElements (e.g., a plain wall without windows or specific sub-modules). Try selecting a Viewport that shows a more complex assembly."
+      },
+      "tokens_used": 4955,
+      "error": null
+    }
+  }
+}

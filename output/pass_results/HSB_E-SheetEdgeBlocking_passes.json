@@ -1,0 +1,209 @@
+{
+  "filename": "HSB_E-SheetEdgeBlocking.mcr",
+  "status": "completed",
+  "total_tokens": 41128,
+  "processing_time": 324.0508642196655,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 0,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "Description",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "19-12-2018",
+            "author": "RP",
+            "changes": "Pilot version."
+          },
+          {
+            "version": "1.01",
+            "date": "07-01-2019",
+            "author": "RVW",
+            "changes": "Add offset to beamcut or beamblocking"
+          },
+          {
+            "version": "1.02",
+            "date": "21-01-2019",
+            "author": "RVW",
+            "changes": "Recalculate offset when choosing beamblocking"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": [
+          "HSB_G-SheetToBeam.mcr"
+        ]
+      },
+      "tokens_used": 6659,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script selects an Element using PrEntity, accesses 3D geometry via element.beam() and element.sheet(), performs 3D solid operations using addToolStatic() and dbSplit(), and interacts with the database model (dbCreate). No ShopDrawing prefixes (sd_), Viewport logic, or 2D layout generation code is present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space: The script requires an existing Element containing Sheets in the user-specified zone.",
+          "requiredSettings": [
+            "HSB_G-SheetToBeam.mcr"
+          ]
+        }
+      },
+      "tokens_used": 5386,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5835,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "This script processes a sheet within a specific zone of an element to either cut out intersecting structural members (rafters) or split the sheet into blocking pieces that fit between them.",
+          "category": "Framing/Machining",
+          "typicalUseCase": "Used to create rigid blocking (e.g., OSB or timber strips) between rafters for roof stabilization or insulation support, or to cut rafters to accommodate a large structural web/plywood sheet."
+        },
+        "parameters": [
+          {
+            "name": "sheetBlocking",
+            "technicalDefault": "\"|Beamcut on rafters|\"",
+            "businessMeaning": "Determines the operational mode. If 'Beamcut on rafters' is selected, the sheet acts as a tool to cut voids into the rafters. If 'Blocking between rafters' is selected, the sheet is divided into smaller pieces (blocking) to fit in the spaces between the rafters.",
+            "validRange": "Index 0 or 1",
+            "unit": "Enumeration",
+            "affectsOutput": "Switches between modifying Beams (adding cuts) and modifying Sheets (splitting geometry)."
+          },
+          {
+            "name": "offsetDistance",
+            "technicalDefault": "0",
+            "businessMeaning": "A clearance or play allowance applied to the interaction. In Beamcut mode, it enlarges the cut volume (overcut). In Blocking mode, it increases the gap width between the generated blocking pieces and the rafters.",
+            "validRange": "-10.0 to 50.0 mm",
+            "unit": "mm",
+            "affectsOutput": "Modifies the dimensions of the BeamCut tool or the gap calculation during the sheet splitting process."
+          },
+          {
+            "name": "sheetZone",
+            "technicalDefault": "3",
+            "businessMeaning": "Specifies the construction zone (height layer) from which to retrieve the sheet geometry used for the operation.",
+            "validRange": "0 to 10 (depending on project setup)",
+            "unit": "Zone Index",
+            "affectsOutput": "Determines which sheet in the element is selected as the driver for the cuts or blocking."
+          },
+          {
+            "name": "createBeam",
+            "technicalDefault": "\"|Yes|\"",
+            "businessMeaning": "Specifies whether the resulting sheet entities (or blocking pieces) should be converted into structural Beams using the HSB_G-SheetToBeam script.",
+            "validRange": "\"|No|\" or \"|Yes|\"",
+            "unit": "Boolean (String)",
+            "affectsOutput": "If Yes, the final geometry is converted from generic Sheets to detailed Beams with codes and material properties."
+          },
+          {
+            "name": "sName",
+            "technicalDefault": "\" \"",
+            "businessMeaning": "Sets the name attribute of the processed sheet/beam entities.",
+            "validRange": "String",
+            "unit": "Text",
+            "affectsOutput": "Updates the 'Name' property in the element list and production data."
+          },
+          {
+            "name": "sMaterial",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Assigns a specific hsbCAD material to the resulting entities.",
+            "validRange": "String (Material Name)",
+            "unit": "Text",
+            "affectsOutput": "Controls the material assignment for scheduling and rendering."
+          },
+          {
+            "name": "sGrade",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Assigns a structural grade/timber class to the resulting entities.",
+            "validRange": "String (Grade Name)",
+            "unit": "Text",
+            "affectsOutput": "Updates the structural grade property."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "-1",
+            "businessMeaning": "Sets the CAD display color (index) of the resulting entities.",
+            "validRange": "0 to 255 (or -1 for ByLayer)",
+            "unit": "Color Index",
+            "affectsOutput": "Visual representation in the CAD model."
+          },
+          {
+            "name": "sBeamCode",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Assigns a production code to the resulting entities for manufacturing identification.",
+            "validRange": "String",
+            "unit": "Text",
+            "affectsOutput": "Production labeling and CAM data."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sheetBlocking",
+            "effect": "Determines the geometric role of 'offsetDistance'. If 'Beamcut', offset adds to the cut size. If 'Blocking', offset adds to the gap between pieces.",
+            "cascade": [
+              "offsetDistance"
+            ]
+          },
+          {
+            "trigger": "createBeam",
+            "effect": "If set to '|Yes|', triggers the execution of the 'HSB_G-SheetToBeam' script on the final geometry.",
+            "cascade": [
+              "SheetToBeam Script Execution"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Sheet / Beam",
+            "description": "In 'Blocking' mode, the original sheet is split into multiple smaller sheets/beams fitting between rafters. In 'Beamcut' mode, the sheet remains whole but has its properties updated.",
+            "appliedTo": "The selected Zone's Sheet."
+          },
+          {
+            "type": "Machining (BeamCut)",
+            "description": "In 'Beamcut' mode, a rectangular void is cut into all intersecting rafters/beams based on the sheet's extents plus the offset.",
+            "appliedTo": "All Beams in the element that intersect the target sheet."
+          }
+        ]
+      },
+      "tokens_used": 7360,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"Script execution initiated (Manual Insert or via ExecuteKey).\",\n    \"Properties loaded: If an ExecuteKey (Catalog) is provided, properties are loaded automatically; otherwise, the Properties Dialog is displayed.\",\n    \"User prompted to select target Element(s) via PrEntity.\",\n    \"Script clones itself onto each selected Element using dbCreate (attaching to Element coordinates).\",\n    \"Original script instance self-destructs (erases).\",\n    \"Cloned script instance initializes on the Element.\",\n    \"Validation: Script checks if exactly 1 Element is referenced; fails and erases if not.\",\n    \"Property Mapping: Reads 'sheetBlocking', 'offsetDistance', 'sheetZone', and 'createBeam'.\",\n    \"Zone Calculation: Converts user input 'sheetZone' (e.g., 6-10) to internal negative indices (e.g., -1 to -5).\",\n    \"Geometry Retrieval: Fetches all Sheets from the calculated Zone and all Beams from the Element.\",\n    \"Loop start for each Sheet found in the Zone.\",\n    \"Sheet Transformation: Moves sheet vertically to align with the bottom of Zone -1.\",\n    \"Property Application: Applies Name, Material, Grade, Color, etc., to the Sheet.\",\n    \"Intersection Analysis: Identifies which Beams physically intersect the Sheet's envelope body.\",\n    \"Branch Execution: Performs logic based on 'sheetBlocking' mode (Cutting or Splitting).\",\n    \"Post-Processing Check: Checks if 'createBeam' is set to Yes.\",\n    \"Conversion: If Yes, executes 'HSB_G-SheetToBeam' script to convert Sheets to structural Beams.\",\n    \"Script instance self-destructs (erases) to leave only the resulting geometry.\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Insertion Context (ExecuteKey vs Manual)\",\n      \"path1\": {\n        \"name\": \"ExecuteKey / Catalog Mode\",\n        \"steps\": [\n          \"Load properties from the specified catalog entry matching _kExecuteKey.\",\n          \"Skip the interactive dialog.\",\n          \"Proceed to Element selection.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Manual Insert Mode\",\n        \"steps\": [\n          \"Display the Properties Dialog to the user.\",\n          \"User confirms settings.\",\n          \"Save settings to 'LastInserted' catalog.\",\n          \"Proceed to Element selection.\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Operation Mode (sheetBlocking)\",\n      \"path1\": {\n        \"name\": \"Beamcut on rafters (Index 0)\",\n        \"steps\": [\n          \"Define a BeamCut tool using the sheet's dimensions plus the offsetDistance (Length/Height adjusted, Width set to +100mm).\",\n          \"Iterate through all intersecting beams.\",\n          \"Apply the BeamCut tool to the beams (beam.addToolStatic).\",\n          \"Sheet remains as a single entity.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Blocking between rafters (Index 1)\",\n        \"steps\": [\n          \"For each intersecting rafter, calculate a split plane and a gap (rafter width + 2 * offsetDistance).\",\n          \"Verify if the rafter intersection point lies within the sheet's profile.\",\n          \"Split the sheet using dbSplit with the calculated plane and gap.\",\n          \"Resulting sheet pieces are collected as 'blocking'.\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Final Entity Type (createBeam)\",\n      \"path1\": {\n        \"name\": \"Convert to Beam (Yes)\",\n        \"steps\": [\n          \"Compile a list of all processed sheets.\",\n          \"Execute 'HSB_G-SheetToBeam' via dbCreate to transform sheets into GenBeams.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Keep as Sheet (No)\",\n        \"steps\": [\n          \"Leave the geometry as Sheet entities.\",\n          \"No further script execution.\"\n        ]\n      }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"Insert Cycle Count\",\n      \"errorMessage\": \"None (Silent)\",\n      \"recovery\": \"If insertCycleCount > 1, the script immediately erases itself to prevent infinite recursion loops during cloning.\"\n    },\n    {\n      \"check\": \"Element Reference\",\n      \"errorMessage\": \"\\\"Element reference not found.\\\"\",\n      \"recovery\": \"The script verifies _Element.length() == 1. If invalid (0 or >1), it reports the error and erases the instance. User must ensure the script is correctly associated with a single element.\"\n    }\n  ],\n  \"postInsertionActions\": [\n    {\n      \"action\": \"Modify Design Parameters\",\n      \"how\": \"Re-run Script / Undo\",\n      \"effect\": \"Since the script erases itself after execution (it is a generator script), changing parameters (like offset) post-insertion is not possible via OPM"
+      },
+      "tokens_used": 9432,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-SheetEdgeBlocking.mcr\n\n## Overview\nThis script automates the creation of rigid blocking (e.g., OSB or timber strips) between rafters or cuts rafters to accommodate a sheet web. It operates on a specific sheet within a construction zone of an element, allowing you to either split the sheet into individual blocking pieces or use the sheet geometry to cut voids into intersecting beams.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in the 3D model on Elements and their geometry. |\n| Paper Space | No | Not applicable for 2D layouts or drawings. |\n| Shop Drawing | No | Does not generate shop drawing views or dimensions. |\n\n## Prerequisites\n- **Required Entities:** An Element containing at least one Sheet in the target zone and intersecting Beams (e.g., rafters).\n- **Minimum Beam count:** 0 (Required for cuts/blocking logic, but script starts with 0).\n- **Required Settings Files:** \n  - `HSB_G-SheetToBeam.mcr` (Must be available to perform the final conversion if requested).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Select `HSB_E-SheetEdgeBlocking.mcr` from the file list.\n\n### Step 2: Configure Parameters\n```\nDialog: Properties Palette\nAction: Set the desired operation mode (Beamcut or Blocking), adjust the offset distance, and specify the target Zone.\nNote: If using an ExecuteKey (Catalog), these settings load automatically; otherwise, the dialog appears for manual entry.\n```\n\n### Step 3: Select Element\n```\nCommand Line: Select Element:\nAction: Click on the Element in the model that contains the target sheet and rafters.\n```\n\n### Step 4: Execution\nAction: The script processes the geometry, updates the properties, and then self-destructs. The resulting blocking pieces or cuts remain in the model.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **sheetBlocking** | Dropdown | \"Beamcut on rafters\" | **Mode Selection**: <br>- *Beamcut on rafters*: Uses the sheet volume to cut holes in intersecting beams.<br>- *Blocking between rafters*: Splits the sheet into smaller pieces to fit between the beams. |\n| **offsetDistance** | Number | 0 | **Clearance (mm)**: The gap applied around the geometry. For blocking, this increases the gap between pieces. For cutting, this enlarges the cut volume (play). |\n| **sheetZone** | Number | 3 | **Zone Index**: The construction zone number where the target sheet is located. |\n| **createBeam** | Dropdown | \"No\" | **Convert to Beam**: If set to \"Yes\", the resulting sheet geometry is converted into a structural Beam using the HSB_G-SheetToBeam script. |\n| **sName** | Text | \" \" | Sets the Name property of the resulting entities. |\n| **sMaterial** | Text | \"\" | Assigns a specific material name to the resulting entities. |\n| **sGrade** | Text | \"\" | Assigns a structural grade/timber class to the resulting entities. |\n| **nColor** | Number | -1 | Sets the display color (Index) of the resulting entities (-1 = ByLayer). |\n| **sBeamCode** | Text | \"\" | Assigns a production code for manufacturing/CAM output. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| *None* | This is a generator script that erases itself after execution. There are no context-menu options available on the resulting geometry to modify the script parameters. |\n\n## Settings Files\n- **Filename**: `HSB_G-SheetToBeam.mcr`\n- **Location**: Standard TSL script folder (Company or Install path).\n- **Purpose**: Provides the logic to convert the processed sheet geometry into structural beams if the `createBeam` property is enabled.\n\n## Tips\n- **Zone Identification**: Ensure you correctly identify the `sheetZone`. The script looks for the sheet in this specific zone to drive the blocking or cutting logic.\n- **Offset Usage**: Use the `offsetDistance` to account for saw kerf or tolerance. A small positive value (e.g., 2mm) ensures blocking pieces are not too tight to fit physically.\n- **Undo Function**: Since the script deletes itself after running, use the AutoCAD `UNDO` command if you need to change parameters and run the script again.\n- **Material Assignment**: If you choose to convert the blocking to beams (`createBeam` = Yes), ensure you fill in `sMaterial` and `sGrade` so the pieces behave correctly in reports and lists.\n\n## FAQ\n- **Q: What is the difference between \"Beamcut\" and \"Blocking\" modes?**\n  **A:** \"Beamcut\" modifies the rafters by cutting holes where the sheet would be. \"Blocking\" keeps the rafters whole but cuts the sheet into smaller strips that fit *between* the rafters.\n- **Q: Why did the script disappear after I ran it?**\n  **A:** This is a \"generator\" script. It creates the geometry (blocking or cuts) and then removes itself from the drawing to prevent clutter. You cannot edit its settings later; you must Undo and re-insert.\n- **Q: My blocking pieces are overlapping the rafters.**\n  **A:** Increase the `offsetDistance` parameter. This adds a gap between the split pieces and the intersecting beams."
+      },
+      "tokens_used": 6456,
+      "error": null
+    }
+  }
+}

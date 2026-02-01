@@ -1,0 +1,239 @@
+{
+  "filename": "hsb-SubAssemblyMultipleBeams.mcr",
+  "status": "completed",
+  "total_tokens": 25531,
+  "processing_time": 204.59260177612305,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "04.03.2009",
+            "author": "Anno Sportel (as@hsb-cad.com)",
+            "changes": "Pilot version"
+          },
+          {
+            "version": "1.1",
+            "date": "06.03.2009",
+            "author": "",
+            "changes": "Erase the main beam if it's selected on the second group of beams."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4409,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script interacts with 3D GenBeams using `getBeam` and `PrEntity`. It uses `dbCreate` with the `_kModel` flag to instantiate the subassembly. No `sd_` prefixes, `_Viewport` usage, or 2D drawing generation logic found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (3D environment)",
+          "requiredSettings": [
+            "hsb-SubAssembly.mcr (Target script referenced in dbCreate)"
+          ]
+        }
+      },
+      "tokens_used": 2863,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getBeam",
+              "promptOriginal": "Select Main Beam",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "Extra beams to create SubAssembly",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3820,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Groups a main beam and multiple secondary beams into a single SubAssembly entity by triggering the 'hsb-SubAssembly' script, effectively creating a logical component unit.",
+          "category": "Organizing / Grouping",
+          "typicalUseCase": "Assembling a collection of loose timber members (e.g., a roof truss, gable frame, or floor cassettes) that need to be treated, transported, or manufactured as a single unified object."
+        },
+        "parameters": [
+          {
+            "name": "_Beam[0] (Main Beam)",
+            "technicalDefault": "User Selection",
+            "businessMeaning": "The primary structural member that acts as the host or anchor point for the entire subassembly.",
+            "validRange": "1 GenBeam",
+            "unit": "Entity",
+            "affectsOutput": "Determines the insertion point and coordinate system (Orientation X/Z) for the resulting subassembly instance. The subassembly is attached to this beam in the project tree."
+          },
+          {
+            "name": "_Beam[1..n] (Extra Beams)",
+            "technicalDefault": "User Selection",
+            "businessMeaning": "Secondary structural members that are physically or logically connected to the main beam and must be included in the assembly group.",
+            "validRange": "1 or more GenBeams (cannot include the Main Beam)",
+            "unit": "Entities",
+            "affectsOutput": "Passes these members to the subassembly map so they are processed together. This enables shared machining, nesting, or grouped output for the component."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selecting Extra Beams",
+            "effect": "The script automatically filters out the Main Beam if it is selected again in the second group to prevent duplicate processing.",
+            "cascade": [
+              "_Beam array"
+            ]
+          },
+          {
+            "trigger": "Selection of Main Beam",
+            "effect": "Defines the local coordinate system (UCS) for the resulting subassembly instance based on the main beam's X and Z vectors.",
+            "cascade": [
+              "vecUcsX",
+              "vecUcsY"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "TslInst (SubAssembly)",
+            "description": "An instance of the 'hsb-SubAssembly' script initialized with a map containing all selected beams. The 'hsb-SubAssemblyMultipleBeams' script deletes itself after creating this instance.",
+            "appliedTo": "The Main Beam and all selected Extra Beams."
+          }
+        ]
+      },
+      "tokens_used": 5009,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script launched via command or palette.",
+          "2. Prompt user to select a Main Beam using getBeam.",
+          "3. Prompt user to select Extra Beams using PrEntity (allowing multiple selections).",
+          "4. Script filters the selected Extra Beams to remove the Main Beam (if it was accidentally re-selected).",
+          "5. Store Main Beam and Extra Beams in the _Beam array.",
+          "6. Execute logic: Verify that at least one Main Beam exists in _Beam.",
+          "7. Sort the list of beams by their entity handle to ensure consistent naming.",
+          "8. Generate a unique identifier (sSubAssemblyName) by concatenating the handles of all selected beams.",
+          "9. Iterate through existing subassemblies attached to the Main Beam.",
+          "10. Check if any existing subassembly has a matching 'SubAssemblyName'.",
+          "11. [Conditional] If no match is found, create a new instance of 'hsb-SubAssembly.mcr' via dbCreate, passing the beam map.",
+          "12. [Conditional] If a match is found, do nothing (prevent duplicates).",
+          "13. Call eraseInstance() to delete the temporary script instance."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Verification of Main Beam selection",
+            "path1": {
+              "name": "Valid Beam",
+              "steps": [
+                "Proceed to sorting and duplicate check logic."
+              ]
+            },
+            "path2": {
+              "name": "Invalid/Empty Selection",
+              "steps": [
+                "Execute eraseInstance().",
+                "Terminate script immediately."
+              ]
+            }
+          },
+          {
+            "condition": "Existing SubAssembly Detection",
+            "path1": {
+              "name": "New Assembly (nNewInst == true)",
+              "steps": [
+                "Create Map of entities (Main + Extra beams).",
+                "Execute dbCreate for 'hsb-SubAssembly' with Main Beam X/Z vectors as UCS.",
+                "Erase temporary script."
+              ]
+            },
+            "path2": {
+              "name": "Existing Assembly (nNewInst == false)",
+              "steps": [
+                "Skip dbCreate (prevent duplicates).",
+                "Erase temporary script."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Main Beam Existence",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Script automatically erases itself if _Beam array is empty on execution."
+          },
+          {
+            "check": "Selection Filtering",
+            "errorMessage": "None",
+            "recovery": "Script automatically invokes filterGenBeamsNotThis to ensure the Main Beam is not listed twice in the Extra Beams array."
+          },
+          {
+            "check": "Handle Consistency",
+            "errorMessage": "None",
+            "recovery": "Script sorts beams by handle to ensure the generated 'SubAssemblyName' is identical regardless of the order beams were selected."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None (Script Self-Destructs)",
+            "how": "N/A",
+            "effect": "The script instance calls eraseInstance() immediately after creating the target SubAssembly or detecting a duplicate. Users interact with the newly created 'hsb-SubAssembly' instance, not this launcher script."
+          }
+        ]
+      },
+      "tokens_used": 5059,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb-SubAssemblyMultipleBeams\n\n## Overview\nThis script groups a main beam and multiple secondary beams into a single logical SubAssembly component. It is useful for organizing timber elements (such as roof trusses or gable frames) so they can be treated, manufactured, and transported as one unified unit.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be run in the 3D model environment. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | Not used for generating 2D drawings directly. |\n\n## Prerequisites\n- **Required Entities**: At least one GenBeam (Main Beam) and one or more additional GenBeams.\n- **Minimum beam count**: 2 beams total (1 Main + 1 Extra).\n- **Required settings**: The target script `hsb-SubAssembly.mcr` must be present in your hsbCAD environment, as this script generates an instance of it.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command**: `TSLINSERT` → Select `hsb-SubAssemblyMultipleBeams.mcr` from the file dialog, or run via your custom hsbCAD toolbar/menu.\n\n### Step 2: Select Main Beam\n```\nCommand Line: Select Main Beam\nAction: Click on the primary structural beam that will serve as the anchor/host for the assembly.\n```\n\n### Step 3: Select Extra Beams\n```\nCommand Line: Extra beams to create SubAssembly\nAction: Select all other beams that need to be included in this group. You can select multiple beams. Press Enter when finished.\n```\n*Note: If you accidentally select the Main Beam again during this step, the script will automatically ignore it.*\n\n## Properties Panel Parameters\nThis script does not have persistent user-editable properties in the Properties Palette. It acts as a one-time generator to create the assembly and then removes itself from the project.\n\n## Right-Click Menu Options\nThere are no specific context menu options added by this script. It executes immediately upon insertion.\n\n## Settings Files\nThis script does not use external XML settings files. However, it depends on the script `hsb-SubAssembly.mcr` to function correctly.\n\n## Tips\n- **Auto-Cleanup**: The script instance automatically deletes itself after creating the SubAssembly. You do not need to manually delete the \"launcher\" script from the model.\n- **Duplicate Prevention**: The script checks if an identical subassembly (same combination of beams) already exists on the main beam. If it finds a match, it will not create a duplicate, preventing errors.\n- **Selection Order**: You can select the extra beams in any order. The script organizes them internally by their unique ID to ensure consistent naming.\n- **Resulting Entity**: After running, look for the new SubAssembly attached to the Main Beam in your Project Tree.\n\n## FAQ\n- **Q: What happens if I select the main beam in the second group?**\n  **A**: The script is smart enough to filter it out. You will not get a duplicate entry; the assembly will be created correctly.\n- **Q: Can I use this to create a floor cassette?**\n  **A**: Yes, this script is ideal for grouping multiple joists and bearers into a single cassette component.\n- **Q: Why did the script disappear after I ran it?**\n  **A**: This is normal behavior. The script is a \"generator\" tool. Its job is finished once the SubAssembly is created, so it erases itself to keep your model clean."
+      },
+      "tokens_used": 4371,
+      "error": null
+    }
+  }
+}

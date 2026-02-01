@@ -1,0 +1,242 @@
+{
+  "filename": "GE_HDWR_RESET_CATALOG_ENTRY.mcr",
+  "status": "completed",
+  "total_tokens": 23839,
+  "processing_time": 269.8075246810913,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3892,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script executes exclusively within an _bOnInsert block and terminates by calling eraseInstance(), indicating a transient utility tool rather than a drawing generator. It uses PrEntity to select a TslInst or accepts manual string input. No sd_*, Multipage, or Viewport drawing generation commands are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "None (Optional TslInst selection)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "TSL_HARDWARE_FAMILY_LIST.dxx"
+          ]
+        }
+      },
+      "tokens_used": 3149,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select hardware TSL to reset or hit ENTER to manually set values",
+              "condition": "_bOnInsert",
+              "required": false
+            },
+            {
+              "step": 2,
+              "function": "getString",
+              "promptOriginal": "Family Name",
+              "condition": "No entity selected",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "getString",
+              "promptOriginal": "Catalog File Path",
+              "condition": "No entity selected",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": [
+          {
+            "filename": "TSL_HARDWARE_FAMILY_LIST.dxx",
+            "searchPaths": [
+              "Derived from selected TslInst map attribute 'HSBCOMPANY_TSL_CATALOG_PATH' or manual user input"
+            ],
+            "purpose": "Stores the hardware family catalog entries to be reset",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 2286,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A utility tool that clears the saved configuration for a specific hardware family from the central catalog file, forcing the system to prompt for a new source file (e.g., manufacturer TXT) upon the next insertion of that hardware.",
+          "category": "Utility / Data Management",
+          "typicalUseCase": "Used when a user needs to switch the data source for a hardware component (e.g., pointing a generic hanger family to a new supplier's price/geometry list) and must remove the existing locked reference in the project catalog."
+        },
+        "parameters": [
+          {
+            "name": "ssE (Hardware TslInst Selection)",
+            "technicalDefault": "Null",
+            "businessMeaning": "The existing hardware instance in the model that serves as the reference for identifying which Family Name and Catalog Path to reset.",
+            "validRange": "Any valid TslInst entity in the current drawing",
+            "unit": "Entity",
+            "affectsOutput": "If selected, the script automatically extracts the 'FAMILYNAME' and 'HSBCOMPANY_TSL_CATALOG_PATH' from the selected instance, bypassing the need for manual text entry."
+          },
+          {
+            "name": "sKey (Family Name)",
+            "technicalDefault": "Empty String",
+            "businessMeaning": "The unique identifier (name) of the hardware family configuration to be deleted from the catalog database.",
+            "validRange": "Non-empty string matching an existing Key in the DXX file (Case-insensitive)",
+            "unit": "Text",
+            "affectsOutput": "If a match is found in the catalog, this specific key and its associated values are permanently removed from the DXX file."
+          },
+          {
+            "name": "sFilePath (Catalog File Path)",
+            "technicalDefault": "Empty String",
+            "businessMeaning": "The directory location on the disk where the 'TSL_HARDWARE_FAMILY_LIST.dxx' configuration file is stored and will be updated.",
+            "validRange": "Valid file system path string (e.g., 'C:\\Project\\Data\\' or '\\\\Server\\Shared\\')",
+            "unit": "Text",
+            "affectsOutput": "Specifies the exact target file to be modified. The script appends 'TSL_HARDWARE_FAMILY_LIST.dxx' to this path. The file must be writable by the user."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects a TslInst via 'ssE'",
+            "effect": "The 'sKey' and 'sFilePath' parameters are automatically populated from the selected entity's Map attributes ('FAMILYNAME' and 'HSBCOMPANY_TSL_CATALOG_PATH'), skipping the manual command-line prompts.",
+            "cascade": [
+              "sKey",
+              "sFilePath"
+            ]
+          }
+        ],
+        "outputEntities": []
+      },
+      "tokens_used": 4669,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script begins execution in _bOnInsert block.",
+          "Check insertCycleCount; if greater than 1, erase instance and exit (prevent re-runs).",
+          "Prompt user to select a Hardware TSL instance (PrEntity) or press ENTER for manual input.",
+          "Determine execution path based on whether an entity was selected.",
+          "If Entity Selected: Extract 'FAMILYNAME' and 'HSBCOMPANY_TSL_CATALOG_PATH' from the instance map.",
+          "If Manual Input: Prompt user for 'Family Name' and 'Catalog File Path' via command line.",
+          "Clean input strings (Trim whitespace, Uppercase the Family Name).",
+          "Read the DXX catalog file from the specified path into a Map object.",
+          "Iterate through catalog keys to find a match with the provided Family Name.",
+          "Conditional Result: If key is found, remove entry and save file; otherwise, report failure.",
+          "Erase script instance and terminate."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User Input Source (Selection vs Manual)",
+            "path1": {
+              "name": "Entity Selected",
+              "steps": [
+                "User selects a TslInst.",
+                "Extract map attribute 'FAMILYNAME' to sKey.",
+                "Extract map attribute 'HSBCOMPANY_TSL_CATALOG_PATH' to sPath.",
+                "Construct full file path (sPath + 'TSL_HARDWARE_FAMILY_LIST.dxx')."
+              ]
+            },
+            "path2": {
+              "name": "Manual Entry",
+              "steps": [
+                "User presses ENTER without selecting.",
+                "Display hint message regarding data acquisition.",
+                "Input 'Family Name' via getString.",
+                "Input 'Catalog File Path' via getString."
+              ]
+            }
+          },
+          {
+            "condition": "Catalog Lookup Result",
+            "path1": {
+              "name": "Key Match Found",
+              "steps": [
+                "Remove the key from the catalog Map.",
+                "Write the updated Map to the DXX file.",
+                "Report 'Key found in catalog. RESET SUCCESS.'.",
+                "Erase instance."
+              ]
+            },
+            "path2": {
+              "name": "Key Match Not Found",
+              "steps": [
+                "Report 'Key NOT found in catalog.'.",
+                "Report the specific Family Name and File Path searched.",
+                "Erase instance."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Silent failure/erasure)",
+            "recovery": "Script is designed to run only once. Re-inserting the script is required to run again."
+          },
+          {
+            "check": "Catalog File Path Validity",
+            "errorMessage": "Implicit (Script fails to read/write DXX)",
+            "recovery": "Ensure the provided path exists and the user has write permissions to the 'TSL_HARDWARE_FAMILY_LIST.dxx' file."
+          },
+          {
+            "check": "Key Existence in Catalog",
+            "errorMessage": "'Key NOT found in catalog.'",
+            "recovery": "Verify the 'Family Name' spelling (case-insensitive) matches the key in the DXX file, or ensure the correct catalog file path is being targeted."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "The script is a utility that calls eraseInstance() immediately upon completion of its task. No object remains in the drawing to be edited via OPM or context menus."
+          }
+        ]
+      },
+      "tokens_used": 5164,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_HDWR_RESET_CATALOG_ENTRY.mcr\n\n## Overview\nThis utility clears the saved configuration for a specific hardware family from the central catalog file. It is used to force the system to prompt for a new data source file (e.g., a new manufacturer list) the next time you insert that hardware component.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script runs in Model Space. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required Entities:** None (Optional: Select an existing hardware instance to auto-populate data).\n- **Minimum Beam Count:** 0\n- **Required Settings Files:** `TSL_HARDWARE_FAMILY_LIST.dxx` (The catalog file to be modified).\n\n## Usage Steps\n\n### Step 1: Launch Script\nExecute the script using the standard hsbCAD insert command.\n**Command:** `TSLINSERT` (or your company's custom script insertion alias) → Select `GE_HDWR_RESET_CATALOG_ENTRY.mcr`.\n\n### Step 2: Select Hardware or Enter Manual Mode\nThe script will prompt you to identify the hardware family to reset.\n```\nCommand Line: Select hardware TSL to reset or hit ENTER to manually set values\nAction:\n    Option A: Click on an existing hardware TSL instance in your model.\n    Option B: Press ENTER to input the details manually.\n```\n\n### Step 3: Provide Family Details (If Manual Mode Selected)\nIf you selected an entity in Step 2, skip this step. If you pressed ENTER, provide the following details when prompted:\n\n```\nCommand Line: Family Name\nAction: Type the exact name of the hardware family (e.g., \"HANGER_SIMPSON\").\n```\n\n```\nCommand Line: Catalog File Path\nAction: Type the folder path where the catalog file is located (e.g., \"C:\\Project\\TSL_Data\\\").\nNote: The script looks for TSL_HARDWARE_FAMILY_LIST.dxx in this folder.\n```\n\n### Step 4: Review Result\nThe script will process the request and report the result on the command line.\n- **Success:** \"Key found in catalog. RESET SUCCESS.\"\n- **Failure:** \"Key NOT found in catalog.\" (Check spelling or file path).\n\n**Note:** The script instance will automatically erase itself from the drawing immediately after running.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This is a transient utility script. It does not have persistent properties in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | This script runs once and erases itself; it does not have a right-click menu. |\n\n## Settings Files\n- **Filename:** `TSL_HARDWARE_FAMILY_LIST.dxx`\n- **Location:** Derived from the selected entity's attribute 'HSBCOMPANY_TSL_CATALOG_PATH' or entered manually by the user.\n- **Purpose:** Stores the links between hardware family names and their specific data source files (TXT/DXF). This script deletes the specific entry for the family you wish to reset.\n\n## Tips\n- **Use Selection Mode:** To avoid typing errors, always select an existing hardware instance in the model rather than typing the Family Name manually.\n- **Use Case:** Use this script when you need to switch a hardware family to a completely different manufacturer's file (e.g., pointing all \"HANGER\" elements to a new price list).\n- **Permissions:** Ensure you have write permissions to the folder containing the `TSL_HARDWARE_FAMILY_LIST.dxx` file, or the script will fail to update the catalog.\n\n## FAQ\n- **Q: Why did the script say \"Key NOT found in catalog\"?**\n- **A:** This means the Family Name you typed does not exist in the specified DXX file. Check your spelling (it is case-insensitive) and verify that the file path points to the correct project catalog.\n  \n- **Q: Does this delete the physical hardware objects in my drawing?**\n- **A:** No. It only deletes the *configuration link* in the catalog file. Existing hardware in the model remains unchanged, but future insertions of that family will ask you to select a source file again.\n\n- **Q: Can I undo the changes made by this script?**\n- **A:** No. The script permanently modifies the external DXX catalog file immediately upon execution."
+      },
+      "tokens_used": 4679,
+      "error": null
+    }
+  }
+}

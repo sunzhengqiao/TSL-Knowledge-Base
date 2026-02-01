@@ -1,0 +1,374 @@
+{
+  "filename": "HSB_E-MarkSheetEdges.mcr",
+  "status": "completed",
+  "total_tokens": 44174,
+  "processing_time": 249.5860664844513,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7785,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script creates instances in `_kModelSpace` via `tslNew.dbCreate(..., _kModelSpace, ...);`. No ShopDrawing constructs (sd_*) or viewport handling are present. It targets `Element`, `Sheet`, and `Beam` objects directly in the 3D model."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Sheet",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "HSB_G-FilterGenBeams (TSL script)",
+            "Catalog entry (if executed via key)"
+          ]
+        }
+      },
+      "tokens_used": 4200,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "Property Dialog",
+            "trigger": "On Insert (if _kExecuteKey is empty or not found in catalog)",
+            "title": "Script Properties",
+            "dataSource": "Local script variables",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "zone",
+            "type": "PropString",
+            "displayName": "|Assign to element zone|",
+            "defaultValue": "6",
+            "inputType": "dropdown",
+            "options": [
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "10"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "femaleFilterDefinition",
+            "type": "PropString",
+            "displayName": "|Filter definition female beams|",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": "Dynamic (from HSB_G-FilterGenBeams catalog)",
+            "category": null,
+            "description": "|Filter definition for female beams.||Use| HSB_G-FilterGenBeams |to define the filters|."
+          },
+          {
+            "index": 2,
+            "variable": "femaleBeamCodesToFilter",
+            "type": "PropString",
+            "displayName": "|Female beam codes to filter|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": "|Filter female beams with these beam codes.||NOTE|: |These beam codes are only filtered if the filter definition for female beams is left blank!|"
+          },
+          {
+            "index": 3,
+            "variable": "onlyUseHorizontalEdges",
+            "type": "PropString",
+            "displayName": "|Only use horizontal edges|",
+            "defaultValue": "|No|",
+            "inputType": "dropdown",
+            "options": [
+              "|No|",
+              "|Yes|"
+            ],
+            "category": null,
+            "description": "|Only use horizontal edges for the marking.|"
+          },
+          {
+            "index": 4,
+            "variable": "useOutline",
+            "type": "PropString",
+            "displayName": "|Use Outline for marking|",
+            "defaultValue": "|Yes|",
+            "inputType": "dropdown",
+            "options": [
+              "|Yes|",
+              "|No|"
+            ],
+            "category": null,
+            "description": "|Specify whether to use the outline of the sheetprofile.|"
+          },
+          {
+            "index": 0,
+            "variable": "nColor",
+            "type": "PropInt",
+            "displayName": "|Color|",
+            "defaultValue": 4,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "|Specifies the color of the visualisation symbol.|"
+          },
+          {
+            "index": 0,
+            "variable": "dSymbolSize",
+            "type": "PropDouble",
+            "displayName": "|Symbol size|",
+            "defaultValue": "40.0 (mm)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "|Specifies the size of the visualisation symbol.|"
+          },
+          {
+            "index": 5,
+            "variable": "tslIdentifier",
+            "type": "PropString",
+            "displayName": "|Identifier|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": "|Only one tsl instance, per identifier, can be attached to an element.|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 7543,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Automatically marks the edges of sheathing/sheeting on the underlying structural beams to indicate nailing or fixing lines.\",\n    \"category\": \"ShopDrawing / Marking\",\n    \"typicalUseCase\": \"When generating production data for a roof or floor structure, the carpenter needs to see exactly where sheets (plywood/OSB) start, end, and join on the rafters or joists.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"zone\",\n      \"technicalDefault\": \"6\",\n      \"businessMeaning\": \"Selects the specific construction layer (e.g., Top finish, Sheathing) within the element that contains the sheeting geometry to be analyzed.\",\n      \"validRange\": \"0-10 (Index based on Element construction layers)\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Determines which set of Sheets are retrieved. Selecting the wrong zone results in no marks being generated.\"\n    },\n    {\n      \"name\": \"femaleFilterDefinition\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Selects a saved filter preset (from HSB_G-FilterGenBeams) to identify which supporting beams should receive the marks (e.g., only Rafters, excluding Purlins).\",\n      \"validRange\": \"Catalog entries of HSB_G-FilterGenBeams\",\n      \"unit\": \"Selection\",\n      \"affectsOutput\": \"Filters the list of beams. Only beams matching the filter criteria will have sheet edges marked on them.\"\n    },\n    {\n      \"name\": \"femaleBeamCodesToFilter\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"A manual override to specify which beams to mark by their Beam Code (e.g., 'Rafter', 'Joist').\",\n      \"validRange\": \"Valid Beam Code strings in the project\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Restricts marking to beams with the specified codes. Only active if 'Filter definition' is left blank.\"\n    },\n    {\n      \"name\": \"onlyUseHorizontalEdges\",\n      \"technicalDefault\": \"|No|\",\n      \"businessMeaning\": \"If 'Yes', the script ignores sheet edges that are not parallel to the main element axis (e.g., gable ends, dormer cheeks) and only marks horizontal/eaves lines.\",\n      \"validRange\": \"Yes / No\",\n      \"unit\": \"Boolean\",\n      \"affectsOutput\": \"Reduces the number of marks by excluding non-horizontal sheet intersections.\"\n    },\n    {\n      \"name\": \"useOutline\",\n      \"technicalDefault\": \"|Yes|\",\n      \"businessMeaning\": \"Determines the scope of the marking. 'Yes' marks all edges, including the outer perimeter (fascia lines). 'No' marks only internal sheet-to-sheet joints.\",\n      \"validRange\": \"Yes / No\",\n      \"unit\": \"Boolean\",\n      \"affectsOutput\": \"'Yes' creates marks on the outer boundary of the roof/floor. 'No' suppresses these outer marks, leaving only internal joints.\"\n    },\n    {\n      \"name\": \"nColor\",\n      \"technicalDefault\": \"4\",\n      \"businessMeaning\": \"Sets the display color of the visual indicator symbol for this script in the CAD model.\",\n      \"validRange\": \"1-255 (AutoCAD Color Index)\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Visuals only. Does not affect machining data.\"\n    },\n    {\n      \"name\": \"dSymbolSize\",\n      \"technicalDefault\": \"40.0\",\n      \"businessMeaning\": \"Controls the physical size of the visual symbol"
+      },
+      "tokens_used": 9001,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Launch: User starts script via command line or execute key.",
+          "2. Initial Properties Load: Properties are set from Execute Key (if found in catalog), otherwise defaults are used.",
+          "3. Insert Cycle Check: If insertCycleCount > 1, the instance is erased immediately (prevent duplicate runs).",
+          "4. Property Dialog (Conditional): If no Execute Key is used or key is not found, the Properties Dialog is shown to the user for configuration.",
+          "5. Save Catalog: Current properties are saved to the '_LastInserted' catalog entry.",
+          "6. Entity Selection: Prompt 'Select elements' is displayed. User selects one or more Elements.",
+          "7. Validation Loop: Iterate through selected elements.",
+          "8. Cleanup Duplicate Scripts: Check for existing instances of this script (with same Identifier) on the selected Element. If found, erase them to ensure uniqueness.",
+          "9. Instance Creation: Create a new instance of the script attached to each selected Element in ModelSpace. The original insert instance is then erased.",
+          "10. Script Execution (per Element): The new instance initializes properties from '_LastInserted'.",
+          "11. Element Dependency: Script attaches to the Element, assigns to Element Group, and sets dependency.",
+          "12. Trigger Condition: Logic runs if _bOnElementConstructed is true, manualInserted is true, or onDebug is true.",
+          "13. Geometry Retrieval: Retrieve Sheets from the specified Zone and all Beams from the Element.",
+          "14. Beam Filtering: Filter beams based on the selected Filter Definition (HSB_G-FilterGenBeams) and Beam Codes.",
+          "15. Filter Error Check: If filtering fails (TSL not found), report warning and erase instance.",
+          "16. Profile Generation: Generate a Netto Profile of the sheets to identify internal vs outline edges.",
+          "17. Sheet Edge Iteration: Loop through every Sheet and its envelope edges.",
+          "18. Horizontal Edge Check: If 'Only use horizontal edges' is Yes, skip edges not parallel to Element X-axis.",
+          "19. Outline Check: If 'Use Outline' is No, skip edges that are part of the outer boundary (determined via Netto Profile).",
+          "20. Beam Intersection: Find beams perpendicular to the current sheet edge.",
+          "21. Tooling Generation: Calculate intersection points. If valid and within beam/sheet bounds, project points to the beam face.",
+          "22. Duplicate Check: Check if a marker already exists near the calculated midpoint. If yes, skip.",
+          "23. Face Verification: Verify the point lies on the beam's actual face profile.",
+          "24. Apply Marking: Create MarkerLine and add Tooling to the beam.",
+          "25. Visualization: Draw the specific 3D and Plan view symbols at the Element origin.",
+          "26. Completion: Script finishes, waiting for next update or modification."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execute Key Usage",
+            "path1": {
+              "name": "Execute Key Found",
+              "steps": [
+                "Load properties from catalog key",
+                "Skip Properties Dialog",
+                "Proceed to Selection"
+              ]
+            },
+            "path2": {
+              "name": "No Execute Key",
+              "steps": [
+                "Show Properties Dialog",
+                "User confirms settings",
+                "Proceed to Selection"
+              ]
+            }
+          },
+          {
+            "condition": "Zone Index Selection",
+            "path1": {
+              "name": "Zone > 5",
+              "steps": [
+                "Calculate actual zone index (5 - zoneIndex)",
+                "Use inverted zone for sheet retrieval"
+              ]
+            },
+            "path2": {
+              "name": "Zone <= 5",
+              "steps": [
+                "Use selected zone index directly"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Filter Logic",
+            "path1": {
+              "name": "Filter Definition Provided",
+              "steps": [
+                "Call HSB_G-FilterGenBeams TSL",
+                "Use resulting beam list",
+                "Ignore 'Female beam codes to filter'"
+              ]
+            },
+            "path2": {
+              "name": "Filter Definition Empty",
+              "steps": [
+                "Call HSB_G-FilterGenBeams (default behavior)",
+                "Apply 'Female beam codes to filter' if provided"
+              ]
+            }
+          },
+          {
+            "condition": "Edge Horizontal Check",
+            "path1": {
+              "name": "Only Horizontal = Yes",
+              "steps": [
+                "Check dot product with Element X",
+                "Skip non-horizontal edges"
+              ]
+            },
+            "path2": {
+              "name": "Only Horizontal = No",
+              "steps": [
+                "Process all edges"
+              ]
+            }
+          },
+          {
+            "condition": "Outline Usage",
+            "path1": {
+              "name": "Use Outline = No",
+              "steps": [
+                "Check midpoint against Netto Profile",
+                "Skip edge if midpoint is outside profile (internal joint only)"
+              ]
+            },
+            "path2": {
+              "name": "Use Outline = Yes",
+              "steps": [
+                "Include outer perimeter edges"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "None explicit in prompt, but empty selection ends the loop silently.",
+            "recovery": "Select valid Element(s)."
+          },
+          {
+            "check": "Single Element Attachment (Runtime)",
+            "errorMessage": "None explicit, but script erases itself if _Element.length != 1.",
+            "recovery": "Script must be attached to exactly one Element. The insertion loop handles multiple selections by creating multiple instances."
+          },
+          {
+            "check": "Filter TSL Availability",
+            "errorMessage": "|beams could not be filtered!| |Make sure that the tsl| HSB_G-FilterGenBeams |is loaded in the drawing|.",
+            "recovery": "Load HSB_G-FilterGenBeams.mcr into the drawing."
+          },
+          {
+            "check": "Beam-Sheet Intersection",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Ensure the filter definition actually includes beams that support the sheets."
+          },
+          {
+            "check": "Duplicate Identifier",
+            "errorMessage": "None explicit",
+            "recovery": "The script automatically removes previous instances with the same identifier on the same element during insertion."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Zone",
+            "how": "OPM (Properties Palette) - Property 'Assign to element zone'",
+            "effect": "Recalculates which sheets are analyzed, generating marks on different layers."
+          },
+          {
+            "action": "Adjust Filters",
+            "how": "OPM - Properties 'Filter definition female beams' or 'Female beam codes to filter'",
+            "effect": "Changes the subset of beams that receive marks."
+          },
+          {
+            "action": "Toggle Edge Options",
+            "how": "OPM - Properties 'Only use horizontal edges' or 'Use Outline for marking'",
+            "effect": "Adds or removes marks based on geometric criteria (horizontal vs vertical, internal vs external)."
+          },
+          {
+            "action": "Modify Visuals",
+            "how": "OPM - Properties 'Color' or 'Symbol size'",
+            "effect": "Updates the display symbol in the model immediately."
+          },
+          {
+            "action": "Element Geometry Change",
+            "how": "Modify the Element or underlying Beams/Sheets in CAD",
+            "effect": "Script automatically recalculates and updates tooling marks due to setDependencyOnEntity."
+          }
+        ]
+      },
+      "tokens_used": 9060,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_E-MarkSheetEdges.mcr\n\n## Overview\nAutomatically marks the edges of sheathing or sheeting materials on underlying structural beams. This tool is used to visualize and generate nailing or fixing lines (e.g., for plywood or OSB sheets) directly on the beams in the 3D model.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script attaches to Elements and modifies beams in the 3D model. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | This is a model processing script, not a 2D detail generator. |\n\n## Prerequisites\n- **Required Entities:** Elements containing Sheets and GenBeams.\n- **Required Settings:** The script `HSB_G-FilterGenBeams.mcr` must be loaded in the drawing to use filter definitions.\n- **Minimum Beams:** 0 (The script will run, but marks require beams to be present).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: Type `TSLINSERT` in the command line and select `HSB_E-MarkSheetEdges.mcr`.\n\n### Step 2: Configure Properties\nIf an Execute Key (saved preset) is not selected, a properties dialog will appear.\n- **Assign to element zone:** Select the construction layer index (e.g., 0-10) that contains the sheeting material you wish to process.\n- **Filter definition female beams:** (Optional) Select a preset filter to determine which beams receive the marks (e.g., only Rafters).\n- **Click OK** to confirm settings.\n\n### Step 3: Select Elements\n```\nCommand Line: Select elements\nAction: Click on the Element(s) (walls, roofs, or floors) containing the sheets and beams you wish to process. Press Enter to finish selection.\n```\n\n### Step 4: Review Results\nThe script will attach to the element. Visual markers will appear on the beams at the intersections with the sheet edges. You can inspect these marks in the 3D model or use them for machining/data export.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Assign to element zone | Dropdown | 6 | Selects the specific construction layer (Index 0-10) within the Element that contains the sheeting geometry to be analyzed. |\n| Filter definition female beams | Dropdown | (Empty) | Selects a saved filter preset from `HSB_G-FilterGenBeams` to identify which supporting beams should receive the marks. If left blank, manual beam codes are used. |\n| Female beam codes to filter | Text | (Empty) | Manually enter Beam Codes (e.g., \"Rafter\", \"Joist\") to mark specific beams. **Note:** This is only active if \"Filter definition female beams\" is left blank. |\n| Only use horizontal edges | Dropdown | No | If set to \"Yes\", the script ignores vertical or non-horizontal sheet edges (like gable ends) and only marks horizontal lines. |\n| Use Outline for marking | Dropdown | Yes | If set to \"Yes\", outer perimeter edges are marked. If \"No\", only internal sheet-to-sheet joints are marked. |\n| Color | Number | 4 | Specifies the AutoCAD color index for the visualization symbol. |\n| Symbol size | Number | 40.0 (mm) | Specifies the size of the visualization symbol displayed in the model. |\n| Identifier | Text | (Empty) | Ensures only one instance of this script per identifier is attached to an element. Useful for managing multiple configurations. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| (None specific) | This script uses standard hsbCAD update behavior. Changes in the Properties Palette trigger automatic recalculation. |\n\n## Settings Files\n- **Dependency**: `HSB_G-FilterGenBeams.mcr`\n- **Purpose**: This script is required to provide the list of available filter definitions and to process beam filtering logic.\n\n## Tips\n- **Check Your Zone:** If no marks appear, verify that the \"Assign to element zone\" corresponds to the layer where your sheets (e.g., OSB) are actually defined in the Element construction.\n- **Filtering:** Use `HSB_G-FilterGenBeams` to create complex filters (e.g., \"All beams except purlins\") rather than manually typing codes for better control.\n- **Visual Confirmation:** Adjust the \"Color\" and \"Symbol size\" properties if the marks are hard to see against your timber material colors.\n- **Internal vs External:** Set \"Use Outline for marking\" to **No** if you only want to see where sheets butt against each other, rather than the outer edge of the roof/floor.\n\n## FAQ\n- **Q: Why are no marks appearing on my beams?**\n  - **A:** Check three things: 1) Ensure the correct \"Zone\" is selected where sheets exist. 2) Ensure your \"Filter definition\" actually includes the beams you expect to mark. 3) Ensure the `HSB_G-FilterGenBeams` script is loaded.\n- **Q: Can I mark only the joints between sheets and ignore the outer edge?**\n  - **A:** Yes. Set the property \"Use Outline for marking\" to **No**.\n- **Q: What happens if I change the Element geometry?**\n  - **A:** The script is set to update automatically. Changing the roof shape or sheet layout will trigger the script to recalculate the mark positions immediately."
+      },
+      "tokens_used": 6585,
+      "error": null
+    }
+  }
+}

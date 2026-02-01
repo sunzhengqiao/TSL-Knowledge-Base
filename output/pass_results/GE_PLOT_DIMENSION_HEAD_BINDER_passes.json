@@ -1,0 +1,303 @@
+{
+  "filename": "GE_PLOT_DIMENSION_HEAD_BINDER.mcr",
+  "status": "completed",
+  "total_tokens": 31902,
+  "processing_time": 678.9740469455719,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "21.mar.2013",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "- Copied from hsb_DimensionHeadBinder, to keep US content folder naming standards\n\t- Thumbnail added\n \t- Version control not needed, original version was 1.0"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5412,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script requires 'getViewport' insertion on '_bOnInsert', stores the viewport in '_Viewport', and explicitly calculates and uses 'ms2ps' (Model Space to Paper Space) and 'ps2ms' coordinate transformations to convert geometry and dimension definitions before drawing them with the Display object."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Paper Space containing a Viewport displaying a Wall Element (with Top Plate beams)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4547,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getViewport",
+              "promptOriginal": "Select a viewport",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sDimLayout",
+            "type": "PropString",
+            "displayName": "Dim Style",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": [
+              "_DimStyles"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "dOffset",
+            "type": "PropDouble",
+            "displayName": "Offset",
+            "defaultValue": "U(150, 6)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5879,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically generates paper space dimensions for wall panel top plates, highlighting plate lengths and left/right overhangs relative to the panel outline.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Used during the creation of wall panel layout drawings to automatically dimension the top plates, ensuring the overhangs are clearly documented for manufacturing."
+        },
+        "parameters": [
+          {
+            "name": "sDimLayout",
+            "technicalDefault": "\"\" (Uses available _DimStyles)",
+            "businessMeaning": "Selects the specific drafting standard (dimension style) to apply to the generated dimensions, controlling arrowheads, text size, and precision.",
+            "validRange": "Any dimension style name currently loaded in the CAD drawing.",
+            "unit": "String",
+            "affectsOutput": "Changes the visual appearance (fonts, arrows, layer, units) of the dimension lines drawn in Paper Space."
+          },
+          {
+            "name": "dOffset",
+            "technicalDefault": "U(150, 6)",
+            "businessMeaning": "The distance offset from the top plate surface where the primary dimension line is placed.",
+            "validRange": "50mm to 500mm (depending on drawing scale and visual clutter)",
+            "unit": "mm",
+            "affectsOutput": "Moves the dimension line vertically away from the plate geometry. If set too low, dimensions may clash with the drawing; if too high, they may be hard to read."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Dimension (Dim)",
+            "description": "Creates linear dimensions in Paper Space showing the total length of the top plate and, if applicable, the delta dimension (overhang) on the left and right sides.",
+            "appliedTo": "Top Plate beams within the selected Viewport's Element."
+          }
+        ]
+      },
+      "tokens_used": 3933,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch Script (via Insert command or drag-and-drop)",
+          "2. Prompt user to select a Viewport (getViewport)",
+          "3. Check if script is being inserted (_bOnInsert). If true, show properties dialog and restart.",
+          "4. Validate Viewport existence. If missing, erase instance and exit.",
+          "5. Retrieve Element from Viewport.",
+          "6. Validate Element validity. If invalid, exit.",
+          "7. Calculate Model Space to Paper Space (ms2ps) and inverse (ps2ms) transformation matrices.",
+          "8. Determine Element coordinate system vectors (X, Y, Z).",
+          "9. [Conditional] Check if Panel is reversed in Viewport (compare projected vectors to World X/Y). Adjust internal vectors if true.",
+          "10. Iterate through Element beams to separate 'Top Plate' beams from 'Convex' beams (studs, plates).",
+          "11. Validate beam collection. If beams < 1, exit.",
+          "12. Project Convex beam vertices onto Element plane to create a 2D Convex Hull.",
+          "13. Simplify Convex Hull to Element Outline (remove collinear vertices).",
+          "14. Calculate Panel Center and identify extreme points (Left, Right, Top, Bottom).",
+          "15. Collect and project Top Plate vertices onto the Base Line.",
+          "16. Order projected vertices along the Base Line.",
+          "17. [Conditional] Check if projected vertices > 1.",
+          "18. [If Valid] Draw Main Dimension for Top Plate length at specified offset.",
+          "19. [Conditional] Calculate Left Overhang (Difference between Plate Start and Element Start).",
+          "20. [If Left Overhang > 5mm] Draw specific Left Delta Dimension.",
+          "21. [Conditional] Calculate Right Overhang (Difference between Plate End and Element End).",
+          "22. [If Right Overhang > 5mm] Draw specific Right Delta Dimension."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Viewport selection is empty or viewport is deleted",
+            "path1": {
+              "name": "Valid Viewport",
+              "steps": [
+                "Retrieve Element object",
+                "Proceed with dimensioning calculations"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Viewport",
+              "steps": [
+                "Erase Script Instance",
+                "Exit Execution"
+              ]
+            }
+          },
+          {
+            "condition": "Element orientation in Viewport",
+            "path1": {
+              "name": "Standard Orientation",
+              "steps": [
+                "Keep Element X/Z vectors as is",
+                "Proceed with standard dimensioning"
+              ]
+            },
+            "path2": {
+              "name": "Reversed Orientation",
+              "steps": [
+                "Invert Element X vector (if World X dot < 0)",
+                "Invert Element Z vector (if World Y dot < 0)",
+                "Proceed with dimensioning using corrected vectors"
+              ]
+            }
+          },
+          {
+            "condition": "Top Plate Geometry Exists",
+            "path1": {
+              "name": "Geometry Present",
+              "steps": [
+                "Project and Order vertices",
+                "Draw Main Plate Dimension"
+              ]
+            },
+            "path2": {
+              "name": "No Geometry / Single Vertex",
+              "steps": [
+                "Skip dimensioning",
+                "Exit script"
+              ]
+            }
+          },
+          {
+            "condition": "Left Overhang Detection (Distance > 5mm)",
+            "path1": {
+              "name": "Significant Overhang",
+              "steps": [
+                "Calculate delta points",
+                "Draw Left Delta Dimension (Offset + 150mm)"
+              ]
+            },
+            "path2": {
+              "name": "No/Minor Overhang",
+              "steps": [
+                "Skip Left Dimension"
+              ]
+            }
+          },
+          {
+            "condition": "Right Overhang Detection (Distance > 5mm)",
+            "path1": {
+              "name": "Significant Overhang",
+              "steps": [
+                "Calculate delta points",
+                "Draw Right Delta Dimension (Offset + 150mm)"
+              ]
+            },
+            "path2": {
+              "name": "No/Minor Overhang",
+              "steps": [
+                "Skip Right Dimension"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Viewport availability",
+            "errorMessage": "No error message displayed to user, but instance is erased.",
+            "recovery": "Re-insert the script and ensure a valid viewport is selected."
+          },
+          {
+            "check": "Element validity in Viewport",
+            "errorMessage": "Script exits silently if !el.bIsValid().",
+            "recovery": "Ensure the selected viewport is looking at a valid hsbCAD Wall Element."
+          },
+          {
+            "check": "Existence of Top Plates",
+            "errorMessage": "Script exits silently if bmAll.length < 1 or no vertices found.",
+            "recovery": "Ensure the Element contains Top Plate beams assigned with type _kTopPlate."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Dimension Style",
+            "how": "OPM (Object Properties Palette) -> 'Dim Style' property",
+            "effect": "Updates the visual style (arrows, text, units) of all generated dimensions immediately upon recalculation."
+          },
+          {
+            "action": "Adjust Offset Distance",
+            "how": "OPM -> 'Offset' property",
+            "effect": "Moves the main dimension line vertically relative to the plate. Changes affect Main, Left, and Right dimensions (Left/Right use Offset + 150mm)."
+          },
+          {
+            "action": "Modify Element Geometry",
+            "how": "Modify Wall Element in Model Space",
+            "effect": "Script recalculates automatically (standard TSL behavior). Updates dimension positions if plate length changes or element outline shifts."
+          }
+        ]
+      },
+      "tokens_used": 7042,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_PLOT_DIMENSION_HEAD_BINDER\n\n## Overview\nThis script automatically dimensions the top plates of wall panels in your Paper Space layouts. It creates a main dimension for the plate length and generates specific \"delta\" dimensions to highlight left and right overhangs relative to the panel outline.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script operates solely in Paper Space. |\n| Paper Space | Yes | Must be run on a Layout tab containing a Viewport of a wall. |\n| Shop Drawing | Yes | Designed specifically for wall panel layout drawings. |\n\n## Prerequisites\n- **Required Entities**: A Layout viewport displaying a Wall Element.\n- **Minimum Beams**: The Wall Element must contain at least one Top Plate beam (assigned type `_kTopPlate`).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_PLOT_DIMENSION_HEAD_BINDER.mcr` from the list.\n\n### Step 2: Select a Viewport\n```\nCommand Line: Select a viewport\nAction: Click on the viewport border in Paper Space that displays the wall panel you wish to dimension.\n```\n\n### Step 3: Configure Properties (Optional)\nAfter insertion, the script will immediately generate dimensions. To adjust the appearance or placement, select the script instance and modify the properties in the **Properties Palette** (Ctrl+1).\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Dim Style | dropdown | (Current Dim Styles) | Selects the drafting standard (arrows, text size, and units) for the generated dimensions. |\n| Offset | number | U(150, 6) | Sets the distance between the top plate surface and the primary dimension line. |\n\n## Right-Click Menu Options\n*(No custom right-click menu options are defined for this script. Standard hsbCAD context options apply.)*\n\n## Settings Files\nNo external settings files are required for this script.\n\n## Tips\n- **Adjusting Offset**: If the dimension lines clash with other annotations, select the script in Paper Space and increase the **Offset** value in the Properties palette.\n- **Small Overhangs**: The script automatically filters out very small overhangs. Any overhang less than 5mm will not be dimensioned to keep the drawing clean.\n- **Updating**: If you modify the wall geometry in Model Space, return to the Paper Space layout. The dimensions will update automatically to reflect the new plate lengths.\n- **Missing Dimensions**: If the script seems to disappear or produce no output, ensure the selected viewport is looking at a valid Wall Element that actually contains Top Plates.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I selected a viewport?**\n  A: This usually happens if the viewport is not displaying a valid Wall Element or the Element contains no Top Plate beams. Check your Model Space content.\n- **Q: Can I change the dimension style after the script is inserted?**\n  A: Yes. Select the script instance in Paper Space, open the Properties Palette, and choose a different style from the **Dim Style** dropdown list. The dimensions will update immediately.\n- **Q: The Delta dimensions (overhangs) are missing. Why?**\n  A: Delta dimensions only appear if the overhang is significant (greater than 5mm). If the top plate is flush or nearly flush with the panel outline, only the main length dimension will appear."
+      },
+      "tokens_used": 5089,
+      "error": null
+    }
+  }
+}

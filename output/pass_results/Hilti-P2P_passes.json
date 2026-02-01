@@ -1,0 +1,316 @@
+{
+  "filename": "Hilti-P2P.mcr",
+  "status": "completed",
+  "total_tokens": 50812,
+  "processing_time": 574.3514459133148,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9609,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly creates instances in _kModelSpace (tslNew.dbCreate(..., _kModelSpace, ...)). It performs 3D geometric calculations on GenBeam objects (envelopes, intersectWith, vecX/Y/Z) and creates physical connections/hardware. No _Viewport, sd_ prefixes, or 2D detailing logic (#Type E) found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Beam",
+            "Sip",
+            "Sheet"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": [
+            "TslUtilities.dll"
+          ]
+        }
+      },
+      "tokens_used": 7227,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "Swap Direction",
+            "handler": "sTriggerswapDirection",
+            "action": "Calculates connections on the opposite side of the current geometry. If a valid connection is found, it updates the instance to use the opposite plane or creates new instances for the opposite connection.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "TslUtilities.dll",
+            "searchPaths": [
+              "%hsbInstall%\\Utilities\\DialogService"
+            ],
+            "purpose": "Provides external dialog service capabilities (SelectFromList, SelectOption, etc.).",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 9929,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the connection of timber structural elements (Beams, SIPs, Sheets) using Hilti Point-to-Point fasteners, calculating optimal placement and drilling for hardware.",
+          "category": "Hardware / Connection",
+          "typicalUseCase": "Connecting two adjacent timber walls, panels, or beams with Hilti screws, allowing for adjustable spacing, depth, and side selection."
+        },
+        "parameters": [
+          {
+            "name": "dOffsetBottom",
+            "technicalDefault": "0",
+            "businessMeaning": "The distance from the start of the connection intersection to the first fastener.",
+            "validRange": "0 - 500 mm",
+            "unit": "mm",
+            "affectsOutput": "Relocates the first hardware instance and its corresponding drill hole away from the edge of the material."
+          },
+          {
+            "name": "dOffsetTop",
+            "technicalDefault": "0",
+            "businessMeaning": "The distance from the end of the connection intersection to the last fastener.",
+            "validRange": "0 - 500 mm",
+            "unit": "mm",
+            "affectsOutput": "Relocates the last hardware instance and its corresponding drill hole away from the edge of the material."
+          },
+          {
+            "name": "dOffsetBetween",
+            "technicalDefault": "600",
+            "businessMeaning": "The spacing between consecutive fasteners along the connection line.",
+            "validRange": "100 - 2000 mm",
+            "unit": "mm",
+            "affectsOutput": "Changes the density of hardware; smaller values create more connections, larger values create fewer."
+          },
+          {
+            "name": "dDepth",
+            "technicalDefault": "200",
+            "businessMeaning": "The penetration depth of the screw/drill into the material.",
+            "validRange": "50 - 500 mm",
+            "unit": "mm",
+            "affectsOutput": "Determines the length of the drill hole/cut and the length specification of the hardware part."
+          },
+          {
+            "name": "sInsertionMode",
+            "technicalDefault": "\"Select\"",
+            "businessMeaning": "Defines how the user interacts with the script during insertion (e.g., manually selecting beams vs. automatic detection).",
+            "validRange": "Select / Single",
+            "unit": "Enum",
+            "affectsOutput": "Alters the initial selection workflow; does not change final geometry but affects how instances are grouped."
+          },
+          {
+            "name": "sDistribution",
+            "technicalDefault": "\"Equidistant\"",
+            "businessMeaning": "The algorithm used to calculate fastener positions along the beam.",
+            "validRange": "Equidistant / Manual / Ends",
+            "unit": "Enum",
+            "affectsOutput": "Determines if fasteners are evenly spaced, defined by specific grips, or placed only at ends."
+          },
+          {
+            "name": "sShowTooling",
+            "technicalDefault": "\"Yes\"",
+            "businessMeaning": "Toggles the visibility of the drilling/machining visualization in the model.",
+            "validRange": "Yes / No",
+            "unit": "Bool",
+            "affectsOutput": "Hides or shows the graphical representation of drill holes, though the machining data usually remains for CNC."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User activates 'Swap Direction' (Context Menu)",
+            "effect": "Inverts the connection plane normal vector to the opposite side of the beams.",
+            "cascade": [
+              "mapConnection",
+              "Hardware Location",
+              "Drill Hole Location"
+            ]
+          },
+          {
+            "trigger": "Modification of 'dOffsetBetween'",
+            "effect": "Recalculates the number of hardware instances needed to cover the connection length.",
+            "cascade": [
+              "Hardware Count",
+              "Total Machining Time"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "HardWrComp (Hardware Component)",
+            "description": "Parametric Hilti Screw or Anchor instance defined by the linked XML catalog.",
+            "appliedTo": "The intersecting GenBeams selected by the user."
+          },
+          {
+            "type": "Drill Hole (Machining)",
+            "description": "Cylindrical bores calculated based on the fastener diameter and specified depth.",
+            "appliedTo": "The primary and secondary GenBeams involved in the connection."
+          }
+        ]
+      },
+      "tokens_used": 8868,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches Hilti-P2P script command.",
+          "Script initializes properties and prompts for input based on sInsertionMode.",
+          "User selects GenBeams (Beams/SIPs/Sheets).",
+          "Script calculates potential connection geometry (common faces, intersection region, normal vectors).",
+          "Script validates connection validity (gap within tolerance, sufficient overlap).",
+          "Script creates TSL instance in ModelSpace and stores geometry in 'mapConnection'.",
+          "Execution loop runs based on sDistribution parameter.",
+          "Hardware components (HardWrComp) and Drill holes (doTooling) are generated at calculated coordinates.",
+          "Visualization is updated based on sShowTooling setting."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Value of property 'sInsertionMode' during script launch",
+            "path1": {
+              "name": "Select",
+              "steps": [
+                "User selects multiple GenBeams.",
+                "Script analyzes the group to find all valid connections between pairs.",
+                "Script creates a single 'Distribution' instance (Mode 0) controlling all found connections."
+              ]
+            },
+            "path2": {
+              "name": "Single",
+              "steps": [
+                "User is prompted to select exactly two GenBeams.",
+                "Script calculates connection specifically for the selected pair.",
+                "Script creates a 'Single' instance (Mode 101) attached to those specific beams."
+              ]
+            }
+          },
+          {
+            "condition": "Value of property 'sDistribution' during execution",
+            "path1": {
+              "name": "Ends",
+              "steps": [
+                "Script ignores offset distances.",
+                "Hardware is generated only at the start and end points of the intersection region."
+              ]
+            },
+            "path2": {
+              "name": "Manual",
+              "steps": [
+                "Script ignores offset distances.",
+                "Hardware is generated at the specific location of the user-defined Grip point."
+              ]
+            },
+            "path3": {
+              "name": "Equidistant",
+              "steps": [
+                "Script calculates number of steps based on length, dOffsetBottom, dOffsetTop, and dOffsetBetween.",
+                "Script loops through calculated points.",
+                "Hardware and tooling generated at every point in the loop."
+              ]
+            }
+          },
+          {
+            "condition": "User activates 'Swap Direction' context menu trigger",
+            "path1": {
+              "name": "Valid Opposite Connection Found (Same Entities)",
+              "steps": [
+                "Script identifies the geometrically opposite connection plane.",
+                "Script updates internal 'mapConnection' data.",
+                "If Mode is 'Single', the Grip point is projected to the new plane.",
+                "Instance is recalculated in place."
+              ]
+            },
+            "path2": {
+              "name": "Valid Opposite Connection Found (Different/New Entities)",
+              "steps": [
+                "Script identifies opposite connection involves different beam combinations.",
+                "Current TSL instance is erased.",
+                "New TSL instance(s) are created for the valid opposite connections."
+              ]
+            },
+            "path3": {
+              "name": "No Valid Opposite Connection",
+              "steps": [
+                "Script reports error: 'Swapping not possible'.",
+                "Operation is aborted."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Selection",
+            "errorMessage": "Insufficient entities selected.",
+            "recovery": "Select at least 2 GenBeams."
+          },
+          {
+            "check": "Intersection Region",
+            "errorMessage": "No common intersection region found.",
+            "recovery": "Ensure beams overlap or touch physically in 3D space."
+          },
+          {
+            "check": "Gap Tolerance",
+            "errorMessage": "Gap between elements exceeds maximum allowed.",
+            "recovery": "Move elements closer together (Max gap is typically 50mm)."
+          },
+          {
+            "check": "Swap Availability",
+            "errorMessage": "Swapping not possible.",
+            "recovery": "Ensure there is valid geometry on the opposite side of the beam to connect to."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Adjust Spacing/Offsets",
+            "how": "OPM Properties (dOffsetBetween, dOffsetBottom, dOffsetTop)",
+            "effect": "Recalculates the number and position of hardware instances."
+          },
+          {
+            "action": "Move Hardware Point",
+            "how": "Grip Edit (When sDistribution is 'Manual')",
+            "effect": "Updates the coordinate for the single hardware instance and tooling."
+          },
+          {
+            "action": "Flip Connection Side",
+            "how": "Context Menu -> 'Swap Direction'",
+            "effect": "Calculates connection on the opposite face plane."
+          },
+          {
+            "action": "Toggle Tooling Visibility",
+            "how": "OPM Property (sShowTooling)",
+            "effect": "Hides or shows the graphical representation of drill holes."
+          }
+        ]
+      },
+      "tokens_used": 9780,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Hilti-P2P\n\n## Overview\nAutomates the connection of timber structural elements (Beams, SIPs, Sheets) using Hilti Point-to-Point fasteners. It calculates optimal placement, generates the hardware components, and applies the necessary drill holes for the connection.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in the 3D model environment to calculate intersections and create physical hardware. |\n| Paper Space | No | Not designed for 2D detailing or viewports. |\n| Shop Drawing | No | This is a model generation script, not a 2D detailing tool. |\n\n## Prerequisites\n- **Required Entities**: At least two `GenBeam`, `Beam`, `Sip`, or `Sheet` elements.\n- **Minimum Beam Count**: 2 (overlapping or touching).\n- **Required Settings**: `TslUtilities.dll` (must be located in `%hsbInstall%\\Utilities\\DialogService`).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `Hilti-P2P.mcr`\n\n### Step 2: Select Elements\n```\nCommand Line: Select GenBeam(s) [Settings]:\nAction: Select the timber elements you wish to connect.\n```\n- **If `sInsertionMode` is \"Select\"**: Select a group of beams. The script will automatically find valid connections between all pairs in the selection.\n- **If `sInsertionMode` is \"Single\"**: You will be prompted to select exactly two beams to connect.\n\n### Step 3: Configure Connection\nOnce inserted, the script places an initial connection instance. Select the instance to modify parameters in the Properties Palette or drag the grip (if in Manual mode).\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| dOffsetBottom | Number | 0 | Distance from the start of the intersection to the first fastener (mm). |\n| dOffsetTop | Number | 0 | Distance from the end of the intersection to the last fastener (mm). |\n| dOffsetBetween | Number | 600 | Spacing between consecutive fasteners along the connection (mm). |\n| dDepth | Number | 200 | Penetration depth of the screw/drill into the material (mm). |\n| sInsertionMode | Dropdown | Select | Choose \"Select\" for multiple beams or \"Single\" to connect exactly two specific beams. |\n| sDistribution | Dropdown | Equidistant | Choose how fasteners are placed: \"Equidistant\" (evenly spaced), \"Ends\" (start/end only), or \"Manual\" (user defined). |\n| sShowTooling | Dropdown | Yes | Toggle to show or hide the graphical representation of drill holes. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Swap Direction | Flips the connection to the opposite side of the beams. Useful if the connection was calculated on the wrong face. |\n\n## Settings Files\n- **Filename**: `TslUtilities.dll`\n- **Location**: `%hsbInstall%\\Utilities\\DialogService`\n- **Purpose**: Provides the core functionality required for script interaction and dialog services.\n\n## Tips\n- **Quick Adjustments**: Select the instance and use the **Properties Palette** to quickly change the screw spacing (`dOffsetBetween`) or depth (`dDepth`).\n- **Manual Placement**: Set `sDistribution` to **Manual** to reveal a grip point. You can drag this grip to exactly position a single screw along the beam.\n- **Visual Clutter**: If your model becomes too cluttered with drill hole graphics, set `sShowTooling` to **No**. The CNC data will still be generated, but the graphics will be hidden.\n- **Swapping Sides**: If the script connects beams on the interior face when you need the exterior, select the instance, right-click, and choose **Swap Direction**.\n\n## FAQ\n- **Q: Why does the script fail with \"No common intersection region\"?**\n  **A:** Ensure your timber beams physically overlap or touch in the 3D model. The script requires a geometric intersection to calculate the connection points.\n\n- **Q: The \"Swap Direction\" option gives an error. Why?**\n  **A:** This happens when there is no valid geometry on the opposite side of the beam (e.g., nothing to connect to on the other side) or the gap exceeds the tolerance.\n\n- **Q: Can I connect non-rectangular beams?**\n  **A:** The script is designed for standard timber elements. Complex geometries might result in invalid intersections if a common planar face cannot be determined."
+      },
+      "tokens_used": 5399,
+      "error": null
+    }
+  }
+}

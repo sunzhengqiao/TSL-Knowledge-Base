@@ -1,0 +1,321 @@
+{
+  "filename": "Alpine-Fixing.mcr",
+  "status": "completed",
+  "total_tokens": 42709,
+  "processing_time": 263.49006819725037,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "v1.3",
+            "date": "17.ago.2012",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Description added\nCopyright added\nThumbnail added"
+          },
+          {
+            "version": "v1.0, v1.1 && v1.2",
+            "date": null,
+            "author": "No author",
+            "changes": null
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7575,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script generates 3D geometry using Body and PLine objects and renders them via Display disp(-1). It relies on _ThisInst.coordSys() and reads configuration from _Map, which is typical for model-space detailing scripts or sub-components. No 'sd_' functions, '_Viewport' checks, or '#Type E' entity arrays characteristic of ShopDrawing scripts are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "None explicitly selected in this snippet (Relies on data passed via _Map)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "Map entries for orientation vectors (XV_X/Y/Z, YV_X/Y/Z)",
+            "Map entries for dimensions (PlyWidth, Plies)",
+            "Map entries for configuration (IsHanger, HangerSide, FixingName)"
+          ]
+        }
+      },
+      "tokens_used": 6927,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5563,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates 3D models of specific steel joist hangers (SST IUB or Cullen KM series) or a generic placeholder hanger, oriented relative to a timber truss or beam assembly.",
+          "category": "Hardware",
+          "typicalUseCase": "Used within a larger timber generation macro to visualize and define the specific metalwork hangers required to connect structural members, using data passed via the ModelMap."
+        },
+        "parameters": [
+          {
+            "name": "PlyWidth",
+            "technicalDefault": "0.0",
+            "businessMeaning": "The width of a single timber layer/ply in the structural member.",
+            "validRange": "35mm - 300mm",
+            "unit": "mm",
+            "affectsOutput": "Combined with 'Plies' to determine the total width of the timber, which sets the spacing between the left and right side plates of the hanger."
+          },
+          {
+            "name": "Plies",
+            "technicalDefault": "1",
+            "businessMeaning": "The number of timber layers acting as a single unit.",
+            "validRange": "1 - 4",
+            "unit": "count",
+            "affectsOutput": "Multiplies 'PlyWidth' to calculate the total member width (dWidth), dictating how wide the hanger needs to be to wrap around the timber."
+          },
+          {
+            "name": "FixingName",
+            "technicalDefault": "Empty",
+            "businessMeaning": "The commercial product code of the hanger (e.g., 'IUB190_75' for SST brand, 'KM38' for Cullen).",
+            "validRange": "Specific codes hardcoded in script (IUB190_75, KM38, etc.) or 'DEFAULT'",
+            "unit": "string",
+            "affectsOutput": "Selects the specific manufacturing dimensions (width, height, back depth, thickness, leg geometry) for the 3D model. If 'DEFAULT' is used, dimensions fall back to calculated values based on timber width."
+          },
+          {
+            "name": "IsHanger",
+            "technicalDefault": "0",
+            "businessMeaning": "Determines if a metal hanger is actually present or needed at this location.",
+            "validRange": "0 (No hanger), 1 (Hanger present)",
+            "unit": "boolean",
+            "affectsOutput": "If 0, nothing is drawn. If 1, the full 3D geometry of the hanger (or placeholder lines if model not found) is generated."
+          },
+          {
+            "name": "HangerSide",
+            "technicalDefault": "\"LEFT\"",
+            "businessMeaning": "Specifies the orientation/handedness of the hanger relative to the beam's longitudinal axis.",
+            "validRange": "\"LEFT\", \"RIGHT\"",
+            "unit": "enum",
+            "affectsOutput": "If \"RIGHT\", the hanger geometry is mirrored along the X-axis (flipped 180 degrees longitudinally)."
+          },
+          {
+            "name": "XV_X/Y/Z & YV_X/Y/Z",
+            "technicalDefault": "0.0",
+            "businessMeaning": "Vector coordinates defining the orientation (Length and Width axes) of the parent timber element.",
+            "validRange": "-1.0 to 1.0 (Unit Vector components)",
+            "unit": "vector",
+            "affectsOutput": "Aligns the hanger geometry to the correct slope and rotation of the timber. If 0, the script defaults to the TSL Instance coordinate system."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "FixingName is set to a specific catalog code (e.g. 'IUB190_75')",
+            "effect": "The 'PlyWidth' and 'Plies' parameters are ignored for the hanger width; the hardcoded catalog width is used instead.",
+            "cascade": [
+              "Hanger Width Geometry",
+              "Plate Spacing"
+            ]
+          },
+          {
+            "trigger": "FixingName is set to 'DEFAULT' or unknown",
+            "effect": "The hanger width is calculated dynamically based on 'PlyWidth' * 'Plies'.",
+            "cascade": [
+              "Hanger Width Geometry"
+            ]
+          },
+          {
+            "trigger": "HangerSide == \"RIGHT\"",
+            "effect": "Inverts the Truss X Vector, flipping the direction the hanger 'points' or the side the back plate is attached to relative to the insertion point.",
+            "cascade": [
+              "trussXVector"
+            ]
+          },
+          {
+            "trigger": "Map Vectors (XV/YV) are all 0.0",
+            "effect": "The script abandons the Map vectors and aligns the hanger strictly to the _ThisInst local coordinate system (X, Y, Z).",
+            "cascade": [
+              "trussXVector",
+              "trussYVector",
+              "trussZVector"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "3D Metal Plate Body",
+            "description": "A collection of 5 extruded bodies (Left Plate, Right Plate, Back Plate, Bottom Plate, Legs) forming a U-shaped or Boxed joist hanger.",
+            "appliedTo": "Visual representation only (referenced at insertion point _Pt0)."
+          },
+          {
+            "type": "PLine Placeholder",
+            "description": "If 'FixingName' is not found in the internal list, simple 3D lines are drawn to indicate a hanger location without specific geometry.",
+            "appliedTo": "Visual representation only."
+          },
+          {
+            "type": "Text Label",
+            "description": "3D text displaying the 'FixingName' is drawn near the hanger for identification in the model.",
+            "appliedTo": "Visual annotation."
+          }
+        ]
+      },
+      "tokens_used": 7784,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution begins (invoked by parent macro or inserted manually).",
+          "Read orientation vectors (XV_X/Y/Z, YV_X/Y/Z) and config (IsHanger, HangerSide, PlyWidth, Plies, FixingName) from _Map.",
+          "Determine Coordinate System: Check if XV vectors are all 0.0.",
+          "   [Branch A] If vectors are 0.0: Use _ThisInst local coordinate system vectors.",
+          "   [Branch B] If vectors are non-zero: Use Map vectors and calculate Z-axis via Cross Product.",
+          "Check orientation: If 'IsHanger' is true AND 'HangerSide' equals 'RIGHT', invert the X-vector.",
+          "Normalize all axis vectors (X, Y, Z).",
+          "Calculate timber width: dWidth = PlyWidth * Plies. Determine Left and Right anchor points.",
+          "Check 'IsHanger' boolean flag.",
+          "   [Branch A] If IsHanger is false: Terminate script (draw nothing).",
+          "   [Branch B] If IsHanger is true: Proceed to geometry generation.",
+          "Display 'FixingName' as 3D text at insertion point.",
+          "Search internal catalog arrays for the 'FixingName'.",
+          "   [Branch A] If Name found: Retrieve dimensions (Width, Height, Thickness, etc.) and draw 3D Body plates (Left, Right, Bottom, Legs).",
+          "   [Branch B] If Name not found: Draw simple 3D PLine placeholders at Left and Right points.",
+          "Execution finishes."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Map Vector Input (XV_X, XV_Y, XV_Z) values",
+            "path1": {
+              "name": "Zero Vectors (New ModelMap)",
+              "steps": [
+                "Set trussXVector = _ThisInst.vecX()",
+                "Set trussZVector = _ThisInst.vecY()",
+                "Set trussYVector = _ThisInst.vecZ()"
+              ]
+            },
+            "path2": {
+              "name": "Defined Vectors (Legacy Map)",
+              "steps": [
+                "Set trussXVector = Map(XV...)",
+                "Set trussYVector = Map(YV...)",
+                "Calculate trussZVector = CrossProduct(trussX, trussY)"
+              ]
+            }
+          },
+          {
+            "condition": "IsHanger Flag",
+            "path1": {
+              "name": "True",
+              "steps": [
+                "Draw Text Label",
+                "Search Catalog",
+                "Draw Detailed Geometry or Placeholders"
+              ]
+            },
+            "path2": {
+              "name": "False",
+              "steps": [
+                "Exit script (No geometry)"
+              ]
+            }
+          },
+          {
+            "condition": "Catalog Search Result (FixingName)",
+            "path1": {
+              "name": "Found (Index != -1)",
+              "steps": [
+                "Extract specific width/height/depth from arrays",
+                "Generate 5 extruded bodies (Back, Sides, Bottom, Legs)"
+              ]
+            },
+            "path2": {
+              "name": "Not Found (Index == -1)",
+              "steps": [
+                "Attempt to use 'DEFAULT' catalog entry if available",
+                "If no match: Draw basic wireframe triangles (PLine)"
+              ]
+            }
+          },
+          {
+            "condition": "HangerSide Parameter",
+            "path1": {
+              "name": "RIGHT",
+              "steps": [
+                "Invert trussXVector (Mirror geometry longitudinally)"
+              ]
+            },
+            "path2": {
+              "name": "LEFT",
+              "steps": [
+                "Use standard trussXVector direction"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Vector Magnitude/Direction",
+            "errorMessage": "None (Implicit)",
+            "recovery": "The script normalizes vectors at the end of setup to ensure valid geometry even if input vectors are not unit length."
+          },
+          {
+            "check": "Unknown FixingName",
+            "errorMessage": "None",
+            "recovery": "Script falls back to 'DEFAULT' dimensions defined in the arrays. If that fails, it draws placeholder lines to indicate presence without specific geometry."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Update Geometry",
+            "how": "Change _Map entries via the generating macro or properties.",
+            "effect": "Script recalculates on next refresh/update cycle, changing the hanger type, size, or flipping side."
+          },
+          {
+            "action": "Move/Reorient",
+            "how": "Modify the insertion point (_Pt0) or the Instance Orientation.",
+            "effect": "The hanger geometry updates its position and rotation to match the new coordinate system."
+          }
+        ]
+      },
+      "tokens_used": 8320,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Alpine-Fixing.mcr\n\n## Overview\nThis script generates 3D models of specific steel joist hangers (such as SST IUB or Cullen KM series) or generic placeholders. It is designed to align these metalwork components relative to a timber truss or beam assembly based on coordinate vectors and dimensions passed from a parent macro or Model Map.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script generates 3D geometry for the model. |\n| Paper Space | No | Not intended for 2D detailing or layout views. |\n| Shop Drawing | No | Does not generate shop drawing views or lists. |\n\n## Prerequisites\n- **Parent Script/Macro**: Typically, this script is not run in isolation but is called by a larger timber generation macro that feeds it data.\n- **Map Data**: If inserting manually, the following data keys must be present in the Model Map for the script to function correctly:\n  - Orientation vectors (`XV_X`, `XV_Y`, `XV_Z`, `YV_X`, `YV_Y`, `YV_Z`)\n  - Dimensions (`PlyWidth`, `Plies`)\n  - Configuration (`IsHanger`, `HangerSide`, `FixingName`)\n\n## Usage Steps\n\n### Step 1: Launch Script\n```\nCommand Line: TSLINSERT\nAction: Browse and select Alpine-Fixing.mcr\n```\n\n### Step 2: Place Insertion Point\n```\nCommand Line: Specify insertion point:\nAction: Click in the Model Space to define the origin (usually the connection point on the timber).\n```\n\n### Step 3: Configure Map Data (if required)\nSince this script relies on Map data rather than interactive prompts, you must configure the Map properties manually if not provided by a parent macro.\n\n1. Select the inserted script instance.\n2. Open the **Properties Palette** (Ctrl+1).\n3. Edit the **Model Map** entries:\n   - Set `IsHanger` to `1`.\n   - Set `FixingName` to a valid code (e.g., `IUB190_75`, `KM38`) or `DEFAULT`.\n   - Set `PlyWidth` and `Plies` to match your timber dimensions (if using `DEFAULT` fixing).\n   - Ensure Orientation Vectors (`XV_...`, `YV_...`) are set to align with your beam (set to 0 to use the current UCS/Instance CS).\n\n## Properties Panel Parameters\n\nThese parameters are typically stored in the Model Map. To edit them, select the element and modify the Map values in the Properties panel or the \"Edit Map\" context menu.\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| FixingName | String | Empty | The commercial product code (e.g., \"IUB190_75\"). If \"DEFAULT\", dimensions are calculated from timber width. |\n| IsHanger | Boolean | 0 | Toggles the visibility of the hanger. Set to 1 to draw, 0 to hide. |\n| HangerSide | Enum | \"LEFT\" | Orientation of the hanger. Options are \"LEFT\" or \"RIGHT\". |\n| PlyWidth | Double | 0.0 | Width of a single timber ply in millimeters. |\n| Plies | Integer | 1 | Number of timber plies. Used with PlyWidth to calculate total width. |\n| XV_X/Y/Z | Vector | 0.0 | X-axis direction vector of the parent timber. |\n| YV_X/Y/Z | Vector | 0.0 | Y-axis direction vector of the parent timber. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Calculate | Recalculates the script geometry based on current Map data. |\n| Erase | Removes the script instance from the drawing. |\n| Edit Map | Opens a dialog to manually view and edit the Model Map entries (Orientation, Dimensions, etc.). |\n\n## Settings Files\n- **Filename**: None specified\n- **Location**: N/A\n- **Purpose**: This script does not use external settings files. All configuration is handled via the Model Map.\n\n## Tips\n- **Orientation**: If the hanger appears rotated incorrectly, check the `XV_...` and `YV_...` vectors in the Map. If you set them all to `0.0`, the script will automatically align to the TSL Instance's coordinate system.\n- **Fallback Geometry**: If you enter a `FixingName` that is not recognized, the script will not crash; instead, it will draw simple 3D placeholder lines to indicate where a hanger is located.\n- **Flipping**: Use the `HangerSide` parameter to flip the hanger from left to right without needing to rotate the entire coordinate system.\n- **Dynamic Sizing**: If you want the hanger to automatically adjust to the timber width, leave `FixingName` as `DEFAULT` (or empty) and ensure `PlyWidth` and `Plies` are accurate.\n\n## FAQ\n- **Q: I inserted the script but nothing is visible.**\n  - A: Check the `IsHanger` property in the Map. It must be set to `1`. Also, verify that your `FixingName` is a valid code supported by the script.\n- **Q: How do I rotate the hanger to match my sloped roof?**\n  - A: Update the `XV_...` and `YV_...` Map vectors to match the direction of the beam. Alternatively, set these to `0` and rotate the TSL Instance itself using the AutoCAD Rotate or 3D Rotate tools.\n- **Q: Can I add new hanger types?**\n  - A: New types must be hard-coded into the script's internal catalog arrays by a developer. You cannot add new product codes simply via the Map."
+      },
+      "tokens_used": 6540,
+      "error": null
+    }
+  }
+}

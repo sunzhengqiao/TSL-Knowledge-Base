@@ -1,0 +1,204 @@
+{
+  "filename": "AssemblyDefinition.mcr",
+  "status": "completed",
+  "total_tokens": 52611,
+  "processing_time": 411.77006483078003,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9229,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script is inserted into the model to define assemblies, evidenced by the command 'hsb_ScriptInsert' and collection of GenBeams/Elements using collectEntities(..., _kModelSpace, ...). It calculates 3D bounding boxes, center of gravity, and draws to 'dpModel'. While comments mention data usage in shopdrawings, the script itself operates on 3D model entities to create a definition object."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing structural elements (GenBeams or Elements) to be grouped into an assembly.",
+          "requiredSettings": [
+            "hsbCAD version 27.3.4 or higher (required for specific purge functionality mentioned in version history)"
+          ]
+        }
+      },
+      "tokens_used": 7436,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9985,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Groups a selection of timber elements (GenBeams/Elements) into a logical assembly unit for production and logistics, calculating weight, dimensions, and assigning position numbers.\",\n    \"category\": \"Organizational / Production Management\",\n    \"typicalUseCase\": \"Used to define a 'pack' or 'assembly' of timber parts (like a roof truss or wall panel) that will be transported and installed together, generating a unified name and managing the numbering of its constituent parts.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"sFormat\",\n      \"technicalDefault\": \"\\\"ASS-@(PosNum)\\\"\",\n      \"businessMeaning\": \"The naming template for the assembly (e.g., 'W-10' or 'Roof-A'). This label appears on drawings and production lists.\",\n      \"validRange\": \"Text string supporting format tags (e.g., @(PosNum), @(Prefix))\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Updates the assembly name displayed in the model and used in DataLinks.\"\n    },\n    {\n      \"name\": \"sPrefixFormat\",\n      \"technicalDefault\": \"\\\"F-@(_kModelSpaceIndex)\\\"\",\n      \"businessMeaning\": \"A grouping prefix added to the assembly name to organize families of assemblies (e.g., 'Floor1-' or 'ZoneA-').\",\n      \"validRange\": \"Text string\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Modifies the final 'Name' property by prepending the specified group code.\"\n    },\n    {\n      \"name\": \"nPrefixIndex\",\n      \"technicalDefault\": \"1\",\n      \"businessMeaning\": \"An auto-incrementing number used in conjunction with the Prefix to ensure unique assembly names within a group.\",\n      \"validRange\": \"1 to 9999\",\n      \"unit\": \"Count\",\n      \"affectsOutput\": \"Appends a unique index to the prefix (e.g., changing PrefixIndex from 1 to 2 changes 'Floor1-A' to 'Floor2-A').\"\n    },\n    {\n      \"name\": \"dWeight\",\n      \"technicalDefault\": \"0.0\",\n      \"businessMeaning\": \"The total calculated weight of the assembly, used for transport planning and crane calculations.\",\n      \"validRange\": \"> 0.0\",\n      \"unit\": \"kg (or lbs depending on project settings)\",\n      \"affectsOutput\": \"Read-only value updates based on the volume of the included timber parts; visualized in properties.\"\n    },\n    {\n      \"name\": \"Length\",\n      \"technicalDefault\": \"0.0\",\n      \"businessMeaning\": \"The physical length of the assembly's bounding box (transport dimension along the local X-axis).\",\n      \"validRange\": \"> 0.0\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Updates the visual bounding box size and transport dimensions.\"\n    },\n    {\n      \"name\": \"Width\",\n      \"technicalDefault\": \"0.0\",\n      \"businessMeaning\": \"The physical width of the assembly's bounding box (transport dimension along the local Y-axis).\",\n      \"validRange\": \"> 0.0\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Updates the visual bounding box size and transport dimensions.\"\n    },\n    {\n      \"name\": \"Height\",\n      \"technicalDefault\": \"0.0\",\n      \"businessMeaning\": \"The physical height of the assembly's bounding box (transport dimension along the local Z-axis).\",\n      \"validRange\": \"> 0.0\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Updates the visual bounding box size and transport dimensions.\"\n    },\n    {\n      \"name\": \"nStartPosNum\",\n      \"technicalDefault\": \"1\",\n      \"businessMeaning\": \"The starting position number for the assembly itself.\",\n      \"validRange\": \"1 to 99999\",\n      \"unit\": \"Count\",\n      \"affectsOutput\": \"Sets the @(PosNum) tag used in the Format string for the main assembly.\"\n    },\n    {\n      \"name\": \"nStartPosNumItems\",\n      \"technicalDefault\": \"1\",\n      \"businessMeaning\": \"The starting position number for the individual elements (beams/parts) contained within the assembly.\",\n      \"validRange\": \"1 to 99999\",\n      \"unit\": \"Count\",\n      \"affectsOutput\": \"Renumbers the child entities of the assembly sequentially.\"\n    },\n    {\n      \"name\": \"sStrategy\",\n      \"technicalDefault\": \"\\\"Select\\\"\",\n      \"businessMeaning\": \"Defines how the assembly identifies its members (e.g., manually selected, touching/interacting solids, or legacy stud logic).\",\n      \"validRange\": \"Select, byContact, Legacy\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Determines which entities are grouped into the assembly definition on recalculation.\"\n    },\n    {\n      \"name\": \"sInformation\",\n      \"technicalDefault\": \"\\\"\\\"\",\n      \"businessMeaning\": \"Free text field for additional assembly details or instructions to be included in lists or labels.\",\n      \"validRange\": \"Text\",\n      \"unit\": \"Text\",\n      \"affectsOutput\": \"Stored in submapX metadata for reporting.\"\n    },\n    {\n      \"name\": \"dScale\",\n      \"technicalDefault\": \"1.0\",\n      \"businessMeaning\": \"Visual scale factor for the assembly's coordinate system display (axes) in the model.\",\n      \"validRange\": \"0.1 to 5.0\",\n      \"unit\": \"Factor\",\n      \"affectsOutput\": \"Makes the drawn XYZ axes larger or smaller for visibility; does not affect geometry.\"\n    }\n  ],\n  \"parameterDependencies\": [\n    {\n      \"trigger\": \"Changes to Geometry (adding/removing beams)\",\n      \"effect\": \"Recalculates bounding box and weight.\",\n      \"cascade\": [\n        \"Length\",\n        \"Width\",\n        \"Height\",\n        \"dWeight\"\n      ]\n    },\n    {\n      \"trigger\": \"Modification of sPrefixFormat or sFormat\",\n      \"effect\": \"Regenerates the assembly Name.\",\n      \"cascade\": [\n        \"Name\"\n      ]\n    },\n    {\n      \"trigger\": \"Creation of new assembly with same Prefix\",\n      \"effect\": \"Auto-increments the PrefixIndex.\",\n      \"cascade\": [\n        \"nPrefixIndex\"\n      ]\n    }\n  ],\n  \"outputEntities\": [\n    {\n     "
+      },
+      "tokens_used": 9565,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User executes script via 'hsb_ScriptInsert' command.",
+          "2. Script prompts for an insertion point (getPoint) for the assembly origin.",
+          "3. Script prompts user to select GenBeams and/or Elements.",
+          "4. [Conditional] Validation: Check if entities were selected.",
+          "5. [Conditional] If 0 entities selected, prompt user to continue with empty assembly or cancel.",
+          "6. Calculate initial bounding box and center of gravity based on selection.",
+          "7. Determine coordinate system orientation (default aligned with bounding box).",
+          "8. Scan model for existing assemblies to assign a unique Prefix Index (if Prefix is enabled).",
+          "9. Generate Assembly Name using the 'Format' string and calculated index.",
+          "10. Assign Position Numbers to the assembly and its constituent items.",
+          "11. Create DataLink references on child entities pointing back to this assembly instance.",
+          "12. Draw bounding box and coordinate axes in the model."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Initial Selection Count (during Insert)",
+            "path1": {
+              "name": "Entities Selected",
+              "steps": [
+                "Proceed to calculate bounding box geometry.",
+                "Store selected entity handles in the script map.",
+                "Create assembly definition."
+              ]
+            },
+            "path2": {
+              "name": "No Entities Selected",
+              "steps": [
+                "Display prompt: 'Continue with empty assembly?'",
+                "If Yes: Create assembly with 0 weight and default dimensions.",
+                "If No: Exit script insertion."
+              ]
+            }
+          },
+          {
+            "condition": "Property 'sStrategy' (Collection Method)",
+            "path1": {
+              "name": "Select",
+              "steps": [
+                "Use only the explicitly selected/stored list of entities.",
+                "Update bounding box if this list changes."
+              ]
+            },
+            "path2": {
+              "name": "byContact",
+              "steps": [
+                "Start with base selection.",
+                "Expand selection to include any entities physically touching or intersecting the base solids.",
+                "Update bounding box based on the expanded group."
+              ]
+            }
+          },
+          {
+            "condition": "Prefix Configuration",
+            "path1": {
+              "name": "Prefix Enabled (bAddPrefix = true)",
+              "steps": [
+                "Scan current model for matching assembly definitions.",
+                "Identify used indices.",
+                "Assign next available index to 'nPrefixIndex'.",
+                "Append formatted prefix to Name."
+              ]
+            },
+            "path2": {
+              "name": "Prefix Disabled",
+              "steps": [
+                "Purge any @(PrefixIndex) tags from the format string.",
+                "Generate Name without index suffix.",
+                "Hide 'nPrefixIndex' property."
+              ]
+            }
+          },
+          {
+            "condition": "Update Trigger",
+            "path1": {
+              "name": "Property Change (OPM)",
+              "steps": [
+                "Recalculate Name/Dimensions.",
+                "Do not prompt for input.",
+                "Regenerate visual representation."
+              ]
+            },
+            "path2": {
+              "name": "Context Menu Command",
+              "steps": [
+                "Execute specific logic (e.g., Add Entities, Remove Entities).",
+                "Modify internal entity list.",
+                "Recalculate bounding box."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Validity",
+            "errorMessage": "Silent failure for erased entities.",
+            "recovery": "Script automatically filters out invalid or erased entities from the calculation."
+          },
+          {
+            "check": "Prefix Index Uniqueness",
+            "errorMessage": "Duplicate naming detected internally.",
+            "recovery": "Script automatically scans and increments the index to the next available unique number to prevent naming conflicts."
+          },
+          {
+            "check": "Erase Operation (hsbCAD 27.3.4+)",
+            "errorMessage": "Orphaned DataLinks if purge fails.",
+            "recovery": "Script attempts to purge the submapX entry from child entities upon deletion."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Move Assembly Origin",
+            "how": "Grip Point Drag (_Pt0)",
+            "effect": "Updates the visual location of the coordinate axes and the assembly's insertion point without moving the structural members."
+          },
+          {
+            "action": "Add/Remove Entities",
+            "how": "Right-click Context Menu",
+            "effect": "Modifies the group of entities belonging to the assembly, triggers recalculation of Weight and Dimensions."
+          },
+          {
+            "action": "Change Collection Strategy",
+            "how": "Properties Palette (OPM) -> sStrategy",
+            "effect": "Switches between static selection ('Select') and dynamic proximity grouping ('byContact')."
+          },
+          {
+            "action": "Renumber Items",
+            "how": "Properties Palette (OPM) -> nStartPosNumItems",
+            "effect": "Sequentially updates the element (PosNum) marks for all parts within the assembly."
+          },
+          {
+            "action": "Resize Axis Visuals",
+            "how": "Properties Palette (OPM) -> dScale",
+            "effect": "Increases or decreases the drawn length of the X/Y/Z axes in the model for visibility."
+          }
+        ]
+      },
+      "tokens_used": 10175,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# AssemblyDefinition\n\n## Overview\nGroups a selection of timber elements (GenBeams or Elements) into a single logical assembly unit for production and logistics. It automatically calculates dimensions, weight, and manages numbering for the grouped parts.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D model entities. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | While it provides data for shop drawings, it is inserted in the model. |\n\n## Prerequisites\n- **Entities**: Structural GenBeams or Elements must exist in the model.\n- **Minimum Count**: 0 (Script allows creating empty assemblies, but typically requires at least 1 beam to calculate data).\n- **hsbCAD Version**: 27.3.4 or higher (recommended for proper data cleanup).\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command**: `hsb_ScriptInsert`\n**Action**: Select `AssemblyDefinition.mcr` from the file list.\n\n### Step 2: Define Assembly Origin\n```\nCommand Line: Pick insertion point:\nAction: Click in the model to place the assembly's coordinate system (local origin).\n```\n\n### Step 3: Select Assembly Members\n```\nCommand Line: Select beams/elements:\nAction: Select the timber parts (beams, panels) you want to include in this assembly.\n```\n\n### Step 4: Confirm Selection\n```\nCommand Line: Continue with empty assembly? [Yes/No]\nAction: \n- If you selected items: This prompt usually skips automatically.\n- If you selected 0 items: Type 'Yes' to create an empty placeholder assembly or 'No' to cancel.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sFormat | String | `ASS-@(PosNum)` | The naming template for the assembly (e.g., \"Pack-1\"). |\n| sPrefixFormat | String | `F-@(_kModelSpaceIndex)` | Grouping prefix code (e.g., \"Floor1-\") added to the name. |\n| nPrefixIndex | Integer | 1 | Auto-incrementing number used with the prefix to ensure unique names. |\n| dWeight | Double | 0.0 | **(Read Only)** Total weight of all elements in the assembly. |\n| Length | Double | 0.0 | **(Read Only)** Physical length of the assembly bounding box (X-axis). |\n| Width | Double | 0.0 | **(Read Only)** Physical width of the assembly bounding box (Y-axis). |\n| Height | Double | 0.0 | **(Read Only)** Physical height of the assembly bounding box (Z-axis). |\n| nStartPosNum | Integer | 1 | The starting position number for the main assembly. |\n| nStartPosNumItems | Integer | 1 | The starting number used for renumbering the parts inside this assembly. |\n| sStrategy | String | `Select` | Method to group entities: `Select` (fixed list) or `byContact` (includes touching parts). |\n| sInformation | String | Empty | Free text field for notes or instructions for production. |\n| dScale | Double | 1.0 | Visual scale factor for the drawn X/Y/Z axes in the model. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Add Entities | Opens a selection box to add new beams/elements to the current assembly. Updates weight and dimensions. |\n| Remove Entities | Prompts you to select items currently in the assembly to remove them. |\n| Renumber Items | Resets the position numbers of all parts inside the assembly based on `nStartPosNumItems`. |\n| Update Assembly | Forces a recalculation of the bounding box and weight without changing the entity list. |\n\n## Settings Files\n- **Filename**: None specified.\n- **Location**: N/A\n- **Purpose**: This script relies on internal hsbCAD entity data and properties rather than external XML configuration files.\n\n## Tips\n- **Dynamic Grouping**: Set `sStrategy` to `byContact` if you want the assembly to automatically grab new beams that physically touch the existing members.\n- **Organizing Floors**: Use the `sPrefixFormat` (e.g., \"Floor1-\") combined with `nPrefixIndex` to automatically number different assemblies on the same level (Floor1-1, Floor1-2).\n- **Visibility**: If the assembly axes are too small to see, increase the `dScale` property in the properties palette.\n\n## FAQ\n- **Q: Why is my assembly weight 0.0?**\n  **A**: The assembly may have no entities assigned. Use the \"Add Entities\" right-click option to select timber parts.\n- **Q: How do I rename the assembly without changing the numbering?**\n  **A**: Modify the `sFormat` property. You can use static text (e.g., \"RoofTruss\") or variables like `@(PosNum)`.\n- **Q: What happens if I delete a beam that is part of an assembly?**\n  **A**: The script automatically detects missing entities. On the next update, it will recalculate the dimensions and weight based on the remaining parts."
+      },
+      "tokens_used": 6221,
+      "error": null
+    }
+  }
+}

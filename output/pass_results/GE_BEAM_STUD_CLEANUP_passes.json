@@ -1,0 +1,338 @@
+{
+  "filename": "GE_BEAM_STUD_CLEANUP.mcr",
+  "status": "completed",
+  "total_tokens": 30197,
+  "processing_time": 422.3966500759125,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "15-may-2011",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "- Thumbnail added"
+          },
+          {
+            "version": "1.0",
+            "date": "11-Jul-2011",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "- Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4503,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script manipulates 3D Beam objects using Body intersections (hasIntersection) and database erase methods (dbErase). It references ElementWallSF. There are no references to _Viewport, sd_ prefixes, or _Entity arrays typical of Paper Space or Shop Drawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "ElementWallSF"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2714,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\"\\n\"+T(\"|Select beams|\")",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sPr1",
+            "type": "PropString",
+            "displayName": "|Priority 1|",
+            "defaultValue": "30",
+            "inputType": "dropdown",
+            "options": [],
+            "dataSource": "_BeamTypes",
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sPr2",
+            "type": "PropString",
+            "displayName": "|Priority 2|",
+            "defaultValue": "56",
+            "inputType": "dropdown",
+            "options": [],
+            "dataSource": "_BeamTypes",
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 2,
+            "variable": "sPr3",
+            "type": "PropString",
+            "displayName": "|Priority 3|",
+            "defaultValue": "58",
+            "inputType": "dropdown",
+            "options": [],
+            "dataSource": "_BeamTypes",
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 3,
+            "variable": "sPr4",
+            "type": "PropString",
+            "displayName": "|Priority 4|",
+            "defaultValue": "59",
+            "inputType": "dropdown",
+            "options": [],
+            "dataSource": "_BeamTypes",
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6166,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically removes duplicate vertical studs or beams that physically overlap in the model, resolving conflicts based on beam type priority and load-bearing status.",
+          "category": "Model Cleanup / Framing",
+          "typicalUseCase": "Used after importing architectural models or generating walls where double studs or intersecting wall elements create geometric overlaps, ensuring the structural model contains only the intended members."
+        },
+        "parameters": [
+          {
+            "name": "sPr1",
+            "technicalDefault": "30",
+            "businessMeaning": "The highest priority beam type. If an overlap occurs, a stud of this type will always be kept over others.",
+            "validRange": "Any valid Beam Type code from the hsbCAD catalog (e.g., '30' for Standard Stud).",
+            "unit": "BeamType",
+            "affectsOutput": "Determines which overlapping beams are identified as 'Primary' and preserved during cleanup."
+          },
+          {
+            "name": "sPr2",
+            "technicalDefault": "56",
+            "businessMeaning": "The second-highest priority beam type. Kept over Priority 3 and 4, but removed if intersecting with Priority 1.",
+            "validRange": "Any valid Beam Type code from the hsbCAD catalog.",
+            "unit": "BeamType",
+            "affectsOutput": "Resolves conflicts when Priority 1 is not present in the intersection."
+          },
+          {
+            "name": "sPr3",
+            "technicalDefault": "58",
+            "businessMeaning": "The third-highest priority beam type. Kept over Priority 4, but removed if intersecting with Priority 1 or 2.",
+            "validRange": "Any valid Beam Type code from the hsbCAD catalog.",
+            "unit": "BeamType",
+            "affectsOutput": "Resolves conflicts for lower-tier structural elements or blocking."
+          },
+          {
+            "name": "sPr4",
+            "technicalDefault": "59",
+            "businessMeaning": "The lowest priority beam type. Any stud intersecting with a beam of Priority 1, 2, or 3 will be removed.",
+            "validRange": "Any valid Beam Type code from the hsbCAD catalog.",
+            "unit": "BeamType",
+            "affectsOutput": "Defines 'sacrificial' elements that are removed when they clash with more important studs."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Configuration of sPr1 through sPr4",
+            "effect": "Establishes the hierarchy tree. If overlapping beams have types that map to the same priority level (e.g., both map to Priority 1), the script falls back to checking Load Bearing properties.",
+            "cascade": [
+              "sPr1",
+              "sPr2",
+              "sPr3",
+              "sPr4"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "GenBeam (Erased)",
+            "description": "The lower priority beam is deleted from the model database to resolve geometric overlap.",
+            "appliedTo": "Vertical beams intersecting with higher priority beams."
+          },
+          {
+            "type": "GenBeam (Visual Warning)",
+            "description": "Conflicting beams are colored Red (Color Index 1) instead of being deleted if priorities and load-bearing status are identical.",
+            "appliedTo": "Vertical beams where the script cannot automatically determine which one to delete."
+          }
+        ]
+      },
+      "tokens_used": 5296,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script execution initiated (Insert).",
+          "2. Check insertCycleCount; if > 1, erase instance and abort immediately.",
+          "3. Display properties dialog (once) for beam type configuration.",
+          "4. Prompt user to select beams using PrEntity.",
+          "5. Store selected beams in the internal _Beam array and exit insertion phase.",
+          "6. Validate that _Beam array contains at least 2 beams; otherwise, erase instance.",
+          "7. Filter selected beams to retain only those parallel to the Z-axis (Verticals).",
+          "8. Iterate through all vertical beams to find geometric intersections (Envelope Body check).",
+          "9. For intersecting beams, determine priority based on user-configured Beam Types.",
+          "10. If priorities differ, delete the lower-priority beam.",
+          "11. If priorities are equal, check Load Bearing status of parent ElementWallSF.",
+          "12. If Load Bearing differs, delete the non-load-bearing beam.",
+          "13. If priorities and Load Bearing are identical, color both beams Red (Index 1).",
+          "14. Erase the script instance from the drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count",
+            "path1": {
+              "name": "Cycle > 1",
+              "steps": [
+                "Erase script instance",
+                "Stop execution"
+              ]
+            },
+            "path2": {
+              "name": "Cycle 1",
+              "steps": [
+                "Show Dialog",
+                "Prompt for selection"
+              ]
+            }
+          },
+          {
+            "condition": "Number of Selected Beams",
+            "path1": {
+              "name": "Less than 2",
+              "steps": [
+                "Erase script instance",
+                "Stop execution"
+              ]
+            },
+            "path2": {
+              "name": "2 or more",
+              "steps": [
+                "Filter for vertical beams",
+                "Begin intersection analysis"
+              ]
+            }
+          },
+          {
+            "condition": "Geometric Intersection",
+            "path1": {
+              "name": "Beams intersect",
+              "steps": [
+                "Compare Beam Type Priorities"
+              ]
+            },
+            "path2": {
+              "name": "No intersection",
+              "steps": [
+                "Move to next beam pair"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Type Priority Comparison",
+            "path1": {
+              "name": "Priorities differ",
+              "steps": [
+                "Delete lower priority beam",
+                "Adjust loop indices",
+                "Continue"
+              ]
+            },
+            "path2": {
+              "name": "Priorities equal",
+              "steps": [
+                "Check Load Bearing property of parent wall elements"
+              ]
+            }
+          },
+          {
+            "condition": "Load Bearing Status (When Priorities Equal)",
+            "path1": {
+              "name": "Status differs",
+              "steps": [
+                "Delete the beam with Load Bearing = 0",
+                "Adjust loop indices",
+                "Continue"
+              ]
+            },
+            "path2": {
+              "name": "Status same (Both LB or Non-LB)",
+              "steps": [
+                "Set Color of both beams to Red (1)",
+                "Keep both beams",
+                "Continue"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam selection quantity",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "The script erases itself if fewer than 2 beams are selected. User must re-run the command and ensure a valid selection set is provided."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "The script executes once and then calls eraseInstance() on itself. It does not remain in the drawing as an interactive element. Changes must be undone via standard AutoCAD Undo if necessary."
+          }
+        ]
+      },
+      "tokens_used": 5937,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_BEAM_STUD_CLEANUP.mcr\n\n## Overview\nThis script automatically cleans up wall framing by removing duplicate vertical studs or beams that physically overlap in the model. It resolves conflicts by checking a user-defined priority list for beam types and the load-bearing status of the wall elements.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D beam entities in the model. |\n| Paper Space | No | Not designed for 2D detailing or layout views. |\n| Shop Drawing | No | Not intended for manufacturing views. |\n\n## Prerequisites\n- **Required Entities**: GenBeams (vertical beams/studs) and ElementWallSF (associated wall elements).\n- **Minimum Beam Count**: 2 or more beams must be selected to run the comparison logic.\n- **Required Settings**: None (uses standard catalog beam types).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_BEAM_STUD_CLEANUP.mcr`\n\n### Step 2: Configure Priorities (Optional)\n- Before proceeding, check the **Properties Palette** (Ctrl+1).\n- Adjust the **Priority 1** through **Priority 4** settings to match your structural rules.\n    - *Example*: Set Priority 1 to your main stud type (e.g., type \"30\") to ensure it is always kept over blocking or secondary studs.\n\n### Step 3: Select Beams\n```\nCommand Line: Select beams\nAction: Click to select the vertical studs or wall elements you want to check for duplicates. Press Enter when finished.\n```\n*Note: The script automatically filters out horizontal beams; only vertical elements are processed.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Priority 1 | Dropdown | 30 | The most important beam type. If this type overlaps with others, the others will be deleted. |\n| Priority 2 | Dropdown | 56 | The second most important beam type. Kept over Priorities 3 and 4, but removed if overlapping with Priority 1. |\n| Priority 3 | Dropdown | 58 | The third most important beam type. Kept over Priority 4, but removed if overlapping with Priorities 1 or 2. |\n| Priority 4 | Dropdown | 59 | The lowest priority beam type. This will be deleted if it overlaps with any higher priority type. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script runs once upon insertion and deletes itself; it does not remain in the drawing for context menu interactions. |\n\n## Settings Files\n- **None Required**: This script relies on the standard hsbCAD beam types catalog and element properties.\n\n## Tips\n- **Red Beams**: If the script finds overlapping beams that have the exact same Priority and Load-Bearing status, it cannot decide which to delete. In this case, it colors both beams **Red** so you can manually resolve the conflict.\n- **Self-Deleting**: The script instance will disappear from the drawing immediately after running. Use the **Undo** command (Ctrl+Z) if you need to revert the changes.\n- **Vertical Only**: You can select a whole wall frame including plates; the script will only analyze and clean up the vertical studs, ignoring horizontal top and bottom plates.\n\n## FAQ\n- **Q: Why did the script disappear after I selected the beams?**\n  - A: This is normal behavior. The script performs the cleanup and then removes itself from the drawing to keep your model clean.\n- **Q: Some beams turned Red but weren't deleted. Why?**\n  - A: The script turns beams Red when they are duplicates but have identical properties (Priority and Load-Bearing status). It defaults to keeping both and marking them for you to check manually.\n- **Q: How do I know which Priority number to use?**\n  - A: The values correspond to the codes in your hsbCAD Catalog (Beam Types). Consult your catalog manager or check the properties of an existing beam to find its type code."
+      },
+      "tokens_used": 5581,
+      "error": null
+    }
+  }
+}

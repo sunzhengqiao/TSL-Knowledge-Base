@@ -1,0 +1,410 @@
+{
+  "filename": "f_Section.mcr",
+  "status": "completed",
+  "total_tokens": 45727,
+  "processing_time": 209.26082301139832,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 2,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl creates a section on one or multiple truck grids to visualize the section at the given location",
+        "versionHistory": [
+          {
+            "version": "1.2",
+            "date": "24nov2020",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "HSB-9861 section line added"
+          },
+          {
+            "version": "1.1",
+            "date": "24nov2020",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "HSB-9861 bugfix and section preview projected to truck"
+          },
+          {
+            "version": "1.0",
+            "date": "24nov2020",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "HSB-9861 initial"
+          }
+        ],
+        "settingsFiles": [
+          "f_Stacking.xml"
+        ],
+        "dependencies": [
+          "f_truck",
+          "f_Truck"
+        ]
+      },
+      "tokens_used": 7454,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script collects entities from the model using '_kModelSpace'. It inserts into the model context based on selected 'f_truck' TSL instances. No 'sd_' prefix, '_Viewport' usage, or ShopDrawing specific patterns (#Type E) are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "TslInst",
+            "f_truck"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing f_truck grid instances",
+          "requiredSettings": [
+            "f_Stacking.xml"
+          ]
+        }
+      },
+      "tokens_used": 6378,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select stacked trucks|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "|Select point on section line|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "getPoint",
+              "promptOriginal": "|Select section location|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "Standard Properties Dialog",
+            "trigger": "On Insert (if no command key is active)",
+            "title": "Properties",
+            "dataSource": "Internal Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dTextHeight",
+            "type": "PropDouble",
+            "displayName": "|Text Height|",
+            "defaultValue": "U(0)",
+            "inputType": "number",
+            "options": [],
+            "category": "|Display|",
+            "description": "|Defines the Text Height||0 = byDimStyle|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": [
+          {
+            "filename": "f_Stacking.xml",
+            "searchPaths": [
+              "_kPathHsbCompany\\TSL\\Settings",
+              "_kPathHsbInstall\\Content\\General\\TSL\\Settings"
+            ],
+            "purpose": "Stores stacking configuration and sequential colors used for section visualization",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 8049,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates a 2D cross-sectional visualization of timber elements loaded onto transport grids (trucks) to check packaging and loading logistics.",
+          "category": "Visualization / Logistics",
+          "typicalUseCase": "Used during the design or detailing phase to verify if elements fit within the truck dimensions and to visualize how the load looks from the side at specific longitudinal positions."
+        },
+        "parameters": [
+          {
+            "name": "dTextHeight",
+            "technicalDefault": "U(0)",
+            "businessMeaning": "Controls the height of the text labels (e.g., '# 1') marking the section view.",
+            "validRange": "0 (Use current Dimension Style) or Positive values (e.g., 50mm - 500mm depending on drawing scale)",
+            "unit": "mm",
+            "affectsOutput": "Changes the size of the section number annotation drawn at the section location. If 0, it defaults to the system dimension style text height."
+          },
+          {
+            "name": "Section Line Point (_PtG[0])",
+            "technicalDefault": "User Input (getPoint)",
+            "businessMeaning": "Defines the position along the length of the truck where the cross-section cut is taken.",
+            "validRange": "Any point along the longitudinal axis of the selected truck grid",
+            "unit": "3D Coordinates (Point3d)",
+            "affectsOutput": "Determines which part of the load is sliced. Moving this point changes which elements (and parts of elements) are visible in the resulting cross-section profile."
+          },
+          {
+            "name": "Section View Location (_PtG[1])",
+            "technicalDefault": "User Input (getPoint)",
+            "businessMeaning": "Specifies the location in the model where the resulting cross-section geometry is drawn or projected.",
+            "validRange": "Any point in Model Space",
+            "unit": "3D Coordinates (Point3d)",
+            "affectsOutput": "Moves the entire generated cross-section visualization (outline, hatching, and text) to the specified point for easier viewing or layout."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing Section Line Point",
+            "effect": "Recalculates the intersection of truck bodies with the cut plane.",
+            "cascade": [
+              "PlaneProfile geometry",
+              "Section View visualization"
+            ]
+          },
+          {
+            "trigger": "Changing Section View Location",
+            "effect": "Transforms the calculated section profile to a new coordinate origin.",
+            "cascade": [
+              "Visual position of the section"
+            ]
+          },
+          {
+            "trigger": "Loading 'f_Stacking.xml' settings",
+            "effect": "Updates the color palette used for different stacking layers.",
+            "cascade": [
+              "Display colors of cross-section profiles"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "GraphicRepresentation (PlaneProfile)",
+            "description": "2D polygons representing the cross-sectional area of timber elements and the truck boundary at the cut location. These are colored based on their stacking index.",
+            "appliedTo": "Model Space (Visual overlay)"
+          },
+          {
+            "type": "Text Entity",
+            "description": "Section labels (e.g., '# 1') identifying the specific section sequence.",
+            "appliedTo": "Model Space (at the Section View Location)"
+          },
+          {
+            "type": "Line/Polyline",
+            "description": "Projection lines connecting the section cut point on the truck to the section view location, and the truck outline rectangle.",
+            "appliedTo": "Model Space"
+          }
+        ]
+      },
+      "tokens_used": 8293,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Launch Script / Insert TSL",
+          "Load Settings ('f_Stacking.xml') from Company or Install path",
+          "Display Standard Properties Dialog (if no command key active)",
+          "Prompt User to Select Stacked Trucks (PrEntity)",
+          "Filter Selected Entities for valid 'f_truck' TSL instances with 'isGrid' property",
+          "Prompt User for Section Line Point on Truck (getPoint -> _PtG[0])",
+          "Prompt User for Section View Location (getPoint -> _PtG[1])",
+          "Calculate Base Point (_Pt0) as average of input points",
+          "Validate References (Check for valid Truck Grid and main Truck entity)",
+          "Detect Existing Sections on same Truck Grids to determine Sequence Number",
+          "Iterate through Truck Grids to collect stacked elements (Items/GenBeams)",
+          "Retrieve sequential colors from Settings",
+          "Construct 3D Bodies of stacked elements and transform to package coordinates",
+          "Calculate Section Plane at Section Line Point perpendicular to Truck X-axis",
+          "Slice Bodies with Section Plane to generate PlaneProfiles",
+          "Transform PlaneProfiles to Section View Location",
+          "Draw Truck Outline, Section Lines, and Text Labels in Model Space",
+          "Store Profile Data and Grip positions in Instance Map"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Command Key Active on Insert",
+            "path1": {
+              "name": "Execute Catalog/Command",
+              "steps": [
+                "Check if Catalog name exists in Script Catalogs",
+                "If found, set Property values from Catalog",
+                "If not found, set Property values from '_LastInserted' Catalog"
+              ]
+            },
+            "path2": {
+              "name": "Standard Dialog",
+              "steps": [
+                "Execute showDialog() to show Properties Palette",
+                "User enters properties manually"
+              ]
+            }
+          },
+          {
+            "condition": "User Selection (PrEntity)",
+            "path1": {
+              "name": "Valid Selection",
+              "steps": [
+                "Process selected entities",
+                "Filter for 'f_truck' with 'isGrid'",
+                "Continue to Point prompts"
+              ]
+            },
+            "path2": {
+              "name": "Cancelled or Invalid Selection",
+              "steps": [
+                "Selection count is 0 or User cancels",
+                "Erase Instance (Script terminates)"
+              ]
+            }
+          },
+          {
+            "condition": "Reference Validation",
+            "path1": {
+              "name": "Valid References Found",
+              "steps": [
+                "Truck Grid and Main Truck entity found",
+                "Proceed to Calculation"
+              ]
+            },
+            "path2": {
+              "name": "Missing References",
+              "steps": [
+                "Report Error Message",
+                "Erase Instance (Script terminates)"
+              ]
+            }
+          },
+          {
+            "condition": "Stacking Type",
+            "path1": {
+              "name": "Type 0 (Horizontal)",
+              "steps": [
+                "Calculate Coordinate System to align horizontal",
+                "Transform bodies to horizontal package coords"
+              ]
+            },
+            "path2": {
+              "name": "Other/Unknown Type",
+              "steps": [
+                "Use default Coordinate System",
+                "Do not apply horizontal alignment transform"
+              ]
+            }
+          },
+          {
+            "condition": "User Interaction (Grip Drag)",
+            "path1": {
+              "name": "Drag Grip 1 (Section View Location)",
+              "steps": [
+                "Update _PtG[1]",
+                "Retrieve stored Profiles from Map",
+                "Transform Profiles relative to new point",
+                "Draw preview",
+                "Return (Do not recalculate slice)"
+              ]
+            },
+            "path2": {
+              "name": "Drag Grip 0 (Section Cut Point)",
+              "steps": [
+                "Update _PtG[0]",
+                "Recalculate Reference Line",
+                "Update Section Plane",
+                "Reslice all bodies",
+                "Draw filled preview of profiles",
+                "Draw truck outline projected to cut location",
+                "Return (Do not store final data)"
+              ]
+            },
+            "path3": {
+              "name": "Normal Calculation (No Drag)",
+              "steps": [
+                "Calculate Slices",
+                "Draw outlines",
+                "Store Profiles in Map for Grip 1 usage"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Selected Entities contain 'f_truck' TSL instances",
+            "errorMessage": "(Implicit) If _Entity array is empty, instance is erased.",
+            "recovery": "Select valid 'f_truck' grid entities and restart script."
+          },
+          {
+            "check": "Selected 'f_truck' has map property 'isGrid' == 1",
+            "errorMessage": "(Implicit) Entities not satisfying this are ignored. If none satisfy, instance is erased.",
+            "recovery": "Ensure the truck selected is configured as a Grid in the stacking tool."
+          },
+          {
+            "check": "Main Truck ('f_Truck') reference exists within the Grid entities",
+            "errorMessage": "Could not find a valid truck grid reference. Tool will be deleted.",
+            "recovery": "Ensure the 'f_truck' grid is properly linked to a main truck element or contains the required structure."
+          },
+          {
+            "check": "Settings File Version",
+            "errorMessage": "Notice: A different Version of the settings has been found for [ScriptName]",
+            "recovery": "Update the XML settings file or accept the current version (Warning only, script continues)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Section View Location",
+            "how": "Grip Edit (_PtG1)",
+            "effect": "Moves the entire section visualization (profiles and labels) to a new location without recalculating the slice geometry."
+          },
+          {
+            "action": "Change Section Cut Position",
+            "how": "Grip Edit (_PtG0)",
+            "effect": "Moves the cut line along the truck. The script recalculates the intersection/slice of the load at the new position and updates the view dynamically."
+          },
+          {
+            "action": "Adjust Text Height",
+            "how": "Object Properties (OPM) -> dTextHeight",
+            "effect": "Changes the size of the section number labels. If set to 0, defaults to DimStyle."
+          },
+          {
+            "action": "Sequence Update",
+            "how": "Automatic on Recalculation",
+            "effect": "If multiple sections exist on the same truck grid, the script automatically re-indexes them ('# 1', '# 2', etc.) based on their handle order."
+          }
+        ]
+      },
+      "tokens_used": 9229,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# f_Section\n\n## Overview\nThis script generates a 2D cross-sectional view of timber elements loaded onto truck grids. It is used to visualize and verify how the load is packaged at specific longitudinal positions on the transport vehicle.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates exclusively in the 3D model environment. |\n| Paper Space | No | Cannot be inserted directly into Layout tabs. |\n| Shop Drawing | No | Not intended for generating manufacturing drawings. |\n\n## Prerequisites\n- **Required Entities**: `f_truck` TSL instances (specifically those configured as grids).\n- **Minimum Beam Count**: N/A (Selects TSL instances, not raw beams).\n- **Required Settings**: `f_Stacking.xml` (Must be present in Company or Install TSL settings folder).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `f_Section.mcr`\n\n### Step 2: Select Trucks\n```\nCommand Line: Select stacked trucks\nAction: Click on the truck grid instances (f_truck) that you want to inspect. Press Enter when finished.\n```\n\n### Step 3: Define Section Cut Position\n```\nCommand Line: Select point on section line\nAction: Click a point along the length of the truck. This defines where the \"slice\" will be taken.\n```\n\n### Step 4: Define View Location\n```\nCommand Line: Select section location\nAction: Click in the open space where you want the resulting cross-section drawing to appear.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| dTextHeight | Double | U(0) | Controls the height of the section labels (e.g., '# 1'). Set to 0 to use the current Dimension Style text height, or enter a specific value in millimeters. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| (None specific) | This script relies on standard TSL options and interactive grips rather than custom context menu entries. |\n\n## Settings Files\n- **Filename**: `f_Stacking.xml`\n- **Location**: `_kPathHsbCompany\\TSL\\Settings` or `_kPathHsbInstall\\Content\\General\\TSL\\Settings`\n- **Purpose**: Defines the sequential colors used to highlight different layers or elements within the cross-section view.\n\n## Tips\n- **Dynamic Adjustment**: After insertion, use the **Grips** to adjust the section.\n  - **Grip on the Truck**: Drag this to slide the section cut line along the length of the truck. The section view updates automatically to show the load at the new position.\n  - **Grip on the View**: Drag this to move the generated cross-section drawing to a cleaner area of the model without recalculating the cut.\n- **Visibility Check**: Use this tool to ensure that tall timber elements do not exceed the truck's profile height at specific points.\n- **Automatic Numbering**: If you create multiple sections on the same truck, the script automatically assigns sequence numbers (# 1, # 2, etc.) based on the order of creation.\n\n## FAQ\n- Q: Why is my section text huge or tiny?\n- A: Check the `dTextHeight` property in the AutoCAD Properties palette. If it is set to 0, it follows your Dimension Style settings. Change it to a fixed value (e.g., 100) for consistent sizing.\n\n- Q: Can I section multiple trucks at once?\n- A: Yes, during Step 2, you can select multiple truck grids. The section will visualize the combined load profile at the specified cut location."
+      },
+      "tokens_used": 6324,
+      "error": null
+    }
+  }
+}

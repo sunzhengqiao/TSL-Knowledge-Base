@@ -1,0 +1,275 @@
+{
+  "filename": "GE_WALL_BLOCKING_CLEANUP.mcr",
+  "status": "completed",
+  "total_tokens": 27771,
+  "processing_time": 507.4244089126587,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "v1.0",
+            "date": "19.mar.2013",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "Release\n- Copied from hsb_CleanupBlocking, to keep US content folder naming standards"
+          },
+          {
+            "version": "v1.1",
+            "date": "19.mar.2013",
+            "author": "David Rueda (dr@hsb-cad.com)",
+            "changes": "- Version control from 1.0 to 1.1, to keep updated with hsb_CleanupBlocking\n- Thumbnail added"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5310,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses PrEntity to select ElementWallSF objects and performs geometric calculations (extractContactFaceInPlane, intersectWith) and physical modifications (stretchStaticTo) on GenBeam objects within those elements. It contains no references to _Viewport, sd_ prefixes, or 2D drawing generation logic."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing hsbCAD Wall Elements.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3566,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select one or More Elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5117,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically stretches wall blocking beams to fit perfectly against angled top plates within selected wall elements.",
+          "category": "Framing/Automation",
+          "typicalUseCase": "After generating a wall frame with angled top plates (e.g., for vaulted ceilings), use this script to adjust the height and end cut of blocking members so they tightly abut the angled beams."
+        },
+        "parameters": [
+          {
+            "name": "ssE",
+            "technicalDefault": "ElementWallSF()",
+            "businessMeaning": "The selection of wall elements (ElementWallSF) to be processed. The script will scan these elements for blocking and angled members.",
+            "validRange": "One or more valid hsbCAD Wall Elements present in Model Space.",
+            "unit": "Count",
+            "affectsOutput": "Determines the scope of the operation; only blocking beams within the selected elements will be modified."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects Elements",
+            "effect": "Script spawns a processing instance for each individual element.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam Geometry Modification",
+            "description": "Blocking beams (type _kSFBlocking) are stretched using stretchStaticTo to match the geometry of angled top plates (type _kSFAngledTPLeft/Right). This adjusts length and rotation to fit the slope.",
+            "appliedTo": "Beams of type _kSFBlocking contained within the selected Wall Elements."
+          }
+        ]
+      },
+      "tokens_used": 5230,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch",
+          "Check Insert State (_bOnInsert)",
+          "Validate Insert Cycle Count",
+          "Prompt User to Select Wall Elements (PrEntity)",
+          "Store Selected Elements in _Element array",
+          "Spawn Instances: Iterate through selected Elements and create new TSL instances via dbCreate",
+          "Erase Original Launcher Instance",
+          "Instance Execution (per Element)",
+          "Validate Element Presence (_Element.length)",
+          "Check Execution Mode (via Map)",
+          "Retrieve Wall Element Beams",
+          "Categorize Beams: Separate into Angled Top Plates (_kSFAngledTPLeft/Right) and Blocking (_kSFBlocking)",
+          "Loop through Angled Top Plates",
+          "Extract Contact Face Geometry of Angled Plate (Wall Plane)",
+          "Loop through Blocking Beams",
+          "Extract Contact Face Geometry of Blocking (Wall Plane)",
+          "Calculate Geometric Intersection",
+          "Check Intersection Area",
+          "[Conditional] Apply Stretch: If area > 5mm², stretch blocking beam to angled plate",
+          "Check Construction State (_bOnElementConstructed)",
+          "Erase Processing Instance"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count check (insertCycleCount() > 1)",
+            "path1": {
+              "name": "Cycle > 1 (Cleanup)",
+              "steps": [
+                "Erase current instance",
+                "Return (Terminate)"
+              ]
+            },
+            "path2": {
+              "name": "Cycle == 1 (Proceed)",
+              "steps": [
+                "Proceed to Element Selection"
+              ]
+            }
+          },
+          {
+            "condition": "Element Selection (ssE.go())",
+            "path1": {
+              "name": "User confirms selection",
+              "steps": [
+                "Append elements to _Element",
+                "Spawn processing instances",
+                "Erase original instance"
+              ]
+            },
+            "path2": {
+              "name": "User cancels selection",
+              "steps": [
+                "Script terminates silently"
+              ]
+            }
+          },
+          {
+            "condition": "Element Validation in spawned instance (_Element.length()==0)",
+            "path1": {
+              "name": "Invalid/Empty Element",
+              "steps": [
+                "Erase instance",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "Valid Element Present",
+              "steps": [
+                "Proceed to beam processing"
+              ]
+            }
+          },
+          {
+            "condition": "Intersection Area Check (ppBm.area() > 5mm²)",
+            "path1": {
+              "name": "Significant Intersection",
+              "steps": [
+                "Call bm.stretchStaticTo(bmAngle, true)",
+                "Modify blocking geometry to fit angled plate"
+              ]
+            },
+            "path2": {
+              "name": "No/Negligible Intersection",
+              "steps": [
+                "Skip current blocking beam",
+                "Continue to next beam"
+              ]
+            }
+          },
+          {
+            "condition": "Event Trigger Check (_bOnElementConstructed)",
+            "path1": {
+              "name": "True (Construction Event)",
+              "steps": [
+                "Erase instance",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "False (Manual/Other Event)",
+              "steps": [
+                "Continue execution",
+                "Process stretches"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Silent exit)",
+            "recovery": "N/A"
+          },
+          {
+            "check": "Element Existence in spawned instance",
+            "errorMessage": "None (Silent erase)",
+            "recovery": "N/A"
+          },
+          {
+            "check": "Element Validity (el.bIsValid())",
+            "errorMessage": "None (Silent erase)",
+            "recovery": "Ensure selected entity is a valid hsbCAD ElementWallSF"
+          },
+          {
+            "check": "Intersection Threshold (> 5mm²)",
+            "errorMessage": "None",
+            "recovery": "N/A (Logic threshold to prevent stretching distant beams)"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Re-running the script",
+            "how": "Command Line / Script Catalog",
+            "effect": "Re-selects elements and re-calculates stretches. The script spawns transient instances that erase themselves after processing, so it is designed as a 'run once' command rather than a persistent smart object."
+          }
+        ]
+      },
+      "tokens_used": 4499,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# GE_WALL_BLOCKING_CLEANUP\n\n## Overview\nAutomatically stretches wall blocking beams to fit perfectly against angled top plates (e.g., for vaulted ceilings) within selected wall elements.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D wall elements in the model. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required entities**: hsbCAD Wall Elements (`ElementWallSF`) containing both Blocking beams and Angled Top Plate beams.\n- **Minimum beam count**: 0 (Script will run but produce no changes if relevant beams are missing).\n- **Required settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the command line.\n2.  Navigate to the location of `GE_WALL_BLOCKING_CLEANUP.mcr`.\n3.  Select the file and click **Open**.\n\n### Step 2: Select Wall Elements\n```\nCommand Line: Select one or More Elements\nAction: Click on the wall elements in the drawing that contain the blocking you wish to adjust. Press Enter when finished.\n```\n*Note: The script will automatically process the selected elements. It calculates the intersection between the blocking and the angled top plates and adjusts the blocking height and angle to fit tight against the plate.*\n\n## Properties Panel Parameters\nThis script does not expose any parameters in the Properties Palette.\n\n## Right-Click Menu Options\nThis script does not add specific options to the right-click context menu.\n\n## Settings Files\nNo external settings files are used by this script.\n\n## Tips\n- **Proximity Matters**: The script stretches blocking based on geometric intersections. Ensure the blocking is generated relatively close to the angled top plate before running this script.\n- **Vaulted Ceilings**: This tool is particularly useful after generating walls with vaulted or pitched roof configurations where standard rectangular blocking would leave gaps at the top.\n- **Transient Operation**: This script functions as a \"command\" rather than a permanent smart object. Once executed, it modifies the geometry and finishes; it does not remain attached to the wall for future updates.\n\n## FAQ\n- **Q: Why didn't my blocking change?**\n  **A:** Ensure the selected wall elements contain beams classified as \"Angled Top Plates\" (Left or Right) and \"Blocking\". If the top plate is flat (horizontal), the script will not make any changes.\n- **Q: Can I use this on floor elements?**\n  **A:** No, this script is specifically designed for Wall Elements (`ElementWallSF`).\n- **Q: Do I need to select individual blocking beams?**\n  **A:** No, simply select the entire Wall Element. The script will automatically find and process all relevant blocking beams inside it."
+      },
+      "tokens_used": 4049,
+      "error": null
+    }
+  }
+}

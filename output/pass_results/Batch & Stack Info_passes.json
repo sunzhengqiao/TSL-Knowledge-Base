@@ -1,0 +1,239 @@
+{
+  "filename": "Batch & Stack Info.mcr",
+  "status": "completed",
+  "total_tokens": 26229,
+  "processing_time": 326.82522225379944,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "09/12/2021",
+            "author": "Anno Sportel",
+            "changes": "Show batch and stacking information in the drawing."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5084,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses 'Group().collectEntities(true, Element(), _kModelSpace)' to gather data, explicitly targeting Model Space. It utilizes 'Display dp(-1)' for visualization, which is typical for Model Space annotations. No ShopDrawing markers (sd_*, #Type E) or Viewport logic found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing Elements with specific subMapX attributes ('HSB_...CHILD') for Batch and Stacking data.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2304,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getPoint",
+              "promptOriginal": "|Select a position|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4199,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates a visual list in Model Space that organizes Elements by their assigned Batch and Stacking groups.",
+          "category": "Reporting/Visualization",
+          "typicalUseCase": "Used during production planning to visually verify that elements are correctly grouped into Batches and Stacks for transport and logistics before exporting data."
+        },
+        "parameters": [
+          {
+            "name": "_Pt0",
+            "technicalDefault": "User selected (getPoint)",
+            "businessMeaning": "The insertion point (anchor) for the top of the Batch/Stack report list in the drawing.",
+            "validRange": "Any 3D point in Model Space",
+            "unit": "mm (coordinates)",
+            "affectsOutput": "Determines the spatial location where the hierarchy of Batch names, Stack headers, and Element numbers are drawn."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Annotation (Text & Polyline)",
+            "description": "Creates a structured text list and filled rectangle headers representing the Batch and Stack hierarchy. Batch names appear large at the top, Stacks appear as filled headers below batches, and Element numbers are listed in columns below the Stacks.",
+            "appliedTo": "Model Space (Visual annotation only, no physical geometry modification)."
+          }
+        ]
+      },
+      "tokens_used": 4466,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script launched via insertion command.",
+          "2. Check insert cycle count.",
+          "3. Prompt user to select an insertion point (_Pt0) with getPoint.",
+          "4. Script execution restarts (Recalc phase).",
+          "5. Collect all Elements from Model Space.",
+          "6. Iterate through elements to parse 'HSB_...CHILD' subMapX keys for Batch and Stacking data.",
+          "7. Validate element grouping (must have a Batch).",
+          "8. Sort collected elements by Batch Name, Stack Name, Sequence, and Element Number.",
+          "9. Initialize Display and Text properties.",
+          "10. Loop through sorted elements to draw visualization:",
+          "    a. Detect Batch change -> Draw Batch Header.",
+          "    b. Detect Stack change -> Draw Stack Header (Filled Rectangle).",
+          "    c. Draw Element Number.",
+          "11. Adjust coordinates based on list length to prevent overlap.",
+          "12. Finish drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count",
+            "path1": {
+              "name": "Subsequent Cycle",
+              "steps": [
+                "Detect insertCycleCount() > 1",
+                "Execute eraseInstance()",
+                "Return (Stop script)"
+              ]
+            },
+            "path2": {
+              "name": "First Cycle",
+              "steps": [
+                "Continue to getPoint prompt",
+                "Wait for user input"
+              ]
+            }
+          },
+          {
+            "condition": "Element Data Validation (Batch Name)",
+            "path1": {
+              "name": "Valid Batch Found",
+              "steps": [
+                "Append element to batchedElements array",
+                "Extract Stack and Sequence info",
+                "Include in sorting phase"
+              ]
+            },
+            "path2": {
+              "name": "Missing Batch",
+              "steps": [
+                "Check if Stack Name exists",
+                "If yes, reportNotice warning to command line",
+                "Continue to next element (Skip)"
+              ]
+            }
+          },
+          {
+            "condition": "Rendering Layout (Batch Change)",
+            "path1": {
+              "name": "New Batch Detected",
+              "steps": [
+                "Set currentBatch variable",
+                "Reset Stack tracking",
+                "Move rowStart (Y-axis) down",
+                "Draw 'Batch [Name]' text",
+                "Reset columnStart (X-axis) to origin"
+              ]
+            },
+            "path2": {
+              "name": "Same Batch",
+              "steps": [
+                "Maintain current rowStart",
+                "Proceed to check Stack change"
+              ]
+            }
+          },
+          {
+            "condition": "Rendering Layout (Stack Change)",
+            "path1": {
+              "name": "New Stack Detected",
+              "steps": [
+                "Set currentStack variable",
+                "Create PLine rectangle and fill",
+                "Draw 'Stack [Name]' text",
+                "Move columnStart (X-axis) right"
+              ]
+            },
+            "path2": {
+              "name": "Same Stack",
+              "steps": [
+                "Calculate element position in current column",
+                "If unstacked, check column count (mod 5) to wrap to next column"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element assigned to a Stack but missing a Batch assignment.",
+            "errorMessage": "Element [Number] is part of stack [Name], but is not in a batch!",
+            "recovery": "User must assign the Element to a valid Batch in the element properties or data structure; the script will automatically include it in the next update."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Move the entire report",
+            "how": "Grip Edit (Select script, drag insertion point grip)",
+            "effect": "The script recalculates, clearing the old display and redrawing the entire Batch/Stack list at the new location."
+          },
+          {
+            "action": "Update report content",
+            "how": "Modify Element Batch/Stack data in model + Script Regen (e.g., 'tsl regen' or Properties edit)",
+            "effect": "The script re-collects data, resorts the elements, and redraws the visualization to reflect changes (added/removed elements, renamed batches)."
+          }
+        ]
+      },
+      "tokens_used": 6079,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Batch & Stack Info\n\n## Overview\nThis script generates a visual schedule in Model Space that organizes Elements by their assigned Batch and Stacking groups. It is used to verify production planning and logistics by displaying Batch names, Stack headers, and Element numbers in a structured list.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script collects data from all Elements in Model Space and draws the report there. |\n| Paper Space | No | Not designed for Paper Space usage. |\n| Shop Drawing | No | Does not process shop drawing layouts or views. |\n\n## Prerequisites\n- **Required Entities**: Elements must exist in the Model Space.\n- **Minimum Beam Count**: 0 (The script will run but may produce an empty list if no elements exist).\n- **Required Settings**: Elements must possess valid Batch and Stacking data in their properties (specifically `subMapX` attributes starting with 'HSB_...CHILD').\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `Batch & Stack Info.mcr` from the file list.\n\n### Step 2: Select Insertion Point\n```\nCommand Line: |Select a position|\nAction: Click anywhere in the Model Space to set the top-left anchor point for the report.\n```\n*After clicking, the script will calculate and draw the Batch/Stack hierarchy immediately.*\n\n## Properties Panel Parameters\n\nThis script has no user-editable properties in the Properties Palette (OPM).\n\n## Right-Click Menu Options\n\nThis script has no custom context menu options.\n\n## Settings Files\n\nNone required.\n\n## Tips\n- **Moving the Report**: Select the script object in the drawing and drag the grip point (the original insertion point) to a new location. The list will automatically redraw at the new position.\n- **Updating the List**: If you modify Batch or Stack assignments on your elements, simply run a regeneration command (e.g., `TSL REGEN` or modify the script instance properties) to refresh the visual list.\n- **Data Validation**: The script checks data integrity. If you see a warning on the command line stating an element is \"part of a stack but not in a batch,\" check the properties of that specific element.\n\n## FAQ\n\n- **Q: Why does my list look empty or incomplete?**\n- **A**: Ensure your elements have valid Batch names assigned in their data. Elements without a Batch assignment will be skipped by the report.\n\n- **Q: How do I change the size of the text?**\n- **A**: The text size is determined by the script's internal logic. Currently, there are no exposed parameters to change the font size via the Properties Panel.\n\n- **Q: Can I use this in a Layout (Paper Space)?**\n- **A**: No, this script only reads elements from Model Space and draws the report there."
+      },
+      "tokens_used": 4097,
+      "error": null
+    }
+  }
+}
