@@ -1,0 +1,219 @@
+{
+  "filename": "PartLabeler.mcr",
+  "status": "completed",
+  "total_tokens": 31484,
+  "processing_time": 799.9248023033142,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3623,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script selects Element entities via PrEntity and attaches to _Element. It queries GenBeam data (el.genBeam) and modifies GenBeam submaps. No PaperSpace/ShopDrawing API calls (sd_*, _Viewport) found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (Attached to a Timber Element)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3987,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select Elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "psBeamCriteria",
+            "type": "PropString",
+            "displayName": "Beam Criteria",
+            "defaultValue": "@(posnum)",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": "A comma seperated list of formats used to group like items for labeling"
+          },
+          {
+            "index": 1,
+            "variable": "psSheetCriteria",
+            "type": "PropString",
+            "displayName": "Sheet Criteria",
+            "defaultValue": "@(posnum)",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": "A comma seperated list of formats used to group like items for labeling"
+          },
+          {
+            "index": 2,
+            "variable": "psZones",
+            "type": "PropString",
+            "displayName": "Zones to Label",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 3,
+            "variable": "psLabelStrategy",
+            "type": "PropString",
+            "displayName": "Label Strategy",
+            "defaultValue": "|Zone|",
+            "inputType": "dropdown",
+            "options": [
+              "|Zone|",
+              "|Element|"
+            ],
+            "category": null,
+            "description": "Zone option restarts lableing with 'A' for each zone. Element option makes every label in the wall unique"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "|Update Labels|",
+            "handler": "stUpdateDataCommand",
+            "action": "Sets bWriteData to true to trigger recalculation of labels",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 5604,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically assigns alphabetic labels (A, B, C...) to beams and sheets within a timber element based on user-defined grouping criteria.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Generating assembly labels for wall panels or floor cassettes where similar parts need to share a mark number, but unique parts need different marks."
+        },
+        "parameters": [
+          {
+            "name": "psBeamCriteria",
+            "technicalDefault": "@(posnum)",
+            "businessMeaning": "Defines the logic used to group structural beams into labeled categories. Beams with identical results for these criteria will receive the same label.",
+            "validRange": "Standard hsbCAD format strings (e.g., @(material), @(length), @(width), @(height))",
+            "unit": "String",
+            "affectsOutput": "Determines which beams share the same alphabetic label. Adding criteria increases specificity, creating more unique labels."
+          },
+          {
+            "name": "psSheetCriteria",
+            "technicalDefault": "@(posnum)",
+            "businessMeaning": "Defines the logic used to group sheeting material (OSB, Plywood) into labeled categories. Sheets with identical results for these criteria will receive the same label.",
+            "validRange": "Standard hsbCAD format strings (e.g., @(material), @(length), @(width))",
+            "unit": "String",
+            "affectsOutput": "Determines which sheets share the same alphabetic label."
+          },
+          {
+            "name": "psZones",
+            "technicalDefault": "",
+            "businessMeaning": "Restricts labeling to specific construction zones within the element. If left blank, it defaults to zones -5 through 5.",
+            "validRange": "Comma-separated list of integers (e.g., '1, 2, 5') representing specific zones defined in the element.",
+            "unit": "Integer list",
+            "affectsOutput": "Filters which GenBeams are processed. Beams outside the specified zones are ignored and not labeled."
+          },
+          {
+            "name": "psLabelStrategy",
+            "technicalDefault": "|Zone|",
+            "businessMeaning": "Controls the scope of uniqueness for the labels.",
+            "validRange": "|Zone| (Labels restart at 'A' for each zone), |Element| (Labels continue sequentially through the entire wall)",
+            "unit": "Option",
+            "affectsOutput": "If set to |Zone|, the label 'A' may appear multiple times in different zones. If set to |Element|, 'A' appears only once per wall."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "psBeamCriteria or psSheetCriteria change",
+            "effect": "Triggers recalculation of all labels because the grouping keys have changed.",
+            "cascade": [
+              "mpLabel (SubMap on GenBeams)"
+            ]
+          },
+          {
+            "trigger": "psZones change",
+            "effect": "Re-runs the labeling loop only on the specified subset of zones, potentially leaving previously labeled beams in other zones untouched or removing labels if excluded.",
+            "cascade": [
+              "mpLabel (SubMap on GenBeams)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Data Map (mpLabel)",
+            "description": "A string map attached to each GenBeam containing the calculated alphabetic label (e.g., A, B, AA).",
+            "appliedTo": "GenBeams within the selected Element that match the Zone criteria."
+          },
+          {
+            "type": "Visual Text",
+            "description": "Temporary text drawn in the model at the element origin indicating the labeler is active.",
+            "appliedTo": "Element Origin (Visual only)."
+          }
+        ]
+      },
+      "tokens_used": 4680,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. Script launched via insert command.\",\n    \"2. Property Dialog (showDialogOnce) prompts for initial criteria.\",\n    \"3. User selects one or more Elements (PrEntity 'Select Elements').\",\n    \"4. [Validation] If no elements selected, script instance is erased.\",\n    \"5. [Validation] If insert cycle count > 1, script instance is erased.\",\n    \"6. Original insert instance clones itself onto each selected Element using 'tsl.dbCreate' with current properties.\",\n    \"7. Original insert instance erases itself.\",\n    \"8. Cloned instance initializes attached to the Element.\",\n    \"9. [Cleanup] Cloned instance searches for and erases any other duplicate instances of this script on the Element.\",\n    \"10. Visual 'Labeler' text is drawn at Element origin.\",\n    \"11. [Trigger Check] System checks if recalculation is needed (On Insert, Property Change, or 'Update Labels' command).\",\n    \"12. Zone list is parsed. If empty, defaults to range -5 to 5.\",\n    \"13. GenBeams are collected from specified zones into temporary maps.\",\n    \"14. Loop begins through each Zone map.\",\n    \"15. [Strategy Branch] If Strategy is '|Zone|', label counter resets. If '|Element|', counter continues.\",\n    \"16. Loop begins through each GenBeam in the Zone.\",\n    \"17. [Type Branch] Checks if Entity is a Beam or Sheet to select correct Criteria format.\",\n    \"18. A unique 'CompareKey' is generated by concatenating formatted attributes based on criteria.\",\n    \"19. [Key Branch] Check if CompareKey already exists in the temporary label map.\",\n    \"20. If Key exists: Retrieve existing label.\",\n    \"21. If Key is new: Generate new alphabetic label (A-Z, then AA-AZ logic) and add to map.\",\n    \"22. 'mpLabel' submap containing the label string is written to the GenBeam.\",\n    \"23. Script finishes and waits for next trigger.\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Insert Cycle Count\",\n      \"path1\": {\n        \"name\": \"Cycle > 1\",\n        \"steps\": [\"Erase Instance\", \"Return (Exit)\"]\n      },\n      \"path2\": {\n        \"name\": \"First Cycle\",\n        \"steps\": [\"Proceed to Element Selection\"]\n      }\n    },\n    {\n      \"condition\": \"Element Selection Validity\",\n      \"path1\": {\n        \"name\": \"No Elements Selected\",\n        \"steps\": [\"Erase Instance\", \"Return (Exit)\"]\n      },\n      \"path2\": {\n        \"name\": \"Elements Selected\",\n        \"steps\": [\"Proceed to Cloning Phase\"]\n      }\n    },\n    {\n      \"condition\": \"Zone Input (psZones)\",\n      \"path1\": {\n        \"name\": \"Empty String\",\n        \"steps\": [\"Define default zone range -5 to 5\"]\n      },\n      \"path2\": {\n        \"name\": \"Comma Separated String\",\n        \"steps\": [\"Parse integers from string\", \"Filter out invalid non-integer values\"]\n      }\n    },\n    {\n      \"condition\": \"Label Strategy (psLabelStrategy)\",\n      \"path1\": {\n        \"name\": \"|Zone|\",\n        \"steps\": [\"Reset label index (iLabelIndex) to 0 at start of each zone loop\"]\n      },\n      \"path2\": {\n        \"name\": \"|Element|\",\n        \"steps\": [\"Continue incrementing label index across all zones without resetting\"]\n      }\n    },\n    {\n      \"condition\": \"Entity Type Detection\",\n      \"path1\": {\n        \"name\": \"Is Structural Beam\",\n        \"steps\": [\"Use 'psBeamCriteria' to generate CompareKey\"]\n      },\n      \"path2\": {\n        \"name\": \"Is Sheeting Material\",\n        \"steps\": [\"Use 'psSheetCriteria' to generate CompareKey\"]\n      }\n    },\n    {\n      \"condition\": \"CompareKey"
+      },
+      "tokens_used": 7919,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# PartLabeler.mcr\n\n## Overview\nThis script automatically assigns alphabetic labels (A, B, C...) to beams and sheets within a timber element. It groups similar parts based on user-defined criteria (such as material or dimensions) to ensure identical parts share the same mark number.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be attached to an Element in the model. |\n| Paper Space | No | This script operates on model entities, not drawing views. |\n| Shop Drawing | No | This prepares data in the model which can then be used in shop drawings. |\n\n## Prerequisites\n- **Required Entities**: An `Element` (e.g., a wall or floor panel) containing `GenBeam` entities (structural beams or sheeting materials).\n- **Minimum beam count**: 0.\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `PartLabeler.mcr`\n\n### Step 2: Select Elements\n```\nCommand Line: Select Elements\nAction: Click on the timber element(s) (walls/floors) you wish to label and press Enter.\n```\n*Note: The script will automatically attach itself to each selected element.*\n\n### Step 3: Configure Properties\n```\nAction: Select one of the attached elements and open the Properties Palette (Ctrl+1).\nLocate the \"Script\" or \"PartLabeler\" section to adjust labeling rules.\n```\nYou can change grouping criteria or zones here.\n\n### Step 4: Update Labels\n```\nAction: Right-click on the element and select \"|Update Labels|\" from the context menu.\nResult: The script will recalculate and write the label (e.g., \"A\", \"B\") to the \"mpLabel\" data map of every beam/sheet in the specified zones.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Beam Criteria | text | @(posnum) | Determines how beams are grouped. Beams with identical attributes defined here (e.g., @(material), @(width)) will receive the same label. |\n| Sheet Criteria | text | @(posnum) | Determines how sheets/panels are grouped. Uses the same logic as Beam Criteria but for sheeting material. |\n| Zones to Label | text | (empty) | Specifies which construction zones to label. Leave blank to label all zones (-5 to 5). Enter numbers (e.g., \"1, 2, 5\") to target specific zones only. |\n| Label Strategy | dropdown | \\|Zone\\| | Controls label uniqueness. <br>`|Zone|`: Labels restart at 'A' for every zone.<br>`|Element|`: Labels continue sequentially (A, B, C...) across the entire element without repeating. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| \\|Update Labels\\| | Triggers the script to re-scan the element, re-evaluate the grouping criteria, and apply new labels to the beams. |\n\n## Settings Files\n- None required.\n\n## Tips\n- **Grouping Logic**: To create more specific labels, add more tokens to the criteria. For example, changing `Beam Criteria` from `@(material)` to `@(material) @(length)` will ensure that beams of the same material but different lengths get different labels.\n- **Data Access**: The script writes the calculated label to the `mpLabel` submap of each GenBeam. You can use this field in hsbCAD catalogs or label styles to display the mark on drawings.\n- **Troubleshooting**: If labels are not appearing, check the `Zones to Label` property to ensure the beams are not outside the specified range.\n\n## FAQ\n- **Q: Why are all my beams labeled 'A'?**\n  A: Your `Beam Criteria` is likely too broad. All beams currently match the defined criteria (e.g., they are all the same material). Try adding `@(length)` or `@(height)` to distinguish them.\n\n- **Q: Can I label only the top plates of a wall?**\n  A: Yes, provided your top plates are in a specific zone. Check which zone they belong to and enter that zone number (e.g., \"2\") into the `Zones to Label` property.\n\n- **Q: What is the difference between '|Zone|' and '|Element|' strategies?**\n  A: `|Zone|` treats every zone as an independent list (Zone 1 has parts A, B, C; Zone 2 also has parts A, B, C). `|Element|` treats the whole wall as one list (Zone 1 has A, B, C; Zone 2 continues with D, E, F)."
+      },
+      "tokens_used": 5671,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,309 @@
+{
+  "filename": "HVAC-G.mcr",
+  "status": "completed",
+  "total_tokens": 34932,
+  "processing_time": 695.2138831615448,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl creates a G-connection of ductwork beams.",
+        "versionHistory": [
+          {
+            "version": "1.5",
+            "date": "20Nov2018",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": " helper guide line added "
+          },
+          {
+            "version": "1.4",
+            "date": "09aug2018",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": " hardware output added "
+          },
+          {
+            "version": "1.3",
+            "date": "18Jul2018",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": " helper line support, new HVAC-System support "
+          },
+          {
+            "version": "1.2",
+            "date": "18Jul2018",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": " renamed"
+          },
+          {
+            "version": "1.1",
+            "date": "21jun2018",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": " connection points published "
+          },
+          {
+            "version": "1.0",
+            "date": "20jun2018",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": " initial "
+          }
+        ],
+        "settingsFiles": [
+          "HVAC.xml"
+        ],
+        "dependencies": []
+      },
+      "tokens_used": 7563,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select Beam() objects directly from the model; generates Body geometry; applies Cut tools to beams; uses Display dpModel/dpPlan for visualization; no usage of _Viewport, _kPaperSpace, or sd_ prefix."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space containing at least two ductwork beams",
+          "requiredSettings": [
+            "HVAC.xml"
+          ]
+        }
+      },
+      "tokens_used": 6954,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select 2 ductwork beams|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select second ductwork beam|",
+              "condition": "_bOnInsert && _Beam.length()==1",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": [
+          {
+            "filename": "HVAC.xml",
+            "searchPaths": [
+              "_kPathHsbCompany\\TSL\\Settings"
+            ],
+            "purpose": "Provides default settings and configuration for the HVAC G-connection.",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 6642,
+      "error": null
+    },
+    "4": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "Request timeout after retries"
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Execution Initiated",
+          "2. Load Settings: Check for 'HVAC.xml' in company path or retrieve existing MapObject from dictionary",
+          "3. Insertion Phase (_bOnInsert): Prompt user to select ductwork beams",
+          "4. Selection Logic: Loop until 2 valid beams are selected",
+          "   a. Select 1st beam",
+          "   b. Select 2nd beam",
+          "   c. Validate 2nd beam (Check for duplicate, Check for parallelism)",
+          "5. Exit Insertion Phase: Script recalculation triggered with selected beams",
+          "6. Post-Insertion Validation: Verify 2 beams exist and are not parallel (erase instance on failure)",
+          "7. Data Extraction: Read 'HvacChild' submaps from beams for dimensions (Width, Height, Radius, Insulation)",
+          "8. Geometry Calculation: Determine intersection, calculate angle and arc radius",
+          "9. Modify Beams: Apply Cut tools to beam ends (StretchOnToolChange enabled)",
+          "10. Visualization Check: Determine if beams are in the same plane (bInPlane)",
+          "11. Geometry Generation:",
+          "   a. If Radius > 0: Generate segmented Arc Body (Round, Rectangular, or Custom Profile)",
+          "   b. If Radius <= 0: Generate Mitre symbol",
+          "12. Drawing: Add geometry to Model and Plan displays (draw alert if not in plane)",
+          "13. Hardware: Create or update HardWrComp entry for listing/BOM",
+          "14. Finalize: Draw helper lines and update instance"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Settings Availability",
+            "path1": {
+              "name": "MapObject Exists",
+              "steps": [
+                "Retrieve mapSetting from existing 'hsbTSL' dictionary entry"
+              ]
+            },
+            "path2": {
+              "name": "MapObject Missing (On Insert/Debug)",
+              "steps": [
+                "Search for HVAC.xml in company folder",
+                "Read XML content",
+                "Create new MapObject in dictionary"
+              ]
+            }
+          },
+          {
+            "condition": "Second Beam Selection Logic",
+            "path1": {
+              "name": "Duplicate Beam",
+              "steps": [
+                "Display 'refused (Duplicate)' message",
+                "Ignore selection",
+                "Prompt user again"
+              ]
+            },
+            "path2": {
+              "name": "Parallel Beams",
+              "steps": [
+                "Display 'refused (parallel)' message",
+                "Ignore selection",
+                "Prompt user again"
+              ]
+            },
+            "path3": {
+              "name": "Valid Beam",
+              "steps": [
+                "Append to _Beam array",
+                "Exit selection loop if count == 2"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Alignment (Post-Insertion)",
+            "path1": {
+              "name": "Parallel Beams",
+              "steps": [
+                "Report Error: 'this tool is not applicable to parallel beams'",
+                "Erase Instance"
+              ]
+            },
+            "path2": {
+              "name": "Intersecting/Angled Beams",
+              "steps": [
+                "Proceed with calculation"
+              ]
+            }
+          },
+          {
+            "condition": "Radius Type",
+            "path1": {
+              "name": "Radius > 0 (Arc)",
+              "steps": [
+                "Calculate arc segments",
+                "Sweep profile (Round/Rect/Custom) along arc",
+                "Apply cuts to segments",
+                "Draw 3D body and shadow profile"
+              ]
+            },
+            "path2": {
+              "name": "Radius <= 0 (Mitre)",
+              "steps": [
+                "Extract contact face",
+                "Draw mitre symbol profile"
+              ]
+            }
+          },
+          {
+            "condition": "Planarity (bInPlane)",
+            "path1": {
+              "name": "Not In Plane",
+              "steps": [
+                "Draw Alert visual ('Not possible')",
+                "Draw arc as linework (helper) if body generation fails/is inappropriate",
+                "Flip display color for contrast"
+              ]
+            },
+            "path2": {
+              "name": "In Plane",
+              "steps": [
+                "Standard body generation",
+                "Standard plan projection"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam Count",
+            "errorMessage": "(Implicit) Erases instance if less than 2 beams are linked.",
+            "recovery": "Ensure two valid GenBeams are selected during insertion or linked to the instance."
+          },
+          {
+            "check": "Parallelism",
+            "errorMessage": "'refused (parallel)' (during selection) or 'this tool is not applicable to parallel beams' (during calculation)",
+            "recovery": "Select beams that are not parallel to each other."
+          },
+          {
+            "check": "Duplicate Selection",
+            "errorMessage": "'refused (Duplicate)'",
+            "recovery": "Select a different beam for the second connection."
+          },
+          {
+            "check": "Settings File",
+            "errorMessage": "(Implicit) Defaults used if XML missing, may result in dimensions of 0.",
+            "recovery": "Ensure 'HVAC.xml' exists in _kPathHsbCompany\\TSL\\Settings."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Move / Grip Edit Beams",
+            "how": "AutoCAD Grips / Move Command",
+            "effect": "The script uses `_kStretchOnToolChange`, so moving the connected beams will automatically update the G-connection geometry and cuts."
+          },
+          {
+            "action": "Modify Beam Properties",
+            "how": "Properties Palette (if parent beam is editable)",
+            "effect": "Changing the beam's 'HvacChild' map values (e.g., Diameter, Width, Radius) triggers a recalculation, updating the connection shape."
+          },
+          {
+            "action": "Delete Beam",
+            "how": "Erase Command",
+            "effect": "The script uses `setEraseAndCopyWithBeams`, so deleting a source beam will automatically delete this connection instance."
+          }
+        ]
+      },
+      "tokens_used": 9247,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HVAC-G\n\n## Overview\nThis script creates a G-connection (bend) between two ductwork beams. It automatically calculates the geometry based on the intersection of the selected beams and applies the necessary cuts.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for selecting 3D ductwork beams. |\n| Paper Space | No | Not supported in layout views. |\n| Shop Drawing | No | This is a model generation script. |\n\n## Prerequisites\n- **Required Entities**: Two ductwork beams (GenBeam objects).\n- **Minimum Beam Count**: 2 (Non-parallel).\n- **Required Settings**: `HVAC.xml` (Located in the company TSL settings folder).\n\n## Usage Steps\n\n### Step 1: Launch Script\nExecute the `TSLINSERT` command in AutoCAD and select `HVAC-G.mcr` from the list.\n\n### Step 2: Select First Beam\n```\nCommand Line: Select 2 ductwork beams\nAction: Click on the first ductwork beam you wish to connect.\n```\n\n### Step 3: Select Second Beam\n```\nCommand Line: Select second ductwork beam\nAction: Click on the second ductwork beam.\n```\n*Note:* The script will validate your selection:\n- If you select the **same beam twice**, the command line will display \"refused (Duplicate)\". Please select a different beam.\n- If the beams are **parallel**, the command line will display \"refused (parallel)\". Please select beams that form an angle.\n\n## Properties Panel Parameters\nThis script does not expose specific parameters in the Properties Palette (OPM). It derives its dimensions and configuration from the selected beams and the `HVAC.xml` settings file.\n\n## Right-Click Menu Options\nThis script does not add custom items to the right-click context menu. Standard hsbCAD options (like Recalculate) apply.\n\n## Settings Files\n- **Filename**: `HVAC.xml`\n- **Location**: `_kPathHsbCompany\\TSL\\Settings` (Company TSL folder).\n- **Purpose**: Defines default dimensions and configuration settings for the HVAC G-connection generation.\n\n## Tips\n- **Dynamic Updates**: The connection is associative. If you use AutoCAD grips to move or rotate the connected beams, the G-connection will automatically update to match the new geometry.\n- **Deletion**: If you delete one of the source beams, the G-connection instance will also be deleted automatically.\n- **Visual Warnings**: If the script detects that the beams are not in the same plane (which might make a physical connection impossible), it will draw a visual alert or helper lines instead of a solid body.\n\n## FAQ\n- **Q: Why does the script say \"refused (parallel)\"?**\n  A: The G-connection tool only works on beams that intersect or form an angle. It cannot connect parallel ducts.\n- **Q: Can I adjust the bend radius after insertion?**\n  A: The radius is typically determined by the beam properties or the XML settings. Modify the beam's properties or the XML file and recalculate to update the connection.\n- **Q: What happens if I change the size of the duct?**\n  A: The script listens for changes in the beam data. If you modify the beam size, run a recalculation (or move the beam slightly), and the connection will update to fit the new dimensions."
+      },
+      "tokens_used": 4526,
+      "error": null
+    }
+  }
+}

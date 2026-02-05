@@ -1,0 +1,267 @@
+{
+  "filename": "HSB_I-ShowProfiles.mcr",
+  "status": "completed",
+  "total_tokens": 25894,
+  "processing_time": 324.24285101890564,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "10.04.2013",
+            "author": "AS",
+            "changes": "First revision"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4265,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses _Element.append(getElement()) to select an element and operates on its 3D geometry (profNetto/profBrutto) without ShopDrawing (sd_) or Viewport references."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "The script requires an existing hsbCAD Element (Zone) to be selected upon insertion.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1479,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5879,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Visualizes the Netto (inner) and Brutto (outer) horizontal profiles of specific construction zones within an Element, offset vertically along the element's axis for checking clearances or wall boundaries.",
+          "category": "Visualization/Verification",
+          "typicalUseCase": "Checking the outline of a wall or floor at a specific height (e.g., ceiling height or window header height) to verify intersections or spatial boundaries without generating physical 3D solids."
+        },
+        "parameters": [
+          {
+            "name": "nZoneIndex",
+            "technicalDefault": "0",
+            "businessMeaning": "Selects the horizontal slice (zone) of the element to analyze. Indices 0-5 refer to zones above the element origin, while 6-10 map to zones below the origin (-1 to -5).",
+            "validRange": "0 to 10",
+            "unit": "Zone Index",
+            "affectsOutput": "Determines which 2D cross-section geometry is extracted from the element."
+          },
+          {
+            "name": "sShowProfiles",
+            "technicalDefault": "\"Both\"",
+            "businessMeaning": "Controls which profiles are displayed in the model.",
+            "validRange": "Both, Netto, Brutto",
+            "unit": "Enumeration",
+            "affectsOutput": "Toggles the visibility of the inner finish (Netto) and outer structural (Brutto) lines."
+          },
+          {
+            "name": "dOffsetNetto",
+            "technicalDefault": "U(100)",
+            "businessMeaning": "The distance to shift the Netto profile along the element's Z-axis (local vertical).",
+            "validRange": "-5000 to 5000",
+            "unit": "mm",
+            "affectsOutput": "Moves the inner profile up or down relative to its actual position in the wall."
+          },
+          {
+            "name": "dOffsetBrutto",
+            "technicalDefault": "U(150)",
+            "businessMeaning": "The distance to shift the Brutto profile along the element's Z-axis (local vertical).",
+            "validRange": "-5000 to 5000",
+            "unit": "mm",
+            "affectsOutput": "Moves the outer profile up or down relative to its actual position in the wall."
+          },
+          {
+            "name": "nColorNetto",
+            "technicalDefault": "1",
+            "businessMeaning": "The CAD color used to draw the Netto (inner) profile line.",
+            "validRange": "1 to 255 (AutoCAD Color Index)",
+            "unit": "ACI",
+            "affectsOutput": "Visual color of the inner profile."
+          },
+          {
+            "name": "nColorBrutto",
+            "technicalDefault": "3",
+            "businessMeaning": "The CAD color used to draw the Brutto (outer) profile line.",
+            "validRange": "1 to 255 (AutoCAD Color Index)",
+            "unit": "ACI",
+            "affectsOutput": "Visual color of the outer profile."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sShowProfiles is set to \"Netto\"",
+            "effect": "The Brutto offset and color settings are ignored for drawing purposes.",
+            "cascade": [
+              "dOffsetBrutto",
+              "nColorBrutto"
+            ]
+          },
+          {
+            "trigger": "sShowProfiles is set to \"Brutto\"",
+            "effect": "The Netto offset and color settings are ignored for drawing purposes.",
+            "cascade": [
+              "dOffsetNetto",
+              "nColorNetto"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "PlaneProfile",
+            "description": "2D geometric curves representing the horizontal cross-section of the wall element at the specified zone, projected vertically by the offset value.",
+            "appliedTo": "The selected hsbCAD Element"
+          }
+        ]
+      },
+      "tokens_used": 4194,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch script (Insert command).",
+          "2. Script checks insert cycle; if not the first cycle, it erases itself and stops (handling Undo/Redo logic).",
+          "3. Script opens the Properties Dialog allowing user to configure Zone Index, Visibility, Offsets, and Colors.",
+          "4. Command line prompts user to Select an element (hsbCAD Zone).",
+          "5. User clicks an element in the drawing.",
+          "6. Script validates that an element was selected.",
+          "7. Script calculates the actual Zone number (handling negative indices for zones below origin).",
+          "8. Script extracts Netto and Brutto PlaneProfiles from the element.",
+          "9. Script applies vertical (Z-axis) offsets to the profiles.",
+          "10. Script draws the profiles in the model using the specified colors, filtering based on Visibility settings."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Element Selection Validation",
+            "path1": {
+              "name": "Element Selected",
+              "steps": [
+                "Proceed to geometry extraction",
+                "Process and draw profiles"
+              ]
+            },
+            "path2": {
+              "name": "No Element Selected",
+              "steps": [
+                "Report 'No element selected' notice",
+                "Erase script instance",
+                "Stop execution"
+              ]
+            }
+          },
+          {
+            "condition": "Zone Index Calculation (nZoneIndex)",
+            "path1": {
+              "name": "Top Zones (0-5)",
+              "steps": [
+                "nZone maps directly to index (0 to 5)",
+                "Profile retrieved from positive Z height relative to element origin"
+              ]
+            },
+            "path2": {
+              "name": "Bottom Zones (6-10)",
+              "steps": [
+                "Calculate negative zone: nZone = 5 - nZoneIndex (maps 6 to -1, 10 to -5)",
+                "Profile retrieved from negative Z height relative to element origin"
+              ]
+            }
+          },
+          {
+            "condition": "Visibility Profile Setting (sShowProfiles)",
+            "path1": {
+              "name": "Both",
+              "steps": [
+                "Draw Netto Profile (using Offset and Color Netto)",
+                "Draw Brutto Profile (using Offset and Color Brutto)"
+              ]
+            },
+            "path2": {
+              "name": "Netto",
+              "steps": [
+                "Draw Netto Profile (using Offset and Color Netto)",
+                "Skip Brutto Profile"
+              ]
+            },
+            "path3": {
+              "name": "Brutto",
+              "steps": [
+                "Skip Netto Profile",
+                "Draw Brutto Profile (using Offset and Color Brutto)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "No element selected",
+            "recovery": "User must re-run the script and ensure they click a valid hsbCAD Element when prompted."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Zone Index",
+            "how": "Properties Palette (OPM)",
+            "effect": "Updates the calculation to retrieve the Netto/Brutto profiles from a different vertical slice of the element."
+          },
+          {
+            "action": "Adjust Vertical Offsets",
+            "how": "Properties Palette (OPM)",
+            "effect": "Moves the generated profile lines up or down along the element's local Z-axis for visual clarity."
+          },
+          {
+            "action": "Toggle Profile Visibility",
+            "how": "Properties Palette (OPM)",
+            "effect": "Switches between showing Both, Only Netto, or Only Brutto profiles."
+          },
+          {
+            "action": "Modify Colors",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changes the AutoCAD color index (ACI) of the drawn lines."
+          }
+        ]
+      },
+      "tokens_used": 4992,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_I-ShowProfiles\n\n## Overview\nThis script visualizes the Netto (inner) and Brutto (outer) horizontal profiles of a construction zone (Element). It is used to extract 2D cross-sections at specific heights and offsets, allowing you to verify clearances, wall boundaries, and spatial intersections without generating physical 3D solids.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D Element geometry in Model Space. |\n| Paper Space | No | Not designed for use in Layout views. |\n| Shop Drawing | Yes | Can be used to verify geometry contexts, though it generates 3D lines. |\n\n## Prerequisites\n- **Required Entities:** An existing hsbCAD Element (Zone) must be present in the drawing.\n- **Minimum Beams:** 0 (This script operates on the Element level, not individual beams).\n- **Required Settings:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nExecute the command `TSLINSERT` (or `TSI`), select `HSB_I-ShowProfiles.mcr` from the list, and press Enter.\n\n### Step 2: Configure Properties (Optional)\nAfter insertion, the Properties Palette will automatically appear. You can pre-configure the **Zone Index**, **Offsets**, and **Colors** here before selecting the element, or adjust them afterwards.\n\n### Step 3: Select Element\n```\nCommand Line: Select element:\nAction: Click on the desired hsbCAD Element (Zone) in your drawing.\n```\n*Note: If no element is selected, the script will display a \"No element selected\" message and erase itself.*\n\n### Step 4: View Profiles\nOnce the element is selected, the script calculates the profiles based on the properties and draws the lines in the model.\n\n### Step 5: Adjust Visualization (Post-Insertion)\nSelect the generated script object (or the element if it remains linked) and use the **Properties Palette** to dynamically change the Zone Index or move the lines up/down using the Offset parameters.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **nZoneIndex** | Integer | 0 | Selects the horizontal slice of the element to visualize.<br>• **0-5**: Zones above the element origin.<br>• **6-10**: Zones below the origin (maps 6 to -1, 10 to -5). |\n| **sShowProfiles** | Dropdown | Both | Determines which profiles are drawn: **Both**, **Netto** (inner), or **Brutto** (outer). |\n| **dOffsetNetto** | Double | 100 mm | The vertical distance to shift the Netto profile along the element's local Z-axis. |\n| **dOffsetBrutto** | Double | 150 mm | The vertical distance to shift the Brutto profile along the element's local Z-axis. |\n| **nColorNetto** | Integer | 1 | The AutoCAD Color Index (ACI) for the Netto (inner) profile line. |\n| **nColorBrutto** | Integer | 3 | The AutoCAD Color Index (ACI) for the Brutto (outer) profile line. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Refreshes the profile geometry based on the current Element state and script properties. |\n| Erase | Removes the visualization script from the drawing. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script does not rely on external settings files; all configuration is handled via the Properties Palette.\n\n## Tips\n- **Visual Separation:** Set the `dOffsetNetto` and `dOffsetBrutto` to different values (e.g., 100mm and 150mm) to prevent the inner and outer lines from overlapping, making it easier to distinguish wall thickness.\n- **Checking Lower Levels:** To inspect the profile of a floor zone below the ground level (0), use `nZoneIndex` values 6 through 10.\n- **Color Coding:** Change the `nColorNetto` and `nColorBrutto` values to colors that contrast with your current CAD background for better visibility.\n\n## FAQ\n- **Q: Why did the script disappear after I ran it?**\n  A: This usually happens if you canceled the element selection or did not click a valid hsbCAD Element. Re-run the script and ensure you select a valid Element when prompted.\n- **Q: How do I check a profile 2000mm below the origin?**\n  A: This script uses fixed zone indices. `nZoneIndex` 10 corresponds to the 5th zone below origin. If you need specific arbitrary heights, you may need to check if your element has specific zones defined at that height, or modify the script logic (if you have coding permissions).\n- **Q: Can I use this on a single beam?**\n  A: No, this script is designed to work on hsbCAD Elements (Zones/Walls), not individual GenBeams."
+      },
+      "tokens_used": 5085,
+      "error": null
+    }
+  }
+}

@@ -1,165 +1,97 @@
-# HSB_W-SplitPlatesExtraOptions
+# HSB_W-SplitPlatesExtraOptions.mcr
 
-Split plates on walls avoiding modules and studs for internal rows, with option to alternate split locations to external rows and set sorted beam codes. Can also be used to reset plates to original framing length.
+## Overview
+Automatically splits wall plates (top, bottom, and sill) into manageable lengths based on maximum length constraints while avoiding studs and opening modules to maintain structural integrity. It also handles the creation of splice blocks (scabs) and the labeling of the split segments.
 
-## Script Type
+## Usage Environment
+| Space | Supported | Notes |
+|-------|-----------|-------|
+| Model Space | Yes | Primary working environment. |
+| Paper Space | No | Not applicable. |
+| Shop Drawing | No | Not applicable. |
 
-**Type: O (Object)**
+## Prerequisites
+- **Required Entities:** ElementWallSF (Wall objects).
+- **Minimum Beam Count:** 1 (The wall must contain plates/beams to split).
+- **Required Settings:** None (uses default internal properties or hsbCAD Catalogs).
 
-This is an Object-type TSL script that attaches to wall elements. It operates without requiring pre-selected beams and is inserted onto ElementWallSF (Stick Frame Wall) elements.
+## Usage Steps
 
-- **Implicit Insert**: Yes
-- **DXA Output**: Enabled
-- **Sequence Number**: 110
+### Step 1: Launch Script
+Command: `TSLINSERT` → Select `HSB_W-SplitPlatesExtraOptions.mcr`
 
-## Keywords
+### Step 2: Select Wall Elements
+```
+Command Line: Select element(s)
+Action: Click on the Wall elements (ElementWallSF) in the model that you wish to process.
+```
 
-`Plate`, `Split`
+### Step 3: Configure Properties
+```
+Action: After selection, the script attaches to the walls. Open the Properties Palette (Ctrl+1) to adjust splitting parameters.
+```
 
-## Version History
+### Step 4: Preview and Adjust
+```
+Action: With Preview mode set to "Yes", the wall plates will display calculated split points (often shown as grips or regions).
+Action: Drag the blue grip points to manually adjust split locations if needed, or change properties like Maximum Length.
+```
 
-| Version | Date | Description |
-|---------|------|-------------|
-| 1.11 | 24.05.2022 | Add display and grip points to manually define splitting points |
-| 1.10 | 16.02.2022 | Add Locating Plate to list of beams that need splitting |
-| 1.9 | 10.11.2021 | Add blocking and SFBlocking to list of beams that need splitting |
-| 1.8 | 20.09.2021 | Fix bug when splitting at studs; fix bug when setting beamcode |
-| 1.7 | 17.09.2021 | New property "Side of Stud Clear Space" with 3 options |
-| 1.6 | 07.04.2021 | Bugfix endless loop |
-| 1.5 | 25.03.2021 | Filter plates by centerpoint of first plate |
-| 1.4 | 25.03.2021 | Added beam type verybottomplate |
-| 1.3 | 23.03.2021 | No beamcode overwrite at default; bugfix on element creation |
-| 1.2 | 17.03.2021 | Bugfix inaccuracy of searchpoint |
-| 1.1 | 26.02.2021 | Added property "add to label" and beamcode suffix direction choice |
-| 1.0 | 18.04.2019 | Initial release |
+### Step 5: Finalize
+```
+Action: Set "Preview mode" to "No" in the Properties Palette or select "Reset Plates And Delete" from the right-click menu to commit the changes and remove the script instance.
+```
 
-## User Properties
+## Properties Panel Parameters
 
-### General Category
+### General
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Maximum length | number | 4800 mm | The maximum allowed length for a single plate piece before a split is forced. |
+| Opening module dimensions greater than | number | 605 mm | Threshold to identify 'large' openings. Splits near openings larger than this use specific spacing rules. |
+| Split distance to opening module | number | 269 mm | Minimum clearance distance between a split cut and the edge of a large opening module. |
+| Split distance to small module | number | 119 mm | Minimum clearance distance between a split cut and a small obstruction or module. |
+| Split distance to stud | number | 119 mm | Minimum clearance distance between a split cut and a wall stud. |
+| Side of Stud Clear Space | dropdown | both | Defines which side of a stud the clearance restriction applies (both, left, or right). |
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Maximum length | Double | 4800 mm | Maximum allowed length for plate segments after splitting |
-| Opening module dimensions greater than | Double | 605 mm | Threshold to identify opening modules (doors, windows) |
-| Split distance to opening module | Double | 269 mm | Minimum distance to maintain from opening module edges when splitting |
-| Split distance to small module | Double | 119 mm | Minimum distance to maintain from small module edges when splitting |
-| Split distance to stud | Double | 119 mm | Minimum distance to maintain from stud centers when splitting |
-| Side of Stud Clear Space | String | both | Defines which side of studs to avoid: "both", "left", or "right" |
+### Additional options
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Split Location | dropdown | Opposite | Determines if splits are aligned ("Same") or staggered ("Opposite") between top and bottom plates. |
+| Split on stud | dropdown | No | If "Yes", allows external plates to be split directly over a stud location. |
+| Create splice blocks | dropdown | Yes | If "Yes", generates timber blocks at the split joints to reconnect the plates. |
+| Set BeamCode | dropdown | Left to Right | Assigns a sequential suffix (A, B, C...) to the split plates based on position. |
+| Write BeamCode suffix to Label | dropdown | No | Appends the sequential suffix to the visible label on the plate. |
 
-### Additional Options Category
+### Reset & Debug
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Reset plates | dropdown | No | If "Yes", restores plates to their original, un-split lengths. |
+| Preview mode | dropdown | Yes | Keeps the script active for adjustments. Set to "No" to apply changes and delete the script. |
+| Show non split regions | dropdown | Yes | Visualizes the valid regions where splits can occur (exclusion zones). |
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Split Location | String | Opposite | Defines if splits are aligned ("Same") or opposite ("Opposite") from bottom to top plates |
-| Split on stud | String | No | Defines if splits on very top/bottom plates are over a stud; also affects Blocking splitting |
-| Create splice blocks | String | Yes | Creates splice blocks (blocking pieces) at split locations |
-| Set BeamCode | String | Left to Right | Sets beam codes for identification: "No", "Left to Right", or "Right to Left" |
-| Write BeamCode suffix to Label | String | No | Writes the suffix of the beam code to the Label field |
+## Right-Click Menu Options
 
-### Reset Category
+| Menu Item | Description |
+|-----------|-------------|
+| ../Split Plates | Triggers a recalculation of split points based on current properties. Can also be triggered by double-clicking the script instance. |
+| ../Reset Plates | Restores the plates to their original lengths but keeps the script active for re-editing. |
+| ../Reset Plates And Delete | Restores plates to original lengths and removes the script instance from the model. |
+| ../Delete | Removes the script instance, committing any current split geometry. |
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Reset plates | String | No | Resets plates to original lengths by rejoining split segments |
+## Settings Files
+- **Catalogs**: The script attempts to load properties from a Catalog Entry if provided during launch, or defaults to the `_LastInserted` catalog configuration.
+- **Location**: Standard hsbCAD Catalog paths.
 
-### Debug Category
+## Tips
+- **Interactive Editing**: Keep "Preview mode" set to "Yes" initially. This allows you to see the "Show non split regions" (green/red indicators) and drag the blue split grips to fine-tune positions manually.
+- **Staggering Splits**: Use the "Split Location" property set to "Opposite" to stagger top and bottom plate joints. This generally improves the structural racking strength of the wall.
+- **Avoiding Studs**: If the script refuses to split a specific long section, check "Show non split regions". It may be that the "Split distance to stud" is too large for the spacing between studs in that wall, leaving no valid gap to cut.
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Preview mode | String | Yes | Allows changing settings without removing TSL from element |
-| Show non split regions | String | Yes | Displays the non-split regions (areas around studs and modules) visually |
-
-## Supported Beam Types
-
-The script processes the following beam types for splitting:
-
-**Top Plates:**
-- TopPlate, SFTopPlate, PanelTopPlate
-- SFVeryTopPlate, SFVeryTopSlopedPlate
-- PanelCapStrip
-- SFAngledTPLeft, SFAngledTPRight
-
-**Bottom Plates:**
-- Bottom, PanelBottomPlate
-- SFBottomPlate, SFVeryBottomPlate
-
-**Other Beams:**
-- SFBlocking, Blocking, Brace
-- LocatingPlate
-
-## Usage Workflow
-
-### Step 1: Insert the Script
-
-1. Run the TSL insertion command or use the button command:
-   ```
-   ^C^C(defun c:TSLCONTENT() (hsb_ScriptInsert "HSB_W-SplitPlates_Enhanced")) TSLCONTENT
-   ```
-2. When prompted, select one or more wall elements (ElementWallSF)
-3. The script will be attached to each selected wall element
-
-### Step 2: Configure Split Parameters
-
-After insertion, select the TSL instance and adjust properties in the Properties Palette (OPM):
-
-1. **Set Maximum Length**: Define the maximum plate segment length (default 4800mm)
-2. **Configure Module Distances**: Adjust distances from openings and small modules
-3. **Set Stud Clearance**: Define the clear space around studs and which side to respect
-4. **Choose Split Location**: Select "Same" for aligned splits or "Opposite" for staggered splits between top and bottom plates
-
-### Step 3: Configure Output Options
-
-1. **Splice Blocks**: Enable/disable creation of blocking at split points
-2. **Beam Codes**: Choose whether to assign sequential beam codes and the direction
-3. **Label Writing**: Optionally write beam code suffixes to labels for identification
-
-### Step 4: Preview and Apply
-
-1. Keep "Preview mode" set to "Yes" to see results without committing
-2. Adjust settings as needed while viewing the split visualization
-3. When satisfied, the splits are applied automatically on recalculation
-
-## Context Menu Commands
-
-Right-click on the TSL instance to access these commands:
-
-| Command | Description |
-|---------|-------------|
-| **Split Plates** | Recalculates and applies plate splitting with current settings |
-| **Reset Plates** | Rejoins all split plates back to their original framing length |
-| **Reset Plates And Delete** | Resets plates to original length and removes the TSL instance |
-| **Delete** | Removes the TSL instance without resetting plates |
-
-## How It Works
-
-### Splitting Logic
-
-1. **Module Detection**: Identifies opening modules (doors, windows) and small modules within the wall
-2. **Non-Split Zones**: Calculates protected zones around modules and studs where splits should not occur
-3. **Internal Plates First**: Splits bottom plates and top plates, respecting the non-split zones
-4. **External Plates**: Splits very bottom plates, very top plates, and blocking members
-5. **Staggering**: When "Opposite" is selected, external plates are split at opposite positions from internal plates
-
-### Beam Code Assignment
-
-When "Set BeamCode" is enabled:
-- Bottom plate rows receive codes: B1, B2, B3...
-- Top plate rows receive codes: T1, T2, T3...
-- Other beams receive codes: O1, O2...
-- Direction (Left to Right / Right to Left) determines suffix increment order
-
-### Splice Block Creation
-
-When enabled, blocking pieces are automatically created:
-- Positioned at each split location
-- Material and grade match the parent plate
-- Named "SPLICE BLOCK" for easy identification
-- Stretched between adjacent studs
-
-## Notes
-
-- The script will not attach to an element that already has this TSL attached
-- If maximum length is shorter than the minimum required split distance, an error is reported
-- The script automatically rejoins previously split plates before applying new splits
-- Manual split points can be defined using grip points (version 1.11+)
-- Debug visualization shows non-split regions in red when enabled
+## FAQ
+- **Q: How do I split a plate directly over a stud?**
+- **A:** Change the property "Split on stud" to "Yes". This overrides the standard clearance distance.
+- **Q: Why did my plates disappear?**
+- **A:** You likely have "Reset plates" set to "Yes". Change it back to "No" to restore the split geometry.
+- **Q: Can I undo the splits?**
+- **A:** Yes, right-click the script instance and select "../Reset Plates". If the script has already been deleted ("Preview mode" was No), you will need to use the standard AutoCAD Undo command.

@@ -1,0 +1,216 @@
+{
+  "filename": "HSB_W-Lifting.mcr",
+  "status": "completed",
+  "total_tokens": 47322,
+  "processing_time": 766.9842557907104,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9223,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script operates on GenBeam and Element objects (e.g., `Element el`, `Beam bmStud`) and modifies the 3D geometry by adding `Drill` tools and reinforcement `Body` objects. There are no 'sd_' prefixes, no '_Viewport' checks, and no '#Type E' structures typical of ShopDrawing scripts. Visualizations are performed using `Display` objects in 3D view directions."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "The script must be attached to or run on a hsbCAD Wall or Roof Element containing structural members (studs/plates) to calculate lifting points and apply drilling.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5656,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9967,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9547,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launches and checks for insertion mode (_bOnInsert)",
+          "If inserting: Prompts user 'Select a set of elements' using command line input",
+          "User selects one or more Wall or Roof Elements",
+          "Script iterates through each selected Element",
+          "Filtering: Collects beams (studs/plates) based on BeamCode, Label, and Jack exclusion properties",
+          "Validation: Checks if TSL identifier is unique to the element to prevent duplicate execution",
+          "Determine lifting point count (2, 3, or 4) based on element length and weight thresholds",
+          "Calculate reference center: Uses Element Center or specific Beam Center based on 'Centerpoint for drills' property",
+          "Calculate coordinate positions: Applies offset and symmetry logic (Symmetric vs Asymmetric)",
+          "Apply Tooling: Based on 'Tooling' selection (Drill stud/topplate/side cuts/none), applies Drill or Cutout tools to beams",
+          "Apply Reinforcement: If enabled, generates Body plates for reinforcement at drill locations",
+          "Generate Visualization: Draws dynamic Display objects representing lifting ropes and points in 3D and Plan views",
+          "Finalize: Map entities for grip editing if 'Custom' side is selected"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Element Weight/Length Threshold",
+            "path1": {
+              "name": "Standard Load",
+              "steps": [
+                "Calculate positions for 2 lifting points"
+              ]
+            },
+            "path2": {
+              "name": "Heavy/Long Load",
+              "steps": [
+                "Calculate positions for 4 lifting points (extra ropes)"
+              ]
+            }
+          },
+          {
+            "condition": "Tooling Option (sTooling)",
+            "path1": {
+              "name": "Drill Stud and Topplate",
+              "steps": [
+                "Apply drills to both vertical studs and horizontal top/bottom plates"
+              ]
+            },
+            "path2": {
+              "name": "Drill Stud",
+              "steps": [
+                "Apply drills only to vertical studs"
+              ]
+            },
+            "path3": {
+              "name": "Side Cuts",
+              "steps": [
+                "Create rectangular cutouts in top plate instead of round drills"
+              ]
+            },
+            "path4": {
+              "name": "No Drills",
+              "steps": [
+                "Skip tooling generation, only visualize points"
+              ]
+            }
+          },
+          {
+            "condition": "Symmetry Setting (sSymmetricAsymmetric)",
+            "path1": {
+              "name": "Symmetric",
+              "steps": [
+                "Apply offsets equally from center point",
+                "Enforce 0 offset property logic if needed"
+              ]
+            },
+            "path2": {
+              "name": "Asymmetric",
+              "steps": [
+                "Apply offsets allowing different distances from center",
+                "Specific Z-axis transformations applied"
+              ]
+            }
+          },
+          {
+            "condition": "Center Reference Entity",
+            "path1": {
+              "name": "Element",
+              "steps": [
+                "Base calculations on geometric center of the Element bounding box"
+              ]
+            },
+            "path2": {
+              "name": "Beam by Code",
+              "steps": [
+                "Find beam with user-specified code",
+                "Base calculations on that specific beam's center"
+              ]
+            }
+          },
+          {
+            "condition": "Reinforcement Plate Dimensions",
+            "path1": {
+              "name": "User Defined",
+              "steps": [
+                "Use explicit Width and Height properties"
+              ]
+            },
+            "path2": {
+              "name": "Auto-Calculate (0 Value)",
+              "steps": [
+                "Width defaults to Stud width",
+                "Height defaults to drill vertical offset"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Duplicate Identifier",
+            "errorMessage": "Script detected an existing instance with the same identifier.",
+            "recovery": "Change the 'Pos 1' (tslIdentifier) property to a unique value."
+          },
+          {
+            "check": "Beam Filter",
+            "errorMessage": "No studs found matching the filter criteria.",
+            "recovery": "Clear 'Filter beams with beamcode' or ensure beams exist with that code."
+          },
+          {
+            "check": "Drill Intersection",
+            "errorMessage": "Drill does not intersect the target beam envelope.",
+            "recovery": "Adjust 'Horizontal offset drill', 'Vertical offset drill', or 'Offset from center point'."
+          },
+          {
+            "check": "Reference Beam",
+            "errorMessage": "Beam specified for centering drills not found.",
+            "recovery": "Change 'Beamcode to center drills' to a valid beam code in the element."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Adjust Drill Positions",
+            "how": "Modify 'Offset from center point', 'Horizontal offset', 'Vertical offset' via OPM",
+            "effect": "Recalculates drill coordinates and moves visualization dynamically."
+          },
+          {
+            "action": "Change Tooling Type",
+            "how": "Select different 'Tooling' option via OPM",
+            "effect": "Switches between Drills, Side Cuts, or removes them entirely."
+          },
+          {
+            "action": "Manual Grip Repositioning",
+            "how": "Drag grip points in Model view (if Tooling Side is 'Custom')",
+            "effect": "Moves individual lifting points to exact locations manually."
+          },
+          {
+            "action": "Toggle Reinforcement Plates",
+            "how": "Set 'Stud drill reinforcement' to Yes/No",
+            "effect": "Adds or removes reinforcement bodies at the stud drilling locations."
+          }
+        ]
+      },
+      "tokens_used": 7932,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_W-Lifting.mcr\n\n## Overview\nThis script automates the calculation and generation of lifting points for Wall and Roof elements. It calculates the optimal number of lifting points based on element weight/length, applies drilling or cutout operations to studs and plates, and generates visualizations of the lifting ropes in 3D.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for geometry generation and 3D visualization. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required Entities**: One or more hsbCAD Wall or Roof Elements containing structural members (studs/plates).\n- **Minimum Beams**: At least one stud or plate matching the filter criteria.\n- **Required Settings**: None (Script uses internal logic and properties).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_W-Lifting.mcr` from the list.\n\n### Step 2: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the Wall or Roof elements you wish to process and press Enter.\n```\n\n### Step 3: Configure and Visualize\nOnce inserted, the script will automatically:\n1. Filter the studs/plates based on default or user-set properties.\n2. Calculate 2 or 4 lifting points based on the element's weight and length.\n3. Generate dynamic lines in the model representing the lifting ropes.\n4. Apply the selected tooling (drills or cuts) to the beams.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Pos 1 (TSL Identifier) | String | - | A unique identifier for this script instance. Change this if you get a duplicate error. |\n| Filter beams with beamcode | String | - | Only studs/plates with this BeamCode/Label will be processed. Leave empty to include all. |\n| Tooling | Dropdown | Drill Stud and Topplate | Selects how the lifting points are applied: Drill Stud and Topplate, Drill Stud only, Side Cuts (rectangular notches), or None. |\n| Centerpoint for drills | Dropdown | Element Center | Determines the reference origin for lifting points. Can be the Element center or a specific Beam center. |\n| Beamcode to center drills | String | - | If Centerpoint is set to \"Beam\", enter the code of the specific beam to use as the reference. |\n| Symmetric/Asymmetric | Dropdown | Symmetric | Sets the calculation logic. Symmetric places points evenly from the center; Asymmetric allows for offset variations. |\n| Offset from center point | Number | Calculated | The distance from the reference center to the lifting points. |\n| Horizontal offset drill | Number | 0 | Lateral shift of the drill hole/cut relative to the stud center. |\n| Vertical offset drill | Number | Calculated | Vertical height of the hole relative to the beam reference. |\n| Stud drill reinforcement | Yes/No | No | If Yes, generates reinforcement plates at the drill locations on studs. |\n| Reinforcement Width | Number | Auto (0) | Width of the reinforcement plate. 0 uses the stud width. |\n| Reinforcement Height | Number | Auto (0) | Height of the reinforcement plate. 0 uses the vertical offset distance. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Update / Recalculate | Refreshes the lifting point calculations based on current property values or element changes. |\n| Grip Edit | (If enabled) Allows dragging the lifting points manually in the model view to custom locations. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: This script operates entirely based on Element geometry and Properties Palette settings.\n\n## Tips\n- **Heavy Elements**: The script automatically switches to 4 lifting points for elements that exceed specific weight or length thresholds.\n- **Avoiding Collisions**: If your drill holes are missing or intersecting incorrectly, try adjusting the \"Horizontal offset drill\" or \"Vertical offset drill\" properties.\n- **Custom Lifting**: If the automatic calculations don't suit a specific situation, you can use the Grip Edit points (visible when selecting the element in some configurations) to manually move the lifting loops.\n\n## FAQ\n- **Q: I get an error \"Script detected an existing instance with the same identifier.\"**\n  - **A:** Another instance of this script is already attached to the element with the same ID. Go to the Properties Palette and change the \"Pos 1\" value to a unique name.\n  \n- **Q: No drills or cuts are appearing on my studs.**\n  - **A:** Check the \"Filter beams with beamcode\" property. If it contains text, ensure your studs actually have that code assigned. Alternatively, check the \"Tooling\" property to ensure it isn't set to \"None\".\n\n- **Q: The reference point is in the wrong location.**\n  - **A:** Change \"Centerpoint for drills\" from \"Element\" to \"Beam\" and specify the correct \"Beamcode to center drills\" (e.g., a bottom plate) to anchor the calculations correctly."
+      },
+      "tokens_used": 4997,
+      "error": null
+    }
+  }
+}

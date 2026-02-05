@@ -1,0 +1,319 @@
+{
+  "filename": "OpeningBrace.mcr",
+  "status": "completed",
+  "total_tokens": 37174,
+  "processing_time": 460.8418490886688,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "08.09.2023",
+            "author": "Marsel Nakuci",
+            "changes": "HSB-19228: For 2 openings that have same kingstuds, make sure to make them same module; Delete existing brace when inserting tsl a second time"
+          },
+          {
+            "version": "1.0",
+            "date": "28.08.2023",
+            "author": "Marsel Nakuci",
+            "changes": "HSB-19228: Initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": [
+          "mtfBraceOpening"
+        ]
+      },
+      "tokens_used": 6837,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script creates GenBeam entities using dbCreate into _kModelSpace. Manipulates 3D geometry (Point3d, Vector3d, PLine). Filters and modifies ElementWallSF, Opening, and Beam objects. No ShopDrawing keywords (sd_*, #Type E) or Viewport handling found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWallSF",
+            "Opening",
+            "GenBeam (King Stud)",
+            "GenBeam (Bottom Plate)"
+          ],
+          "minimumBeams": 3,
+          "requiredSpace": "3D Model Space containing a Stick Frame Wall (ElementWallSF) with at least one Opening.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5233,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select SF Walls|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4182,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically inserts a horizontal brace beam (sill plate) below openings in stick frame walls, aligning it between king studs and synchronizing wall modules.",
+          "category": "Framing/Automation",
+          "typicalUseCase": "Used when detailing stick frame walls to ensure structural support below window sills or door thresholds ( cripple studs) while maintaining consistent module numbering across king studs."
+        },
+        "parameters": [
+          {
+            "name": "Input Wall Selection",
+            "technicalDefault": "ElementWallSF",
+            "businessMeaning": "The Stick Frame Wall entity containing the openings that require bracing. The script processes every opening found within the selected wall.",
+            "validRange": "ElementWallSF entities in the current drawing that contain at least one Opening object.",
+            "unit": "Selection",
+            "affectsOutput": "Determines the location and number of braces created. All openings in the selected wall will receive a brace beam."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Wall Selection (ElementWallSF)",
+            "effect": "The script identifies all Openings within the wall and spawns a calculation instance for each. If no openings exist, the script terminates.",
+            "cascade": [
+              "Opening Entities",
+              "King Studs",
+              "Bottom Plate"
+            ]
+          },
+          {
+            "trigger": "Module Mismatch between King Studs",
+            "effect": "If the Left and Right King Studs belong to different production modules, the script reassigns all beams in the Right King Stud's module to match the Left King Stud's module.",
+            "cascade": [
+              "Beam Modules",
+              "Grouping"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "GenBeam",
+            "description": "Horizontal brace beam named 'BRACE'. It uses the same width and height as the wall's bottom plate. Material is set to 'CLS', Grade to 'C16'. Positioned at the top edge of the bottom plate, spanning between King Studs.",
+            "appliedTo": "Spanning between King Studs below the Opening."
+          },
+          {
+            "type": "Beam Modification",
+            "description": "Intermediate vertical studs (cripple studs) located between the king studs are stretched dynamically to connect to the new brace beam.",
+            "appliedTo": "Vertical studs found between the King Studs."
+          },
+          {
+            "type": "Cleanup",
+            "description": "Existing beams intersecting the new brace that are named 'BRACE' are deleted to prevent duplication on re-calculation.",
+            "appliedTo": "Existing 'BRACE' beams in the wall."
+          }
+        ]
+      },
+      "tokens_used": 7159,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch Script (TSLCONTENT)",
+          "2. Check Insertion Cycle (If > 1, exit immediately to prevent duplicates)",
+          "3. Check for Catalog Execution Key (If present, load properties; otherwise use defaults)",
+          "4. Prompt User to select ElementWallSF entities (Stick Frame Walls)",
+          "5. Create 'Manager' TSL Instance for each selected Wall (Mode 0)",
+          "6. Manager Instance retrieves all Openings contained within the Wall",
+          "7. Validate Wall has Openings (If none, delete Manager and exit)",
+          "8. Manager creates 'Processor' TSL Instance for each Opening (Mode 1)",
+          "9. Processor retrieves Parent Element (Wall) and all Beams within the Wall",
+          "10. Calculate Opening midpoint and projection geometry",
+          "11. Identify Bottom Plate (via intersection below opening midpoint)",
+          "12. Identify King Studs (Left and Right via horizontal intersection)",
+          "13. Validate critical reference beams exist (Bottom Plate, Left King Stud, Right King Stud)",
+          "14. Check Production Modules: Compare Left and Right King Stud modules",
+          "15. [Conditional] If Modules differ: Reassign all beams in Right Module to Left Module",
+          "16. Determine Brace orientation based on Bottom Plate vector alignment",
+          "17. Create new 'BRACE' GenBeam at top edge of Bottom Plate",
+          "18. Stretch new Brace to intersect both King Studs",
+          "19. Cleanup: Delete existing beams named 'BRACE' intersecting the new beam",
+          "20. Assign properties (Material, Grade, Name, Module) to new Brace",
+          "21. Identify and stretch vertical cripple studs (located between King Studs) to the new Brace",
+          "22. Erase Processor Instance",
+          "23. Erase Manager Instance",
+          "24. Complete"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle Count",
+            "path1": {
+              "name": "Cycle > 1",
+              "steps": [
+                "Erase Instance",
+                "Return (Exit)"
+              ]
+            },
+            "path2": {
+              "name": "First Cycle",
+              "steps": [
+                "Proceed to Catalog Check or User Prompt"
+              ]
+            }
+          },
+          {
+            "condition": "Wall Openings Exist",
+            "path1": {
+              "name": "Openings Found",
+              "steps": [
+                "Iterate through openings",
+                "Spawn Processor instances (Mode 1)"
+              ]
+            },
+            "path2": {
+              "name": "No Openings",
+              "steps": [
+                "Report 'No Opening found for Stickframe'",
+                "Erase Instance",
+                "Return"
+              ]
+            }
+          },
+          {
+            "condition": "Reference Beam Availability",
+            "path1": {
+              "name": "All Refs Found",
+              "steps": [
+                "Proceed to Brace Creation"
+              ]
+            },
+            "path2": {
+              "name": "Missing Ref",
+              "steps": [
+                "Report specific error (e.g., 'Bottom Plate not found', 'Left King Stud not found')",
+                "Erase Instance",
+                "Return"
+              ]
+            }
+          },
+          {
+            "condition": "Production Module Match (Left King Stud vs Right King Stud)",
+            "path1": {
+              "name": "Different Modules",
+              "steps": [
+                "Iterate all beams in Wall",
+                "Identify beams belonging to Right Module",
+                "Reassign them to Left Module"
+              ]
+            },
+            "path2": {
+              "name": "Same Module",
+              "steps": [
+                "Skip module reassignment"
+              ]
+            }
+          },
+          {
+            "condition": "Bottom Plate Orientation",
+            "path1": {
+              "name": "Parallel to Wall Y-axis",
+              "steps": [
+                "Set Beam Indices: ny=1, nz=0"
+              ]
+            },
+            "path2": {
+              "name": "Not Parallel",
+              "steps": [
+                "Set Beam Indices: ny=0, nz=1"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Selected Entity is a valid ElementWallSF",
+            "errorMessage": "Stick frame wall not found",
+            "recovery": "Select a valid Stick Frame Wall element."
+          },
+          {
+            "check": "Wall contains Opening entities",
+            "errorMessage": "No Opening found for Stickframe",
+            "recovery": "Ensure the selected wall has at least one door or window opening."
+          },
+          {
+            "check": "Bottom Plate exists below the opening midpoint",
+            "errorMessage": "Bottom Plate not found",
+            "recovery": "Check wall structure for a horizontal plate beam below the opening."
+          },
+          {
+            "check": "Left King Stud exists to the left of the opening",
+            "errorMessage": "Left King Stud not found",
+            "recovery": "Ensure vertical King Studs flank the opening and are correctly classified."
+          },
+          {
+            "check": "Right King Stud exists to the right of the opening",
+            "errorMessage": "Right King Stud not found",
+            "recovery": "Ensure vertical King Studs flank the opening and are correctly classified."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Edit Geometry",
+            "how": "Grip Edit / CAD Move",
+            "effect": "The generated 'BRACE' beam is a static GenBeam. Moving it does not update the script logic as the TSL instance is erased upon creation."
+          },
+          {
+            "action": "Regenerate Brace",
+            "how": "Re-run the TSL Insert command on the wall",
+            "effect": "The script will detect the existing 'BRACE' beam (based on name and location), delete it, and generate a new one based on current wall/opening geometry."
+          },
+          {
+            "action": "Adjust Material/Properties",
+            "how": "Properties Palette (OPM)",
+            "effect": "Users can manually change the Material ('CLS'), Grade ('C16'), or Name ('BRACE') of the generated beam via standard AutoCAD properties, though re-running the script will reset these to hardcoded values."
+          }
+        ]
+      },
+      "tokens_used": 7846,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# OpeningBrace.mcr\n\n## Overview\nAutomatically inserts a horizontal brace beam (sill plate) below openings in stick frame walls. It aligns the brace between king studs, stretches intermediate cripple studs, and synchronizes production modules to ensure consistency.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script operates on 3D Stick Frame Wall elements. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Entities**: Stick Frame Wall (`ElementWallSF`) containing at least one `Opening` (door or window).\n- **Wall Structure**: The wall must have valid King Studs (vertical beams flanking the opening) and a Bottom Plate (horizontal beam below the opening).\n- **Dependencies**: Requires `mtfBraceOpening`.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `OpeningBrace.mcr`\n\n### Step 2: Select Stick Frame Walls\n```\nCommand Line: |Select SF Walls|\nAction: Click on the Stick Frame Wall entity that contains the opening(s) you wish to brace.\n```\n*Note: You can select multiple walls at once. Press Enter to confirm your selection.*\n\n### Step 3: Automatic Processing\nOnce selected, the script performs the following actions automatically without further prompts:\n1. Scans the selected wall for openings.\n2. Identifies the King Studs (left/right) and the Bottom Plate for each opening.\n3. Deletes any existing beams named \"BRACE\" in the target area.\n4. Creates a new \"BRACE\" beam (GenBeam) spanning between the King Studs at the top edge of the Bottom Plate.\n5. Stretches any vertical cripple studs located between the King Studs up to the new brace.\n6. Synchronizes production modules (if King Studs are in different modules, it merges them into the Left Stud's module).\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script runs automatically upon insertion and does not expose user-editable parameters in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | No custom context menu items are added by this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script uses hardcoded defaults for material ('CLS') and grade ('C16'). It does not rely on external XML settings files.\n\n## Tips\n- **Preventing Duplicates**: The script automatically deletes existing beams named \"BRACE\" before generating new ones. You can safely re-run the script to update the brace if the wall geometry changes.\n- **Module Grouping**: This script is useful for ensuring that beams around an opening are grouped into the same production module. If the Left and Right King Studs are in different modules, the script will force the Right module to match the Left module.\n- **Wall Integrity**: If the script fails to find a brace, check that your Bottom Plate actually runs underneath the opening midpoint.\n\n## FAQ\n- **Q: What does \"Stick frame wall not found\" mean?**\n  - **A:** You likely selected a generic wall or a polyline. You must select the specific hsbCAD `ElementWallSF` entity (Stick Frame Wall).\n- **Q: The script reported \"Bottom Plate not found\". Why?**\n  - **A:** The script looks for a horizontal beam directly below the midpoint of the opening. Ensure your wall has a plate defined at the correct height, or that the opening height is not set too low.\n- **Q: Can I change the material of the brace?**\n  - **A:** The script sets the material to \"CLS\" and Grade to \"C16\" by default. While you can change these manually in the Properties Palette after creation, re-running the script will reset them to these defaults.\n- **Q: Does this work for multiple openings in one wall?**\n  - **A:** Yes, the script iterates through all openings found in the selected Wall entity and processes each one individually."
+      },
+      "tokens_used": 5917,
+      "error": null
+    }
+  }
+}

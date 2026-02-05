@@ -1,0 +1,228 @@
+{
+  "filename": "HSB_T-SplitBeam.mcr",
+  "status": "completed",
+  "total_tokens": 18168,
+  "processing_time": 193.7611391544342,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2285,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No sd_*, Multipage*, or _Viewport keywords found. Interaction relies on getBeam() and getPoint() which are standard ModelSpace commands."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 994,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getBeam",
+              "promptOriginal": "|Select a beam|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "|Split from|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "PrPoint",
+              "promptOriginal": "|Split to|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3159,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A tool to split a single existing timber beam into two separate entities based on a defined cut line, effectively replacing the original beam with two new segments.",
+          "category": "Editing/Modification",
+          "typicalUseCase": "Used when a continuous beam needs to be physically separated, such as creating a joint for a transport splice, preparing for a perpendicular intersecting beam, or isolating a section of a beam for different machining."
+        },
+        "parameters": [
+          {
+            "name": "bm",
+            "technicalDefault": "User Selection",
+            "businessMeaning": "The target timber beam to be cut or divided.",
+            "validRange": "Any existing linear structural beam in the model.",
+            "unit": "N/A (Entity)",
+            "affectsOutput": "Source of geometry and properties. The original beam is deleted and replaced by split versions of this entity."
+          },
+          {
+            "name": "from",
+            "technicalDefault": "User Point Selection",
+            "businessMeaning": "The start point defining the cut line or split location on the beam.",
+            "validRange": "Any point in 3D space, typically projected onto the beam centerline or cutting plane.",
+            "unit": "mm",
+            "affectsOutput": "Determines one side of the cutting plane geometry."
+          },
+          {
+            "name": "to",
+            "technicalDefault": "User Point Selection (Rubber-banded from 'from')",
+            "businessMeaning": "The end point defining the direction and angle of the cut.",
+            "validRange": "Any point in 3D space. The vector (from -> to) defines the cut plane orientation.",
+            "unit": "mm",
+            "affectsOutput": "Determines the angle of the cut faces on the resulting split beams. If aligned with the beam, it creates a square cut; otherwise, it creates an angled/plumb cut."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of 'bm'",
+            "effect": "Sets the context for the split operation.",
+            "cascade": [
+              "from",
+              "to"
+            ]
+          },
+          {
+            "trigger": "Selection of 'from'",
+            "effect": "Acts as the base point for the dynamic preview of the 'to' point.",
+            "cascade": [
+              "to"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "GenBeam",
+            "description": "Two new beam segments replacing the original 'bm'. The split faces align with the vector defined by 'from' and 'to'.",
+            "appliedTo": "ModelSpace (Original beam 'bm' is erased)"
+          }
+        ]
+      },
+      "tokens_used": 2279,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script is launched by user.",
+          "User selects an existing beam to split.",
+          "User picks the 'Split from' start point on the beam.",
+          "User picks the 'Split to' end point to define the cut plane vector.",
+          "Script calculates the dot product between the beam direction and the cut vector.",
+          "Script executes the database split operation (bm.dbSplit).",
+          "Script instance erases itself from the model."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User input for 'Split to' point (ssPt.go())",
+            "path1": {
+              "name": "Valid Input",
+              "steps": [
+                "The function returns _kOk.",
+                "The 'to' point is captured.",
+                "The loop breaks and processing continues."
+              ]
+            },
+            "path2": {
+              "name": "Invalid Input / Cancel",
+              "steps": [
+                "The function returns a value other than _kOk.",
+                "A warning 'Invalid split location' is reported.",
+                "The script instance is erased.",
+                "The script terminates immediately."
+              ]
+            }
+          },
+          {
+            "condition": "Cut vector orientation relative to Beam X-axis (Dot Product)",
+            "path1": {
+              "name": "Reverse Direction (< 0)",
+              "steps": [
+                "The cut vector is opposite to the beam's X-axis.",
+                "The 'from' and 'to' points are swapped.",
+                "The split proceeds using the corrected vector."
+              ]
+            },
+            "path2": {
+              "name": "Forward Direction (>= 0)",
+              "steps": [
+                "The cut vector aligns with the beam's X-axis.",
+                "'from' and 'to' points remain unchanged.",
+                "The split proceeds using the original input."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Successful entry of the 'Split to' point via PrPoint",
+            "errorMessage": "|Invalid split location|",
+            "recovery": "The script aborts and erases itself. The user must re-run the script and select valid points."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "The script executes once during insertion (_bOnInsert) and then calls eraseInstance(). It does not persist in the model, so there are no post-insertion edits available. The changes to the beam (splitting into two) are permanent database changes."
+          }
+        ]
+      },
+      "tokens_used": 4345,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_T-SplitBeam.mcr\n\n## Overview\nThis script splits a single existing timber beam into two separate entities based on a user-defined cut line. It permanently replaces the original beam with two new segments that match the cut orientation specified by the user.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This is the only supported environment. |\n| Paper Space | No | Script uses 3D input commands (`getBeam` and `getPoint`). |\n| Shop Drawing | No | This is a model modification tool only. |\n\n## Prerequisites\n- **Required Entities**: One existing `GenBeam` (Structural Beam) must be present in the model.\n- **Minimum Beam Count**: 1\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Browse and select `HSB_T-SplitBeam.mcr`.\n\n### Step 2: Select Beam\n```\nCommand Line: Select a beam\nAction: Click on the timber beam you wish to split.\n```\n\n### Step 3: Define Cut Start Point\n```\nCommand Line: Split from\nAction: Click a point in 3D space to define the start of the cut line. This typically lies on the beam surface or centerline where the split should begin.\n```\n\n### Step 4: Define Cut Direction (End Point)\n```\nCommand Line: Split to\nAction: Click a second point to define the direction and angle of the cut. The vector from the \"Split from\" point to this point determines the angle of the cut faces on the new beams.\n```\n\n## Properties Panel Parameters\n*This script does not expose editable parameters in the Properties Palette (OPM). It executes immediately based on command line input.*\n\n## Right-Click Menu Options\n*This script runs once upon insertion and erases itself; therefore, there are no right-click context menu options available.*\n\n## Settings Files\nNone.\n\n## Tips\n- **Creating Angled Cuts**: The \"Split to\" point dictates the cut angle. If you want a square (90-degree) cut, click perpendicular to the beam's length. If you click diagonally, the resulting beams will have angled/plumb cut faces.\n- **Vector Flexibility**: You do not need to worry about clicking in the exact direction of the beam's axis. The script automatically detects if you defined the cut vector backwards and corrects the orientation accordingly.\n- **Data Safety**: The script deletes the original beam and creates two new ones. This permanently changes the entity ID of the beam, which may affect linked lists or production data if run on already processed elements.\n\n## FAQ\n- **Q: What happens if I cancel the operation while setting the second point?**\n  - **A:** The script will abort and display an \"Invalid split location\" warning. The original beam will remain unchanged in the model.\n- **Q: Can I use this to cut a beam into three pieces at once?**\n  - **A:** No, this script specifically splits one beam into exactly two segments. To create three pieces, you must run the script twice on the resulting segments.\n- **Q: Does the script remain in the drawing after I use it?**\n  - **A:** No. This is a \"run-once\" utility script. It performs the split and then erases itself from the model database."
+      },
+      "tokens_used": 5106,
+      "error": null
+    }
+  }
+}

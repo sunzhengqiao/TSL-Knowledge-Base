@@ -1,0 +1,435 @@
+{
+  "filename": "MultiSaw.mcr",
+  "status": "completed",
+  "total_tokens": 51780,
+  "processing_time": 274.0995144844055,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "04.08.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-19740 initial version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8316,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script operates on GenBeam entities and creates 3D geometry (Body, PLine, PlaneProfile). It uses 3D interaction methods like getPoint, PrPoint, and Jigging (_bOnJig) with view direction checks (getViewDirection). It applies 3D manufacturing tools (FreeProfile, SolidSubtract) directly to beams using addTool(). There is no usage of sd_ prefixes, Sheet entities, or Paper Space viewports."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space (required for selecting beams and applying solid tooling)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7515,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrPoint.goJig",
+              "promptOriginal": "|Select first point [Lengthwise/Crosswise/Align/FlipSide]|",
+              "condition": "selectDirection function execution",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getString",
+              "promptOriginal": "|Are you sure to overwrite existing settings?| [|No|]/[|Yes|]",
+              "condition": "Export Settings trigger (if file exists)",
+              "required": false
+            }
+          ],
+          "keywordOptions": [
+            {
+              "prompt": "|Select first point [Lengthwise/Crosswise/Align/FlipSide]|",
+              "options": [
+                "Lengthwise",
+                "Crosswise",
+                "Align",
+                "FlipSide"
+              ]
+            }
+          ]
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "|Select X-Alignment|",
+            "handler": "|Select X-Alignment|",
+            "action": "Sets alignment vector to X axis and recalculates",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Select Y-Alignment|",
+            "handler": "|Select Y-Alignment|",
+            "action": "Sets alignment vector to Y axis and recalculates",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Revert Direction|",
+            "handler": "|Revert Direction|",
+            "action": "Reverses the current direction vector",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Import Settings|",
+            "handler": "|Import Settings|",
+            "action": "Imports settings from the XML file defined in sFullPath",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Export Settings|",
+            "handler": "|Export Settings|",
+            "action": "Exports current settings to the XML file defined in sFullPath",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "sFullPath (variable)",
+            "searchPaths": [],
+            "purpose": "Storage for tool configuration and settings (Import/Export).",
+            "required": false
+          }
+        ]
+      },
+      "tokens_used": 9665,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates a multi-blade saw spindle tool to create multiple parallel cuts or slots (dados) across selected timber beams.",
+          "category": "Machining / Manufacturing",
+          "typicalUseCase": "Used when a carpenter or engineer needs to cut multiple slots for floor joists, roof battens, or shelf supports into one or more beams simultaneously."
+        },
+        "parameters": [
+          {
+            "name": "vecDir",
+            "technicalDefault": "gb.vecX()",
+            "businessMeaning": "The direction of the cuts relative to the beam. Determines if cuts run lengthwise, crosswise, or at a custom angle.",
+            "validRange": "Any direction vector on the beam face plane",
+            "unit": "Direction",
+            "affectsOutput": "Rotates the array of saw cuts on the beam surface."
+          },
+          {
+            "name": "vecFace",
+            "technicalDefault": "gb.vecZ() (Top face)",
+            "businessMeaning": "The specific face of the timber (Top, Bottom, Left, Right) that the saw will cut into.",
+            "validRange": "Normal vector of a beam face",
+            "unit": "Direction",
+            "affectsOutput": "Moves the tooling to the opposite side of the beam if changed."
+          },
+          {
+            "name": "toolWidth",
+            "technicalDefault": "Map value",
+            "businessMeaning": "The thickness (kerf) of a single saw blade.",
+            "validRange": "2.0 mm - 10.0 mm (Standard saw blade thicknesses)",
+            "unit": "mm",
+            "affectsOutput": "Sets the width of the individual cut slots."
+          },
+          {
+            "name": "toolRadius",
+            "technicalDefault": "Map value",
+            "businessMeaning": "The radius of the saw blade used to create the corner geometry of the cut.",
+            "validRange": "100 mm - 350 mm",
+            "unit": "mm",
+            "affectsOutput": "Creates rounded corners in the slot geometry instead of sharp 90-degree corners if an offset is present."
+          },
+          {
+            "name": "depth",
+            "technicalDefault": "Map value",
+            "businessMeaning": "How deep the saw blades cut into the timber material.",
+            "validRange": "1 mm to Beam Depth/Width (Cannot exceed stock size)",
+            "unit": "mm",
+            "affectsOutput": "Controls the Z-depth of the machining operation."
+          },
+          {
+            "name": "Distances[]",
+            "technicalDefault": "Map value array",
+            "businessMeaning": "The spacing between the centers of adjacent saw blades on the spindle.",
+            "validRange": "20 mm - 600 mm (Depending on application)",
+            "unit": "mm",
+            "affectsOutput": "Defines the center-to-center distance of the parallel cuts."
+          },
+          {
+            "name": "sFullPath",
+            "technicalDefault": "Calculated path string",
+            "businessMeaning": "The file path used to save and load the tool configuration (XML).",
+            "validRange": "Valid Windows file system path",
+            "unit": "String",
+            "affectsOutput": "Does not directly affect geometry, but loading a file here will overwrite all tool parameters."
+          },
+          {
+            "name": "bIsSkewed",
+            "technicalDefault": "Calculated state",
+            "businessMeaning": "Determines if the cut direction is not perpendicular to the beam axis.",
+            "validRange": "Boolean (True/False)",
+            "unit": "N/A",
+            "affectsOutput": "Switches the generation logic between standard cuts and skewed Slot entities."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Keyword 'Lengthwise'",
+            "effect": "Sets the cut direction parallel to the beam axis.",
+            "cascade": [
+              "vecDir"
+            ]
+          },
+          {
+            "trigger": "Keyword 'Crosswise'",
+            "effect": "Sets the cut direction perpendicular to the beam axis.",
+            "cascade": [
+              "vecDir"
+            ]
+          },
+          {
+            "trigger": "Keyword 'FlipSide'",
+            "effect": "Inverts the face normal vector to apply the cut to the opposite side.",
+            "cascade": [
+              "vecFace",
+              "ptFace"
+            ]
+          },
+          {
+            "trigger": "Context Menu 'Select X-Alignment'",
+            "effect": "Aligns the cut direction to the global X-axis.",
+            "cascade": [
+              "vecDir"
+            ]
+          },
+          {
+            "trigger": "Context Menu 'Revert Direction'",
+            "effect": "Multiplies the current direction vector by -1.",
+            "cascade": [
+              "vecDir"
+            ]
+          },
+          {
+            "trigger": "Context Menu 'Import Settings'",
+            "effect": "Reads XML file and overwrites toolWidth, depth, radius, and Distances[].",
+            "cascade": [
+              "toolWidth",
+              "depth",
+              "toolRadius",
+              "Distances[]"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "FreeProfile / Slot / SolidSubtract",
+            "description": "Creates the visual subtraction (SolidSubtract) and the CNC toolpath (FreeProfile or Slot). If the cut is skewed, it generates Slot entities; otherwise, it generates FreeProfiles.",
+            "appliedTo": "All GenBeams selected that are coplanar with the initial selection point."
+          }
+        ]
+      },
+      "tokens_used": 8887,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script (MultiSaw)",
+          "Select GenBeam(s)",
+          "Script enters selectDirection function (PrPoint Jigging)",
+          "User hovers over beam face to highlight potential cut surface (kJigSelectFace)",
+          "User picks insertion point on the beam face",
+          "User defines cut direction by one of: Picking two points, Dragging, or Selecting a Keyword (Lengthwise/Crosswise/Align)",
+          "User confirms direction (Press Enter/Space)",
+          "Script executes createAndApplySaw function",
+          "Script calculates tool geometry based on Map parameters (Width, Depth, Radius, Distances)",
+          "Script applies SolidSubtract and CNC tools (FreeProfile or Slot) to valid beams",
+          "Script finishes insertion"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Method of Direction Definition",
+            "path1": {
+              "name": "Keyword Selection",
+              "steps": [
+                "User selects 'Lengthwise' or 'Crosswise' keyword",
+                "vecDir is calculated automatically (Parallel or Perpendicular to beam axis)",
+                "Script proceeds to tool generation"
+              ]
+            },
+            "path2": {
+              "name": "Graphical Input",
+              "steps": [
+                "User selects 'Align' keyword (or defaults to graphical)",
+                "User picks first point (Start of cut line)",
+                "User picks second point (End of cut line) or drags cursor",
+                "vecDir is calculated from the delta between points",
+                "Script proceeds to tool generation"
+              ]
+            }
+          },
+          {
+            "condition": "Cut Geometry Type (bIsSkewed)",
+            "path1": {
+              "name": "Skewed Cut",
+              "steps": [
+                "vecDir is not perpendicular to beam axis",
+                "Script generates Slot entities (if offset exists) or specific skewed geometry",
+                "FreeProfile is NOT generated"
+              ]
+            },
+            "path2": {
+              "name": "Standard Cut",
+              "steps": [
+                "vecDir is perpendicular to beam axis",
+                "Script generates FreeProfile entities for CNC",
+                "SolidSubtract is applied using Body geometry"
+              ]
+            }
+          },
+          {
+            "condition": "Tool Profile Definition",
+            "path1": {
+              "name": "Rounded/Shouldered",
+              "steps": [
+                "Parameter 'Offset' > 0 and 'ToolRadius' > 0",
+                "Script creates a PLine with arc segments (rounded corners)",
+                "Body is swept from this PLine"
+              ]
+            },
+            "path2": {
+              "name": "Rectangular",
+              "steps": [
+                "Parameter 'Offset' is 0 or 'ToolRadius' is 0",
+                "Script creates a simple rectangular Body (Box)",
+                "No corner rounding applied"
+              ]
+            }
+          },
+          {
+            "condition": "Multiple Beams Selection",
+            "path1": {
+              "name": "Valid Coplanar Beams",
+              "steps": [
+                "Script compares face normal of selected beams",
+                "If faces are coplanar and aligned with selection point",
+                "Tool is applied to all matching beams"
+              ]
+            },
+            "path2": {
+              "name": "Invalid/Non-Coplanar Beams",
+              "steps": [
+                "Script detects beam face does not align with initial selection",
+                "Beam is filtered out from the 'out' array",
+                "Tool is NOT applied to this beam"
+              ]
+            }
+          },
+          {
+            "condition": "Export Settings Trigger",
+            "path1": {
+              "name": "File Exists",
+              "steps": [
+                "Context Menu 'Export Settings' clicked",
+                "Script detects file at sFullPath",
+                "Prompt: 'Are you sure to overwrite existing settings?'",
+                "User confirms 'Yes' to write, 'No' to cancel"
+              ]
+            },
+            "path2": {
+              "name": "File Does Not Exist",
+              "steps": [
+                "Context Menu 'Export Settings' clicked",
+                "Script checks path (none found)",
+                "File written immediately without prompt"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Calculated Cut Length",
+            "errorMessage": "None (Silent Skip)",
+            "recovery": "Script skips the specific cut segment if (dLength <= dOffsetA + dOffsetB) or (dLength < 2*dOvershoot)."
+          },
+          {
+            "check": "Beam Coplanarity",
+            "errorMessage": "None (Automatic Filtering)",
+            "recovery": "Script filters out selected beams that do not share the exact same face plane as the initial insertion point."
+          },
+          {
+            "check": "File Write Permissions (Export)",
+            "errorMessage": "Message: 'Failed to write to [Path]'",
+            "recovery": "User must check folder permissions or drive availability."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change X/Y Alignment",
+            "how": "Right-click Context Menu > Select X-Alignment / Select Y-Alignment",
+            "effect": "Resets vecDir to Global X or Y axis and recalculates geometry."
+          },
+          {
+            "action": "Reverse Cut Direction",
+            "how": "Right-click Context Menu > Revert Direction",
+            "effect": "Multiplies vecDir by -1 (flips cut 180 degrees)."
+          },
+          {
+            "action": "Import Configuration",
+            "how": "Right-click Context Menu > Import Settings",
+            "effect": "Loads XML parameters into mapSetting, overwriting current Width, Depth, Radius, and Distances."
+          },
+          {
+            "action": "Dynamic Geometry Modification",
+            "how": "Drag Grips (Visual feedback during drag)",
+            "effect": "_bOnGripPointDrag triggers a redraw of the bodies based on new point locations."
+          }
+        ]
+      },
+      "tokens_used": 10490,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# MultiSaw.mcr\n\n## Overview\nGenerates a multi-blade saw spindle tool to create multiple parallel cuts or slots (dados) across selected timber beams simultaneously. It is typically used for machining slots for floor joists, roof battens, or shelf supports.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for selecting beams and applying 3D solid tooling. |\n| Paper Space | No | Script operates on 3D GenBeam entities only. |\n| Shop Drawing | No | This is a manufacturing/modeling script, not a detailing script. |\n\n## Prerequisites\n- **Required Entities**: At least one `GenBeam`.\n- **Minimum Beam Count**: 1.\n- **Required Settings**: None strictly required to run, though an XML file is used to save/load configurations.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `MultiSaw.mcr`\n\n### Step 2: Select Beams\nAction: Select the timber beam(s) you wish to cut. Press **Enter** to confirm selection.\n\n### Step 3: Select Face and Start Point\n```\nCommand Line: Select first point [Lengthwise/Crosswise/Align/FlipSide]\nAction: Click on the face of the beam where you want the cuts to start.\n```\n*Note: The script highlights the face under your cursor. This determines the \"Face\" normal (Top, Bottom, Left, Right).*\n\n### Step 4: Define Cut Direction\nYou have several options to define how the saw cuts run across the beam:\n\n*   **Option A (Keywords)**: Type `Lengthwise` or `Crosswise` and press **Enter**. The direction will be calculated automatically relative to the beam axis.\n*   **Option B (Custom Align)**: Type `Align` and press **Enter**, then click a second point to define a custom direction vector.\n*   **Option C (Drag)**: Simply move your mouse to visually drag the direction of the cut, then click to lock it in.\n\n### Step 5: Confirm and Apply\nAction: Press **Enter** or **Space** to confirm the placement. The script will generate the tooling geometry and apply the cuts to all valid, coplanar beams selected in Step 2.\n\n## Configuration Parameters\n*Note: This script does not expose parameters directly in the AutoCAD Properties Palette (OPM). These values are controlled via the Import/Export Settings functionality or internal script defaults.*\n\n| Parameter | Default | Description |\n|-----------|---------|-------------|\n| Direction (`vecDir`) | Beam X-Axis | The direction the cuts run across the beam surface. |\n| Tool Width (`toolWidth`) | Map Value | The thickness (kerf) of a single saw blade (e.g., 4mm). |\n| Tool Radius (`toolRadius`) | Map Value | The radius of the saw blade, creating rounded corners in the slot. |\n| Depth (`depth`) | Map Value | The depth of the cut into the timber material. |\n| Distances (`Distances[]`) | Map Value Array | The spacing between the centers of adjacent saw blades. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Select X-Alignment | Resets the cut direction to align with the Global X-axis. |\n| Select Y-Alignment | Resets the cut direction to align with the Global Y-axis. |\n| Revert Direction | Flips the current cut direction 180 degrees (multiplies vector by -1). |\n| Import Settings | Loads a saved configuration (Width, Depth, Radius, Spacing) from an XML file. |\n| Export Settings | Saves the current configuration to an XML file for future use. |\n\n## Settings Files\n- **Filename**: Variable (Defined by `sFullPath` within the script).\n- **Location**: Typically a company standard folder or project directory.\n- **Purpose**: Stores tool configuration data such as blade thickness, radius, depth, and spacing arrays. This allows you to reuse standard setups (e.g., a specific joist spacing pattern) without re-entering values.\n\n## Tips\n- **Multiple Beams**: You can select multiple beams at the start. The script automatically filters out beams that are not coplanar (on the same plane) as the face you clicked on, preventing errors.\n- **Corner Geometry**: If you see sharp 90-degree corners instead of rounded ones, check your `ToolRadius` and `Offset` settings; the script creates rounded profiles only when these values are greater than zero.\n- **Visual Feedback**: During insertion, use the `FlipSide` keyword if you initially clicked the wrong face (e.g., clicking the bottom when you meant to cut the top).\n\n## FAQ\n- **Q: Why did the tool cut one beam but skip another?**\n  **A**: The skipped beam likely does not share the exact same face plane as the insertion point. The script only applies tools to coplanar faces.\n- **Q: How do I change the spacing between the cuts?**\n  **A**: This is defined in the `Distances` array. The easiest way to change this is to \"Export Settings\" to an XML file, edit the distances in that file (or have a pre-made file), and then use \"Import Settings\" via the Right-Click menu.\n- **Q: What is the difference between \"Align\" and just picking points?**\n  **A**: \"Align\" explicitly switches to a mode where you pick two points to define a vector. Simply picking points without the keyword defaults to the visual drag behavior, which may interpret the input differently depending on your view direction."
+      },
+      "tokens_used": 6907,
+      "error": null
+    }
+  }
+}

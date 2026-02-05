@@ -1,0 +1,329 @@
+{
+  "filename": "MultipageAnchor.mcr",
+  "status": "completed",
+  "total_tokens": 44385,
+  "processing_time": 308.02698802948,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8346,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": true,
+          "isMultipageScript": true,
+          "detectionEvidence": "Script handles _bOnGenerateShopDrawing event and creates instances in _kModelSpace via dbCreate. Interacts with ShopDrawView and MultiPage classes. Uses logic to distinguish between bIsBlockSpace and Model Mode."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "MultiPage",
+            "ShopDrawView"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Requires a valid MultiPage in Model Space for the anchor to function, or a ShopDrawView in BlockSpace to trigger automatic generation.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7249,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select Shopdraw View or multipage and entities to link|",
+              "condition": "_bOnInsert && bSelectPage && bSelectSDV",
+              "required": true
+            },
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select Shopdraw View|",
+              "condition": "_bOnInsert && bSelectSDV && !bSelectPage",
+              "required": true
+            },
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select multiapge and entities to link|",
+              "condition": "_bOnInsert && !(bSelectPage && bSelectSDV) && !bSelectSDV",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": null,
+              "condition": "_bOnInsert && (page.bIsValid() || sdv.bIsValid())",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "PrEntity",
+              "promptOriginal": "|Select entities|",
+              "condition": "_bOnRecalc && (_kExecuteKey==|Add Entities| || _kExecuteKey==TslDoubleClick)",
+              "required": true
+            },
+            {
+              "step": 4,
+              "function": "PrEntity",
+              "promptOriginal": "|Select entities|",
+              "condition": "_bOnRecalc && _kExecuteKey==|Remove Entities|",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDialog",
+            "trigger": "_bOnInsert && catalog not selected",
+            "title": null,
+            "dataSource": "Internal Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dSize",
+            "type": "PropDouble",
+            "displayName": "|Size|",
+            "defaultValue": "U(10)",
+            "inputType": "number",
+            "options": [],
+            "category": "|General|",
+            "description": "|Defines the Size of the symbolic anchor|"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "|Add Entities|",
+            "handler": "|Add Entities|",
+            "action": "Prompts user to select entities to link to the anchor.",
+            "alsoTriggeredBy": "TslDoubleClick"
+          },
+          {
+            "menuItem": "|Remove Entities|",
+            "handler": "|Remove Entities|",
+            "action": "Prompts user to select entities to remove from the anchor.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 6253,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates a positional anchor that links entities (annotations, blocks) to a specific location relative to a MultiPage or ShopDrawView, ensuring they move together if the layout changes.",
+          "category": "Drafting/Annotation",
+          "typicalUseCase": "Used to 'stick' text, dimensions, or symbols to a specific detail view or drawing layout so that when the view is moved or regenerated, the associated annotations maintain their relative position automatically."
+        },
+        "parameters": [
+          {
+            "name": "dSize",
+            "technicalDefault": "U(10)",
+            "businessMeaning": "Defines the physical size of the square symbolic anchor marker displayed on screen and in drawings.",
+            "validRange": "5 to 100",
+            "unit": "mm",
+            "affectsOutput": "Changes the graphical dimensions (width/height) of the anchor symbol and the text height of the counter indicating how many entities are linked. Does not affect timber geometry."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Moving the Anchor Grip Point (_Pt0)",
+            "effect": "Updates the relative offset vectors for all linked entities and physically transforms (moves) the linked entities to maintain the new relative position.",
+            "cascade": [
+              "Linked Entities",
+              "_Entity"
+            ]
+          },
+          {
+            "trigger": "Moving the parent MultiPage",
+            "effect": "The Anchor instance automatically moves to maintain its relationship with the MultiPage origin, dragging all linked entities with it.",
+            "cascade": [
+              "_Pt0",
+              "Linked Entities"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Symbolic Representation",
+            "description": "A square graphical marker with a number in the center (representing the count of linked entities), drawn using PLine and PlaneProfile. Used for visual identification only.",
+            "appliedTo": "Model Space (symbolically) and Block Space (symbolically)"
+          },
+          {
+            "type": "Positional Transformation",
+            "description": "Updates the coordinates of user-selected entities (entLinks) to match the anchor's position, effectively grouping them to the anchor without using a CAD Group.",
+            "appliedTo": "User-selected Entities (BlockRefs, PLines, etc.)"
+          }
+        ]
+      },
+      "tokens_used": 7400,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch Script (TSLCONTENT)",
+          "2. Check for existing ShopDrawView (SDV) or MultiPage in current Group",
+          "3. [Conditional Branch] Display specific selection prompt based on detection",
+          "4. User selects Parent Entity (SDV or MultiPage) and optional Child Entities (Links)",
+          "5. User confirms insertion location (_Pt0) via getPoint",
+          "6. [System] Categorize selections into Parent (page/sdv) and Links (entLinks)",
+          "7. [If ModelSpace] Validate Parent integrity (check MultiPage ShowSet)",
+          "8. [If ModelSpace] Calculate and store position offsets (vecOrg) relative to MultiPage",
+          "9. Draw Anchor Symbol and Link Visualization"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Detection of entities in current group during insertion",
+            "path1": {
+              "name": "ShopDrawView & MultiPage Detected",
+              "steps": [
+                "Set flags: bSelectSDV=true, bSelectPage=true",
+                "Prompt: '|Select Shopdraw View or multipage and entities to link|'",
+                "Allow: BlockRef, MultiPage, ShopDrawView"
+              ]
+            },
+            "path2": {
+              "name": "Only ShopDrawView Detected",
+              "steps": [
+                "Set flags: bSelectSDV=true",
+                "Prompt: '|Select Shopdraw View|'",
+                "Allow: ShopDrawView only"
+              ]
+            },
+            "path3": {
+              "name": "No SDV or MultiPage Detected",
+              "steps": [
+                "Prompt: '|Select multiapge and entities to link|'",
+                "Allow: BlockRef (implies selecting the MultiPage via generic entity selection)"
+              ]
+            }
+          },
+          {
+            "condition": "Operating Context (Space)",
+            "path1": {
+              "name": "BlockSpace (Linked to SDV)",
+              "steps": [
+                "Store Instance UID in Map",
+                "If '_bOnGenerateShopDrawing': Create corresponding ModelSpace instance via dbCreate",
+                "Set 'createdByBlockSpace' flag in Map",
+                "Return (Skip ModelSpace logic)"
+              ]
+            },
+            "path2": {
+              "name": "ModelSpace (Linked to MultiPage)",
+              "steps": [
+                "Validate MultiPage and ShowSet",
+                "Assign to Groups",
+                "Update vecOrg or _Pt0 based on movement events",
+                "Transform linked entities if MultiPage moved"
+              ]
+            }
+          },
+          {
+            "condition": "Trigger Event (Movement vs Command)",
+            "path1": {
+              "name": "Grip Point Drag (_Pt0)",
+              "steps": [
+                "Calculate new offset vecOrg",
+                "Update Map with new offset",
+                "Highlight linked entities (Draw visualization)"
+              ]
+            },
+            "path2": {
+              "name": "Parent MultiPage Moved",
+              "steps": [
+                "Detect shift in ptOrg (Page Origin)",
+                "Update _Pt0 to match relative offset",
+                "Transform linked entities by same delta"
+              ]
+            },
+            "path3": {
+              "name": "Double Click or Context Menu",
+              "steps": [
+                "Prompt for entity selection",
+                "Filter out TSLs/Beams",
+                "Append or Remove from _Entity array"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "MultiPage Validity",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script calls eraseInstance() if the linked page becomes invalid."
+          },
+          {
+            "check": "ShowSet Content (HSB-18246)",
+            "errorMessage": "Notice: '<handle> does not contain any showset entity.'",
+            "recovery": "Script deletes the empty MultiPage (page.dbErase()) and erases the anchor instance (eraseInstance()) to prevent errors."
+          },
+          {
+            "check": "Linked Entity Type (during Add Entities)",
+            "errorMessage": "None",
+            "recovery": "Script automatically skips selection if the entity is a TslInst, MultiPage, GenBeam, or Element."
+          },
+          {
+            "check": "Catalog Selection",
+            "errorMessage": "None",
+            "recovery": "If a catalog key is passed, properties are set silently; otherwise, showDialog() is shown."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Add Entities",
+            "how": "Double Click on Anchor OR Right Click -> '|Add Entities|'",
+            "effect": "Opens selection prompt. Validates selection (excludes structural elements). Appends valid entities to _Entity list and stores relative offsets."
+          },
+          {
+            "action": "Remove Entities",
+            "how": "Right Click -> '|Remove Entities|'",
+            "effect": "Opens selection prompt. Removes selected entities from the _Entity list, excluding the Parent MultiPage."
+          },
+          {
+            "action": "Move Anchor",
+            "how": "Drag Anchor Grip Point (_Pt0)",
+            "effect": "Updates the offset vector between the Anchor and the MultiPage. Visually highlights the linked entities during the drag."
+          },
+          {
+            "action": "Move MultiPage (Parent)",
+            "how": "Standard CAD Move command on the MultiPage",
+            "effect": "The Anchor instance detects the position change and automatically moves to maintain its relative offset. All linked entities are transformed to move with the anchor."
+          }
+        ]
+      },
+      "tokens_used": 9323,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# MultipageAnchor.mcr\n\n## Overview\nThis script creates a positional anchor that links drafting entities (such as text, dimensions, or blocks) to a specific ShopDrawView or MultiPage. It ensures that annotations remain in the correct relative position even if the drawing layout or view is moved.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Primary environment for inserting and managing the anchor. |\n| Paper Space | Yes | Supported indirectly via MultiPage and ShopDrawView interaction. |\n| Shop Drawing | Yes | Automatically generates instances during shop drawing creation. |\n\n## Prerequisites\n- **Required Entities**: A valid **MultiPage** or **ShopDrawView** must exist in the drawing.\n- **Minimum Beam Count**: 0 (This script is for drafting/layout, not timber elements).\n- **Required Settings**: None specific (uses internal properties or catalog defaults).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or `TSLCONTENT`) → Select `MultipageAnchor.mcr`\n\n### Step 2: Select Parent and Linked Entities\n**Command Line:** `Select Shopdraw View or multipage and entities to link`\n**Action:**\n1. Click on the **ShopDrawView** or **MultiPage** you wish to anchor to.\n2. Select the additional entities (text, dimensions, symbols) you want to link to that view.\n3. Press **Enter** to confirm selection.\n\n*(Note: If the script detects specific contexts, it may restrict the selection to just the ShopDrawView or generic entities, but generally, it allows selecting the parent and children together.)*\n\n### Step 3: Define Anchor Position\n**Command Line:** `Specify insertion point`\n**Action:** Click in the drawing to place the symbolic anchor. This point determines the relative offset for all linked entities.\n\n### Step 4: Configure Properties (Optional)\nIf no catalog preset was selected, a properties dialog may appear automatically. You can adjust the **Size** of the anchor symbol here or later in the Properties Palette.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Size | Number | 10 mm | Defines the graphical size of the square anchor symbol and the text height of the linked entity counter. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Add Entities | Prompts you to select additional entities to link to the anchor. Automatically filters out structural elements (Beams/TSLs). |\n| Remove Entities | Prompts you to select entities currently linked to the anchor to remove them from the group. |\n\n**Note:** Double-clicking the anchor also triggers the **Add Entities** command.\n\n## Settings Files\n- **Filename**: None required\n- **Location**: N/A\n- **Purpose**: This script relies on internal properties and standard catalogs rather than external settings XML files.\n\n## Tips\n- **Grouping without Blocks**: Use this script instead of standard CAD Groups if you need items to follow a specific View or MultiPage layout during regeneration.\n- **Visual Feedback**: The anchor draws as a square with a number in the center. This number indicates how many entities are currently linked to it.\n- **Moving Layouts**: If you move the parent MultiPage or ShopDrawView using standard CAD commands, the anchor and all its linked entities will automatically move to maintain their relative positions.\n- **Grip Editing**: You can drag the anchor grip point (`_Pt0`) to reposition the anchor; the linked entities will follow the new offset.\n\n## FAQ\n- **Q: Can I link structural beams or elements?**\n  **A:** No. The \"Add Entities\" function automatically filters out TSL Instances, GenBeams, and Elements. It is intended for annotations and drafting symbols only.\n\n- **Q: What happens if my MultiPage becomes empty or invalid?**\n  **A:** The script detects if the parent MultiPage is invalid or its ShowSet is empty. If so, it will automatically delete the anchor and the empty MultiPage to prevent errors.\n\n- **Q: Why did the anchor disappear?**\n  **A:** The anchor may have erased itself because the linked MultiPage was deleted or found to be invalid. Check that your parent drawing view still exists."
+      },
+      "tokens_used": 5814,
+      "error": null
+    }
+  }
+}

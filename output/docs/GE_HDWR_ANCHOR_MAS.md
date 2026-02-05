@@ -1,71 +1,69 @@
 # GE_HDWR_ANCHOR_MAS.mcr
 
 ## Overview
-This script automates the placement of MAS anchor straps, which are metal connectors used to secure wall bottom plates to the foundation. It intelligently handles the wall framing state by displaying a placeholder marker when the wall is unframed and automatically generating the full 3D steel strap geometry once the wall is framed.
+This script inserts Masonry Anchor Straps (MAS) designed to wrap the bottom plate of timber walls and embed into the foundation. It automatically manages the geometry based on the wall's framing status and ensures minimum spacing between anchors.
 
 ## Usage Environment
 | Space | Supported | Notes |
 |-------|-----------|-------|
-| Model Space | Yes | Script operates on 3D Wall Elements. |
-| Paper Space | No | Not applicable for layout views. |
-| Shop Drawing | No | This is a model generation script. |
+| Model Space | Yes | The script generates 3D bodies and markers in the model. |
+| Paper Space | No | Not designed for layout views or paper space. |
+| Shop Drawing | No | Does not generate shop drawing details. |
 
 ## Prerequisites
-- **Required Entities**: A Wall Element (`ElementWall`) must exist in the model.
-- **Minimum Beam Count**: 0 (The script functions on both unframed and framed walls).
-- **Required Settings**: None.
+- **Required entities**: An `ElementWall` must exist in the model.
+- **Minimum beam count**: 0 (The script works on both unframed outlines and framed walls).
+- **Required settings files**: None.
 
 ## Usage Steps
 
 ### Step 1: Launch Script
-Command: `TSLINSERT` → Select `GE_HDWR_ANCHOR_MAS.mcr` from the file dialog.
+Command: `TSLINSERT` → Select `GE_HDWR_ANCHOR_MAS.mcr`
 
-### Step 2: Select Host Wall
+### Step 2: Select Wall
 ```
 Command Line: Select element
-Action: Click on the Wall Element in the model where you want to install anchors.
+Action: Click on the wall element where you want to install the anchors.
 ```
 
 ### Step 3: Define Anchor Locations
 ```
 Command Line: Select a set of points along wall (points will get proper high automatically. Wall side will be the closer to selected points)
-Action: Click points along the length of the wall to specify where each anchor should be placed.
-Note: You can select multiple points in a sequence. The script automatically calculates the vertical height and determines the side of the wall based on where you click.
+Action: Click along the length of the wall to place anchors. You can click multiple points to insert multiple anchors at once. Press Enter or right-click to finish.
 ```
-
-### Step 4: Finish Selection
-```
-Command Line: (Press Enter or Escape)
-Action: Press Enter or right-click to finish placing anchors.
-```
+*Note: The script will calculate the height and wall side automatically based on your clicks.*
 
 ## Properties Panel Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Element | Entity | *Selected Wall* | The Wall Element to which the anchor is attached. |
-| Pt0 | Point | *Click Location* | The insertion point of the anchor along the wall. This can be grip-edited. |
-| Side | Option | *Calculated* | Determines if the strap is applied to the Left or Right side of the wall (calculated from input point). |
-| Embed Length | Double | 9" | The vertical length of the strap embedded into the concrete foundation. |
-| Embed Width | Double | 2.75" | The width of the embedded strap portion. |
-| Strap Length | Double | 10" | The vertical height of the strap wrapping up the side of the bottom plate. |
+| N/A | N/A | N/A | This script does not expose user-editable properties in the Properties Palette. Geometry is controlled by the wall and insertion point. |
 
 ## Right-Click Menu Options
-*No custom context menu items are defined for this script.* Standard TSL recalculation options apply.
+
+| Menu Item | Description |
+|-----------|-------------|
+| N/A | No specific context menu options are added by this script. |
 
 ## Settings Files
-None. This script operates on internal geometric calculations and standard entity properties.
+- **Filename**: None required.
+- **Location**: N/A
+- **Purpose**: N/A
 
 ## Tips
-- **Unframed Walls**: If you run this script on an empty wall (no beams/studs), you will see a small cross symbol at the bottom. Do not delete this; it is a placeholder indicating the anchor position.
-- **Auto-Generation**: Once you frame the wall (e.g., using a framing macro), the script will detect the beams and replace the cross with the full 3D metal strap wrapping the bottom plates.
-- **Collision Prevention**: If you place an anchor too close to another one (less than 2 inches), the script will automatically delete the new instance to prevent overlapping hardware.
-- **Adjusting Position**: You can select the anchor instance and use the grip point to slide it along the wall length after insertion.
+- **Unframed Walls**: If you place the anchor on a wall that has not been framed yet (no beams generated), the script will display a small 'X' marker. Once the wall is framed, the 'X' will automatically update to the full 3D metal strap geometry.
+- **Automatic Spacing**: The script enforces a minimum distance of 2 inches between anchors. If you place a new anchor too close to an existing one, the new anchor will automatically delete itself.
+- **Grip Editing**: You can move an anchor after insertion by selecting it and using the grip point (`_Pt0`) to slide it along the wall. The height and orientation update automatically.
+- **Wall Side Selection**: The anchor is applied to the side of the wall closest to where you clicked during the point selection phase.
 
 ## FAQ
-- **Q: I only see a small cross at the bottom of my wall. Where is the hardware?**
-  - A: The wall is currently unframed. The cross reserves the position. Once the wall is framed with bottom plates, the script will automatically generate the 3D steel strap.
-- **Q: I tried to place an anchor, but it disappeared immediately.**
-  - A: The anchor was likely placed within 2 inches of an existing MAS anchor. The script automatically erases overlapping instances.
-- **Q: Can I use this on a beam?**
-  - A: No, this script is designed specifically for Wall Elements. Selecting a beam will cause the script to fail or exit silently.
+- **Q: Why do I see a cross 'X' instead of the metal strap?**
+  **A:** This indicates the wall is currently "unframed" (no beams detected). Generate the wall framing, and the symbol will change to the correct 3D hardware shape.
+- **Q: I clicked to place an anchor, but it disappeared immediately. Why?**
+  **A:** You likely tried to place the anchor within 2 inches of an existing anchor. The script automatically deletes instances that violate the minimum spacing rule. Try placing it further away.
+- **Q: Can I use this on walls that are already framed?**
+  **A:** Yes. If the wall is already framed, the script will immediately generate the 3D wrapping strap geometry instead of the placeholder marker.
+- **Q: How do I change the size of the strap?**
+  **A:** The dimensions (e.g., embedded length, wrap height) are currently hardcoded into the script logic. You must contact your system administrator to modify the script if different dimensions are required.
+
+---

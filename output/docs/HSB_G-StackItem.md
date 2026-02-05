@@ -1,107 +1,75 @@
 # HSB_G-StackItem
 
-A TSL script that defines a stack item for organizing and visualizing timber elements in a stacking arrangement. This script creates child items that can be associated with a parent stack (HSB_G-Stack) for prefabrication and logistics planning.
+## Overview
+This script is used to define individual timber elements as items within a transport stack. It links selected elements to a parent stacking volume (created by `HSB_G-Stack`) for logistics and packing list generation.
 
-## Script Metadata
+## Usage Environment
+| Space | Supported | Notes |
+|-------|-----------|-------|
+| Model Space | Yes | Script must be inserted in Model Space to interact with 3D stack volumes. |
+| Paper Space | No | Not designed for 2D drawings. |
+| Shop Drawing | No | Not used for detailing views. |
 
-| Property | Value |
-|----------|-------|
-| Version | 1.01 |
-| Last Modified | 21.10.2019 |
-| Author | Anno Sportel (support.nl@hsbcad.com) |
-| Type | O (Object) |
-| Beams Required | 0 |
+## Prerequisites
+- **Required Entities**: At least one hsbCAD Element (e.g., a beam or wall).
+- **Parent Script**: The parent script `HSB_G-Stack` must exist in the model to define the stacking volume.
+- **Required Space**: Model Space only.
 
-## Script Type
+## Usage Steps
 
-**O-Type (Object)**: This is a standalone object script that creates a visual representation of elements within a stacking system. It does not require beam selection and operates on Element entities instead.
+### Step 1: Launch Script
+1. Type `TSLINSERT` in the command line.
+2. Browse and select `HSB_G-StackItem.mcr`.
 
-## Description
+### Step 2: Configure Properties (If Prompted)
+```
+Command Line: [Dialog Appears]
+Action: If the execute key is not set, the Properties Palette will open. Review the default settings (e.g., Stack Script Name) and click OK.
+```
 
-This script creates a "Hsb_StackingChild" object that:
-- Represents an element's position within a stack configuration
-- Provides visual feedback showing the element's orientation and position
-- Automatically links to a parent stack (HSB_G-Stack) when placed within its boundaries
-- Stores relative positioning data for use by MultiElementTools, MapExplorer, and hsbShare
+### Step 3: Select Elements
+```
+Command Line: Select a set of elements
+Action: Click on the timber elements (beams, walls, etc.) you want to include as stack items and press Enter.
+```
 
-## User Properties
+### Step 4: Position Items
+```
+Action: The script will attach an instance to each selected element. 
+Move these elements (or the script instances) so that they physically intersect with the parent Stack volume.
+Note: The logical link is only established when the item intersects with the parent Stack body.
+```
 
-This script uses catalog-based property management. Properties can be loaded from predefined catalogs using the execute key mechanism.
+## Properties Panel Parameters
 
-| Property | Type | Description |
-|----------|------|-------------|
-| Catalog Selection | Dialog | Properties are set via dialog or catalog presets |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| stackScriptName | String | HSB_G-Stack | The name of the parent TSL script that defines the stack volume. This must match the filename of the parent script. |
+| distanceBetweenStackingChilds | Double | 3000 mm | The spacing distance used when inserting multiple items in sequence via the command line. |
+| stackingChildColor | Integer | 140 | The color index (0-255) used to display the stack item bounding box in the model. |
 
-Note: The script uses `setPropValuesFromCatalog()` and `setCatalogFromPropValues()` for property management, allowing users to save and recall property configurations.
+## Right-Click Menu Options
 
-## Usage Workflow
+| Menu Item | Description |
+|-----------|-------------|
+| Double Click | Rotates the stack item instance 90 degrees around its local X-axis. Use this to orient the element correctly within the stack. |
 
-### Step 1: Insert the Script
-1. Run the HSB_G-StackItem command in hsbCAD
-2. If no catalog preset is specified, a dialog will appear for configuration
+## Settings Files
+- **Filename**: None specified
+- **Location**: N/A
+- **Purpose**: This script relies on the parent `HSB_G-Stack` script configuration rather than its own separate settings file.
 
-### Step 2: Select Elements
-1. When prompted with "Select a set of elements", select one or more Element entities (walls, floors, roofs)
-2. The script will create a stacking child instance for each selected element
+## Tips
+- **Establishing Links**: The script writes data to the Element only when it detects a collision with the parent Stack volume. If the element appears as an "orphaned box," move it closer or inside the stack volume.
+- **Visualizing Orientation**: Use the **Double Click** feature to quickly rotate the element orientation if it is not lying flat or oriented correctly in the stack.
+- **Color Coding**: Change the `stackingChildColor` property to visually distinguish between different types of items or layers in your stack.
 
-### Step 3: Position the Stack Items
-1. Each stack item is created at a world coordinate position
-2. Items are automatically spaced 3000mm apart along the negative Y-axis
-3. The visual representation shows the element's bounding box dimensions
+## FAQ
+- **Q: The script attached to my element, but it doesn't seem to be part of the stack.**
+- **A:** Ensure the element (or the visualization box) physically overlaps with the parent `HSB_G-Stack` volume. The link is calculated based on 3D intersection.
 
-### Step 4: Link to Parent Stack
-1. If an HSB_G-Stack instance exists in the model, the stack item will automatically detect it
-2. When the stack item's origin intersects with a stack body, it becomes a child of that stack
-3. The element receives "Hsb_StackingChild" metadata containing:
-   - Parent stack UID
-   - Relative origin point
-   - Relative orientation vectors (X, Y, Z)
+- **Q: How do I change the orientation of the item inside the stack?**
+- **A:** Simply double-click on the stack item instance. It will rotate 90 degrees around its X-axis.
 
-### Step 5: Rotate Stack Items (Optional)
-1. Double-click on a stack item to rotate it 90 degrees around its X-axis
-2. This allows adjusting the stacking orientation of individual elements
-
-## Visual Feedback
-
-The script provides visual indicators:
-- **Red axis (Color 1)**: X-direction of the stack item
-- **Green axis (Color 3)**: Y-direction of the stack item
-- **Blue axis (Color 150)**: Z-direction of the stack item
-- **Stacking child body (Color 140)**: Represents the element's volume
-- **Element number**: Displayed at the origin point with text height 250mm
-
-## Integration with HSB_G-Stack
-
-This script is designed to work with HSB_G-Stack (the parent stacking script):
-- Automatically detects existing stack instances in the model
-- Writes "Hsb_StackingChild" submapX data to the element when linked
-- Stores coordinate transformation data for export and fabrication workflows
-
-## Context Menu Commands
-
-This script supports the following interaction:
-
-| Command | Trigger | Action |
-|---------|---------|--------|
-| TslDoubleClick | Double-click on instance | Rotates the stack item 90 degrees around the X-axis |
-
-## Technical Notes
-
-1. **Coordinate System**: The script maintains relative coordinates between the stack item and its parent stack, enabling proper positioning during export
-2. **Element Data**: When linked to a stack, the element receives metadata in the "Hsb_StackingChild" submapX including parent UID and relative position/orientation
-3. **Catalog System**: Properties can be saved to "_LastInserted" catalog for quick re-use of recent settings
-4. **Cleanup**: Any existing "Hsb_StackingChild" data is removed from elements before creating new stack items
-
-## Related Scripts
-
-- **HSB_G-Stack**: Parent stacking script that defines the stack location and boundaries
-- **MultiElementTools**: Uses the Hsb_StackingChild format for element organization
-- **MapExplorer**: Can read and display stacking child data
-- **hsbShare**: Exports stacking information for collaboration
-
-## Version History
-
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.00 | 04.04.2019 | First revision |
-| 1.01 | 21.10.2019 | Correct name of stack TSL |
+- **Q: What happens if I delete the parent Stack?**
+- **A:** The child items will remain in the model but will lose their logical connection (the relative position map will no longer update).

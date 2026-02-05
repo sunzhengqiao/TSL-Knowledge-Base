@@ -1,0 +1,336 @@
+{
+  "filename": "NA_SheetBreakBacking.mcr",
+  "status": "completed",
+  "total_tokens": 43606,
+  "processing_time": 279.51015615463257,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7042,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script interacts directly with 'ElementWall' and 'Beam' entities in the 3D model ('el.beam()', 'bm.dbCreate()'), uses geometric operations on 'Body' objects, and assigns elements to groups via 'assignToElementGroup'. It lacks any 'sd_' prefixes, '#Type E' declarations, or references to '_Viewport' which are characteristic of Paper Space or Shop Drawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Must be inserted onto or interact with an existing ElementWall in Model Space.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6177,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getElement",
+              "promptOriginal": "\nSelect an Element",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "strGo",
+            "type": "PropString",
+            "displayName": "Sheathing Break Material",
+            "defaultValue": "1 Ply",
+            "inputType": "dropdown",
+            "options": [
+              "1 Ply",
+              "2 Ply",
+              "3 Ply",
+              "3x",
+              "4x"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "stDoBlocking",
+            "type": "PropString",
+            "displayName": "Apply to Blocking",
+            "defaultValue": "Yes",
+            "inputType": "dropdown",
+            "options": [
+              "Yes",
+              "No"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 7019,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the insertion of backing or blocking members at sheathing sheet joints (breaks) within an ElementWall to provide nailing surfaces and structural continuity.",
+          "category": "Framing",
+          "typicalUseCase": "Used during wall generation to ensure studs or blocking are placed behind sheathing joints to satisfy nailing requirements and engineering specifications."
+        },
+        "parameters": [
+          {
+            "name": "strGo",
+            "technicalDefault": "1 Ply",
+            "businessMeaning": "Defines the material configuration and thickness of the backing material to be inserted at sheathing breaks. This corresponds to the number of plies or the nominal width of the blocking member (e.g., '1 Ply' typically maps to a 1.5\" wide member).",
+            "validRange": "1 Ply, 2 Ply, 3 Ply, 3x, 4x",
+            "unit": "Text/String (Mapping to Thickness)",
+            "affectsOutput": "Determines the width (depth in the wall plane) of the generated backing beams and the aggressive cleanup of existing vertical studs in the wall. For example, '1 Ply' is less aggressive in deleting adjacent studs compared to wider configurations."
+          },
+          {
+            "name": "stDoBlocking",
+            "technicalDefault": "Yes",
+            "businessMeaning": "Toggles whether horizontal sheathing breaks apply to blocking members within the wall.",
+            "validRange": "Yes, No",
+            "unit": "Boolean/String",
+            "affectsOutput": "When set to 'Yes', horizontal blocking members intersecting horizontal sheathing breaks are modified (split or resized) to match the backing material specifications. When 'No', existing horizontal blocking is ignored."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "strGo is set to a specific value",
+            "effect": "Determines the specific dimension array (arIQtyPly, dPlySize) used for creating backing beams and potentially influences the logic for removing conflicting vertical studs.",
+            "cascade": [
+              "arIQtyPly",
+              "dPlySize"
+            ]
+          },
+          {
+            "trigger": "Script running as a slave instance (iAmSlave)",
+            "effect": "Overrides OPM properties (strGo, stDoBlocking) with values passed from the master script's Map (mpSheetData).",
+            "cascade": [
+              "strGo",
+              "stDoBlocking",
+              "arPtVBreaks",
+              "arPtHBreaks",
+              "arPtSheetEnds"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam",
+            "description": "New backing beams (typically Studs) inserted at vertical sheathing breaks, or modified blocking beams at horizontal breaks.",
+            "appliedTo": "ElementWall"
+          },
+          {
+            "type": "Cut",
+            "description": "Cuts applied to existing blocking beams where they intersect the new backing beams.",
+            "appliedTo": "Existing Blocking Beams"
+          },
+          {
+            "type": "Deletion",
+            "description": "Removal of existing vertical studs or beams that conflict with the new backing beam geometry.",
+            "appliedTo": "Conflicting Beams in Wall"
+          }
+        ]
+      },
+      "tokens_used": 7736,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Initialization: Set units to inches, initialize state map and configuration arrays (SheetBreaks, PlySizes).",
+          "User Input (Insertion): User prompted to 'Select an Element'. Script validates that the element is a valid ElementWall and assigns it to element group 'Z'.",
+          "Sanitization: Script scans for duplicate or conflicting TSLs (specifically 'GE_WDET_DOUBLE_STUDS' and other instances of itself) attached to the element and erases them.",
+          "Input Source Determination: Check if the script is running as a 'Slave' (via 'mpSheetData' in _Map) or 'Master' (Standalone).",
+          "Data Acquisition (Branch):",
+          "   - Master Mode: Analyze the Element's Sheet geometry to calculate Vertical (arPtVBreaks) and Horizontal (arPtHBreaks) break lines, and Sheet Ends (arPtSheetEnds).",
+          "   - Slave Mode: Read break coordinates and configuration settings directly from the Map provided by a master script.",
+          "Parameter Synchronization: If running as Slave, override OPM properties (strGo, stDoBlocking) with values from the master Map. Otherwise, use OPM defaults.",
+          "Wall Analysis: Categorize Element beams into Vertical (Studs), Blocking, and Other. Generate Body representations of beams and openings for intersection testing.",
+          "Vertical Break Processing:",
+          "   - Iterate through vertical break lines.",
+          "   - Calculate valid segments for new backing beams by intersecting break lines with wall bodies.",
+          "   - Create new Backing Beams (Studs) at these locations.",
+          "   - Stretch new Backing Beams until they hit adjacent 'Other' beams.",
+          "   - Apply Cut operations to existing Blocking beams that intersect the new Backing Beams.",
+          "   - Delete existing Vertical beams that conflict with the new Backing Beams (Logic varies based on 'strGo' setting).",
+          "Sheet End Processing:",
+          "   - Iterate through sheet end points.",
+          "   - Determine if an existing nearby vertical stud can be stretched to the end position.",
+          "   - If no suitable stud exists or space is insufficient, create a new end backing stud.",
+          "   - Cut blocking intersecting these end studs.",
+          "Horizontal Break Processing:",
+          "   - Check 'stDoBlocking' property (Yes/No).",
+          "   - If Yes: Iterate through horizontal blocking beams.",
+          "   - Identify blocking beams that intersect horizontal break lines.",
+          "   - Modify blocking width and material to match the backing configuration (splitting into multiple plies if required by 'strGo').",
+          "Finalization: Assign material grades based on wall exposure. If running as Slave, erase the script instance. If Master, persist in the drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Is a valid ElementWall selected?",
+            "path1": {
+              "name": "Valid",
+              "steps": [
+                "Assign Element to Group Z.",
+                "Proceed to TSL conflict check."
+              ]
+            },
+            "path2": {
+              "name": "Invalid/Null",
+              "steps": [
+                "eraseInstance() and exit."
+              ]
+            }
+          },
+          {
+            "condition": "Script Execution Mode",
+            "path1": {
+              "name": "Master (Standalone)",
+              "steps": [
+                "Read properties from OPM ('Sheathing Break Material', 'Apply to Blocking').",
+                "Calculate geometry from Wall Sheets (RealBody analysis).",
+                "Filter break points to remove duplicates and points too close to ends."
+              ]
+            },
+            "path2": {
+              "name": "Slave (Controlled by Map)",
+              "steps": [
+                "Read 'mpSheetData' from _Map.",
+                "Extract predefined point arrays (arPtVerticals, arPtHorizontals).",
+                "Override OPM settings with Map values."
+              ]
+            }
+          },
+          {
+            "condition": "Sheathing Break Material (strGo)",
+            "path1": {
+              "name": "1 Ply",
+              "steps": [
+                "Set backing width/depth based on '1 Ply' logic.",
+                "Deletion logic: Check conflicts by offsetting intersecting bodies by +/- 0.125\" (tolerant)."
+              ]
+            },
+            "path2": {
+              "name": "2 Ply, 3 Ply, 3x, 4x",
+              "steps": [
+                "Set backing width/depth based on dPlySize array (e.g., 1.5\", 2.5\", 3.5\").",
+                "Deletion logic: Check conflicts using direct body intersection (no offset)."
+              ]
+            }
+          },
+          {
+            "condition": "Sheet End Stud Availability",
+            "path1": {
+              "name": "Existing Stud Stretchable",
+              "steps": [
+                "Find nearest vertical stud (bmBehind).",
+                "Transform (move) stud to cover the sheet end point.",
+                "Tag stud with 'mpSheetBreakEnd'."
+              ]
+            },
+            "path2": {
+              "name": "Create New Stud",
+              "steps": [
+                "Check space before and after target location.",
+                "Create new backing stud at sheet end.",
+                "Assign standard material and 'mpSheetBreakEnd' tag."
+              ]
+            }
+          },
+          {
+            "condition": "Apply to Blocking (stDoBlocking)",
+            "path1": {
+              "name": "Yes",
+              "steps": [
+                "Iterate horizontal blocking.",
+                "If blocking intersects a horizontal break line, adjust width (dY) to dPlySize.",
+                "Replicate blocking (Copy/Transform) if configuration requires multiple plies (e.g., 2 Ply)."
+              ]
+            },
+            "path2": {
+              "name": "No",
+              "steps": [
+                "Skip horizontal blocking modification loop."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "(Implicit)",
+            "recovery": "If _Element array is empty or el.bIsValid() is false, the script erases itself immediately."
+          },
+          {
+            "check": "Duplicate Instances",
+            "errorMessage": "(Implicit)",
+            "recovery": "Script scans attached TSLs; if it finds another instance of itself or specified conflicts ('GE_WDET_DOUBLE_STUDS'), it erases the conflicting instances."
+          },
+          {
+            "check": "Map Data (Slave Mode)",
+            "errorMessage": "(Implicit)",
+            "recovery": "Script checks 'mpSheetData.length()'. If 0, it falls back to Master mode logic (calculating from geometry)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Backing Configuration",
+            "how": "Edit 'Sheathing Break Material' (strGo) or 'Apply to Blocking' (stDoBlocking) via Object Properties (OPM).",
+            "effect": "Triggers a recalculation. Backing beam dimensions change. Horizontal blocking is resized or ignored based on the 'Apply to Blocking' toggle."
+          },
+          {
+            "action": "Update Geometry",
+            "how": "Standard hsbCAD Recalculate or Wall modification (e.g., changing sheet layout).",
+            "effect": "Script re-evaluates the positions of vertical/horizontal breaks and regenerates backing members accordingly."
+          }
+        ]
+      },
+      "tokens_used": 10181,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# NA_SheetBreakBacking\n\n## Overview\nThis script automates the insertion of backing or blocking members at sheathing sheet joints (breaks) within an ElementWall. It ensures structural continuity and provides adequate nailing surfaces by generating or modifying beams at vertical and horizontal sheathing lines.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Must be applied to an existing ElementWall. |\n| Paper Space | No | Not intended for layout or detailing views. |\n| Shop Drawing | No | This is a 3D modeling script. |\n\n## Prerequisites\n- **Required Entities**: An existing ElementWall in the drawing.\n- **Minimum Beam Count**: 0 (The wall itself must exist, but specific beam counts within it are not strictly required for insertion).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or `TSLL`)\nAction: Browse to and select `NA_SheetBreakBacking.mcr`.\n\n### Step 2: Select Wall Element\n```\nCommand Line: Select an Element\nAction: Click on the desired wall in the model.\n```\nThe script will automatically analyze the sheathing layout of the selected wall to determine where backing is needed. It will also automatically remove any duplicate instances of this script or conflicting \"Double Stud\" scripts found on the same wall.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Sheathing Break Material | Dropdown | 1 Ply | Determines the width/depth of the backing material inserted at sheet breaks. Options include \"1 Ply\", \"2 Ply\", \"3 Ply\", \"3x\", and \"4x\". This affects the size of the new studs and how aggressively the script removes conflicting existing studs. |\n| Apply to Blocking | Dropdown | Yes | If \"Yes\", the script modifies horizontal blocking beams that intersect horizontal sheathing breaks to match the backing material dimensions. If \"No\", horizontal blocking is ignored. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| (None) | This script does not add custom items to the right-click context menu. Changes are made via the Properties Panel. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script operates independently using the properties of the selected ElementWall and the OPM parameters.\n\n## Tips\n- **Auto-Cleanup**: If you accidentally insert the script twice, or if you have a \"Double Stud\" script in the same location, this script will automatically erase the conflicts to prevent errors.\n- **Sheet Ends**: The script is smart enough to check if an existing stud can be stretched to cover a sheet end. If not, it will create a new backing stud automatically.\n- **Modification**: To change the thickness of your backing after insertion, simply select the wall, open the Properties palette (Ctrl+1), locate the script instance, and change the \"Sheathing Break Material\" dropdown. The wall will update immediately.\n\n## FAQ\n- Q: What happens if I change the \"Sheathing Break Material\" from \"1 Ply\" to \"3x\"?\n  - A: The script will recalculate the widths of the backing beams. Note that wider configurations (like \"3x\") use a stricter check for existing studs and are more likely to remove or modify existing studs in the wall to fit the new wider backing.\n- Q: Does this work for both vertical and horizontal sheet breaks?\n  - A: Yes. It inserts new studs for vertical breaks and modifies existing blocking for horizontal breaks (provided \"Apply to Blocking\" is set to \"Yes\").\n- Q: Why did some of my existing studs disappear?\n  - A: The script removes existing vertical studs that conflict with the geometry of the new backing members to ensure the wall builds correctly.\n\n---"
+      },
+      "tokens_used": 5451,
+      "error": null
+    }
+  }
+}

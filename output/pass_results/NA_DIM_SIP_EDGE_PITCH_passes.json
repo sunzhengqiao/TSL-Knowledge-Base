@@ -1,0 +1,256 @@
+{
+  "filename": "NA_DIM_SIP_EDGE_PITCH.mcr",
+  "status": "completed",
+  "total_tokens": 25243,
+  "processing_time": 446.77373147010803,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2856,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script accesses 3D geometry of Sip panels using _Sip and _Entity lists. It performs vector calculations (crossProduct, dotProduct) on vecX/vecY/vecZ to determine 3D orientation. It lacks Paper Space specific API calls like _Viewport, sd_ prefixes, or Layout iteration."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sip"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing Sip Panels",
+          "requiredSettings": [
+            "DimStyle (Default: 'MP Shops 1_8')"
+          ]
+        }
+      },
+      "tokens_used": 4183,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getSip",
+              "promptOriginal": "Select Sip Panel",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "userDimStyle",
+            "type": "PropString",
+            "displayName": "Dim style",
+            "defaultValue": "MP Shops 1_8",
+            "inputType": "dropdown",
+            "options": [
+              "System Dimension Styles (_DimStyles)"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "userDisplayAccurateIcon",
+            "type": "PropString",
+            "displayName": "Display accurate icon",
+            "defaultValue": "Yes",
+            "inputType": "dropdown",
+            "options": [
+              "Yes",
+              "No"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5713,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically generates pitch icons (slope indicators) on the non-rectangular edges of Structural Insulated Panels (SIPs) to visualize roof or connection angles in the model or shop drawings.",
+          "category": "ShopDrawing/Annotation",
+          "typicalUseCase": "Used during the detailing phase to clearly mark the pitch of sloped edges on SIP panels where standard linear dimensions are insufficient, ensuring the manufacturing team understands the angle of cuts."
+        },
+        "parameters": [
+          {
+            "name": "userDimStyle",
+            "technicalDefault": "MP Shops 1_8",
+            "businessMeaning": "Specifies the CAD dimension style (text height, font, arrow style) to be used for the pitch icon labels.",
+            "validRange": "Any Dimension Style name currently loaded in the drawing (e.g., 'Standard', 'MP Shops 1_4', 'Architectural')",
+            "unit": "String (Style Name)",
+            "affectsOutput": "Alters the visual appearance (font size, arrowheads, precision) of the pitch annotation. It does not change the geometric location of the icon."
+          },
+          {
+            "name": "userDisplayAccurateIcon",
+            "technicalDefault": "Yes",
+            "businessMeaning": "Controls whether the pitch icon is drawn to a true geometric scale (representing a 12-inch run) or drawn to a fixed uniform size for consistent visual readability.",
+            "validRange": "Yes (Geometrically Accurate), No (Fixed Size)",
+            "unit": "Selection",
+            "affectsOutput": "If 'Yes', the icon graphically represents the actual slope (steeper = taller triangle). If 'No', the icon size is normalized to the text height of the dimension style, and the true dimensions appear only as text overrides."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "userDisplayAccurateIcon changes from 'Yes' to 'No'",
+            "effect": "The graphical triangle size is overridden to match the dimension style's text height, and the true geometric values are forced into text labels.",
+            "cascade": [
+              "DimRequestPitch geometry size",
+              "Text Override labels"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "DimRequestPitch",
+            "description": "A dimension annotation object representing the pitch triangle, placed at the midpoint of sloped SIP edges.",
+            "appliedTo": "Sip Panel edges (specifically those perpendicular to the depth/normal vector)"
+          }
+        ]
+      },
+      "tokens_used": 3031,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Launch/Insert",
+          "2. Show Properties Dialog (User selects DimStyle and Icon display mode)",
+          "3. Command Line Prompt: Select Sip Panel",
+          "4. Entity Validation (Check if Sip is valid)",
+          "5. Determine Coordinate System (Check for attached Element)",
+          "6. Iterate through all Sip Edges",
+          "7. Filter Edges (Skip edges parallel to X or Y axes)",
+          "8. Calculate Icon Position (Midpoint + Offset)",
+          "9. Determine Icon Geometry (True Slope vs. Fixed Size)",
+          "10. Generate DimRequestPitch (Dimension Entity)",
+          "11. Complete Insertion"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Valid Element attached to Sip Panel",
+            "path1": {
+              "name": "Element Alignment",
+              "steps": [
+                "Use Element.vecX(), vecY(), vecZ() for orientation calculations"
+              ]
+            },
+            "path2": {
+              "name": "Sip Alignment",
+              "steps": [
+                "Use SipPanel.vecX(), vecY(), vecZ() for orientation calculations"
+              ]
+            }
+          },
+          {
+            "condition": "Edge Normal parallel to Width or Height Direction",
+            "path1": {
+              "name": "Rectangular Edge",
+              "steps": [
+                "Skip Edge (Continue loop)"
+              ]
+            },
+            "path2": {
+              "name": "Sloped/Angled Edge",
+              "steps": [
+                "Calculate Pitch Direction",
+                "Calculate Icon Position",
+                "Generate Dimension"
+              ]
+            }
+          },
+          {
+            "condition": "Property 'Display accurate icon' value",
+            "path1": {
+              "name": "Yes (Geometrically Accurate)",
+              "steps": [
+                "Calculate pitch width based on 12-inch run (U(12))",
+                "Calculate pitch height based on real vector projection",
+                "Draw triangle to true scale",
+                "Use default dimension text"
+              ]
+            },
+            "path2": {
+              "name": "No (Fixed Size/Readable)",
+              "steps": [
+                "Calculate fixed size based on DimStyle text height",
+                "Draw triangle using fixed X/Y dimensions",
+                "Override dimension text to display true calculated values"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Active Sip Panel Validity",
+            "errorMessage": "No Sip found. Erasing this instance.",
+            "recovery": "User must select a valid Sip Panel entity. If none selected, the script instance deletes itself."
+          },
+          {
+            "check": "Edge Orientation",
+            "errorMessage": "None (Silent Failure)",
+            "recovery": "Rectangular edges (parallel to X or Y) are automatically ignored; only non-rectangular edges receive icons."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Update Dimension Style",
+            "how": "OPM (Object Properties Palette) - 'Dim style' property",
+            "effect": "Updates the style (font, arrows, text height) of all generated pitch icons associated with the script instance."
+          },
+          {
+            "action": "Toggle Icon Accuracy",
+            "how": "OPM (Object Properties Palette) - 'Display accurate icon' property",
+            "effect": "Toggles icons between true geometric scale (steep roofs show tall triangles) and fixed scale (uniform triangles with text overrides)."
+          }
+        ]
+      },
+      "tokens_used": 5015,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# NA_DIM_SIP_EDGE_PITCH.mcr\n\n## Overview\nThis script automatically generates pitch icons (slope indicators) on the non-rectangular edges of Structural Insulated Panels (SIPs). It provides a clear visual representation of roof or connection angles where standard linear dimensions are insufficient.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be used in Model Space where the 3D Sip geometry exists. |\n| Paper Space | No | This script does not function in Paper Space or Layout tabs. |\n| Shop Drawing | No | While the output may appear in shop drawings, the script itself runs in the model environment. |\n\n## Prerequisites\n- **Required Entities**: At least one Structural Insulated Panel (Sip) entity in the drawing.\n- **Minimum beam count**: 0.\n- **Required settings**: A valid Dimension Style (e.g., 'MP Shops 1_8') must be loaded in the drawing.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `NA_DIM_SIP_EDGE_PITCH.mcr` from the file browser.\n\n### Step 2: Select Sip Panel\n```\nCommand Line: Select Sip Panel\nAction: Click on the desired Sip Panel in the drawing.\n```\nThe script will automatically analyze the panel geometry upon selection.\n\n### Step 3: Configure Properties (Optional)\nBefore or after insertion, you can adjust the appearance of the pitch icons using the Properties Palette (Ctrl+1) while the script instance is selected.\n\n### Step 4: Review Output\nThe script will place pitch icons at the midpoint of any sloped or non-rectangular edges. Rectangular edges are automatically skipped.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Dim style | dropdown | MP Shops 1_8 | Determines the visual style (text height, font, arrowheads) of the pitch annotation. Select from available Dimension Styles in the drawing. |\n| Display accurate icon | dropdown | Yes | Controls the size of the pitch triangle.<br>**Yes**: Draws the triangle to true geometric scale (steeper roofs = taller triangles).<br>**No**: Draws a fixed-size icon for better readability, using text overrides to show the true value. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not add specific items to the right-click context menu. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: This script operates independently of external XML settings files.\n\n## Tips\n- If the pitch icons appear too small or too large to read comfortably, set **Display accurate icon** to **No**. This forces the icons to a uniform size based on the dimension style's text height.\n- Ensure the **Dim style** specified exists in your AutoCAD template. If the default style is missing, the script may default to a standard style.\n- The script filters out edges that are perfectly rectangular (parallel to the panel's main axes). If you do not see an icon on a specific edge, it is likely a standard 90-degree cut.\n\n## FAQ\n- **Q: Why are no icons appearing on my panel?**\n  A: Ensure the panel has sloped or non-rectangular edges. The script automatically skips standard rectangular edges. Also, verify that you selected a valid Sip entity and not a standard wood beam.\n  \n- **Q: The text on my pitch icons is too small.**\n  A: Change the **Dim style** property to a style with larger text height, or set **Display accurate icon** to **No** to normalize the icon size."
+      },
+      "tokens_used": 4445,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,338 @@
+{
+  "filename": "MetalPartInsert.mcr",
+  "status": "completed",
+  "total_tokens": 46068,
+  "processing_time": 219.9227204322815,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8854,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrPoint goJig for interactive insertion of MetalPartCollectionEnt entities into the model. No sd_ prefix, no #Type E input map, no _Viewport usage. The script creates 3D geometry based on user-selected insertion points and styles."
+        },
+        "prerequisites": {
+          "requiredEntities": [],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": [
+            "TslUtilities.dll located at _kPathHsbInstall\\Utilities\\DialogService\\",
+            "Valid MetalPartCollection styles available in the current drawing or in company subassembly/assemblies folders",
+            "MetalPartCollectionDef entity support"
+          ]
+        }
+      },
+      "tokens_used": 6453,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrPoint.goJig",
+              "promptOriginal": "|Pick insertion point|",
+              "condition": "Insertion start",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "Rotate keyword base point selection",
+              "condition": "Rotate keyword selected",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "PrPoint.goJig",
+              "promptOriginal": "|Pick point to rotate [Angle/Basepoint/ReferenceLine]|",
+              "condition": "Rotate mode active",
+              "required": true
+            }
+          ],
+          "keywordOptions": [
+            {
+              "prompt": "|Pick insertion point [Rotate]|",
+              "options": [
+                "Rotate"
+              ]
+            },
+            {
+              "prompt": "|Pick insertion point [Import]|",
+              "options": [
+                "Import"
+              ]
+            },
+            {
+              "prompt": "|Pick insertion point [Rotate/Import]|",
+              "options": [
+                "Rotate",
+                "Import"
+              ]
+            }
+          ]
+        },
+        "dialogs": [
+          {
+            "type": "SelectFromList",
+            "trigger": "Initial insertion when no specific style is known or style DWG selection is requested",
+            "title": "|Default Style Drawing|",
+            "dataSource": "DWG files found in <company>\\subassembly or <company>\\assemblies folders containing MetalPartCollectionDef entries",
+            "features": {
+              "searchable": true,
+              "multiSelect": false
+            }
+          },
+          {
+            "type": "SelectFromList",
+            "trigger": "Initial insertion to select the specific MetalPart style",
+            "title": "|Style Selection|",
+            "dataSource": "Styles available in the current drawing or imported from the selected style DWG",
+            "features": {
+              "searchable": true,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6521,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Inserts pre-defined metal connector assemblies (hardware, brackets, plates) into the 3D model using a library-based workflow.",
+          "category": "Hardware/Fasteners",
+          "typicalUseCase": "Used when a detailer needs to place specific metal connection hardware (like Simpson Strong-Tie or custom fabricated plates) at precise locations on the timber structure, often requiring alignment with multiple beams."
+        },
+        "parameters": [
+          {
+            "name": "Style Drawing Source",
+            "technicalDefault": "",
+            "businessMeaning": "Selects the external DWG library file that contains the catalog of available metal part definitions.",
+            "validRange": "Any valid file path within the <company>\\subassembly or <company>\\assemblies folder structure.",
+            "unit": "filepath",
+            "affectsOutput": "Determines the list of specific Metal Part Styles available for selection in the subsequent dialog."
+          },
+          {
+            "name": "Metal Part Style",
+            "technicalDefault": "",
+            "businessMeaning": "Selects the specific hardware definition to insert (e.g., a specific bracket type, column base, or shear plate).",
+            "validRange": "Depends on content of selected Style Drawing; specific names defined in MetalPartCollectionDef entries.",
+            "unit": "string",
+            "affectsOutput": "Defines the 3D geometry, material properties, and sub-components (sheets, beams, SIPs) of the inserted entity."
+          },
+          {
+            "name": "Insertion Point",
+            "technicalDefault": "_PtW",
+            "businessMeaning": "The precise 3D coordinate in the model where the origin (0,0,0) of the metal part style is placed.",
+            "validRange": "Any XYZ coordinate in Model Space.",
+            "unit": "mm",
+            "affectsOutput": "Sets the global spatial location of the MetalPartCollectionEnt entity."
+          },
+          {
+            "name": "Rotation Reference Point",
+            "technicalDefault": "User input via getPoint",
+            "businessMeaning": "Defines the pivot point around which the metal part is visually rotated during placement.",
+            "validRange": "Any XYZ coordinate in Model Space (often picked on the geometry to be attached to).",
+            "unit": "mm",
+            "affectsOutput": "Affects the visual feedback during the 'Rotate' command; determines the center of the rotation interaction circle."
+          },
+          {
+            "name": "Rotation Angle",
+            "technicalDefault": "0.0",
+            "businessMeaning": "The angle of rotation applied to the metal part around its local Z-axis relative to the world coordinate system.",
+            "validRange": "0 to 360 degrees. Script applies smart snapping (1°, 5°, 15°, 45°, 90°) based on cursor distance from the reference point.",
+            "unit": "degrees",
+            "affectsOutput": "Rotates the coordinate system of the metal part, changing its orientation in the model."
+          },
+          {
+            "name": "Import Keyword",
+            "technicalDefault": "false",
+            "businessMeaning": "A command line option to force the selected metal part style definition to be imported into the current drawing file.",
+            "validRange": "Boolean (Triggered by user selection of 'Import' keyword).",
+            "unit": "N/A",
+            "affectsOutput": "Ensures the style data resides in the current DWG, preventing missing reference issues later in the workflow."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of 'Style Drawing Source'",
+            "effect": "Populates the list of available 'Metal Part Styles'.",
+            "cascade": [
+              "Metal Part Style"
+            ]
+          },
+          {
+            "trigger": "Selection of 'Metal Part Style'",
+            "effect": "Generates the preview geometry used during the 'Insertion Point' and 'Rotation' Jig.",
+            "cascade": [
+              "Insertion Point",
+              "Rotation Angle"
+            ]
+          },
+          {
+            "trigger": "'Rotate' keyword activation",
+            "effect": "Changes the prompt to require a 'Rotation Reference Point' followed by a dynamic angle selection.",
+            "cascade": [
+              "Rotation Reference Point",
+              "Rotation Angle"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "MetalPartCollectionEnt",
+            "description": "A collection entity representing the metal hardware assembly, potentially containing sheets, beams, and SIP elements defined by the style.",
+            "appliedTo": "Model Space (independent of specific timber beams, though typically placed relative to them)."
+          }
+        ]
+      },
+      "tokens_used": 8298,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Start: Initialize and scan directories (<company>\\subassembly, <company>\\assemblies) for DWG files containing MetalPartCollectionDef entries.",
+          "Retrieve list of styles available in the current drawing.",
+          "Determine if external style DWGs were found during scan.",
+          "Display 'Default Style Drawing' dialog (if external DWGs found) to select source library.",
+          "Display 'Style Selection' dialog to select the specific metal part style.",
+          "Check if selected style exists in the current drawing.",
+          "Initialize Jig Preview: Generate geometry bodies from the style definition for dynamic feedback.",
+          "Start Insertion Loop: Display command line prompt ('|Pick insertion point [Rotate]|' or '|Pick insertion point [Rotate/Import]|').",
+          "[Loop] User Action: Pick a point to insert the MetalPartCollectionEnt entity.",
+          "[Loop] User Action: Select 'Rotate' keyword -> Pick Base Point -> Rotate dynamically using cursor with angle snapping -> Return to placement.",
+          "[Loop] User Action: Select 'Import' keyword -> Force import style definition from source DWG -> Update prompt -> Return to placement.",
+          "User Action: Press Escape or Enter to finish command.",
+          "Script End: Execute eraseInstance() to remove the TSL instance, leaving only the placed entities."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Presence of external Style DWGs in company folders",
+            "path1": {
+              "name": "External DWG Found",
+              "steps": [
+                "Show 'Default Style Drawing' dialog to select file path.",
+                "Read styles from selected file.",
+                "Proceed to Style Selection."
+              ]
+            },
+            "path2": {
+              "name": "No External DWG Found",
+              "steps": [
+                "Use styles currently existing in the active DWG only.",
+                "Proceed to Style Selection."
+              ]
+            }
+          },
+          {
+            "condition": "Selected Style status in Current Drawing",
+            "path1": {
+              "name": "Style Exists in Current DWG",
+              "steps": [
+                "Set variable bCanOverride to true.",
+                "Command prompt includes 'Import' keyword option.",
+                "Entity is placed using existing definition."
+              ]
+            },
+            "path2": {
+              "name": "Style Missing in Current DWG",
+              "steps": [
+                "Attempt automatic import from selected Style DWG.",
+                "If import fails, display error and erase script instance.",
+                "If import succeeds, proceed to insertion."
+              ]
+            }
+          },
+          {
+            "condition": "User Input during Insertion Loop",
+            "path1": {
+              "name": "Insert (Pick Point)",
+              "steps": [
+                "Create MetalPartCollectionEnt at picked location.",
+                "Reset rotation state if applicable.",
+                "Restart loop for next insertion."
+              ]
+            },
+            "path2": {
+              "name": "Rotate (Keyword)",
+              "steps": [
+                "Prompt for base point (getPoint).",
+                "Set coordinate system to new base point.",
+                "Enable rotation mode (bIsRotation = true).",
+                "User drags cursor to set angle with snapping logic.",
+                "Update preview geometry.",
+                "Return to insertion prompt."
+              ]
+            },
+            "path3": {
+              "name": "Import (Keyword)",
+              "steps": [
+                "Execute ImportFromDwg function.",
+                "Update prompt to remove 'Import' keyword if successful.",
+                "Return to insertion prompt."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Style Import Result",
+            "errorMessage": "import failed",
+            "recovery": "User must cancel or select a different style; script instance is erased on failure."
+          },
+          {
+            "check": "Style Selection Dialog",
+            "errorMessage": "None (Silent Cancel)",
+            "recovery": "If user cancels the dialog, script instance is erased and command ends."
+          },
+          {
+            "check": "Valid Style Geometry",
+            "errorMessage": "None (Internal Check)",
+            "recovery": "Script checks if definition is valid (cd.bIsValid()). If invalid, no bodies are generated for the Jig, though the script attempts to run."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Manipulation of MetalPartCollectionEnt",
+            "how": "Standard AutoCAD grips and Properties Palette (OPM)",
+            "effect": "Users can move, rotate, or modify properties of the inserted entity using standard CAD tools. The script instance itself is deleted upon completion."
+          },
+          {
+            "action": "No Recalc/Context Menu",
+            "how": "N/A",
+            "effect": "The script does not add addRecalcTrigger entries. The resulting entities are static 'dumb' entities in terms of this specific script's logic once placed, relying on the underlying MetalPartCollectionEnt behavior."
+          }
+        ]
+      },
+      "tokens_used": 9750,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# MetalPartInsert.mcr\n\n## Overview\nThis script allows you to insert pre-defined metal connector assemblies (such as brackets, plates, or hardware) into the 3D model. It provides a library-based workflow to select specific styles from company folders or the current drawing and place them interactively with dynamic rotation controls.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates entirely in 3D Model Space. |\n| Paper Space | No | Not designed for 2D layouts or shop drawings. |\n| Shop Drawing | No | Not for generating production views directly. |\n\n## Prerequisites\n- **Required Entities:** None (Standalone insertion).\n- **Minimum Beam Count:** 0.\n- **Required Settings:**\n  - Valid DWG library files containing `MetalPartCollectionDef` entries located in your company folders (`<company>\\subassembly` or `<company>\\assemblies`).\n  - `TslUtilities.dll` must be installed in the hsbCAD utilities path.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `MetalPartInsert.mcr`\n\n### Step 2: Select Style Drawing (Library)\n*If the script finds external DWG libraries in your company folders:*\n```\nDialog: Default Style Drawing\nAction: Select the source DWG file that contains the catalog of metal parts you wish to use.\n```\n\n### Step 3: Select Specific Part Style\n```\nDialog: Style Selection\nAction: Browse or search the list to select the specific Metal Part Style (e.g., \"Column Base Plate\", \"Simpson H1\") to insert.\n```\n\n### Step 4: Place the Part\n```\nCommand Line: Pick insertion point [Rotate/Import]\nAction: Click in the model to place the selected metal part.\n- The part will appear attached to your cursor.\n- Press 'R' for Rotate or 'I' for Import before clicking if needed.\n```\n\n### Step 5: Adjust Rotation (Optional)\n*If you type 'R' (Rotate) or 'Rotate' at the command line:*\n```\nCommand Line: Rotate keyword base point selection\nAction: Pick a point in the model to act as the pivot center (typically on the geometry you are attaching to).\n```\n```\nCommand Line: Pick point to rotate [Angle/Basepoint/ReferenceLine]\nAction: Move your cursor to rotate the part.\n- Note: The script uses smart snapping (1°, 5°, 15°, 45°, 90°) depending on how far the cursor is from the pivot point.\n```\n\n### Step 6: Finish\n```\nAction: Continue placing parts or press Enter/Esc to finish.\nNote: The script instance removes itself automatically, leaving only the placed metal parts in the model.\n```\n\n## Properties Panel Parameters\n*Note: This script uses interactive dialogs and command-line inputs for configuration rather than static Properties Palette parameters.*\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Style Drawing Source | Filepath | *Scanned Folders* | Determines the library file used to populate the list of available parts. Set via the \"Default Style Drawing\" dialog. |\n| Metal Part Style | String | *User Selected* | The specific definition of the hardware (geometry/material). Set via the \"Style Selection\" dialog. |\n| Insertion Point | Point | *User Click* | The 3D coordinate where the part origin (0,0,0) is placed. |\n| Rotation Angle | Angle | 0.0° | The orientation of the part around its Z-axis. Set dynamically using the \"Rotate\" keyword. |\n\n## Right-Click Menu Options\n*This script does not add specific custom items to the right-click context menu. Standard AutoCAD/hsbCAD commands apply.*\n\n## Settings Files\n- **Filename**: `TslUtilities.dll`\n- **Location**: `_kPathHsbInstall\\Utilities\\DialogService\\`\n- **Purpose**: Required to display the selection dialogs for style drawings and part lists.\n- **Filename**: `*.dwg` (Style Drawings)\n- **Location**: `<company>\\subassembly` or `<company>\\assemblies`\n- **Purpose**: These files contain the `MetalPartCollectionDef` entities that define the geometry and properties of the metal parts.\n\n## Tips\n- **Smart Angle Snapping**: When rotating, move your cursor close to the pivot point for fine adjustments (1°) or further away for large steps (90°).\n- **Import Keyword**: Use the `Import` keyword if you want to force the style definition into the current drawing file. This prevents the \"missing reference\" error if the library DWG is moved or deleted later.\n- **Post-Insert Editing**: Once placed, the script deletes itself. To move or rotate the part later, use standard AutoCAD grips or the Properties Palette on the resulting `MetalPartCollectionEnt`.\n\n## FAQ\n- **Q: What happens if I select a style that isn't in the current drawing?**\n  **A:** The script attempts to automatically import it from the selected Style Drawing. If the import fails, the script will cancel and erase the temporary instance.\n- **Q: Can I modify the script parameters after placing the part?**\n  **A:** No, because the script instance self-destructs upon placement. You must modify the resulting Metal Part entity using its standard properties.\n- **Q: Why don't I see the \"Default Style Drawing\" dialog?**\n  **A:** This only appears if the script finds DWG files in your company subassembly/assemblies folders. If none are found, it defaults to using styles already present in the current drawing."
+      },
+      "tokens_used": 6192,
+      "error": null
+    }
+  }
+}

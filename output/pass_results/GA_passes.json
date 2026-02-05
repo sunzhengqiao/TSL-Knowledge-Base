@@ -1,8 +1,8 @@
 {
   "filename": "GA.mcr",
   "status": "completed",
-  "total_tokens": 51900,
-  "processing_time": 471.8720247745514,
+  "total_tokens": 50746,
+  "processing_time": 428.2905492782593,
   "passes": {
     "1": {
       "success": true,
@@ -18,236 +18,271 @@
           "supportsPaperSpace": false,
           "isShopDrawingScript": false,
           "isMultipageScript": false,
-          "detectionEvidence": "The script manipulates 3D geometry using Body, BeamCut, and GenBeam classes, and attaches hardware components (HardWrComp) to beams. It lacks Viewport handling, sd_ prefix, or 2D layout logic."
+          "detectionEvidence": "The script utilizes GenBeam entities, BeamCut tools for modifying geometry, and constructs 3D Body objects (bd0, bd1) with a Display index of 252. It lacks 'sd_' prefixes, '_Viewport' references, and '#Type E' logic, confirming it is a Model Space connection script that physically alters timber beams."
         },
         "prerequisites": {
           "requiredEntities": [
             "GenBeam"
           ],
           "minimumBeams": 1,
-          "requiredSpace": "Model Space (3D environment)",
+          "requiredSpace": "3D Model Space",
           "requiredSettings": [
-            "AngleBracketCatalog.xml (or GenericAngle.xml)",
-            "hsbTSL MapObject in Dictionary"
+            "GenericAngle.xml",
+            "hsbCompany\\TSL\\Settings folder"
           ]
         }
       },
-      "tokens_used": 6766,
+      "tokens_used": 7298,
       "error": null
     },
     "3": {
       "success": true,
       "data": {},
-      "tokens_used": 10163,
+      "tokens_used": 10178,
       "error": null
     },
     "4": {
       "success": true,
       "data": {
         "scriptPurpose": {
-          "summary": "Inserts and manages generic angle bracket connections (metal L-plates) between timber elements, automating the 3D geometry, beam milling/pocketing, and BOM data.",
-          "category": "Hardware / Connection",
-          "typicalUseCase": "Connecting two timber beams (e.g., beam-to-beam, beam-to-column) or securing a single beam to a substructure using standardized angle brackets from a manufacturer catalog."
+          "summary": "Inserts a configurable metal angle bracket connection for one or two timber beams, handling automatic milling for material clearance.",
+          "category": "Hardware",
+          "typicalUseCase": "Creating structural connections between intersecting beams or fixing a beam to a support using manufacturer-specific angle brackets."
         },
         "parameters": [
           {
-            "name": "_Pt0",
-            "technicalDefault": "User Click Point",
-            "businessMeaning": "The insertion point and anchor. On a single beam, it snaps to the nearest edge. On two beams, it defines the intersection line. It controls which face of the timber the bracket is attached to.",
-            "validRange": "Any point on the surface or near the edge of the target GenBeam(s).",
-            "unit": "3D Coordinates (mm)",
-            "affectsOutput": "Position of the bracket, rotation relative to the beam, and selection of the attachment face."
-          },
-          {
-            "name": "_GenBeam[]",
-            "technicalDefault": "User Selection",
-            "businessMeaning": "The structural timber elements being connected. Supports 1 or 2 beams.",
-            "validRange": "GenBeam, GenSheet, or GenPanel entities.",
-            "unit": "Entity Reference",
-            "affectsOutput": "Determines which beams receive the milling cuts and hardware assignments."
-          },
-          {
             "name": "sFamily",
-            "technicalDefault": "From XML (e.g., 'Standard')",
-            "businessMeaning": "The profile family of the angle bracket (e.g., standard L-bracket vs. reinforced). This sets the base geometric dimensions like height, width, and thickness.",
-            "validRange": "List of families defined in AngleBracketCatalog.xml.",
+            "technicalDefault": "\"AA\"",
+            "businessMeaning": "The manufacturer family or series of the angle bracket (e.g., Simpson AA, AB).",
+            "validRange": "Defined in XML (e.g., AA, AB, AN)",
             "unit": "String",
-            "affectsOutput": "Base dimensions (Width, Height, Thickness) of the 3D body and default milling size."
+            "affectsOutput": "Determines available sizes (sProduct), default geometry, and manufacturer details."
           },
           {
             "name": "sProduct",
-            "technicalDefault": "From XML (e.g., 'AA60280')",
-            "businessMeaning": "The specific article number or SKU of the hardware for purchasing and production lists.",
-            "validRange": "Valid product codes mapped to the selected family in the XML.",
+            "technicalDefault": "\"AA60280\"",
+            "businessMeaning": "The specific article number or model code defining the bracket's dimensions.",
+            "validRange": "Defined in XML for selected family",
             "unit": "String",
-            "affectsOutput": "BOM/Hardware list properties."
+            "affectsOutput": "Sets the width (dB), depth (dA), and thickness (dt) of the bracket."
           },
           {
-            "name": "sManufacturer",
-            "technicalDefault": "From XML",
-            "businessMeaning": "The supplier of the hardware component.",
-            "validRange": "Available manufacturers in the catalog.",
+            "name": "Manufacturer",
+            "technicalDefault": "From XML (e.g., \"Simpson\")",
+            "businessMeaning": "The supplier/brand of the hardware.",
+            "validRange": "Defined in XML catalog",
             "unit": "String",
-            "affectsOutput": "BOM information and hardware attributes."
+            "affectsOutput": "Populates hardware properties in BOM/data export."
+          },
+          {
+            "name": "bRotate180",
+            "technicalDefault": "0 (false)",
+            "businessMeaning": "Rotates the bracket 180 degrees around its vertical axis relative to the beam.",
+            "validRange": "0/1 (No/Yes)",
+            "unit": "Boolean",
+            "affectsOutput": "Swaps the legs of the angle bracket or flips the orientation on the beam face."
+          },
+          {
+            "name": "bSwapLegs",
+            "technicalDefault": "0 (false)",
+            "businessMeaning": "Swaps which side of the bracket attaches to the primary beam vs. the secondary beam.",
+            "validRange": "0/1 (No/Yes)",
+            "unit": "Boolean",
+            "affectsOutput": "Exchanges the dimensions dA and dB in the connection logic."
           },
           {
             "name": "iMillingType",
-            "technicalDefault": "1",
-            "businessMeaning": "Selects the machining strategy for the timber. Determines if the bracket sits on the surface (0), is recessed (1), or has a specific complex pocket (3).",
-            "validRange": "1, 2, or 3 (Integer).",
-            "unit": "Enumeration",
-            "affectsOutput": "Geometry of the BeamCut operation (e.g., depth, negative pockets, and clearance shape)."
+            "technicalDefault": "1 (Rectangular pocket)",
+            "businessMeaning": "The type of material removal required to fit the bracket flush.",
+            "validRange": "0=None, 1=Rectangular, 2=One side, 3=Both sides",
+            "unit": "Integer",
+            "affectsOutput": "Geometry of the 'BeamCut' added to the timber (pocket, slot, or none)."
           },
           {
             "name": "dTolerance",
-            "technicalDefault": "0.0",
-            "businessMeaning": "The additional clearance added to the thickness and width of the cut. Ensures the metal plate fits without forcing.",
-            "validRange": "0.0 to 5.0 mm",
+            "technicalDefault": "1.0",
+            "businessMeaning": "Additional clearance around the bracket for easier assembly or swelling wood.",
+            "validRange": "0.0 mm to 5.0 mm",
             "unit": "mm",
-            "affectsOutput": "Expands the size of the milled pocket in the beam."
+            "affectsOutput": "Expands the size of the milling pocket/cut."
           },
           {
-            "name": "iRotate180",
-            "technicalDefault": "0 (False)",
-            "businessMeaning": "Flips the orientation of the bracket 180 degrees around the insertion axis.",
-            "validRange": "0 (No), 1 (Yes).",
-            "unit": "Boolean/Integer",
-            "affectsOutput": "Rotates the 3D body and the associated machining volume."
+            "name": "dB",
+            "technicalDefault": "From Product XML",
+            "businessMeaning": "The horizontal width of the bracket (leg width 1).",
+            "validRange": "Typically 40mm - 200mm",
+            "unit": "mm",
+            "affectsOutput": "Width of the graphical body and the width of the cut."
           },
           {
-            "name": "sNail",
-            "technicalDefault": "From XML",
-            "businessMeaning": "The article number of the fasteners (nails/screws) used to secure the bracket.",
-            "validRange": "Valid fastener codes in catalog.",
-            "unit": "String",
-            "affectsOutput": "Hardware list entries for fasteners."
+            "name": "dA",
+            "technicalDefault": "From Product XML",
+            "businessMeaning": "The horizontal depth of the bracket (leg width 2).",
+            "validRange": "Typically 40mm - 200mm",
+            "unit": "mm",
+            "affectsOutput": "Depth of the graphical body and the depth of the cut."
+          },
+          {
+            "name": "dC",
+            "technicalDefault": "From Product XML",
+            "businessMeaning": "The vertical height of the bracket.",
+            "validRange": "Typically 60mm - 400mm",
+            "unit": "mm",
+            "affectsOutput": "Height of the graphical body and the height of the cut."
+          },
+          {
+            "name": "dt",
+            "technicalDefault": "From Product XML",
+            "businessMeaning": "The thickness of the steel material.",
+            "validRange": "Typically 2mm - 10mm",
+            "unit": "mm",
+            "affectsOutput": "Depth of the milling (material removal) and representation of the steel plate."
+          },
+          {
+            "name": "Nail/Screw info (mapDiameters)",
+            "technicalDefault": "From Product XML",
+            "businessMeaning": "Configuration of fasteners associated with the bracket.",
+            "validRange": "Diameter and Quantity per XML",
+            "unit": "Count / mm",
+            "affectsOutput": "Generates 'Hardware' components in the BOM and can influence drilling if implemented (though only hardware component creation is visible here)."
           }
         ],
         "parameterDependencies": [
           {
-            "trigger": "Changing 'sFamily'",
-            "effect": "Updates 'sProduct', 'sManufacturer', and underlying dimensions (dA, dB, dC, dt) to match the new family's default configuration.",
+            "trigger": "sFamily changes",
+            "effect": "Updates the list of available sProduct options and sets the default Manufacturer.",
             "cascade": [
               "sProduct",
-              "sManufacturer",
-              "Geometric Dimensions"
+              "Manufacturer"
             ]
           },
           {
-            "trigger": "Changing 'iMillingType'",
-            "effect": "Switches the algorithm used to calculate the BeamCut volume, altering how deep or how complex the timber is machined.",
+            "trigger": "sProduct changes",
+            "effect": "Overwrites dimensions dA, dB, dC, dt, and fastener data with values from the catalog.",
             "cascade": [
-              "BeamCut Geometry"
+              "dA",
+              "dB",
+              "dC",
+              "dt",
+              "mapDiameters"
+            ]
+          },
+          {
+            "trigger": "bSwapLegs is toggled",
+            "effect": "Swaps the usage of dimensions dA and dB in the geometric calculation.",
+            "cascade": [
+              "dA",
+              "dB"
+            ]
+          },
+          {
+            "trigger": "iMillingType changes",
+            "effect": "Changes the calculation logic for BeamCut (depths/directions).",
+            "cascade": [
+              "BeamCut dimensions"
             ]
           }
         ],
         "outputEntities": [
           {
-            "type": "Body (Visual)",
-            "description": "A 3D solid representation of the angle bracket, sized according to dA, dB, dC, and dt.",
-            "appliedTo": "Model Space (visualizing the hardware location)."
+            "type": "3D Body",
+            "description": "Visual representation of the angle bracket (usually steel) embedded in the beam.",
+            "appliedTo": "ModelSpace (Visual representation)"
           },
           {
-            "type": "BeamCut (Milling)",
-            "description": "Material removal operation on the beam. The shape varies by 'iMillingType' (simple surface removal vs. deep pocketing) and includes 'dTolerance'.",
-            "appliedTo": "_GenBeam[0] and _GenBeam[1] (if present)."
+            "type": "BeamCut",
+            "description": "Material removal (pocket, slot, or rabbet) in the timber to allow the bracket to sit flush.",
+            "appliedTo": "GenBeam[0] and GenBeam[1] (if two beams are selected)"
           },
           {
-            "type": "HardWrComp (Hardware)",
-            "description": "BOM entries created for the main bracket component and associated fasteners (nails/screws).",
-            "appliedTo": "The linked GenBeam (for production reports)."
+            "type": "Hardware Component",
+            "description": "Data entry for BOM/CAM output representing the bracket and fasteners.",
+            "appliedTo": "GenBeam[0] (Primary beam)"
           }
         ]
       },
-      "tokens_used": 8894,
+      "tokens_used": 8726,
       "error": null
     },
     "5": {
       "success": true,
       "data": {
         "workflowDiagram": [
-          "1. Script Initialization: Loads constants and defines file paths for 'AngleBracketCatalog.xml'.",
-          "2. Configuration Loading: Attempts to load settings from a Dictionary MapObject. If unavailable or on Insert, it looks for an XML file first in the Company folder (hsbCompany), then the General Installation folder (Content\\General).",
-          "3. Insertion Loop (_bOnInsert): Script enters a loop to allow placing multiple instances sequentially.",
-          "4. Entity Selection: User selects 1 or 2 GenBeams/GenSheets/GenPanels as supports.",
-          "5. Point Placement: User picks a point (_Pt0) to define the insertion location and attachment face.",
-          "6. Default Property Assignment: Script assigns the first available Family/Product and default MillingType from the loaded XML.",
-          "7. Instance Creation: A new TSL instance is created at the calculated location.",
-          "8. Geometric Calculation: Vectors (vxBody, vyBody, vzBody) are calculated based on the beam edges and insertion point. If 2 beams are used, an intersection line is determined.",
-          "9. 3D Body Generation: The angle bracket body is constructed using geometric dimensions (dA, dB, dC, dt) and transformed based on rotation settings.",
-          "10. Milling Operation: BeamCut tools are generated based on the 'iMillingType' and applied to the beam(s).",
-          "11. Hardware/BOM Generation: HardWrComp entries are created for the bracket and associated fasteners (nails/screws), then linked to the GenBeams.",
-          "12. Visualization: The 3D body is drawn in the model."
+          "Script Launch & Initialization",
+          "Load XML Configuration (Check Company folder, fallback to General Content)",
+          "Prompt User Input: Select Beam(s) & Click Point (Insert Mode)",
+          "Calculate Geometry: Determine Pt0 based on 1 or 2 beams (intersection or edge proximity)",
+          "Read Catalog Data: Apply dimensions (dA, dB, dC, dt) from selected sProduct",
+          "Generate 3D Bodies (bd0, bd1) representing the steel bracket",
+          "Apply Milling (BeamCut): Calculate cuts based on iMillingType, bRotate180, and dTolerance",
+          "Create Hardware Components: Link bracket and fasteners to GenBeam for BOM",
+          "Finalize: Update _PtG for grip position and assign layer/groups"
         ],
         "conditionalBranches": [
           {
-            "condition": "Configuration Source Availability",
-            "path1": {
-              "name": "Dictionary MapObject Found",
-              "steps": [
-                "Load settings from MapObject in 'hsbTSL' dictionary.",
-                "Skip XML reading unless debugging or updating version."
-              ]
-            },
-            "path2": {
-              "name": "MapObject Not Found",
-              "steps": [
-                "Search Company Folder for XML.",
-                "If not found, search General Install Folder for XML.",
-                "If still not found, use internal hardcoded default map."
-              ]
-            }
-          },
-          {
             "condition": "Number of Selected Beams",
             "path1": {
-              "name": "Single Beam Connection",
+              "name": "2 Beams (Connection)",
               "steps": [
-                "Projection finds the nearest edge to the insertion point.",
-                "Grip point (_PtG) defines the specific face/plane priority.",
-                "Milling and Hardware applied to the single beam."
+                "Calculate intersection line between beam planes",
+                "Place bracket at intersection",
+                "Apply cuts to both GenBeam[0] and GenBeam[1]",
+                "Enable Double-Click trigger to flip beams"
               ]
             },
             "path2": {
-              "name": "Double Beam Connection",
+              "name": "1 Beam (End/Side Fix)",
               "steps": [
-                "Connection placed at the line of intersection of the two beam planes.",
-                "Milling and Hardware applied to both beams.",
-                "Context menu option available to 'Swap Legs' (flip beams).",
-                "Double-click functionality available to flip connection."
+                "Find closest edge to selected click point",
+                "Determine primary plane based on proximity to grip",
+                "Apply cuts only to GenBeam[0]"
               ]
             }
           },
           {
-            "condition": "iMillingType (Milling Strategy)",
+            "condition": "XML Source Location",
             "path1": {
-              "name": "Type 1 (Standard/Surface)",
+              "name": "Company Settings",
               "steps": [
-                "Generates cuts relative to the surface based on thickness and width.",
-                "Standard clearance application."
+                "Check path: _kPathHsbCompany\\TSL\\Settings\\GenericAngle.xml",
+                "Use this configuration if found"
               ]
             },
             "path2": {
-              "name": "Type 3 (Recessed/Pocket)",
+              "name": "General Content Fallback",
               "steps": [
-                "Transforms body and cuts deeper into the timber (offset by dt + dTolerance).",
-                "Creates a specific pocket geometry, often involving multiple intersecting cuts."
+                "If Company XML missing, check _kPathHsbInstall\\Content\\General\\TSL\\Settings\\",
+                "Load default configuration"
               ]
             }
           },
           {
-            "condition": "iRotate180 (Orientation)",
+            "condition": "Milling Type (iMillingType)",
             "path1": {
-              "name": "0 (Standard)",
+              "name": "Type 0 (None)",
               "steps": [
-                "Body and cuts aligned in the default positive vector direction."
+                "Generate visual body only",
+                "No BeamCut operations"
               ]
             },
             "path2": {
-              "name": "1 (Rotated)",
+              "name": "Type 1 (Rectangular Pocket)",
               "steps": [
-                "Body and cuts rotated 180 degrees around the vertical axis.",
-                "Cutting directions (vzBody) inverted where necessary."
+                "Calculate pocket dimensions with tolerance",
+                "Subtract volume from timber"
+              ]
+            },
+            "path3": {
+              "name": "Type 2 (One Side)",
+              "steps": [
+                "Mill only on specific side of the bracket leg"
+              ]
+            },
+            "path4": {
+              "name": "Type 3 (Both Sides)",
+              "steps": [
+                "Mill both sides of the bracket leg",
+                "Includes logic for rotated geometry (bRotate180)"
               ]
             }
           }
@@ -255,62 +290,57 @@
         "validationRules": [
           {
             "check": "XML File Availability",
-            "errorMessage": "No AngleBracketCatalog.xml found in Company or General folder.",
-            "recovery": "Script falls back to internal default map (limited functionality). User should install correct XML."
+            "errorMessage": "(Implicit) Default map used if XML not found",
+            "recovery": "Script proceeds with hardcoded defaults or fails if critical geometry is missing."
           },
           {
-            "check": "Valid Beam Selection",
-            "errorMessage": "Invalid entity selected or no beam found.",
-            "recovery": "Prompt repeats asking for a valid GenBeam/GenSheet/GenPanel."
+            "check": "Beam Selection",
+            "errorMessage": "(Implicit) TSL Prompt enforces selection",
+            "recovery": "User must select at least one GenBeam via command line interface."
           },
           {
-            "check": "Geometric Dimensions",
-            "errorMessage": "Invalid dimensions (e.g., negative width/height) preventing Body creation.",
-            "recovery": "User must select a valid product/family combination with positive dimensions in the XML."
-          },
-          {
-            "check": "Catalog Entry Exists",
-            "errorMessage": "Selected Manufacturer/Family/Product combination does not exist in loaded XML.",
-            "recovery": "User resets properties to a valid combination available in the Properties Palette."
+            "check": "Product/Family Mapping",
+            "errorMessage": "Values in OPM might not update if XML map key is missing",
+            "recovery": "Ensure sFamily and sProduct strings match XML keys exactly."
           }
         ],
         "postInsertionActions": [
           {
-            "action": "Relocate Bracket",
-            "how": "Grip Point Edit (_PtG)",
-            "effect": "Moves the insertion point along the beam edge. Updates _Pt0 and recalculates the attachment face if moved near a different edge."
-          },
-          {
-            "action": "Swap Beams / Legs",
-            "how": "Context Menu (Right-click) or Double Click",
-            "effect": "Swaps the primary and secondary beam roles (flips the connection orientation) in a 2-beam scenario."
-          },
-          {
-            "action": "Rotate 180 Degrees",
-            "how": "Context Menu (Right-click)",
-            "effect": "Toggles 'iRotate180' property, flipping the bracket orientation relative to the insertion axis."
-          },
-          {
-            "action": "Change Product Specifications",
+            "action": "Change Bracket Family/Product",
             "how": "Properties Palette (OPM)",
-            "effect": "Changing 'sFamily' updates dimensions and defaults. Changing 'sProduct' updates BOM data. Changing 'iMillingType' alters the machining geometry."
+            "effect": "Updates dimensions, fastener data, and visual model immediately upon recalculation."
           },
           {
-            "action": "Adjust Tolerance",
-            "how": "Properties Palette (OPM) -> dTolerance",
-            "effect": "Increases or decreases the size of the milling pocket (clearance) around the metal bracket."
+            "action": "Swap Legs (bSwapLegs) or Rotate 180 (bRotate180)",
+            "how": "Right-Click Context Menu (addRecalcTrigger)",
+            "effect": "Swaps dimension usage (dA/dB) or flips the bracket orientation relative to the beam face."
+          },
+          {
+            "action": "Move Connection",
+            "how": "Grip Point (_PtG) Drag",
+            "effect": "Relocates the bracket along the beam edge or intersection line; if 1 beam, moving grip closer to opposite face switches the attachment plane."
+          },
+          {
+            "action": "Flip Beams",
+            "how": "Double Click (if 2 beams connected)",
+            "effect": "Switches GenBeam[0] and GenBeam[1], reversing the primary/secondary relationship."
+          },
+          {
+            "action": "Adjust Tolerance/Milling",
+            "how": "Properties Palette (OPM)",
+            "effect": "Modifies the size of the BeamCut (pocket) without changing the bracket size."
           }
         ]
       },
-      "tokens_used": 10682,
+      "tokens_used": 9330,
       "error": null
     },
     "6": {
       "success": true,
       "data": {
-        "markdown": "# GA.mcr\n\n## Overview\nInserts and manages generic angle bracket connections (metal L-plates) between timber elements. It automates the creation of 3D geometry, beam milling/pocketing, and BOM data for manufacturing lists.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for 3D geometry and beam processing. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required entities**: GenBeam, GenSheet, or GenPanel (1 or 2 elements).\n- **Minimum beam count**: 1.\n- **Required settings files**: `AngleBracketCatalog.xml` (or `GenericAngle.xml`) located in the Company or Content\\General installation folder.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command:** `TSLINSERT`\n**Action:** Browse to the script location and select `GA.mcr`.\n\n### Step 2: Select Timber Elements\n```\nCommand Line: Select GenBeam/GenSheet/GenPanel:\nAction: Click on the primary timber element you wish to connect.\n```\n*(Note: The script allows selecting a second element immediately after for beam-to-beam connections, or you can press Enter to proceed with a single beam).*\n\n### Step 3: Define Insertion Point\n```\nCommand Line: Specify insertion point:\nAction: Click on the face or edge of the selected beam where the bracket should be placed.\n```\n*   **Single Beam:** The script snaps to the nearest edge based on your click.\n*   **Two Beams:** The point defines the intersection line where the two beams meet.\n\n### Step 4: Configure Properties\n**Action:** The script inserts the default bracket. Use the **Properties Palette** (Ctrl+1) to select the specific Family, Manufacturer, and Product code required for your design.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sFamily | Dropdown | From XML | The profile family of the angle bracket (e.g., Standard L-Bracket). This determines the base geometric dimensions (Height, Width, Thickness). |\n| sProduct | Dropdown | From XML | The specific article number or SKU for purchasing and production lists. |\n| sManufacturer | Dropdown | From XML | The supplier of the hardware component. |\n| sNail | String | From XML | The article number of the fasteners (nails/screws) used to secure the bracket. |\n| iMillingType | Integer | 1 | Machining strategy: 1 (Standard/Surface), 2, or 3 (Recessed/Pocket). Determines how deep the timber is cut. |\n| dTolerance | Double | 0.0 mm | Additional clearance added to the cut dimensions. Increase this if the bracket fits too tightly. |\n| iRotate180 | Integer | 0 | Flips the orientation of the bracket 180 degrees around the insertion axis (0 = No, 1 = Yes). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Swap Legs | Swaps the primary and secondary beam roles (flips the connection orientation). Available only for 2-beam connections. |\n| Rotate 180 | Flips the bracket orientation relative to the insertion axis without changing the assigned beams. |\n\n## Settings Files\n- **Filename**: `AngleBracketCatalog.xml` or `GenericAngle.xml`\n- **Location**: `hsbCompany` folder or `Content\\General` installation path.\n- **Purpose**: Provides the database of available manufacturers, families, product codes, dimensions (dA, dB, dC, dt), and associated fasteners.\n\n## Tips\n- **Grip Editing:** Select the inserted bracket to reveal the grip point. Drag the grip along the beam edge to reposition the connection quickly.\n- **Double-Click:** Double-clicking an existing connection on two beams acts as a shortcut to \"Swap Legs.\"\n- **Recessing:** If you need the bracket to sit inside the timber (flush mount), change the `iMillingType` to 3.\n- **Clearance:** If the manufacturing report indicates the pocket is too small, increase the `dTolerance` value in small increments (e.g., 1.0 mm).\n\n## FAQ\n- **Q: What happens if the script asks for an XML file?**\n  **A:** The script cannot find the required catalog. Ensure your CAD administrator has placed the correct `AngleBracketCatalog.xml` in the correct Company or Content folder.\n- **Q: Can I connect more than two beams?**\n  **A:** No, this script is designed for single-beam anchoring or connections between exactly two beams.\n- **Q: Why does my bracket look rotated wrong?**\n  **A:** Use the `iRotate180` property in the Properties Palette or select \"Rotate 180\" from the right-click context menu."
+        "markdown": "# GA.mcr\n\n## Overview\nInserts a configurable metal angle bracket for single or double timber connections, automatically generating the necessary 3D representation and material milling (cutouts) for a flush installation.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates in 3D to modify beams and generate hardware bodies. |\n| Paper Space | No | Not designed for 2D detailing or views. |\n| Shop Drawing | No | Does not generate shop drawing views directly. |\n\n## Prerequisites\n- **Required Entities**: At least one `GenBeam` (Timber Beam).\n- **Minimum Beam Count**: 1 (Supports 2 beams for connections).\n- **Required Settings**: `GenericAngle.xml` (Located in Company folder or default Install folder).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GA.mcr` from the list.\n\n### Step 2: Select Beams and Insert\n```\nCommand Line: Select beams:\nAction: Click on the primary beam. If connecting two beams, click the second intersecting beam.\n```\n```\nCommand Line: Specify insertion point:\nAction: Click near the end or intersection of the beam where the bracket should be placed.\n```\n\n### Step 3: Configure Bracket\n1.  Select the inserted script object (it may be represented by a grip point or the bracket body).\n2.  Open the **Properties Palette** (Ctrl+1).\n3.  Select the desired **Family** (e.g., Simpson AA).\n4.  Select the specific **Product** code (e.g., AA60280).\n5.  Adjust dimensions or milling settings if necessary.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sFamily | String | AA | The manufacturer series or family of the angle bracket. |\n| sProduct | String | AA60280 | The specific product code defining dimensions and fasteners. |\n| Manufacturer | String | (From XML) | The supplier/brand name for BOM export. |\n| bRotate180 | Boolean | 0 (No) | Rotates the bracket 180 degrees relative to the beam face. |\n| bSwapLegs | Boolean | 0 (No) | Swaps which leg attaches to the primary vs. secondary beam (swaps width/depth usage). |\n| iMillingType | Integer | 1 | Type of material removal: 0=None, 1=Rectangular Pocket, 2=One Side, 3=Both Sides. |\n| dTolerance | Double (mm) | 1.0 | Extra clearance added to the milling pocket for fit. |\n| dB | Double (mm) | (Product) | Horizontal width of the bracket (Leg 1). |\n| dA | Double (mm) | (Product) | Horizontal depth of the bracket (Leg 2). |\n| dC | Double (mm) | (Product) | Vertical height of the bracket. |\n| dt | Double (mm) | (Product) | Thickness of the steel material. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Swap Legs | Toggles the `bSwapLegs` property, switching the orientation of the bracket legs. |\n| Rotate 180 | Toggles the `bRotate180` property, flipping the bracket orientation. |\n| Update | Forces a recalculation of the script geometry. |\n\n## Settings Files\n- **Filename**: `GenericAngle.xml`\n- **Location**: `_kPathHsbCompany\\TSL\\Settings` (or fallback to `_kPathHsbInstall\\Content\\General\\TSL\\Settings`)\n- **Purpose**: Defines the catalog of available brackets, including dimensions (dA, dB, dC, dt), default part numbers, and associated fastener (nail/screw) configurations.\n\n## Tips\n- **Moving the Bracket**: Select the script and drag the **Grip Point** (blue square) to move the bracket along the beam.\n- **Connecting Two Beams**: If you select two beams, the script attempts to place the bracket at their intersection. Double-clicking the object can swap the primary and secondary beam roles.\n- **Face Selection (Single Beam)**: When inserting on a single beam, the bracket attaches to the face nearest to your click point.\n- **Tolerance Adjustment**: If the timber swells or for easier assembly, increase the `dTolerance` value to create a slightly larger pocket in the wood.\n\n## FAQ\n- **Q: Why is the bracket not cutting into the wood?**\n  A: Check the `iMillingType` property. If it is set to `0`, no cuts are generated. Set it to `1` (Rectangular Pocket) for standard inset applications.\n- **Q: How do I switch to a different manufacturer?**\n  A: Change the `sFamily` property in the dropdown menu. The `sProduct` list will update automatically to show available codes for that family.\n- **Q: The bracket is facing the wrong way.**\n  A: Use the Right-Click menu option **Rotate 180** or toggle the **bSwapLegs** property to flip the orientation."
       },
-      "tokens_used": 5931,
+      "tokens_used": 5750,
       "error": null
     }
   }

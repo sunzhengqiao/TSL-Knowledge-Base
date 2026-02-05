@@ -1,150 +1,92 @@
-# HSB_W-Post
-
-**Creates a post with top and bottom plates in a timber frame wall element.**
-
----
+# HSB_W-Post.mcr
 
 ## Overview
+This script inserts a vertical steel post (column) into a timber wall element to provide structural reinforcement. It supports optional top and bottom steel connection plates and automatically handles the cutting and splitting of existing timber top and bottom plates to accommodate the new post.
 
-The HSB_W-Post script inserts a vertical post (column) into Zone 0 of a wall element, with optional steel plates at the top and bottom connections. This tool is commonly used for structural support points within wall framing, such as load-bearing posts or connection points.
+## Usage Environment
+| Space | Supported | Notes |
+|-------|-----------|-------|
+| Model Space | Yes | Script operates on 3D wall elements and geometry. |
+| Paper Space | No | Not intended for layout views. |
+| Shop Drawing | No | Not intended for manufacturing views. |
 
-The post can use various extrusion profiles (rectangular, round, or custom shapes) and includes options to split the top and bottom rails at the post location.
+## Prerequisites
+- **Required Entities**: An `ElementWall` with valid Top Plate (Beam type `_kSFTopPlate`) and Bottom Plate (Beam type `_kSFBottomPlate`) already existing in the model.
+- **Minimum Beam Count**: 2 (The top and bottom plates of the wall).
+- **Required Settings**: Access to an Extrusion Profile Catalog to select steel sections.
 
----
+## Usage Steps
 
-## Script Information
+### Step 1: Launch Script
+Command: `TSLINSERT` → Select `HSB_W-Post.mcr` from the list.
 
-| Property | Value |
-|----------|-------|
-| **Script Type** | O (Object) |
-| **Version** | 1.5 |
-| **Last Updated** | 27.05.2021 |
-| **Beams Required** | 0 (selects wall element interactively) |
-
----
-
-## Properties
-
-### Post Settings
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| **Extrusion profile name** | String (dropdown) | (available profiles) | Select the cross-section profile for the post. Options include rectangular, round, and custom extrusion profiles. |
-| **Default post width** | Double | 70 mm | The width of the post cross-section. Only used for rectangular and round profiles. |
-| **Default post height** | Double | 70 mm | The height (depth) of the post cross-section. Only used for rectangular and round profiles. |
-| **Alignment** | String (dropdown) | Left / Center / Right | Horizontal alignment of the post relative to the insertion point. |
-| **Offset top** | Double | 0 mm | Vertical offset from the top plate of the wall. Positive values move the post downward. |
-| **Offset bottom** | Double | 0 mm | Vertical offset from the bottom plate of the wall. Positive values move the post upward. |
-
-### Top Plate Settings
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| **Top plate** | (separator) | - | Section header for top plate properties. |
-| **Create plate top** | String (dropdown) | No / Yes | Enable or disable creation of the top connection plate. |
-| **Plate top width** | Double | 1500 mm | Width of the top plate (horizontal extent). |
-| **Plate top height** | Double | 150 mm | Height of the top plate (vertical dimension). |
-| **Plate top thickness** | Double | 250 mm | Thickness of the top plate (in wall depth direction). |
-| **Plate top offset X** | Double | 0 mm | Horizontal offset of the top plate from the post center. |
-| **Plate top offset Y** | Double | 0 mm | Vertical offset of the top plate from its default position. |
-
-### Bottom Plate Settings
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| **Bottom plate** | (separator) | - | Section header for bottom plate properties. |
-| **Create plate bottom** | String (dropdown) | No / Yes | Enable or disable creation of the bottom connection plate. |
-| **Plate bottom width** | Double | 1500 mm | Width of the bottom plate (horizontal extent). |
-| **Plate bottom height** | Double | 150 mm | Height of the bottom plate (vertical dimension). |
-| **Plate bottom thickness** | Double | 250 mm | Thickness of the bottom plate (in wall depth direction). |
-| **Plate Bottom offset X** | Double | 0 mm | Horizontal offset of the bottom plate from the post center. |
-| **Plate bottom offset Y** | Double | 0 mm | Vertical offset of the bottom plate from its default position. |
-
-### Plate Zone Assignment
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| **Zone to assign the plates** | Integer (dropdown) | 1-10 | Assigns the created plates to a specific wall zone. Values 1-5 are positive zones; values 6-10 map to negative zones (-1 to -5). |
-
-### Rail Split Settings
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| **Split top and bottom rail** | (separator) | - | Section header for rail splitting options. |
-| **Split type bottom** | String (dropdown) | Do not split / Split at plate / Split at post | Controls whether and where the bottom rail is split. |
-| **Split type top** | String (dropdown) | Do not split / Split at plate / Split at post | Controls whether and where the top rail is split. |
-| **Split gap** | Double | 0 mm | Gap distance between the split rail ends. |
-
----
-
-## Usage Workflow
-
-### Step 1: Insert the Script
-
-1. Launch the HSB_W-Post command from the TSL menu or command line.
-2. A dialog may appear for initial configuration (shown once on first use).
-
-### Step 2: Select Wall Element(s)
-
-1. When prompted with "Please select Element", click on one or more wall elements in your drawing.
-2. Press Enter to confirm your selection.
+### Step 2: Select Wall Element
+```
+Command Line: Please select Element
+Action: Click on the target timber wall in the drawing that requires the post.
+```
 
 ### Step 3: Pick Insertion Point
+```
+Command Line: Pick a reference point to insert post
+Action: Click near the location along the wall where you want the post to be placed.
+```
 
-1. When prompted "Pick a reference point to insert post", click at the desired location along the wall where the post should be placed.
-2. The post will be created vertically between the top and bottom plates of the wall.
+### Step 4: Configure Properties
+After placement, select the inserted script instance and adjust the dimensions, profile, and plate settings in the Properties Palette to fit your design requirements.
 
-### Step 4: Adjust Properties
+## Properties Panel Parameters
 
-After insertion, select the post object and use the Properties Palette (OPM) to modify:
+### General Settings
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Extrusion profile name | dropdown | *Empty* | Select the steel profile catalog name (e.g., HEA, IPE). Leave empty to use manual dimensions. |
+| Default post width | number | 70 mm | Width of the post (along wall length). Used if profile is Rectangular or Round. |
+| Default post height | number | 70 mm | Depth of the post (perpendicular to wall). Used if profile is Rectangular or Round. |
+| Alignment | dropdown | Left | Aligns the post relative to the clicked point: Left, Center, or Right. |
+| Offset top | number | 0 mm | Vertical adjustment at the top. Positive moves the post up. |
+| Offset bottom | number | 0 mm | Vertical adjustment at the bottom. Positive moves the post down. |
+| Zone to assign the plates | dropdown | 1 | Assigns the generated plates to a specific manufacturing zone. |
 
-- Post dimensions and profile
-- Alignment (Left, Center, Right)
-- Top and bottom plate creation and dimensions
-- Rail splitting behavior
+### Top Plate Settings
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Create plate top | dropdown | No | Set to "Yes" to generate a steel plate at the top of the post. |
+| Plate top width | number | 1500 mm | Horizontal length of the top plate along the wall. |
+| Plate top height | number | 150 mm | Vertical height of the top plate. |
+| Plate top thickness | number | 250 mm | Thickness of the top plate. |
+| Plate top offset X | number | 0 mm | Horizontal shift of the top plate relative to the post. |
+| Plate top offset Y | number | 0 mm | Vertical shift of the top plate relative to the post top. |
 
----
+### Bottom Plate Settings
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Create plate bottom | dropdown | No | Set to "Yes" to generate a steel plate at the bottom of the post. |
+| Plate bottom width | number | 1500 mm | Horizontal length of the bottom plate along the wall. |
+| Plate bottom height | number | 150 mm | Vertical height of the bottom plate. |
+| Plate bottom thickness | number | 250 mm | Thickness of the bottom plate. |
+| Plate bottom offset X | number | 0 mm | Horizontal shift of the bottom plate relative to the post. |
+| Plate bottom offset Y | number | 0 mm | Vertical shift of the bottom plate relative to the post bottom. |
 
-## Behavior Notes
+## Right-Click Menu Options
+Standard hsbCAD context menu options apply.
+*   **Recalculate**: Refreshes the script geometry based on current wall properties and script settings.
+*   **Delete**: Removes the script and associated generated steel plates.
 
-### Dynamic Updates
-
-- The script automatically recalculates when the associated wall element is modified.
-- If the wall is split, the script finds the closest wall element to the original insertion point and reassigns itself.
-
-### Post Creation
-
-- The post is created as a beam with type "Post" (_kPost).
-- Default material label is set to "Metaal" (Metal).
-- The post is assigned to the wall element group in Zone 0.
-
-### Plate Creation
-
-- Top and bottom plates are created as Sheet objects with "Steel" material.
-- Plates are assigned to the specified zone number.
-- Plate dimensions can be independently controlled for top and bottom.
-
-### Rail Splitting
-
-- **Do not split**: Rails remain continuous through the post location.
-- **Split at plate**: Rails are split at the edges of the connection plate.
-- **Split at post**: Rails are split at the edges of the post itself.
-- When the script is deleted, split rails are automatically rejoined.
-
----
+## Settings Files
+-   **Extrusion Profile Catalog**: Referenced by the `sProfile` property.
+-   **Location**: Defined in your hsbCAD configuration (Company or Install path).
+-   **Purpose**: Provides the geometric definition for standard steel profiles (e.g., HEA100, IPE200).
 
 ## Tips
+-   **Reference Point**: The "Alignment" setting (Left/Center/Right) is calculated based on the point you clicked in Step 3. If the post isn't where you expected, try changing the alignment or pick the point again.
+-   **Manual Dimensions**: If you need a custom rectangular steel size not in your catalog, leave the "Extrusion profile name" empty and use the "Default post width" and "Default post height" fields.
+-   **Plate Splitting**: The script automatically cuts the existing timber top and bottom plates around the steel post. The width of the steel post determines the gap in the timber.
 
-- Use the **Alignment** property to position the post relative to grid lines or reference points.
-- For heavy-load connections, increase the plate dimensions and consider using thicker plates.
-- The **Split gap** allows for thermal expansion or tolerance in steel-to-timber connections.
-- Custom extrusion profiles (e.g., hollow steel sections) can be selected for the post cross-section.
-
----
-
-## See Also
-
-- HSB_W-Stud - Standard wall stud creation
-- HSB_W-Header - Header beam for openings
-- Wall framing element commands
-
+## FAQ
+-   **Q: Why didn't a steel plate generate?**
+    -   A: Ensure the "Create plate top" or "Create plate bottom" property is set to "Yes".
+-   **Q: The post is floating or cutting into the floor.**
+    -   A: Check the "Offset bottom" property. Adjusting this value will move the bottom of the post up or down relative to the wall's bottom plate.
+-   **Q: Can I use this on a wall without top/bottom plates?**
+    -   A: No, the script requires a valid ElementWall with recognized Top and Bottom plates to calculate the post height and perform splitting.

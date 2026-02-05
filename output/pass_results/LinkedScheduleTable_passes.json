@@ -1,0 +1,371 @@
+{
+  "filename": "LinkedScheduleTable.mcr",
+  "status": "completed",
+  "total_tokens": 50406,
+  "processing_time": 271.0015239715576,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8216,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script comment explicitly states '<insert> Manually inserted on Layout </insert>'. Code utilizes _Viewport array, getViewport(), and checks if(_Viewport.length() > 0) to retrieve the Element associated with the layout view. Logic draws 2D tables (PLine, Text) relative to user-selected point on layout."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "MapObject"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Paper Space / Layout",
+          "requiredSettings": [
+            "MapObject structure containing 'mpRow' entries for table data"
+          ]
+        }
+      },
+      "tokens_used": 6867,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9874,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates linked schedule tables (e.g., beam takeoffs, material lists) in Paper Space that can connect to other instances, automatically formatting and sorting data from a MapObject.",
+          "category": "ShopDrawing / Annotation",
+          "typicalUseCase": "Creating a summary table on a drawing layout that lists element properties (like length, grade, or mark number) derived from the model, which can span across multiple tables if content overflows."
+        },
+        "parameters": [
+          {
+            "name": "psTitleText",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The main header or label displayed at the top of the schedule table.",
+            "validRange": "Any string (e.g., 'Floor 1 Schedule', 'Beam List')",
+            "unit": "text",
+            "affectsOutput": "Updates the text drawn in the title rectangle of the table."
+          },
+          {
+            "name": "psDimstyle",
+            "technicalDefault": "_DimStyles",
+            "businessMeaning": "The CAD dimension style used to dictate font, text size settings (if text height is -1), and arrow style for the table content.",
+            "validRange": "List of available DimStyles in the drawing",
+            "unit": "style",
+            "affectsOutput": "Alters the font and text appearance based on the selected AutoCAD dimension style."
+          },
+          {
+            "name": "psUnits",
+            "technicalDefault": "\"inch\"",
+            "businessMeaning": "The unit system used for numerical values displayed in the table.",
+            "validRange": "\"inch\", \"mm\"",
+            "unit": "system",
+            "affectsOutput": "Converts raw numerical data (lengths, dimensions) to the specified unit before display."
+          },
+          {
+            "name": "psDimFormat",
+            "technicalDefault": "\"By Dimstyle\"",
+            "businessMeaning": "Controls how numerical values are formatted (e.g., decimal, architectural fractional, feet-inches).",
+            "validRange": "\"By Dimstyle\", \"Decimal\", \"Fractional Inch\", \"Ft-Inch\", \"None\"",
+            "unit": "format",
+            "affectsOutput": "Changes the representation of numbers (e.g., 1200mm vs 1.2m vs 3'-11 15/16\")."
+          },
+          {
+            "name": "piDimPrecision",
+            "technicalDefault": "2",
+            "businessMeaning": "The number of decimal places displayed for numeric values.",
+            "validRange": "0 to 4",
+            "unit": "count",
+            "affectsOutput": "Rounds numerical values to the specified precision (e.g., 1.234 becomes 1.23)."
+          },
+          {
+            "name": "pdTitleTextH",
+            "technicalDefault": "-1",
+            "businessMeaning": "Height of the title text. A value of -1 uses the Dimstyle text height.",
+            "validRange": "> 0 or -1",
+            "unit": "drawing units",
+            "affectsOutput": "Resizes the title text and potentially the title row height."
+          },
+          {
+            "name": "pdTextH",
+            "technicalDefault": "-1",
+            "businessMeaning": "Height of the row content text. A value of -1 uses the Dimstyle text height.",
+            "validRange": "> 0 or -1",
+            "unit": "drawing units",
+            "affectsOutput": "Resizes the body text and row height."
+          },
+          {
+            "name": "piTextColor",
+            "technicalDefault": "0",
+            "businessMeaning": "The color index used for all text in the table.",
+            "validRange": "0-255 (AutoCAD Color Index)",
+            "unit": "index",
+            "affectsOutput": "Changes the visual color of the text."
+          },
+          {
+            "name": "piLineColor",
+            "technicalDefault": "1",
+            "businessMeaning": "The color index used for the table grid lines and borders.",
+            "validRange": "0-255 (AutoCAD Color Index)",
+            "unit": "index",
+            "affectsOutput": "Changes the visual color of the table lines."
+          },
+          {
+            "name": "pdExtraWidth",
+            "technicalDefault": "6",
+            "businessMeaning": "Padding added to cell widths to ensure text fits without touching borders.",
+            "validRange": "0 - 20 (depending on text size)",
+            "unit": "drawing units",
+            "affectsOutput": "Widens the columns, making the table physically larger."
+          },
+          {
+            "name": "pdExtraHeight",
+            "technicalDefault": "3",
+            "businessMeaning": "Padding added to row heights to ensure text fits vertically.",
+            "validRange": "0 - 10 (depending on text size)",
+            "unit": "drawing units",
+            "affectsOutput": "Increases row height."
+          },
+          {
+            "name": "piZone",
+            "technicalDefault": "0",
+            "businessMeaning": "Filters the report to show only elements within a specific construction zone (if supported by the data source).",
+            "validRange": "-5 to 5",
+            "unit": "zone index",
+            "affectsOutput": "Reduces the number of rows displayed to those matching the zone criteria."
+          },
+          {
+            "name": "psColumnHeaders",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Comma-separated list of column titles.",
+            "validRange": "String matching data keys in MapObject",
+            "unit": "text",
+            "affectsOutput": "Defines the number of columns and the header labels."
+          },
+          {
+            "name": "psFormat1 through psFormat7",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Specific formatting rules (hsbCAD format strings) applied to the data in the corresponding column.",
+            "validRange": "Valid hsbCAD format strings",
+            "unit": "format string",
+            "affectsOutput": "Transforms raw property values into readable strings (e.g., showing dimensions instead of coordinates)."
+          },
+          {
+            "name": "psShowQuantity",
+            "technicalDefault": "\"No\"",
+            "businessMeaning": "Toggles the display of a quantity/count column in the table.",
+            "validRange": "\"Yes\", \"No\"",
+            "unit": "boolean",
+            "affectsOutput": "Adds or removes a column displaying the count of items."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "psUnits changes to \"mm\"",
+            "effect": "psDimFormat is forced to \"Decimal\" or \"None\" to prevent fractional millimeters.",
+            "cascade": [
+              "psDimFormat"
+            ]
+          },
+          {
+            "trigger": "pdTextH > 0",
+            "effect": "Text height calculation switches from Dimstyle-based to fixed value.",
+            "cascade": [
+              "dEntryW",
+              "dEntryH"
+            ]
+          },
+          {
+            "trigger": "psColumnHeaders change",
+            "effect": "Number of columns changes, resetting column widths and formatting.",
+            "cascade": [
+              "dColumnWs",
+              "stFormats"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "PLine (Polyline)",
+            "description": "The grid lines, borders, and title box rectangle of the table.",
+            "appliedTo": "Paper Space (Layout)"
+          },
+          {
+            "type": "Text (MText/DbText)",
+            "description": "The title, column headers, row data entries, and notes.",
+            "appliedTo": "Paper Space (Layout)"
+          },
+          {
+            "type": "TslInst Link",
+            "description": "Logical link to the next table instance to allow data overflow.",
+            "appliedTo": "Script Instance"
+          }
+        ]
+      },
+      "tokens_used": 8768,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution starts via Insert command or Recalculation.",
+          "If in Insert Mode (_bOnInsert): Check insertCycleCount; abort if > 1 to prevent duplicate instances.",
+          "Display Dialog (Properties Palette) for user to configure Title, Units, and Formats.",
+          "Prompt user to select the upper-left corner of the table (sets _Pt0).",
+          "Prompt user to 'Select Previous Table' (optional chaining).",
+          "Branching: If a valid LinkedScheduleTable is selected, store it as 'Previous'. If skipped (Enter), prompt to 'Select Viewport' to define the model context.",
+          "Execution Phase: Retrieve Element data from Viewport or linked Element handle.",
+          "Fetch MapObject data (mpRows) containing schedule entries.",
+          "Filter rows based on 'Zone' property (if applicable).",
+          "Calculate geometry: Determine column widths based on text content and margins. Determine row heights based on text settings.",
+          "Draw Table: Create Title block, Header row, and data rows using PLine and Text entities.",
+          "Process Notes: Check note text width; split into multiple lines if text exceeds table width.",
+          "Finalize Link: Store the bottom-left coordinate of the table to the Map.",
+          "Check for Follower: If this table instance has a 'Next Table' linked, trigger that instance to recalc.",
+          "Store the handle of the last processed element to allow the next table to continue where this one left off."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User input at 'Select Previous Table' prompt during insertion.",
+            "path1": {
+              "name": "Chained Mode",
+              "steps": [
+                "User selects an existing LinkedScheduleTable instance.",
+                "Script validates the selected script name matches 'LinkedScheduleTable'.",
+                "Sets _Map entity 'tslTablePrevious'.",
+                "Retrieves 'stLastElement' from previous table to determine data starting point.",
+                "Retrieves 'ptBottomLeft' from previous table to position the new table (implied workflow)."
+              ]
+            },
+            "path2": {
+              "name": "Standalone Mode",
+              "steps": [
+                "User presses Enter (Space) to skip selection.",
+                "Script prompts 'Select Viewport'.",
+                "Associates the script with the selected Viewport's Element.",
+                "Starts data processing from the beginning of the dataset."
+              ]
+            }
+          },
+          {
+            "condition": "Note Text Length vs Table Width",
+            "path1": {
+              "name": "Single Line Note",
+              "steps": [
+                "Note text width (dNoteL) is less than available space (dNoteSpace).",
+                "Draw text in a single line.",
+                "Draw border around single line."
+              ]
+            },
+            "path2": {
+              "name": "Multi-line Wrapped Note",
+              "steps": [
+                "Note text width exceeds available space.",
+                "Script tokenizes text by spaces.",
+                "Iteratively builds lines until width limit is reached.",
+                "Starts new line and continues.",
+                "Calculates total height for the note block.",
+                "Draws border encompassing all lines."
+              ]
+            }
+          },
+          {
+            "condition": "Text Height Configuration (pdTextH)",
+            "path1": {
+              "name": "Dimstyle Defined",
+              "steps": [
+                "pdTextH is -1 (default).",
+                "Use dpText.textHeightForStyle() to calculate height.",
+                "Use dpText.textLengthForStyle() to calculate width."
+              ]
+            },
+            "path2": {
+              "name": "Fixed Height",
+              "steps": [
+                "pdTextH is greater than 0.",
+                "Use fixed pdTextH value for row height.",
+                "Calculate width using approximation: stEntry.length() * pdTextH."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Unit vs Format Compatibility",
+            "errorMessage": "(Silent Auto-Correction)",
+            "recovery": "If psUnits is 'mm' and psDimFormat is 'Fractional', the script automatically forces psDimFormat to 'Decimal'."
+          },
+          {
+            "check": "Script Instance Type",
+            "errorMessage": "\"Selected Script was not LinkedScheduleTable\"",
+            "recovery": "User must cancel selection or pick a valid instance of the same script when using 'Select Previous Table'."
+          },
+          {
+            "check": "Insert Cycle",
+            "errorMessage": "(Silent)",
+            "recovery": "If insertCycleCount() > 1, the script erases itself to prevent multiple execution during a single insert command."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Move Table",
+            "how": "Grip Edit (Move _Pt0)",
+            "effect": "Repositions the entire table geometry and updates the 'ptBottomLeft' coordinate in the Map, notifying any follower tables to update their position."
+          },
+          {
+            "action": "Change Data Source",
+            "how": "Right-click Context Menu -> Select Viewport",
+            "effect": "Re-associates the table with a different model Element/Viewport and refreshes the data."
+          },
+          {
+            "action": "Link/Unlink Tables",
+            "how": "Right-click Context Menu -> Select Previous Table",
+            "effect": "Updates the link to a different upstream table or establishes a new chain. Changing the previous table updates the starting data element."
+          },
+          {
+            "action": "Modify Formatting",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changing 'Column Headers', 'Units', 'Text Height', or 'Colors' immediately triggers a recalculation, redrawing the table with new styles."
+          }
+        ]
+      },
+      "tokens_used": 10093,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# LinkedScheduleTable.mcr\n\n## Overview\nThis script automatically generates linked schedule tables (such as beam takeoffs or material lists) in Paper Space. It formats data from a MapObject, allowing for chained tables that continue data listings from one table to the next.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script is designed for Layouts only. |\n| Paper Space | Yes | Requires a Viewport to define the model context. |\n| Shop Drawing | No | This is a detailing/annotation tool. |\n\n## Prerequisites\n- **Required Entities**: A Viewport on the current Layout.\n- **Data Source**: A valid MapObject structure containing schedule entries (`mpRow`) linked to the model elements.\n- **Minimum Beam Count**: 0 (Data is retrieved from the MapObject, not by manually selecting beams).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `LinkedScheduleTable.mcr` from the list.\n\n### Step 2: Configure Properties\nBefore placing the table, adjust settings in the **Properties Palette** (OPM).\n- Set the **Title Text** (e.g., \"Floor 1 Beam Schedule\").\n- Configure **Units** (`inch` or `mm`) and **Dimension Format**.\n- Define **Column Headers** (comma-separated) matching your data keys.\n\n### Step 3: Define Insertion Point\n```\nCommand Line: Select upper left point of table:\nAction: Click in the Paper Space layout to place the top-left corner of the table.\n```\n\n### Step 4: Link Table (Optional)\nYou can chain this table to a previous one to continue a list, or start fresh.\n```\nCommand Line: Select previous table <Enter for Viewport>:\nAction: \n- Option A (Chaining): Click an existing LinkedScheduleTable instance to continue its data.\n- Option B (New): Press Enter to skip this and define a new data source.\n```\n\n### Step 5: Select Data Source\nIf you skipped the previous step (Option B):\n```\nCommand Line: Select Viewport:\nAction: Click the viewport on the layout that displays the model elements you wish to schedule.\n```\n\n### Step 6: Generation\nThe script calculates the column widths and row heights based on your text settings and draws the table. If the data exceeds the space, you can insert a new instance and link it to this one to show the remaining rows.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Title Text** | String | \"\" | The main header label displayed at the top of the table. |\n| **Dimstyle** | String | _DimStyles | The dimension style used for text font and size settings. |\n| **Units** | String | inch | Unit system for numerical values (`inch` or `mm`). |\n| **Dim Format** | String | By Dimstyle | Format for numbers (Decimal, Fractional Inch, Ft-Inch, etc.). |\n| **Precision** | Integer | 2 | Number of decimal places for numeric values (0-4). |\n| **Title Height** | Double | -1 | Height of the title text. (-1 uses Dimstyle height). |\n| **Text Height** | Double | -1 | Height of the row content text. (-1 uses Dimstyle height). |\n| **Text Color** | Integer | 0 | AutoCAD Color Index (0-255) for table text. |\n| **Line Color** | Integer | 1 | AutoCAD Color Index (0-255) for table borders/grid. |\n| **Extra Width** | Double | 6 | Padding added to cell widths for text spacing. |\n| **Extra Height** | Double | 3 | Padding added to row heights for text spacing. |\n| **Zone** | Integer | 0 | Filter to show only elements within a specific construction zone. |\n| **Column Headers** | String | \"\" | Comma-separated list defining the columns (e.g., \"Mark,Length,Grade\"). |\n| **Show Quantity** | String | No | Toggles a column displaying the count of items (\"Yes\" or \"No\"). |\n| **Format 1-7** | String | \"\" | Specific formatting strings applied to corresponding columns. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Select Previous Table** | Allows you to link this table to a different upstream table. Updates the starting data element. |\n| **Select Viewport** | Re-associates the table with a different Viewport to change the model context. |\n| **Recalculate** | Refreshes the table geometry and data based on current properties. |\n\n## Settings Files\n- **MapObject Data**: This script relies on data injected into the drawing's MapObject by other hsbCAD processes (e.g., export scripts). It does not typically use a standalone external XML configuration file for its core logic.\n\n## Tips\n- **Chaining Tables**: If your list is too long for one sheet, insert a second instance of the script and select the first table as the \"Previous Table\". The second table will automatically start listing items where the first one ended.\n- **Formatting**: Set `Title Height` or `Text Height` to `-1` to automatically sync text size with your selected Dimstyle.\n- **Unit Compatibility**: If using millimeters, ensure the **Dim Format** is set to \"Decimal\". Using \"Fractional\" with mm is automatically corrected by the script.\n\n## FAQ\n- **Q: Why is my table empty?**\n- **A: Ensure you selected a Viewport that is linked to valid model elements. The script also requires a MapObject with `mpRow` data to be present; ensure you have run the necessary export/generation commands in hsbCAD.\n  \n- **Q: How do I change the column order or add columns?**\n- **A**: Modify the **Column Headers** property in the Properties Palette. The script parses this comma-separated string to generate columns automatically.\n\n- **Q: Can I move the table after inserting it?**\n- **A**: Yes. Use the standard AutoCAD **Move** command or grip-edit the insertion point. If you have chained tables, moving the leader table will update the position logic for the followers."
+      },
+      "tokens_used": 6588,
+      "error": null
+    }
+  }
+}

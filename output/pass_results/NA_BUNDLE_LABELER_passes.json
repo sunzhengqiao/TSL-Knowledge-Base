@@ -1,0 +1,219 @@
+{
+  "filename": "NA_BUNDLE_LABELER.mcr",
+  "status": "completed",
+  "total_tokens": 18687,
+  "processing_time": 132.0176978111267,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2275,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses 'gr.collectEntities(FALSE,TslInst(),_kModel)' to gather entities, explicitly targeting _kModel. No Paper Space or ShopDrawing specific functions (sd_*) are used."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "TslInst (Stack instances)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space containing TSL instances mapped as 'mpStackMaster'",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2368,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getInt",
+              "promptOriginal": "Start number",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect stacks in desired sequence or press Enter",
+              "condition": "_bOnInsert",
+              "required": false
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "stEmpty",
+            "type": "PropString",
+            "displayName": "------------------------",
+            "defaultValue": "------------------------",
+            "inputType": "text",
+            "options": [],
+            "category": "GENERAL PROPERTIES",
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2118,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A utility script used to sequentially number and label timber stack bundles for shipping or production tracking.",
+          "category": "Utility/Logistics",
+          "typicalUseCase": "Used when preparing a project for delivery to assign a unique shipping number (1, 2, 3...) to stacks of timber, ensuring the physical sequence matches the digital model or packing list."
+        },
+        "parameters": [
+          {
+            "name": "stEmpty",
+            "technicalDefault": "------------------------",
+            "businessMeaning": "A visual separator line in the Properties palette. It has no functional impact on the timber construction or calculations.",
+            "validRange": "N/A (Read-only text)",
+            "unit": "N/A",
+            "affectsOutput": "None. It is purely for UI organization."
+          },
+          {
+            "name": "Start number",
+            "technicalDefault": "None (User prompted)",
+            "businessMeaning": "The unique identifier assigned to the first stack in the sequence. Subsequent stacks will increment this number automatically.",
+            "validRange": "Any positive integer (e.g., 1, 100, 5001)",
+            "unit": "Integer (Count)",
+            "affectsOutput": "Directly controls the 'iStackNumber' attribute written to the stack instances. Determines the starting point of the label sequence."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Change in 'Start number'",
+            "effect": "Shifts the numerical value of the 'iStackNumber' attribute for all processed stacks in the sequence.",
+            "cascade": [
+              "mpStackMaster\\iStackNumber"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "MapData/Attribute",
+            "description": "Updates the metadata (attributes) of existing TSL instances representing stacks. Specifically writes 'iStackNumber', 'iCount', and 'iStackQty' to the 'mpStackMaster' map.",
+            "appliedTo": "TslInst entities in the 'X - STACKER' group mapped as 'mpStackMaster'."
+          }
+        ]
+      },
+      "tokens_used": 3684,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script instance is inserted into the drawing",
+          "System checks insert cycle count; if > 1, script erases itself immediately",
+          "Command line prompt: User enters 'Start number' (Integer)",
+          "Script collects all TslInst entities belonging to the 'X - STACKER' group from Model Space",
+          "Command line prompt: User selects stacks in desired sequence or presses Enter",
+          "Script builds processing list: Selected items added first, followed by unselected items from the 'X - STACKER' group",
+          "Script iterates through the compiled list and updates 'mpStackMaster' attributes (iStackNumber, iCount, iStackQty) for each stack",
+          "Command line report: Displays total number of stacks labeled",
+          "Script instance erases itself from the drawing"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Check",
+            "path1": {
+              "name": "Cycle > 1",
+              "steps": [
+                "Erase Instance",
+                "End Script"
+              ]
+            },
+            "path2": {
+              "name": "Cycle == 1",
+              "steps": [
+                "Prompt for Start Number",
+                "Prompt for Entity Selection"
+              ]
+            }
+          },
+          {
+            "condition": "User Selection (PrEntity)",
+            "path1": {
+              "name": "Specific Entities Selected",
+              "steps": [
+                "Filter selected entities for validity and 'mpStackMaster' map",
+                "Remove selected entities from global list",
+                "Append selected entities to processing list",
+                "Append remaining global entities to processing list"
+              ]
+            },
+            "path2": {
+              "name": "Pressed Enter (No Selection)",
+              "steps": [
+                "Processing list consists entirely of all 'X - STACKER' entities found in Model Space"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Start Number Input",
+            "errorMessage": "Implicit (Function getInt() waits for valid integer)",
+            "recovery": "User must input a valid integer to proceed"
+          },
+          {
+            "check": "Entity Map Existence",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Entities without the 'mpStackMaster' map are ignored/skipped during processing"
+          },
+          {
+            "check": "Entity Validity (TslInst)",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Invalid or deleted entities found in the group are skipped"
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 4179,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# NA_BUNDLE_LABELER.mcr\n\n## Overview\nThis script sequentially numbers timber stack bundles within the 3D model to facilitate shipping and production tracking. It allows you to define a specific numbering sequence by selecting stacks in order or automatically numbering all stacks in the drawing.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script operates exclusively on entities in Model Space. |\n| Paper Space | No | This script does not function in Paper Space. |\n| Shop Drawing | No | This script is not intended for use within Shop Drawing layouts. |\n\n## Prerequisites\n- **Required Entities:** TslInst instances (stacks) mapped with the `mpStackMaster` map.\n- **Minimum Beam Count:** 0 (This script operates on stack instances, not individual beams).\n- **Required Settings:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Use the `TSLINSERT` command or drag the script into the AutoCAD model space.\n2.  Select the `NA_BUNDLE_LABELER.mcr` file.\n\n### Step 2: Define Start Number\n```\nCommand Line: Start number\nAction: Type the starting integer for the sequence (e.g., 1, 101, 500) and press Enter.\n```\nThis number will be assigned to the first stack in your sequence.\n\n### Step 3: Select Stacks\n```\nCommand Line: Select stacks in desired sequence or press Enter\nAction: \n   - Option A: Click the stacks one by one in the exact order you want them numbered. \n   - Option B: Press Enter without selecting anything to number all stacks in the drawing automatically.\n```\n*Note: If you manually select stacks, those selected will be numbered first (in the order clicked), followed by any remaining unselected stacks.*\n\n### Step 4: Completion\nThe script will process the stacks, update their attributes, and then automatically erase itself from the drawing. A report displaying the total number of labeled stacks will appear in the command line.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| stEmpty | text | `------------------------` | A visual separator in the properties palette. It has no functional effect on the script. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | This script does not add specific options to the right-click context menu. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script does not rely on external settings files.\n\n## Tips\n- **Partial Sequencing:** If the first few stacks need to be in a specific order (e.g., loading order), select those specific stacks first. The script will number them 1, 2, 3... and then automatically number the rest of the stacks in the drawing immediately after.\n- **Re-numbering:** Running the script again will overwrite existing stack numbers starting from your new input. Use this to reset or update bundle numbers for revisions.\n\n## FAQ\n- **Q: Why did the script disappear after I ran it?**\n  **A:** This is a \"utility\" script designed to run once. It modifies the stack data and then erases its own instance from the drawing to keep your model clean.\n- **Q: What if I select stacks in the wrong order?**\n  **A:** Simply run the script again and enter the start number. You can re-select the stacks in the correct order, or just press Enter to reset the numbering for all stacks.\n- **Q: Some stacks didn't get a number. Why?**\n  **A:** The script only looks for entities mapped as `mpStackMaster` (typically created by the Stacker module). Ensure your stacks are valid instances and not simple 3D solids or blocks."
+      },
+      "tokens_used": 4063,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,200 @@
+{
+  "filename": "HSB_W-Sanitary.mcr",
+  "status": "completed",
+  "total_tokens": 52548,
+  "processing_time": 422.9427442550659,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9451,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script performs 3D operations including modifying Element geometry (assignToElementGroup), creating new Beams (dbCreate), and applying BeamCuts. It retrieves beams using el.beam() and calculates positions in 3D coordinate systems. There are no references to Viewports, Sheets, or sd_ functions which characterize Paper Space or Shop Drawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "3D Model Space containing a Wall Element with existing studs/beams",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6951,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"getElement\",\n        \"promptOriginal\": \"|Select an element|\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      },\n      {\n        \"step\": 2,\n        \"function\": \"getPoint\",\n        \"promptOriginal\": \"|Select a position between two studs|\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      },\n      {\n        \"step\": 3,\n        \"function\": \"getPoint\",\n        \"promptOriginal\": \"|Select a position for second sanitary object|\",\n        \"condition\": \"_bOnInsert && bDoubleSanitary\",\n        \"required\": true\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [],\n  \"opmProperties\":"
+      },
+      "tokens_used": 10155,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Automates the creation of a wall opening for sanitary installations, including structural trimmers (headers), king stud modifications, and bottom plate machining for piping.\",\n    \"category\": \"Framing\",\n    \"typicalUseCase\": \"Used during wall framing design to insert a niche for a washbasin, toilet, or other sanitary fixture, ensuring necessary clearances and structural support are generated.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"dHSanitary\",\n      \"technicalDefault\": \"U(1100)\",\n      \"businessMeaning\": \"The vertical installation height of the sanitary object, typically measured from the finished floor level.\",\n      \"validRange\": \"800 - 1500\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Determines the vertical position of the trimmers and the text label height.\"\n    },\n    {\n      \"name\": \"sDoubleSanitary\",\n      \"technicalDefault\": \"arSSingleDouble[0] (Single)\",\n      \"businessMeaning\": \"Specifies whether the installation is for a single object or a double unit (e.g., double sink).\",\n      \"validRange\": \"Single, Double\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"If 'Double', prompts for a second insertion point and generates a second set of trimmers and potentially a middle stud.\"\n    },\n    {\n      \"name\": \"dMinimumDistanceBetweenSanitary\",\n      \"technicalDefault\": \"U(750)\",\n      \"businessMeaning\": \"The minimum required spacing between two sanitary objects in a double configuration.\",\n      \"validRange\": \"600 - 1200\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Enforces placement logic to ensure the two openings are not too close together.\"\n    },\n    {\n      \"name\": \"dMinimumDistanceToStudCenter\",\n      \"technicalDefault\": \"U(110)\",\n      \"businessMeaning\": \"The minimum allowable distance between the edge of the sanitary opening and the center of the adjacent existing studs.\",\n      \"validRange\": \"50 - 150\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Automatically adjusts the opening position horizontally if it falls within this forbidden zone near a stud.\"\n    },\n    {\n      \"name\": \"sDimStyleWarning\",\n      \"technicalDefault\": \"_DimStyles\",\n      \"businessMeaning\": \"The text style used for warning dimensions or labels in the CAD environment.\",\n      \"validRange\": \"Any valid DimStyle in the drawing\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Visual appearance of warning text.\"\n    },\n    {\n      \"name\": \"sSide\",\n      \"technicalDefault\": \"arSSide[0] (Front)\",\n      \"businessMeaning\": \"Defines which side of the wall (Front or Back) is the primary reference for the operation.\",\n      \"validRange\": \"Front, Back\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Determines the orientation of the beam cuts and which wall face is used for projection.\"\n    },\n    {\n      \"name\": \"dTrimmerWidth\",\n      \"technicalDefault\": \"U(0)\",\n      \"businessMeaning\": \"The vertical height of the trimmer beam (header) cross-section. If zero, defaults to the element's beam height.\",\n      \"validRange\": \"0 (Default) or 45 - 300\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Sets the Y-dimension of the generated trimmer beam.\"\n    },\n    {\n      \"name\": \"dTrimmerHeight\",\n      \"technicalDefault\": \"U(0)\",\n      \"businessMeaning\": \"The thickness (depth into the wall) of the trimmer beam. If zero, defaults to the element's beam width.\",\n      \"validRange\": \"0 (Default) or 30 - 100\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Sets the Z-dimension of the generated trimmer beam.\"\n    },\n    {\n      \"name\": \"nColorTrimmer\",\n      \"technicalDefault\": \"3\",\n      \"businessMeaning\": \"The display color of the generated trimmer beams.\",\n      \"validRange\": \"1 - 255\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Visual color of the trimmer entities.\"\n    },\n    {\n      \"name\":"
+      },
+      "tokens_used": 9965,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Launch Script",
+          "Check Insert State: Is script being inserted? (_bOnInsert)",
+          "If Inserting: Check for Execute Key (_kExecuteKey)",
+          "Display Properties Dialog (showDialog)",
+          "Prompt User for Element (getElement)",
+          "Prompt User for Point 1 (getPoint: Select position between two studs)",
+          "Check Property 'Single/Double' (bDoubleSanitary)",
+          "[Conditional] If Double: Prompt User for Point 2 (getPoint: Select position for second object)",
+          "Calculate Positions & Adjust for Restrictions (Minimum distance to studs)",
+          "Identify Flanking Studs (BeamLeft, BeamRight) using Beam Sorting",
+          "[Conditional] If Double: Identify Studs for second object (BeamLeft02, BeamRight02)",
+          "Check 'Change width of connecting studs' property",
+          "[Conditional] If Yes: Modify width and color of flanking studs",
+          "Calculate Trimmer Dimensions (Use defaults if 0)",
+          "Check 'Apply milling' property",
+          "[Conditional] If Yes: Create BeamCuts on bottom plate",
+          "[Conditional] If Double & Openings are adjacent: Create Extra Stud and update Beam lists",
+          "Create Left Trimmer Beam (Stretching to flanking studs)",
+          "[Conditional] If Double: Create Right Trimmer Beam",
+          "Generate Visual Geometry (Outlines, Descriptions, Warnings)",
+          "Assign entities to Element Group and Map"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Configuration Mode: Single vs Double Sanitary Object",
+            "path1": {
+              "name": "Single Object Mode",
+              "steps": [
+                "Prompt for single position (_Pt0)",
+                "Ignore _PtG",
+                "Identify two flanking studs (bmLeft01, bmRight01)",
+                "Create one set of trimmers supported by flanking studs",
+                "Generate milling at _Pt0 only (if enabled)"
+              ]
+            },
+            "path2": {
+              "name": "Double Object Mode",
+              "steps": [
+                "Prompt for first position (_Pt0)",
+                "Prompt for second position (_PtG) (or calculate default if not provided)",
+                "Validate minimum distance between objects",
+                "Identify four potential flanking studs (Left1, Right1, Left2, Right2)",
+                "Create extra middle stud if Right1 and Left2 are the same beam",
+                "Create two sets of trimmers (left and right)",
+                "Generate milling at _Pt0 and _PtG (if enabled)"
+              ]
+            }
+          },
+          {
+            "condition": "Stud Modification: 'Change width of connecting studs'",
+            "path1": {
+              "name": "Modify Studs",
+              "steps": [
+                "Store original properties of flanking studs in _Map",
+                "Apply new width (dWConnectingStuds) to bmLeft and bmRight",
+                "Apply new color (nColorConnectingStuds)"
+              ]
+            },
+            "path2": {
+              "name": "Preserve Studs",
+              "steps": [
+                "Leave existing beam dimensions and colors unchanged",
+                "Only create trimmers and cuts"
+              ]
+            }
+          },
+          {
+            "condition": "Double Sanitary Adjacency",
+            "path1": {
+              "name": "Separated Openings (Right1 != Left2)",
+              "steps": [
+                "Use existing Right1 and Left2 as supports",
+                "Create standard trimmers between Left1/Right1 and Left2/Right2",
+                "No extra stud created"
+              ]
+            },
+            "path2": {
+              "name": "Adjacent Openings (Right1 == Left2)",
+              "steps": [
+                "Calculate position for extra stud based on overlap",
+                "Create new extra stud (bmExtraStud)",
+                "Stretch extra stud to bottom plate",
+                "Use extra stud as Right1 or Left2 depending on geometry",
+                "Create trimmers spanning the new configuration"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "Script terminates silently (eraseInstance).",
+            "recovery": "User must select a valid Element in 3D Model Space."
+          },
+          {
+            "check": "Minimum Distance to Stud Center",
+            "errorMessage": "Visual feedback via dimensions, implicit correction in code.",
+            "recovery": "Code automatically shifts _Pt0 or _PtG to satisfy dMinimumDistanceToStudCenter."
+          },
+          {
+            "check": "Minimum Distance Between Objects (Double Mode)",
+            "errorMessage": "Code enforces minimum spacing.",
+            "recovery": "If user clicks closer than dMinimumDistanceBetweenSanitary, code adjusts _PtG[0] to satisfy the minimum distance."
+          },
+          {
+            "check": "Point Snap Logic",
+            "errorMessage": "N/A (Implicit)",
+            "recovery": "User selected points are projected to the closest point on the Zone X-axis line."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Position (Drag Grips)",
+            "how": "Grip Edit (implied by script logic, though script logic depends on _Pt0/_PtG inputs)",
+            "effect": "If the script updates based on point movements, it would recalculate trimmer positions and stud cuts. (Note: Script code provided handles calc on insert/recalc)."
+          },
+          {
+            "action": "Change Properties (OPM)",
+            "how": "Object Properties Palette",
+            "effect": "Changing 'Height', 'Width trimmer', 'Single/double', etc., triggers a recalculation (_bOnDbCreated/Recalc) to resize or regenerate the geometry."
+          },
+          {
+            "action": "Toggle Milling or Outline",
+            "how": "OPM Properties",
+            "effect": "Adding/removing BeamCuts from bottom plate or showing/hiding the rectangular outline based on checkbox properties."
+          },
+          {
+            "action": "Modify Flanking Studs",
+            "how": "OPM Property 'Change width of connecting studs'",
+            "effect": "Resizes the immediate neighboring studs to the specified width and changes their color. Reverting to No restores original dimensions via _Map."
+          }
+        ]
+      },
+      "tokens_used": 9600,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_W-Sanitary\n\n## Overview\nAutomates the creation of wall openings for sanitary installations (e.g., washbasins, toilets). It generates structural trimmers (headers), handles king stud modifications, and applies bottom plate machining for piping, ensuring proper clearances and structural support.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for 3D wall element modification. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required Entities**: A pre-existing Wall Element in the drawing.\n- **Minimum Beam Count**: 2 (The wall must contain existing studs to define the opening location).\n- **Required Settings**: None specific to external files.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_W-Sanitary.mcr` from the list.\n\n### Step 2: Select Wall Element\n```\nCommand Line: Select an element\nAction: Click on the Wall Element in the 3D model where you want to place the sanitary object.\n```\n\n### Step 3: Select First Position\n```\nCommand Line: Select a position between two studs\nAction: Click in the model space to place the center of the first sanitary object (e.g., washbasin).\nNote: The script automatically projects this point to the wall line and adjusts it if it is too close to a stud center.\n```\n\n### Step 4: Select Second Position (Conditional)\n```\nCommand Line: Select a position for second sanitary object\nAction: If the \"Single/Double\" property is set to \"Double\", click to place the second object.\nNote: The script ensures a minimum distance is maintained between the two objects.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| dHSanitary | Double | 1100 mm | Vertical installation height of the sanitary object (measured from finished floor). |\n| sDoubleSanitary | Dropdown | Single | Select \"Single\" for one unit or \"Double\" for two adjacent units (e.g., double sink). |\n| dMinimumDistanceBetweenSanitary | Double | 750 mm | Minimum spacing required between two objects in Double mode. |\n| dMinimumDistanceToStudCenter | Double | 110 mm | Minimum allowable distance between the opening edge and the center of adjacent studs. |\n| sSide | Dropdown | Front | Determines the wall face (Front or Back) used for orientation and machining. |\n| dTrimmerWidth | Double | 0 (Auto) | Vertical height of the trimmer beam (header). If 0, uses the wall's default beam height. |\n| dTrimmerHeight | Double | 0 (Auto) | Thickness of the trimmer beam. If 0, uses the wall's default beam width. |\n| nColorTrimmer | Integer | 3 | Color index for the generated trimmer beams. |\n| sDimStyleWarning | String | _DimStyles | Text style used for warning labels or dimensions. |\n| Change width of connecting studs | Boolean | No | If \"Yes\", resizes the flanking studs to the specified width. |\n| dWConnectingStuds | Double | [User Defined] | New width for the flanking studs (if modification is enabled). |\n| nColorConnectingStuds | Integer | [User Defined] | Color for the modified flanking studs. |\n| Apply milling | Boolean | Yes | If \"Yes\", creates cut-outs (milling) in the bottom plate for pipes. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Erase | Removes the script instance and all generated geometry (trimmers, cuts). |\n| Properties | Opens the Properties Palette to adjust parameters listed above. |\n\n## Settings Files\n- **Filename**: None specified.\n- **Location**: N/A\n- **Purpose**: This script relies on internal standard hsbCAD catalogs for beam creation rather than external settings files.\n\n## Tips\n- **Automatic Adjustments**: You do not need to click perfectly in the center of a bay. The script detects nearby studs and snaps the opening to ensure the \"Minimum Distance to Stud Center\" is respected.\n- **Double Units**: When using \"Double\" mode, if the two openings are very close, the script automatically calculates and inserts an extra middle stud to support the trimmers correctly.\n- **Quick Height Adjustment**: Use the `dHSanitary` property in the Properties Palette to adjust the height up or down after insertion without re-running the script.\n\n## FAQ\n- **Q: Why did the trimmers generate in a different position than I clicked?**\n  **A:** The script enforces a safety margin (`dMinimumDistanceToStudCenter`). If you click too close to an existing stud, it automatically shifts the opening to the nearest valid position to ensure structural integrity.\n  \n- **Q: Can I use this for a toilet and a bidet next to each other?**\n  **A:** Yes. Change `sDoubleSanitary` to \"Double\" and select the location for the second fixture during insertion. Ensure the `dMinimumDistanceBetweenSanitary` allows for your specific fixtures.\n\n- **Q: The bottom plate isn't being cut for my pipes.**\n  **A:** Check the Properties Palette for the \"Apply milling\" option and ensure it is set to \"Yes\"."
+      },
+      "tokens_used": 6426,
+      "error": null
+    }
+  }
+}

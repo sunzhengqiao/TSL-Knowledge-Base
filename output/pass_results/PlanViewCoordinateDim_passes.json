@@ -1,0 +1,319 @@
+{
+  "filename": "PlanViewCoordinateDim.mcr",
+  "status": "completed",
+  "total_tokens": 39906,
+  "processing_time": 713.4194107055664,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 0,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl creates plan view coordinate dimension tags.",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "07.06.2021",
+            "author": "Thorsten Huck",
+            "changes": "HSB-10714 initial version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6793,
+      "error": null
+    },
+    "2": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "HTTPSConnectionPool(host='open.bigmodel.cn', port=443): Max retries exceeded with url: /api/coding/paas/v4/chat/completions (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1000)')))"
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9654,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates plan view coordinate dimension tags on layouts (paper space) based on entities or specific Painter definitions, annotating positions (X/Y) relative to the drawing view.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "A user needs to place coordinate labels (e.g., grid lines or specific construction points) onto a 2D plan view output to indicate the location of walls or beams relative to a datum."
+        },
+        "parameters": [
+          {
+            "name": "sFormat",
+            "technicalDefault": "X: @(ChoordX) \\PY: @(ChoordY)",
+            "businessMeaning": "Determines the text layout and content of the coordinate tag, allowing users to define which variables (like coordinates, elevation, or element names) are displayed.",
+            "validRange": "String containing specific format keys (e.g., '@(ChoordX)', '@(Elevation)') and static text.",
+            "unit": "String",
+            "affectsOutput": "Changes the text displayed inside the dimension tag in the drawing."
+          },
+          {
+            "name": "sStrategy",
+            "technicalDefault": "Default",
+            "businessMeaning": "Defines the logic used to calculate the position of the dimension tag relative to the referenced entity (e.g., at the start, end, center, or both ends of a wall/beam).",
+            "validRange": "Default, Start, End, Start+End, Center",
+            "unit": "Enumeration",
+            "affectsOutput": "Controls where the coordinate tag appears geometrically along the referenced element."
+          },
+          {
+            "name": "sReference",
+            "technicalDefault": "bySelection",
+            "businessMeaning": "Selects the source of the elements to be dimensioned. It can be a specific set of elements defined by a 'Painter' (a saved selection filter) or a manual selection.",
+            "validRange": "List of available Painter definitions matching specific types (Walls, Stickframes) or 'bySelection'.",
+            "unit": "String (Reference Name)",
+            "affectsOutput": "Determines which entities in the model are searched for and tagged with coordinates."
+          },
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "(Current standard dimstyle)",
+            "businessMeaning": "Sets the CAD dimension style (text font, arrow style, color, etc.) to be used for the annotation.",
+            "validRange": "Any existing DimStyle in the drawing template.",
+            "unit": "String",
+            "affectsOutput": "Visual appearance of the text and lines (color, font size, layer) in the drawing."
+          },
+          {
+            "name": "dTextHeight",
+            "technicalDefault": "0",
+            "businessMeaning": "Overrides the text height defined in the selected DimStyle. If 0, the DimStyle height is used.",
+            "validRange": "0 to approx. 100mm (depending on plot scale), typically 2.5mm - 5mm for paper output.",
+            "unit": "mm (Model Units)",
+            "affectsOutput": "Size of the text in the drawing."
+          },
+          {
+            "name": "nSequence",
+            "technicalDefault": "0",
+            "businessMeaning": "Defines the drawing priority/processing order for the protection area, ensuring this script's view protection interacts correctly with other view elements.",
+            "validRange": "Integer (typically 0 - 5000, script default offset 500)",
+            "unit": "Integer",
+            "affectsOutput": "Determines if the tag is drawn above or below other elements in the view; prevents unwanted overlapping or masking."
+          },
+          {
+            "name": "dOffset",
+            "technicalDefault": "1000",
+            "businessMeaning": "The distance the tag is placed away from the entity or the viewport edge, ensuring visibility.",
+            "validRange": "0 to 5000mm depending on drawing scale and density.",
+            "unit": "mm",
+            "affectsOutput": "Spatial placement of the tag relative to the referenced object."
+          },
+          {
+            "name": "vecMoveX",
+            "technicalDefault": "0",
+            "businessMeaning": "Fine-tuning adjustment for the tag's position along the X-axis of the view, allowing manual correction after automatic placement.",
+            "validRange": "-2000 to 2000mm",
+            "unit": "mm",
+            "affectsOutput": "Translates the tag location."
+          },
+          {
+            "name": "vecMoveY",
+            "technicalDefault": "0",
+            "businessMeaning": "Fine-tuning adjustment for the tag's position along the Y-axis of the view.",
+            "validRange": "-2000 to 2000mm",
+            "unit": "mm",
+            "affectsOutput": "Translates the tag location."
+          },
+          {
+            "name": "sPainterStream",
+            "technicalDefault": "",
+            "businessMeaning": "Internal storage of the Painter definition configuration used to filter which elements (Walls, etc.) are tagged. Enables catalog-based setups.",
+            "validRange": "Encoded string of a Map object.",
+            "unit": "String",
+            "affectsOutput": "Determines the filtering logic for selecting entities in the model."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sReference is changed",
+            "effect": "Updates the internal sPainterStream to match the definition of the selected Painter (if not 'bySelection').",
+            "cascade": [
+              "sPainterStream"
+            ]
+          },
+          {
+            "trigger": "dTextHeight is set to 0",
+            "effect": "The text height defaults to the value defined in sDimStyle.",
+            "cascade": [
+              "sDimStyle"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Text/Dimension",
+            "description": "Coordinate labels displaying X, Y, or other custom properties at specific locations in the plan view.",
+            "appliedTo": "Paper Space Viewport (Plan View)"
+          },
+          {
+            "type": "Protection Area",
+            "description": "A hidden boundary defining the area in the view reserved for this script's output, used for automatic view clipping.",
+            "appliedTo": "Plan View Viewport"
+          }
+        ]
+      },
+      "tokens_used": 7862,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script is initialized.",
+          "Constants, Colors, and View Directions are set.",
+          "Properties (sFormat, sStrategy, sReference, sPainterStream, etc.) are declared.",
+          "Check if script is being inserted (_bOnInsert). If yes, scan catalogs for Painter definitions stored in sPainterStream and recreate them in the current project to ensure availability.",
+          "If not inserting, proceed to calculation logic.",
+          "Determine the collection of elements to dimension based on sReference property.",
+          "If 'bySelection', use elements manually added via RMC commands (Add Walls, Add Beams, etc.).",
+          "If a Painter is selected, query the model database using the Painter definition (type, filter) to find matching elements.",
+          "Filter the collected elements to ensure they exist and are visible within the current viewport (PlanView).",
+          "For each valid element, calculate the insertion points based on the selected Strategy (Start, End, Center, etc.).",
+          "Calculate the tag position by applying the Offset (dOffset) and any manual Move Vectors (vecMoveX/Y) stored in the Location map.",
+          "Format the text string using the sFormat property, replacing variables like @(ChoordX), @(Elevation) with actual values.",
+          "Draw the Text entity and the Protection Area (subMap) into the drawing.",
+          "Write status information (number of entities, errors) to the drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "sReference Setting",
+            "path1": {
+              "name": "bySelection",
+              "steps": [
+                "Script waits for user interaction via Right Mouse Click (RMC).",
+                "User runs commands like 'Add Walls', 'Add beams', 'Add TSLs' to populate the entity list.",
+                "Script dimensions only these specific entities."
+              ]
+            },
+            "path2": {
+              "name": "byPainter",
+              "steps": [
+                "Script reads the sPainterStream property.",
+                "Instantiates a PainterDefinition object using the stream data.",
+                "Automatically retrieves all elements matching the painter's filter.",
+                "Script dimensions the entire retrieved set."
+              ]
+            }
+          },
+          {
+            "condition": "Insert vs. Recalc",
+            "path1": {
+              "name": "Insertion (_bOnInsert)",
+              "steps": [
+                "Check for existing catalog entries containing Painter streams.",
+                "Create PainterDefinitions in the database if they do not exist.",
+                "Skip dimensioning logic in this pass (loop)."
+              ]
+            },
+            "path2": {
+              "name": "Recalculation (_bOnCalculated)",
+              "steps": [
+                "Skip Painter creation logic.",
+                "Process dimensioning and drawing logic."
+              ]
+            }
+          },
+          {
+            "condition": "Execute Key (RMC Commands)",
+            "path1": {
+              "name": "Move Tag",
+              "steps": [
+                "Enter Jig mode (JigMove).",
+                "Highlight existing tags and allow visual selection.",
+                "User selects a tag and drags it to a new location.",
+                "Update the 'Location[]' map with the new delta vector.",
+                "Recalculate script to apply changes."
+              ]
+            },
+            "path2": {
+              "name": "Reset Locations",
+              "steps": [
+                "Clear the 'Location[]' map.",
+                "Delete the map from the instance data.",
+                "Recalculate script to return tags to default positions."
+              ]
+            },
+            "path3": {
+              "name": "Add/Remove Format",
+              "steps": [
+                "Parse object variables from the selected element.",
+                "Display a numbered list of available variables to the user in the command line.",
+                "User toggles variables to add/remove them from the sFormat string.",
+                "Update sFormat property."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Visibility",
+            "errorMessage": "None explicit, but tracked internally via 'numNotInView'.",
+            "recovery": "User adjusts viewport settings or layer visibility to ensure elements are visible in the plan view."
+          },
+          {
+            "check": "Empty Selection (bySelection mode)",
+            "errorMessage": "Info display shows: 'Please select entities by RMC command or select a reference byPainter'.",
+            "recovery": "User must select elements using the RMC 'Add...' commands."
+          },
+          {
+            "check": "Painter Validity",
+            "errorMessage": "Implicit (Script filters sPainters list to valid types and existing names).",
+            "recovery": "Ensure the Painter definition exists in the catalog or project and matches allowed types (ElementWall, ElementStickframe, etc.)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Tag Format",
+            "how": "RMC > 'Add/Remove Format'",
+            "effect": "Opens a prompt list to toggle properties (e.g., Name, Elevation, Length) in the tag text."
+          },
+          {
+            "action": "Relocate Tag",
+            "how": "RMC > 'Move Tag' (Jig interaction)",
+            "effect": "Visually select a tag and drag it. The offset is saved in the instance map, persisting across regenerations."
+          },
+          {
+            "action": "Reset Positions",
+            "how": "RMC > 'Reset Locations'",
+            "effect": "Clears all manual offsets, returning tags to their algorithmically calculated positions."
+          },
+          {
+            "action": "Add/Remove Entities",
+            "how": "RMC > 'Add Walls', 'Add beams', 'Add openings', 'Add TSLs', 'Remove entities'",
+            "effect": "Modifies the internal list of elements to be dimensioned. Tags are added or removed accordingly."
+          },
+          {
+            "action": "Set Datum",
+            "how": "RMC > 'Set datum'",
+            "effect": "(Implied) Allows setting a coordinate origin or zero point."
+          },
+          {
+            "action": "Change Parameters",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changing sStrategy, sReference, dOffset, or dTextHeight triggers an immediate recalculation and redraw."
+          }
+        ]
+      },
+      "tokens_used": 8963,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# PlanViewCoordinateDim.mcr\n\n## Overview\nThis script automates the placement of coordinate dimension tags within plan view layouts. It annotates construction elements (such as walls, beams, or stickframes) with their X/Y coordinates or custom attributes based on a chosen strategy.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script is intended for 2D output generation. |\n| Paper Space | Yes | It operates specifically within Plan View viewports on layouts. |\n| Shop Drawing | Yes | Used to create production drawings with coordinate references. |\n\n## Prerequisites\n- A valid Shop Drawing layout with an active Plan View viewport.\n- Model entities (Walls, Beams, etc.) visible in the plan view.\n- (Optional) Pre-defined \"Painter\" selection sets in the catalog if using automatic selection modes.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command:** `TSLINSERT`\n**Action:** Select `PlanViewCoordinateDim.mcr` from the list and click **OK**. The script instance will appear in the drawing tree or viewport.\n\n### Step 2: Configure Reference Source\n**Action:** Select the script instance and open the **Properties Palette** (Ctrl+1).\n**Property:** Locate the `sReference` property.\n**Selection:**\n- Choose **bySelection** to manually pick elements.\n- Choose a specific **Painter** name to automatically filter and tag all matching elements in the view.\n\n### Step 3: Select Elements (If \"bySelection\")\n**Action:** Right-click on the script instance in the drawing or Project Browser.\n**Command Line:** Select **Add Walls**, **Add beams**, or **Add TSLs**.\n**Prompt:** `Select entities:`\n**Action:** Click on the desired elements in the viewport. Press **Enter** to confirm.\n*Note: Tags will generate immediately based on the default settings.*\n\n### Step 4: Adjust Placement and Style\n**Action:** Modify the following properties in the Properties Palette to fine-tune the output:\n- `sStrategy`: Change to **Start**, **End**, **Center**, or **Start+End** to determine where tags appear on the elements.\n- `dOffset`: Increase the value (e.g., 1500) if tags are clipping into the geometry.\n- `sFormat`: Customize the text string (e.g., `X: @(ChoordX) Y: @(ChoordY)`).\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **sFormat** | String | X: @(ChoordX) \\PY: @(ChoordY) | Determines the text content of the tag. Use keys like `@(ChoordX)`, `@(Name)`, or `@(Elevation)`. |\n| **sStrategy** | Dropdown | Default | Logic for tag placement: *Default, Start, End, Start+End, Center*. |\n| **sReference** | Dropdown | bySelection | Defines the source of elements. Choose *bySelection* or a specific Painter definition. |\n| **sDimStyle** | String | (Current) | The CAD dimension style used for text font, color, and arrows. |\n| **dTextHeight** | Double | 0 | Height of the text. If set to 0, the height defined in the DimStyle is used. |\n| **dOffset** | Double | 1000 | Distance in mm from the referenced entity to the tag location. |\n| **nSequence** | Integer | 0 | Drawing priority (layer order). Higher numbers draw on top of lower numbers. |\n| **vecMoveX** | Double | 0 | Manual X-axis adjustment for tags (usually set via \"Move Tag\" command). |\n| **vecMoveY** | Double | 0 | Manual Y-axis adjustment for tags (usually set via \"Move Tag\" command). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Move Tag** | Enters a visual mode where you can click and drag individual tags to a new location. The new offset is saved. |\n| **Reset Locations** | Deletes all manual move adjustments, returning all tags to their calculated positions. |\n| **Add/Remove Format** | Opens a prompt list allowing you to toggle available data points (like Name, Elevation, Length) on/off for the tag text. |\n| **Add Walls** | Filters the selection to only include Wall elements. |\n| **Add beams** | Filters the selection to only include Beam elements. |\n| **Add openings** | Adds openings to the list of entities to dimension. |\n| **Add TSLs** | Adds other TSL instances to the list. |\n| **Remove entities** | Clears the current list of selected entities. |\n| **Set datum** | Allows you to specify a coordinate origin point (0,0) for the calculations. |\n\n## Settings Files\n- **Filename:** None required.\n- **Location:** N/A\n- **Purpose:** This script uses embedded \"Painter\" streams or catalog entries; no external XML file is strictly required for basic operation.\n\n## Tips\n- **Use Painters for Speed:** If you need to tag every wall in a large project, define a \"Painter\" in your catalog and select it via the `sReference` property. This ensures new walls added to the model are automatically tagged in the drawing.\n- **Resolving Overlaps:** If two tags overlap, use the **Move Tag** RMC command to drag them apart rather than changing the global `dOffset`.\n- **Custom Text:** Use the **Add/Remove Format** RMC command to see exactly which variables (like `Material` or `Length`) are available for your specific selected elements without needing to memorize the syntax.\n\n## FAQ\n- **Q: Why don't I see any tags after inserting?**\n  **A:** Check if `sReference` is set to `bySelection`. If so, you must use the Right-Click menu commands (e.g., \"Add Walls\") to select entities. Also ensure the elements are actually visible within the Plan View viewport clipping boundary.\n- **Q: How do I show Elevation instead of Coordinates?**\n  **A:** Change the `sFormat` property to `@(Elevation)` or use the **Add/Remove Format** RMC command to toggle Elevation on.\n- **Q: My text is too small to read.**\n  **A:** Set `dTextHeight` to a specific value (e.g., 2.5 or 3.5 mm for paper space) or check that your selected `sDimStyle` has a usable text height defined."
+      },
+      "tokens_used": 6634,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,267 @@
+{
+  "filename": "NA_WALLS_SHOP_DRAW_COLLECTOR.mcr",
+  "status": "completed",
+  "total_tokens": 19006,
+  "processing_time": 170.75261688232422,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2595,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": true,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly checks for '_bOnGenerateShopDrawing', uses a trigger for '_kShopDrawViewDataShowSet', and processes 'ShopDrawView' entities. It collects 'Element' data via 'showSetDefineEntities' and writes to the shop drawing map."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ShopDrawView"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Paper Space (specifically within the Shop Drawing generation event)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1608,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\n Select shop draw views",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "\n Select insertion point",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "Update Shop Drawing Data",
+            "handler": "_kShopDrawViewDataShowSet",
+            "action": "Recalculates and displays the list of wall names found within the selected shop drawing views.",
+            "alsoTriggeredBy": "Shop Drawing Generation Event"
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 2306,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Extracts and displays a list of wall (Element) numbers contained within specific shop drawing views on the 2D sheet layout.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Automatically annotating a shop drawing sheet to indicate which wall panels are detailed in the selected viewports for assembly tracking."
+        },
+        "parameters": [
+          {
+            "name": "_Entity",
+            "technicalDefault": "Empty array",
+            "businessMeaning": "The selection of Shop Draw Views (viewports) on the paper space layout that the script should analyze to find associated walls.",
+            "validRange": "1 to N existing ShopDrawView entities",
+            "unit": "count",
+            "affectsOutput": "Determines the content of the wall name list. Selecting different views will result in different wall numbers being listed at the insertion point."
+          },
+          {
+            "name": "_Pt0",
+            "technicalDefault": "0,0,0",
+            "businessMeaning": "The coordinate on the drawing sheet where the top of the wall name list text block should be placed.",
+            "validRange": "Any X,Y coordinate within the Paper Space sheet limits",
+            "unit": "inch (based on script Unit(1, 'inch'))",
+            "affectsOutput": "Sets the physical location of the text annotation on the drawing. The list grows downwards from this point."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User changes the selection of ShopDrawViews (_Entity)",
+            "effect": "The script re-scans the model elements associated with the new views and updates the text list generated at _Pt0.",
+            "cascade": [
+              "wallNames list",
+              "Map entries for showSetEntities"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "TextAnnotation",
+            "description": "A vertical list of Element numbers (Wall Names) found in the selected views. Text height is fixed at 0.25 inches.",
+            "appliedTo": "Paper Space (Sheet Layout)"
+          }
+        ]
+      },
+      "tokens_used": 4038,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script starts / Event triggered",
+          "[Condition] Check if _bOnInsert is true (Initial Insertion Mode)",
+          "[Branch - Yes: Insertion Mode] Check insertCycleCount()",
+          "[Branch - Sub-condition: Cycle > 1] Erase instance and exit (Prevent duplicates)",
+          "[Branch - Sub-condition: Cycle == 1] Prompt user to Select shop draw views (PrEntity)",
+          "Validate user selection for ShopDrawView entities",
+          "Prompt user to Select insertion point (getPoint)",
+          "Store inputs: _Entity (views) and _Pt0 (point)",
+          "[Condition] Validate if _Entity array is not empty",
+          "[Branch - Validation Fail] Erase instance and exit",
+          "[Branch - Validation Pass] Register Recalc Trigger (_kShopDrawEvent)",
+          "[Condition] Check if _bOnGenerateShopDrawing is true AND _kExecuteKey equals _kShopDrawViewDataShowSet",
+          "[Branch - No: Skip processing] Script ends (waiting for trigger)",
+          "[Branch - Yes: Processing Mode] Retrieve ViewData from internal Map",
+          "Initialize empty wallNames list",
+          "Loop through each selected ShopDrawView in _Entity",
+          "Find matching ViewData for the current view handle",
+          "[Condition] Check if ViewData is found for the view",
+          "[Branch - No] Skip to next view",
+          "[Branch - Yes] Get showSetDefineEntities (TslInsts) from view data",
+          "Loop through each TslInst",
+          "Access subMap 'mpElementShop' from TslInst",
+          "[Condition] Check if subMap exists and contains 'walls' array",
+          "[Branch - Yes] Loop through wall Entities",
+          "[Branch - Yes - Logic] Check if wall number is unique (not in wallNames)",
+          "[Branch - Yes - Logic] Add unique wall number to list",
+          "[Branch - Yes - Logic] Collect wall components (ElementGroup) into draw list",
+          "Update _Map with collected entities and ViewHandle",
+          "Sort wallNames alphabetically/numerically",
+          "Initialize Display object (dp) with text height 0.25 inch",
+          "Calculate start position based on _Pt0",
+          "[Condition] Check if wallNames list is empty",
+          "[Branch - Yes] Add 'N/A' to list",
+          "[Branch - No] Use extracted names",
+          "Loop through wallNames to draw text",
+          "Draw text string at current position (dp.draw)",
+          "Decrement position Y-coordinate for next line",
+          "Script finishes"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion State",
+            "path1": {
+              "name": "Insert Mode",
+              "steps": [
+                "Check cycle count",
+                "Select ShopDrawViews",
+                "Select Point",
+                "Create Instance"
+              ]
+            },
+            "path2": {
+              "name": "Generation/Calculation Mode",
+              "steps": [
+                "Check Trigger Key",
+                "Extract Data from Map",
+                "Process Walls",
+                "Draw Text"
+              ]
+            }
+          },
+          {
+            "condition": "ShopDrawView Selection",
+            "path1": {
+              "name": "Entities Selected",
+              "steps": [
+                "Process views",
+                "Generate list"
+              ]
+            },
+            "path2": {
+              "name": "No Entities Selected",
+              "steps": [
+                "Erase Instance",
+                "Exit Script"
+              ]
+            }
+          },
+          {
+            "condition": "Data Existence in TslInst",
+            "path1": {
+              "name": "Valid Data Found",
+              "steps": [
+                "Extract wall numbers",
+                "Add to map",
+                "Display names"
+              ]
+            },
+            "path2": {
+              "name": "No Data / Map Empty",
+              "steps": [
+                "Skip wall",
+                "Continue loop",
+                "最终 display 'N/A' if all empty"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Selection Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script erases itself if no views are selected. User must re-insert and select valid ShopDrawView entities."
+          },
+          {
+            "check": "Map Data Integrity (mpElementShop)",
+            "errorMessage": "None",
+            "recovery": "If the referenced elements do not contain the expected 'mpElementShop' subMap, they are silently skipped."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Update Shop Drawing Data",
+            "how": "Context Menu (Right-click) -> 'Update Shop Drawing Data' OR Triggered during Shop Drawing Generation",
+            "effect": "Re-evaluates the _Entity selection, scans the associated model elements for new or changed wall numbers, sorts them, and redraws the text list at the original insertion point."
+          }
+        ]
+      },
+      "tokens_used": 4268,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# NA_WALLS_SHOP_DRAW_COLLECTOR\n\n## Overview\nThis script automatically extracts and lists the wall (Element) numbers found within specific shop drawing views on your layout. It generates a text block on the sheet to identify which wall panels are detailed in the selected viewports.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script is intended for layout sheets. |\n| Paper Space | Yes | This is the primary environment for operation. |\n| Shop Drawing | Yes | Specifically designed for use during shop drawing generation. |\n\n## Prerequisites\n- **Required entities**: `ShopDrawView` entities (Viewports) must exist on the current layout.\n- **Minimum beam count**: 0 (Not applicable).\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `NA_WALLS_SHOP_DRAW_COLLECTOR.mcr`\n\n### Step 2: Select Shop Draw Views\n```\nCommand Line: Select shop draw views\nAction: Click on the shop drawing viewports (ShopDrawViews) that contain the walls you want to list. Press Enter when finished.\n```\n\n### Step 3: Select Insertion Point\n```\nCommand Line: Select insertion point\nAction: Click on the drawing sheet where you want the top of the wall list to appear. The list will grow downwards from this point.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not expose any editable properties in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Update Shop Drawing Data | Refreshes the list of wall numbers. Use this if the walls inside the view have changed or if you want to re-scan the data. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- The script will list walls in alphabetical or numerical order.\n- If the selected view does not contain any wall elements, the script will display \"N/A\".\n- The text height is fixed at 0.25 inches.\n- If you select no views during insertion, the script will automatically delete itself to prevent empty annotations.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I inserted it?**\n  **A:** The script erases itself if you press Enter without selecting any Shop Draw Views. Please run the command again and ensure you select at least one viewport.\n- **Q: Can I change the size of the text?**\n  **A:** No, the text height is currently fixed at 0.25 inches.\n- **Q: How do I update the list if I add a new wall to the model?**\n  **A:** Right-click on the script instance and select \"Update Shop Drawing Data\" from the context menu."
+      },
+      "tokens_used": 4191,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "filename": "HSB_T-Squared.mcr",
+  "status": "completed",
+  "total_tokens": 22087,
+  "processing_time": 260.3965735435486,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "04.03.2015",
+            "author": "AS",
+            "changes": "Pilot version."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3155,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script modifies beam geometry using `Cut` and `BeamCut` tools, which are Model Space operations. No `_Viewport` check, SD prefix, or `_Entity[]` usage found. Uses `Display(3)` for 3D visualization."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2600,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dMaxDepth",
+            "type": "PropDouble",
+            "displayName": "Maximum depth",
+            "defaultValue": "U(10)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 1979,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically calculates and applies cuts for intersecting beams to create a connection, while limiting the depth of the cut to prevent over-penetration.",
+          "category": "Framing/Connection",
+          "typicalUseCase": "Connecting a secondary beam (e.g., purlin or joist) to a main beam (e.g., rafter or girder) where the user wants to ensure the connection does not cut too deeply into the main beam, preserving structural integrity."
+        },
+        "parameters": [
+          {
+            "name": "dMaxDepth",
+            "technicalDefault": "U(10)",
+            "businessMeaning": "The maximum permissible depth the cut is allowed to penetrate into the main beam (Beam 1) relative to the insertion surface. This acts as a safety limit to ensure the beam is not cut too short or the notch is not too deep.",
+            "validRange": "0mm to approx. Half of Beam 1's width/height",
+            "unit": "mm",
+            "affectsOutput": "Determines the position of the cut plane. If the geometric intersection requires a deeper cut than this value, the script projects the cut plane to this maximum depth limit, resulting in a shallower notch/cut on both beams."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Cut (Stretch)",
+            "description": "A planar cut applied to the primary beam (Beam 0) that also triggers a length recalculation (stretch), effectively shortening the beam to meet the intersection point.",
+            "appliedTo": "_Beam0 (Primary Beam)"
+          },
+          {
+            "type": "BeamCut",
+            "description": "A volume cut applied to the secondary beam (Beam 1) to accommodate the intersection, geometry aligned with the calculated cut plane.",
+            "appliedTo": "_Beam1 (Secondary Beam)"
+          },
+          {
+            "type": "Visual Symbol",
+            "description": "A crosshair and circle marker indicating the insertion point and intersection logic.",
+            "appliedTo": "Model Space (at _Pt0)"
+          }
+        ]
+      },
+      "tokens_used": 4372,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"Script launched via Insert or Connect command.\",\n    \"User selects the primary structural beam (Beam 0).\",\n    \"User defines the insertion point (Pt0) on Beam 0 (typically the intersection location).\",\n    \"User selects the secondary connecting beam (Beam 1).\",\n    \"Script calculates local coordinate vectors (vxF, vyM) and the intersection angle.\",\n    \"Script computes the theoretical intersection point (ptStretch).\",\n    \"[Conditional] Script checks if the calculated point violates the 'Maximum depth' (dMaxDepth) property.\",\n    \"Script applies a planar Cut to Beam 0, triggering a length recalculation (stretch).\",\n    \"Script applies a volumetric BeamCut to Beam 1.\",\n    \"Script assigns the TSL instance to Element Group 'T' of Beam 0.\",\n    \"Script draws visual markers (crosshair and circle) at the insertion point.\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Does the geometric intersection depth exceed the 'Maximum depth' (dMaxDepth)?\",\n      \"path1\": {\n        \"name\": \"Standard Geometric Cut\",\n        \"steps\": [\n          \"Calculated 'ptStretch' is used as is.\",\n          \"The cut position is determined solely by the relative geometry of Beam 0 and Beam 1.\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Depth-Limited Cut\",\n        \"steps\": [\n          \"Calculated 'ptStretch' exceeds dMaxDepth.\",\n          \"Script recalculates 'ptStretch' to intersect the plane defined by 'Pt0 + Z1 * dMaxDepth'.\",\n          \"The cut is applied at this shallower, fixed distance.\"\n        ]\n      }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"Beam Selection\",\n      \"errorMessage\": \"Implicit system prompt"
+      },
+      "tokens_used": 5960,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_T-Squared\n\n## Overview\nThis script automatically calculates and applies cuts for two intersecting beams to create a structural connection. It includes a safety feature to limit the depth of the cut, preventing the secondary beam from penetrating too deeply into the primary beam.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script modifies beam geometry and is intended for use in the 3D model. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | This is a model generation script, not a detailing tool. |\n\n## Prerequisites\n- **Required Entities**: Two `GenBeam` entities (Beams).\n- **Minimum Beam Count**: 2 (One Primary, One Secondary).\n- **Required Settings**: None specific (uses default hsbCAD environment).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_T-Squared.mcr` from the list.\n\n### Step 2: Select Primary Beam\n```\nCommand Line: Select beam:\nAction: Click on the main structural beam (e.g., a girder or rafter) that will receive the connection.\n```\n\n### Step 3: Define Insertion Point\n```\nCommand Line: Give point:\nAction: Click on the primary beam to define the exact intersection point where the secondary beam will connect.\n```\n\n### Step 4: Select Secondary Beam\n```\nCommand Line: Select beam to cut:\nAction: Click on the secondary beam (e.g., a purlin or joist) that will be cut to fit against the primary beam.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Maximum depth | Number | 10 mm | The maximum distance the cut is allowed to penetrate into the main beam (Primary Beam). If the geometric intersection requires a deeper cut, the script will limit it to this value to preserve the structural integrity of the main beam. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| *(None)* | This script does not add specific custom options to the right-click context menu. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script operates independently of external settings files.\n\n## Tips\n- **Structural Integrity**: Adjust the **Maximum depth** property if the default 10mm cut is too aggressive for the size of your primary beam. This is particularly useful for narrow beams where deep cuts might weaken the section.\n- **Visualization**: The script draws a crosshair and circle at the insertion point to help you visually verify the connection location.\n- **Order Matters**: Ensure you select the \"Main\" beam first (the one you want to keep mostly intact) and the \"Secondary\" beam second (the one that will be notched/cut).\n\n## FAQ\n- **Q: Why did the script cut the secondary beam shorter than the intersection point?**\n- **A: This happens when the geometric intersection exceeds the **Maximum depth** setting. The script projects the cut plane to the maximum depth limit to ensure the primary beam is not cut too deeply.\n\n- **Q: Can I use this for orthogonal connections (90 degrees)?**\n- **A: Yes, the script calculates the intersection angle automatically and applies the correct planar cut regardless of the angle between the beams."
+      },
+      "tokens_used": 4021,
+      "error": null
+    }
+  }
+}

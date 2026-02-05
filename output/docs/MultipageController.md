@@ -1,114 +1,75 @@
-# MultipageController
+# MultipageController.mcr
 
 ## Overview
+This script automatically cleans up and organizes dimension lines within MultiPage layouts. It can remove redundant dimensions and realign remaining lines with consistent spacing to ensure drawings are clean and readable.
 
-**MultipageController** is a shop drawing optimization tool that automatically purges redundant dimension lines and realigns existing dimension lines on multipage shop drawings. It helps maintain clean, consistent dimensioning across your timber construction documentation.
+## Usage Environment
+| Space | Supported | Notes |
+|-------|-----------|-------|
+| Model Space | Yes | Used to batch process existing Multipage layouts. |
+| Paper Space | No | Script runs in the block definition of Shop Drawings. |
+| Shop Drawing | Yes | Can be embedded in templates for automatic cleanup during generation. |
 
-| Property | Value |
-|----------|-------|
-| Script Type | O-Type (Object) |
-| Version | 1.2 |
-| Last Updated | January 21, 2025 |
-| Beams Required | 0 |
+## Prerequisites
+- **Required Entities**: MultiPage entity (for Model Space execution) or existing ShopDrawViews.
+- **Minimum Beams**: None.
+- **Required Settings**: None.
 
-## Description
+## Usage Steps
 
-This tool streamlines the management of dimension lines in hsbCAD shop drawings. It can:
+### Step 1: Launch Script
+Command: `TSLINSERT` → Select `MultipageController.mcr`
 
-- **Purge duplicate dimensions**: Automatically remove redundant dimension lines that display the same measurements
-- **Realign dimensions**: Organize dimension lines with consistent spacing from the drawing objects and between each other
-- **Filter by orientation**: Target specific dimension line orientations (horizontal, vertical, aligned, or by position)
+### Step 2: Place Script and Select Layouts
+```
+Command Line: Insertion point:
+Action: Click anywhere in the drawing to place the script instance temporarily.
+```
+```
+Command Line: Select Multipage entities:
+Action: Select one or more Multipage layouts from the Model Space and press Enter.
+```
+*Note: After processing, the script instance will automatically delete itself.*
 
-The script supports three operating modes depending on your selection:
-1. **Page Mode**: Select multipages to process all dimension lines on those pages
-2. **Dimline Mode**: Select individual dimension lines to process only those specific dimensions
-3. **Block Space Mode**: Insert in the multipage block definition to automatically apply settings to all newly generated shop drawings
+### Step 3: Configure Properties (Optional)
+If you wish to configure the script for automatic use within a Shop Drawing template:
+1. Insert the script into the desired Shopdrawing block or template.
+2. Select the script instance.
+3. Adjust parameters in the Properties Panel (see below).
 
-## Properties
+## Properties Panel Parameters
 
-### Dimline Category
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| sPurge | Dropdown | No | If set to **Yes**, removes overlapping or duplicate dimension lines. |
+| sAlign | Dropdown | No | If set to **Yes**, realigns dimension lines using the offset settings below. **Note:** Offset settings are only visible when this is Yes. |
+| sFilter | Dropdown | Any | Filters which dimension lines are processed based on orientation. Options: Any, Horizontal, Vertical, Aligned, Bottom, Top, Left, Right. |
+| dBaselineOffset | Number | 10 mm | The distance from the model geometry to the first dimension line. |
+| dIntermediateOffset | Number | 8 mm | The spacing between subsequent stacked dimension lines. |
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Alignment Filter | String (List) | Any | Filters dimension lines by their orientation. Options: Any, Horizontal, Vertical, Bottom, Top, Left, Right, Aligned |
-| Purge Dimlines | String (Yes/No) | Yes | When set to Yes, removes duplicate dimension lines that contain identical measurements |
-| Realign Dimlines | String (Yes/No) | Yes | When set to Yes, repositions dimension lines according to the offset settings below |
-| Baseline Offset | Double | 0 mm | Distance from the first dimension line to the dimensioned object. Set to 0 to keep unchanged |
-| Intermediate Offset | Double | 0 mm | Spacing between consecutive dimension lines when multiple dimensions exist on the same side |
+## Right-Click Menu Options
 
-**Note**: The Baseline Offset and Intermediate Offset properties are only visible when "Realign Dimlines" is set to Yes.
+| Menu Item | Description |
+|-----------|-------------|
+| Add View | Prompts you to select an additional ShopDrawView to include in the calculation. |
+| Remove View | Prompts you to select a ShopDrawView to remove from the calculation. |
 
-## Usage Workflow
+## Settings Files
+- **Filename**: None required.
+- **Location**: N/A
+- **Purpose**: N/A
 
-### Method 1: Process Existing Multipages
+## Tips
+- **Selective Alignment**: Use the `sFilter` property to align only specific types of dimensions (e.g., only Horizontal) without affecting others.
+- **Visibility Trick**: You must set `sAlign` to **Yes** in the properties palette to see and edit the `dBaselineOffset` and `dIntermediateOffset` values.
+- **Model Space Cleanup**: When running this in Model Space on existing layouts, the script performs the cleanup once and then automatically removes itself from the drawing to prevent clutter.
 
-1. **Start the command**
-   - Type the command or access MultipageController from the TSL menu
+## FAQ
+- Q: Why did the script disappear immediately after I selected the Multipage?
+- A: This is normal behavior for Model Space execution. The script performs the cleanup task once and erases itself to keep your drawing clean.
 
-2. **Configure settings in the dialog**
-   - Set the **Alignment Filter** to target specific dimension orientations, or leave as "Any" to process all
-   - Enable/disable **Purge Dimlines** based on whether you want to remove duplicates
-   - Enable/disable **Realign Dimlines** and set offset values if you want consistent spacing
+- Q: I cannot see the Baseline Offset or Intermediate Offset properties. Where are they?
+- A: These properties are hidden unless alignment is active. Change the `sAlign` property to **Yes**, and the offset properties will appear.
 
-3. **Select objects**
-   - Select one or more multipages to process all their dimension lines
-   - Alternatively, select individual dimension lines to process only those specific dimensions
-
-4. **Wait for processing**
-   - The script will analyze, purge (if enabled), and realign (if enabled) the dimension lines
-   - A message will confirm when optimization is complete
-
-### Method 2: Configure for New Shop Drawings (Block Space Mode)
-
-Use this method to automatically apply dimension optimization settings to all future shop drawings generated from a multipage block definition.
-
-1. **Enter the multipage block space**
-   - Open the block definition that contains your shop drawing views
-
-2. **Start MultipageController**
-   - The script will detect you are in block space
-
-3. **Select shop drawing viewports**
-   - Select the viewports you want the optimization to apply to
-   - Press Enter without selection to include all viewports
-
-4. **Pick an insertion point**
-   - Click to place the controller instance
-
-5. **Automatic application**
-   - When new shop drawings are generated, the controller will automatically purge and realign dimension lines according to your settings
-
-## Context Menu Commands
-
-When the MultipageController instance is placed in block space, the following context menu commands are available:
-
-| Command | Description |
-|---------|-------------|
-| **Add View** | Add additional shop drawing viewports to the optimization scope |
-| **Remove View** | Remove a viewport from the optimization scope (available only when multiple views are selected) |
-
-## Alignment Filter Options
-
-| Filter | Description |
-|--------|-------------|
-| Any | Process all dimension lines regardless of orientation |
-| Horizontal | Process only horizontal dimension lines |
-| Vertical | Process only vertical dimension lines |
-| Bottom | Process horizontal dimension lines positioned below the object |
-| Top | Process horizontal dimension lines positioned above the object |
-| Left | Process vertical dimension lines positioned to the left of the object |
-| Right | Process vertical dimension lines positioned to the right of the object |
-| Aligned | Process dimension lines that are neither horizontal nor vertical |
-
-## Technical Notes
-
-- The script automatically erases itself after processing in Page Mode and Dimline Mode
-- In Block Space Mode, the controller remains as a persistent instance that triggers during shop drawing generation
-- Local dimension lines (flagged as "IsLocal") are excluded from purging operations to prevent removal of intentionally placed local dimensions
-- The script works with the **DimLine** TSL script for dimension line operations
-
-## Supported Environments
-
-- **Model Space**: Full functionality with multipage and dimension line selection
-- **Block Space**: Configuration mode for automatic application to new shop drawings
-- **Paper Space**: Currently not supported (will display a notice message)
+- Q: Can I use this to fix dimensions in a single view only?
+- A: Yes. Use the **Remove View** right-click option to isolate only the specific ShopDrawView you wish to correct, then update your properties.

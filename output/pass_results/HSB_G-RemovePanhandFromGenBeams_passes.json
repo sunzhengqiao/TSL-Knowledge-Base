@@ -1,0 +1,212 @@
+{
+  "filename": "HSB_G-RemovePanhandFromGenBeams.mcr",
+  "status": "completed",
+  "total_tokens": 16788,
+  "processing_time": 301.2927005290985,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "05.06.2018",
+            "author": "DR",
+            "changes": "Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2539,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select GenBeam objects, directly accesses GenBeam properties (setPanhand), and erases itself upon completion. No ShopDrawing specific patterns (#Type E, sd_ prefix, Element class) or PaperSpace patterns (_Viewport) are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing GenBeams",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2030,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "select genBeams",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3326,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Removes panhandling (joining/connection) data from selected General Beams (GenBeams), effectively resetting how they are joined to other elements.",
+          "category": "Connection/Editing",
+          "typicalUseCase": "Used when a user needs to detach or reset the connection logic (panhand) of specific beams, perhaps to re-assign connections or export beams without specific joinery data."
+        },
+        "parameters": [
+          {
+            "name": "ssE",
+            "technicalDefault": "User selection via PrEntity",
+            "businessMeaning": "The set of General Beams selected by the user to be processed.",
+            "validRange": "1 or more valid GenBeam objects",
+            "unit": "count",
+            "affectsOutput": "Determines which beams will have their panhand properties cleared."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "ssE (User selection of GenBeams)",
+            "effect": "Populates the internal _Entity array which is then iterated over to execute the setPanhand command.",
+            "cascade": [
+              "_Entity"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Property Modification",
+            "description": "Resets the panhand reference of the GenBeam by passing the script instance ID to setPanhand, effectively clearing previous joinery assignments.",
+            "appliedTo": "Selected GenBeams"
+          }
+        ]
+      },
+      "tokens_used": 1784,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script starts and checks if insertCycleCount > 1",
+          "Prompt user to select GenBeams (PrEntity)",
+          "User confirms selection and entities are stored in internal _Entity array",
+          "Script checks if any entities were selected (_Entity.length)",
+          "[Conditional] If no entities selected, script erases itself; otherwise proceeds",
+          "Script iterates through the _Entity array",
+          "For each entity, check if it is a valid GenBeam",
+          "If valid, execute setPanhand(_ThisInst) to clear/remove joinery data",
+          "Increment counter for affected beams",
+          "Display report notice listing number of affected beams",
+          "Script erases itself (cleanup)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count > 1",
+            "path1": {
+              "name": "Immediate Exit",
+              "steps": [
+                "eraseInstance()",
+                "return"
+              ]
+            },
+            "path2": {
+              "name": "Normal Execution",
+              "steps": [
+                "Initialize PrEntity selection",
+                "Prompt user"
+              ]
+            }
+          },
+          {
+            "condition": "User Selection Result (ssE.go)",
+            "path1": {
+              "name": "Empty/Cancelled Selection",
+              "steps": [
+                "Check _Entity.length() == 0",
+                "eraseInstance()",
+                "return"
+              ]
+            },
+            "path2": {
+              "name": "Valid Selection",
+              "steps": [
+                "Populate _Entity array from selection set",
+                "Proceed to processing loop"
+              ]
+            }
+          },
+          {
+            "condition": "Individual Entity Validity (bIsValid)",
+            "path1": {
+              "name": "Invalid Entity",
+              "steps": [
+                "Skip to next iteration (continue)"
+              ]
+            },
+            "path2": {
+              "name": "Valid GenBeam",
+              "steps": [
+                "Execute setPanhand(_ThisInst)",
+                "Increment affected counter"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "User must select at least one General Beam (GenBeam)",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "User must run the command again and ensure they select valid geometry."
+          },
+          {
+            "check": "Entities in the selection set must be valid GenBeam objects",
+            "errorMessage": "None (Silent skip)",
+            "recovery": "Invalid entities are automatically skipped during the loop."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 3917,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_G-RemovePanhandFromGenBeams\n\n## Overview\nThis script removes the panhandling (connection and joinery) data from selected General Beams (GenBeams). It effectively resets the connection logic for the selected beams, detaching them from their current joinery assignments.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be run in Model Space where the GenBeams are located. |\n| Paper Space | No | Not supported in layout views. |\n| Shop Drawing | No | Not intended for use within Shop Drawing contexts. |\n\n## Prerequisites\n- **Required Entities**: General Beams (GenBeams).\n- **Minimum Beam Count**: 1 (The script requires at least one valid beam to function).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Browse to and select `HSB_G-RemovePanhandFromGenBeams.mcr`\n\n### Step 2: Select GenBeams\n```\nCommand Line: select genBeams\nAction: Click on the General Beams you wish to reset, then press Enter or right-click to confirm selection.\n```\n\n### Step 3: View Report\n```\nAction: The script will display a report notice indicating how many beams were successfully processed.\nAction: The script instance will automatically erase itself from the drawing upon completion.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not use Properties Panel parameters. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | This script does not add specific items to the right-click context menu. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Re-joining Beams**: Use this script when you need to completely remove existing connection logic (panhands) before applying new joints or if the current connections are causing errors.\n- **Clean Up**: The script is designed to run once and then delete itself automatically. You do not need to manually select and delete the script instance after use.\n- **Selection**: You can select multiple beams at once using a window selection, provided they are all valid GenBeam objects.\n\n## FAQ\n- **Q: Can I use this on standard timber beams?**\n  - A: No, this script is designed specifically for **General Beams** (GenBeams). It will not affect standard element beams.\n- **Q: The script disappeared immediately without doing anything.**\n  - A: This usually happens if no entities were selected or if the selected entities were not valid GenBeams. Ensure you have selected the correct object type before confirming.\n- **Q: Will this delete my beams?**\n  - A: No, it only removes the connection/joinery data associated with the beams. The geometry of the beams remains in the drawing."
+      },
+      "tokens_used": 3192,
+      "error": null
+    }
+  }
+}

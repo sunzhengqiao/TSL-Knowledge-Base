@@ -1,0 +1,176 @@
+{
+  "filename": "HSB_R-StretchOpeningTilelaths.mcr",
+  "status": "completed",
+  "total_tokens": 31935,
+  "processing_time": 240.1951985359192,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "19.09.2012",
+            "author": "",
+            "changes": "Pilot version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4681,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly uses `_kModelSpace` in the `TslInst.dbCreate` call. It manipulates 3D geometry (Sheets, Beams) and calculates coordinates using Vector3d. No shopdrawing (sd_) or viewport references are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": [
+            "Catalog entry 'HSB_R-StretchOpeningTilelaths' (optional, for preset properties)"
+          ]
+        }
+      },
+      "tokens_used": 2703,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select one or more elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "_bOnInsert",
+            "title": "Properties",
+            "dataSource": "OPM Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sSeperator01",
+            "type": "PropString",
+            "displayName": "|Tilelath|",
+            "defaultValue": "",
+            "inputType": "label",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sMaterialToStretch",
+            "type": "PropString",
+            "displayName": "     |Material of tilelath to stretch|",
+            "defaultValue": "PANLAT O",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5085,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically extends tile laths (sheets) in roof openings horizontally so they reach and rest on the nearest supporting rafters on both the left and right sides.",
+          "category": "Roofing/Sheeting",
+          "typicalUseCase": "When roof openings (e.g., for dormers or skylights) are created, and the lathing material needs to be extended to bridge the gap and bear on the structural rafters instead of being cut short at the opening boundary."
+        },
+        "parameters": [
+          {
+            "name": "sSeperator01",
+            "technicalDefault": "",
+            "businessMeaning": "A visual label separator in the properties palette displaying 'Tilelath' to group settings.",
+            "validRange": "N/A (Read-only)",
+            "unit": "N/A",
+            "affectsOutput": "None. This is purely for UI organization."
+          },
+          {
+            "name": "sMaterialToStretch",
+            "technicalDefault": "PANLAT O",
+            "businessMeaning": "The specific name of the material (e.g., 'PANLAT O') used to identify which tile laths should be modified. The script scans the element for sheets with this exact material name.",
+            "validRange": "Any string matching a valid material name defined in the hsbCAD catalog or project.",
+            "unit": "String",
+            "affectsOutput": "Determines which sheets are selected for stretching. If set to a material not present in the element, the script performs no geometry changes."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing sMaterialToStretch",
+            "effect": "Alters the selection filter for sheets in the calculation phase.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Sheet",
+            "description": "Recreates the target tile laths with an increased width (solidWidth) calculated to reach the nearest rafters. The original sheet is deleted and replaced by this new, longer sheet.",
+            "appliedTo": "Zone 5 of the selected Roof Element."
+          }
+        ]
+      },
+      "tokens_used": 5291,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "think silently:\nThe user wants a JSON response analyzing the workflow and conditional branches of the provided TSL script.\n\n**1. Analyze the script structure and flow:**\n- **Initialization:** `U(1,\"mm\");` sets units. Properties `sSeperator01` (label) and `sMaterialToStretch` (string, default \"PANLAT O\") are defined.\n- **Catalog Loading:** Checks for `_bOnDbCreated` and `_kExecuteKey`. If found in the catalog list, it loads props.\n- **Insertion Phase (`_bOnInsert`):**\n    - Cycle check: If `insertCycleCount() > 1`, erase and return. (Prevent duplicates or re-runs).\n    - Dialog: If no execute key or key not found, `showDialog()`.\n    - Selection: `PrEntity` to select one or more elements.\n    - Loop Selection:\n        - Clears existing TSL instances of this script on the selected element.\n        - Creates new TSL instances attached to the elements. Sets `MasterToSatellite` and `ManualInsert` flags in the map.\n    - Cleanup: Reports count, erases the \"master\" insertion instance, returns.\n- **Execution Phase (Satellite/Instance):**\n    - **Master/Satellite Sync:** Checks `_Map` for `MasterToSatellite`. If true, sets props from catalog \"MasterToSatellite\".\n    - **Manual Insert Flag:** Checks `_Map` for `ManualInsert`.\n    - **Validation:** Checks `_Element.length()`. If 0, report error, erase, return.\n    - **Element Processing (`_bOnElementConstructed || bManualInsert`):**\n        - Type check: If element is `ERoofPlane`, erase and return. (Only works on walls/floors with zones, likely).\n        - Coordinate System setup (`csEl`, `vxEl`, etc.).\n        - **Rafter Extraction:**\n            - Get all beams in element.\n            - Filter for specific types: `_kDakCenterJoist`, `_kDakLeftEdge`, `_kDakRightEdge`, `_kExtraRafter` or hsbId \"4101\".\n            - Sort perpendicular to X-axis.\n        - **Sheet Processing:**\n            - Get all sheets in Zone 5 (`el.sheet(5)`).\n            - Loop sheets:\n                - Check material vs `sMaterialToStretch`. If mismatch, `continue`.\n                - Get geometry points.\n                - **Stretching Logic:**\n                    - Calculate current left/right points relative to Element CS.\n                    - Find nearest rafters to left and right (`filterBeamsHalfLineIntersectSort`).\n                    - Calculate extra length needed to reach rafters (`dExtraLengthLeft`, `dExtraLengthRight`).\n                    - Calculate new center point and new width.\n                - **Re-creation:**\n                    - `dbCreate` new sheet with new width and position.\n                    - Assign to element group 5, Color 3, Material \"PANLAT\".\n                    - `dbErase` old sheet.\n    - **Finalize:** Erase instance (it's a one-shot script per update).\n\n**2. Identify Workflows:**\n- **Workflow A (Initial Insert):** User runs command -> Dialog (maybe) -> Select Element -> Script creates sub-instances attached to element -> Sub-instances calculate.\n- **Workflow B (Update/Recalc):** Element changes -> `_bOnElementConstructed` fires -> Script runs calculation logic -> Updates sheets -> Erases self (standard pattern for \"generator\" scripts that act as logic triggers). *Correction*: The script erases itself at the end of the calculation. This implies it acts as a transient script or a command that runs, updates geometry, and disappears, rather than a persistent TSL icon that stays visible in the model. However, since it checks `_bOnElementConstructed`, it's likely attached to the element as a TSL instance but hides or deletes itself after processing to avoid clutter, waiting for the next event.\n    *Wait, looking at `eraseInstance()` at the end:* If it erases itself on `ElementConstructed`, it won't run again unless re-inserted or the `MasterToSatellite` logic re-creates it.\n    *Re-reading the Insert logic:* It creates a TSL instance.\n    *Re-reading the End logic:* `eraseInstance()` removes the TSL instance from the element.\n    *Conclusion:* This is a \"run once per update\" script. When the element updates, the script instance wakes up, modifies the sheets, and then destroys its own instance. If the element updates again, how does it run?\n    *Mechanism:* The insertion logic creates a `TslInst`. The TSL logic runs. If `_bOnElementConstructed` is true (which it is right after insert or after element modification), it runs logic and erases.\n    *Problem:* If it erases itself, it won't catch the *next* modification.\n    *Refinement:* Usually, scripts that want to persist do *not* call `eraseInstance()` at the end. This specific script *does* call `eraseInstance()`. This suggests it is a \"Command\" script that is triggered manually, or the \"Master\" instance stays (but the master is erased in insert loop).\n    *Wait:* `if (_bOnInsert) ... eraseInstance(); return;` -> The insert instance is gone.\n    The satellite instances are created: `tsl.dbCreate(...)`.\n    The satellite instances run: `if( _bOnElementConstructed ... ) { ... eraseInstance(); return; }`.\n    So the satellite instances run once and delete themselves. This means the user must re-run the command to update the tile laths if the model changes, OR there is a mechanism I'm missing.\n    *Actually*, looking at standard hsbCAD patterns, some scripts are designed to be \"fire and forget\" or \"tools\". However, if it's attached via `el.tslInst()`, it usually persists.\n    Let's look at `insertCycleCount()`. If > 1, erase. This is to prevent the loop creating it multiple times from running multiple times.\n    *Hypothesis:* The user is expected to run this script whenever they want to stretch the laths. It is not an automatic updater for the lifetime of the element (because it deletes itself). Or, perhaps `eraseInstance` is used to reset state?\n    *Correction:* If it erases itself, it is gone. If the roof changes, the laths won't update unless the script is run again.\n    *Wait*, check `PrEntity`. It selects elements.\n    *Scenario:* User runs script. Selects Wall. Script attaches to Wall. Script calculates laths. Script deletes itself from Wall.\n    *Result:* The script disappears. The modified sheets remain.\n    *Next Change:* Wall moves. Sheets move (assigned to element). But they don't *stretch* further because the script is gone.\n    *Conclusion:* This is a **Tool** script, not a persistent parametric rule. It performs an operation and cleans up.\n\n**3. Conditional Branches:**\n- **Insert Cycle:** Standard (>1 check).\n- **Execute Key:** Loads catalog if present.\n- **Material Filter:** Inside the sheet loop, `if (shZn05.material() != sMaterialToStretch) continue;`. Major branch determining which sheets are affected.\n- **Beam Types:** Filtering rafters based on type or ID.\n- **Intersection Check:** `if( arBmRafterLeft.length() > 0 )`. If no rafter found, extra length is 0.\n\n**4. Validation:**\n- Element count (`_Element.length()`).\n- Element type (`bIsKindOf(ERoofPlane)` - specifically excluded).\n- Point geometry check (`arPtShX.length() < 2`).\n\n**5. Post-insertion:**\n- Since the script erases itself, there are \"No\" post-insertion grips/context menu actions provided *by the instance* because the instance is gone.\n- However, the prompt asks for \"Post-insertion modifications\".\n    - Can the user edit it? No, the instance is deleted.\n    - Can the user edit the sheets? Yes, they are standard sheets.\n    - *Wait*, did I misread `eraseInstance`?\n    - `if( _bOnElementConstructed ... ) { ... eraseInstance(); return; }`\n    - Yes, it definitely erases itself.\n    - So, \"Post-insertion actions\" via the script are None. The script is a one-shot generator.\n    - However, if the user *didn't* run it yet, they configure OPM properties.\n    - Once run, the script is gone.\n    - So I will state that the script instance is transient.\n\n**Refining the \"Post-insertion\" section:**\nThe prompt asks: \"Post-insertion modifications\".\nSince the script deletes itself, you cannot modify the *script instance* afterwards. You would have to delete the generated sheets and run the script again with different settings.\nOr, perhaps the `eraseInstance` is conditional on something else?\nNo, it's at the end of the main logic block.\nSo, the answer to \"what user can do after insertion\" regarding the *script* is \"Nothing, it deletes itself\". Regarding the *result* (sheets), they are standard entities.\n\nLet's double check if I missed a persistence mechanism.\n`setPropValuesFromCatalog`... `TslInst.dbCreate`...\nNo, it acts like a \"Fix\" tool. \"Fix these laths\".\nI will reflect this transient nature in the JSON.\n\n**Workflow Steps Construction:**\n1. Launch Script.\n2. Check if executing from catalog key. Set props.\n3. Check if `_bOnInsert`.\n4. Show Dialog (if applicable).\n5. Select Elements.\n6. Loop elements -> Create Satellite Instance -> Erase Master.\n7. Satellite starts.\n8. Sync props.\n9. Check Element validity.\n10. Check if ElementConstructed (or Manual).\n11. Filter Rafters.\n12. Filter Sheets (Zone 5, specific Material).\n13. For each Sheet: Find Left/Right Rafter. Calculate new width/pos.\n14. Delete old sheet, Create new sheet.\n15. Erase Satellite Instance.\n\n**Validation Rules:**\n- Must select Element.\n- Element must not be RoofPlane.\n- Sheet must have valid points.\n- Sheet material must match.\n\n**Post Insertion:**\n- Script deletes itself.\n- Generated Sheets are standard CAD entities.\n\n**JSON Structure:**\n- `workflowDiagram`: Array of strings.\n- `conditionalBranches`: Array of objects (condition, path1, path2).\n- `validationRules`: Array of objects (check, error, recovery).\n- `postInsertionActions`: Array of objects (action, how, effect).\n\n**Drafting content:**\n- *Branch 1:* Material Match. If match -> stretch. If no match -> skip.\n- *Branch 2:* Rafter Intersection. If found -> calculate dist. If not -> dist = 0.\n- *Validation:* Empty selection -> \"Invalid selection\". RoofPlane -> Silent erase (or handled by logic). Material mismatch -> Silent skip.\n\nLet's refine the `postInsertionActions`. If the script deletes itself, there are no OPM properties to change *after* the fact to affect the existing result. The configuration happens *before* the logic runs (during the insert/dialog phase).\nSo, `postInsertionActions` should likely indicate that the script instance is removed and the result is static geometry.\n\nOne edge case: What if `insertCycleCount` logic is for something else? No, it's standard TSL to prevent recursive loops during the `dbCreate` call triggering the script again immediately.\nThe logic `if( _bOnElementConstructed || bManualInsert )` ensures the logic runs when the element is built (when the TSL is attached) or if flagged manually.\nSince `bManualInsert` is set to `true` in the map during `dbCreate`, this block runs immediately upon creation of the satellite.\nSo the flow is definitely: Create -> Run Logic -> Erase.\n\n**Final check of the Prompt Requirements:**\n- \"Map the complete user workflow and conditional branches.\"\n- \"Return ONLY the JSON.\"\n\nI will structure the JSON clearly.\n\n```json\n{\n  \"workflowDiagram\": [\n    \"1. Start: Initialize properties (sMaterialToStretch).\",\n    \"2. Check Catalog: If executed via catalog key, load preset properties.\",\n    \"3. [Insert Phase] Display Dialog: If no execute key, show Properties dialog.\",\n    \"4. [Insert Phase] Selection: Prompt user to select Element(s).\",\n    \"5. [Insert Phase] Deployment: Loop through selected elements, attach a new satellite instance of the script to each, and pass properties.\",\n    \"6. [Insert Phase] Cleanup: Erase the original 'command' instance.\",\n    \"7. [Satellite Phase] Initialization: Receive properties and 'ManualInsert' flag from map.\",\n    \"8. [Satellite Phase] Validation: Ensure valid Element is attached. If not, report error and erase.\",\n    \"9. [Execution] Trigger: Check if _bOnElementConstructed is true or ManualInsert flag is set.\",\n    \"10. [Execution] Type Check: If Element is a RoofPlane, erase instance and stop.\",\n    \"11. [Execution] Analysis: Identify Rafters (specific types/IDs) and sort them.\",\n    \"12. [Execution] Sheet Loop: Iterate through Sheets in Zone 5.\",\n    \"13. [Execution] Filter: Check if Sheet material matches sMaterialToStretch.\",\n    \"14. [Execution] Calculation: For matching sheets, project edge points, find nearest rafters to left and right.\",\n    \"15. [Execution] Modification: Calculate new width and center position. Delete original sheet and create new stretched sheet.\",\n    \"16. End: Erase the satellite script instance (script is transient).\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Does the selected Sheet match the 'Material of tilelath to stretch'?\",\n      \"path1\": {\n        \""
+      },
+      "tokens_used": 7394,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_R-StretchOpeningTilelaths\n\n## Overview\nAutomatically extends roof tile laths (sheets) horizontally within openings so they rest directly on the nearest rafters. This script identifies specific lath materials, calculates the distance to supporting rafters, and regenerates the sheets to ensure proper structural bearing.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script operates in the 3D model environment modifying Element geometry. |\n| Paper Space | No | Not intended for layout views. |\n| Shop Drawing | No | Does not generate 2D drawing annotations. |\n\n## Prerequisites\n- **Required Entities**: An Element (e.g., a wall or floor with roof properties) that contains both structural rafters and sheathing sheets in Zone 5.\n- **Minimum Beam Count**: 0 (The script filters existing beams; no minimum count is required to start, though rafters must exist for the stretch to function).\n- **Required Settings**: The material name specified in the script properties must exactly match the material name assigned to the sheets in the model.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse to and select `HSB_R-StretchOpeningTilelaths.mcr`.\n\n### Step 2: Configure Properties\n**Dialog:** Properties\nAction:\n1. A dialog appears automatically upon insertion.\n2. Locate the **Material of tilelath to stretch** field.\n3. Verify it matches the material name used for your tile laths (Default: `PANLAT O`).\n4. Click **OK** to proceed.\n\n### Step 3: Select Element\n```\nCommand Line: Select one or more elements\nAction: Click on the Element (wall/floor) containing the roof opening and tile laths you wish to modify.\n```\n\n### Step 4: Completion\n**Action:** The script will process the selected Element. It will find the specified laths, calculate the new dimensions to reach the rafters, replace the old sheets with new ones, and then remove itself from the model.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Tilelath | Label | N/A | Visual separator header in the properties list. |\n| Material of tilelath to stretch | Text | PANLAT O | The exact material name of the sheets you want to extend. Only sheets with this material will be modified. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script is a \"one-time\" tool. It erases itself after execution to keep the drawing clean. There are no persistent right-click options available on the script instance. |\n\n## Settings Files\n- **Filename**: None specific (Standard Catalog entries may be used).\n- **Location**: N/A\n- **Purpose**: Catalog entries can be used to preset the `sMaterialToStretch` property so the dialog does not appear during insertion.\n\n## Tips\n- **Undo Function**: You can safely use the standard AutoCAD `UNDO` command if the results are not as expected.\n- **Re-running**: Since the script deletes itself after running, you must run `TSLINSERT` again if you modify the roof and need to re-stretch the laths.\n- **Zone 5**: Ensure your tile laths are assigned to Construction Zone 5, as the script specifically targets this zone.\n- **Material Matching**: The material name is case-sensitive. Ensure the spelling in the properties matches the catalog exactly.\n\n## FAQ\n- **Q: I ran the script, but the laths didn't change. Why?**\n  A: Check the **Material of tilelath to stretch** property. It likely does not match the actual material name assigned to the sheets in your model.\n- **Q: Can I use this on curved roofs?**\n  A: The script calculates distances based on coordinates. While it may work on segmented roofs, it is designed for typical conditions where rafters run perpendicular to the laths.\n- **Q: Does this script work on Roof Planes?**\n  A: No, the script explicitly skips Roof Plane entities and is designed for Elements (walls/floors)."
+      },
+      "tokens_used": 6781,
+      "error": null
+    }
+  }
+}

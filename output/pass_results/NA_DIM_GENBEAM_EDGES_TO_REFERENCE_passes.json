@@ -1,0 +1,231 @@
+{
+  "filename": "NA_DIM_GENBEAM_EDGES_TO_REFERENCE.mcr",
+  "status": "completed",
+  "total_tokens": 39090,
+  "processing_time": 439.1398801803589,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5434,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly prompts for a viewport using `getViewport()` during insert. It validates `_Viewport.length()`, retrieves the `Viewport` object, and calculates transformations between model and paper space (`modelToPaperTransformation`, `paperToModelTransformation`). It draws dimensions (`Dim`) which are transformed into the viewport coordinate system."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Paper Space (Layout containing a Viewport linked to a 3D Element)",
+          "requiredSettings": [
+            "Map: 'Genbeams at viewport side'"
+          ]
+        }
+      },
+      "tokens_used": 5928,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getViewport",
+              "promptOriginal": "\nSelect element viewport",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "Edit dimension properties",
+            "handler": "callPropertiesTrigger",
+            "action": "Edits dimension properties (specific handling logic appears truncated)",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Add properties override for current element",
+            "handler": "overridePropertiesTrigger",
+            "action": "Creates an element-specific property override in the map",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Remove properties override for current element",
+            "handler": "removePropertiesOverrideTrigger",
+            "action": "Removes the element-specific property override from the map",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Reset grip points for current element",
+            "handler": "resetGripPointsTrigger",
+            "action": "Resets the grip points associated with the dimension",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 8233,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6123,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution begins / Insertion trigger fired",
+          "Check insert cycle count; erase instance if > 1 (prevents loops)",
+          "Prompt user: Select element viewport (getViewport)",
+          "Validate Viewport: If array is empty, report error and erase instance",
+          "Retrieve Element from Viewport",
+          "Validate Element: If invalid and not on insert, report error and exit script",
+          "Load Properties Map: Check for 'UserSelectedValues' key",
+          "Check for Element Override: Look for specific map key 'UserSelectedValues~<ElementHandle>'",
+          "Execute Context Trigger Check: If 'Remove override' triggered, delete override map",
+          "Determine Property Source: Use Element Override map if active, else use Global Default map",
+          "Retrieve GenBeam Lists: Extract 'Genbeams to dimension' and 'Genbeams to reference' from properties",
+          "Validate Beams: If both lists are empty, report error and exit script",
+          "Check Execution Mode: Is the script currently handling a grip point drag?",
+          "IF Dragging Grip: Identify moved grip, project to beam edge, calculate specific segment, draw preview, return early",
+          "IF Not Dragging: Calculate coordinate transformations (Model <-> Paper space)",
+          "Generate Geometry: Calculate all dimension segments between beam edges and reference outlines",
+          "Draw Dimensions: Render final dimension entities in Paper Space",
+          "Post-Drag Cleanup: If grip was just moved, snap grip points to beam outline and save to Map"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Element-specific Property Override exists for current Element",
+            "path1": {
+              "name": "Use Override Settings",
+              "steps": [
+                "Load map from 'UserSelectedValues~<ElementHandle>'",
+                "Set flag bIsOverride to true",
+                "Display warning message indicating override is active"
+              ]
+            },
+            "path2": {
+              "name": "Use Global Default Settings",
+              "steps": [
+                "Load map from 'UserSelectedValues'",
+                "Set flag bIsOverride to false",
+                "Proceed with standard configuration"
+              ]
+            }
+          },
+          {
+            "condition": "User interaction state (Grip Point Drag vs Standard Recalculation)",
+            "path1": {
+              "name": "Grip Point Drag (Preview Mode)",
+              "steps": [
+                "Identify the moved grip index",
+                "Find the GenBeam associated with the grip",
+                "Find the specific edge on the GenBeam closest to the new grip location",
+                "Recalculate dimension lines for that specific edge only",
+                "Draw temporary preview dimensions",
+                "Exit script (skip full redraw)"
+              ]
+            },
+            "path2": {
+              "name": "Standard Recalculation (Full Draw)",
+              "steps": [
+                "Process all GenBeams and References defined in properties",
+                "Generate all dimension segments",
+                "Draw all final dimensions to the display",
+                "Update Grip locations if a drag just finished (_kNameLastChangedProp == '_Grip')"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Viewport Selection",
+            "errorMessage": "\nNA_DIM_GENBEAM_EDGES_TO_REFERENCE.mcr: No valid viewport. Erasing this instance.",
+            "recovery": "Script erases itself automatically. User must re-insert and select a valid viewport."
+          },
+          {
+            "check": "Element Validity",
+            "errorMessage": "\nNo valid element in viewport",
+            "recovery": "Script stops execution. User must ensure the viewport contains a valid 3D Element."
+          },
+          {
+            "check": "GenBeam Configuration",
+            "errorMessage": "\nNA_DIM_GENBEAM_EDGES_TO_REFERENCE.mcr No genbeams to dimension or reference",
+            "recovery": "User must open 'Edit dimension properties' and select GenBeams to dimension or reference."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Edit Dimension Properties",
+            "how": "Context Menu > Edit dimension properties / Modifier les propriétés de cote",
+            "effect": "Opens a dialog (via TslUtilities) to configure which GenBeams to dimension, styling, and offsets. Updates the global UserSelectedValues map."
+          },
+          {
+            "action": "Add Properties Override",
+            "how": "Context Menu > Add properties override for current element",
+            "effect": "Copies the current configuration to a new map entry specific to the current Element handle ('UserSelectedValues~<handle>'). Future edits affect only this element."
+          },
+          {
+            "action": "Remove Properties Override",
+            "how": "Context Menu > Remove properties override for current element",
+            "effect": "Deletes the element-specific map entry, causing the script to revert to the global default configuration for this element."
+          },
+          {
+            "action": "Reset Grip Points",
+            "how": "Context Menu > Reset grip points for current element",
+            "effect": "Clears the internal _Grip array logic, forcing a reset of the interactive dimension points."
+          },
+          {
+            "action": "Adjust Dimensions via Grips",
+            "how": "Click and drag dimension grip points in the viewport",
+            "effect": "The grip snaps to the nearest edge of the associated GenBeam. The dimension line for that specific edge updates dynamically. The final position is saved to the properties map."
+          }
+        ]
+      },
+      "tokens_used": 8305,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# NA_DIM_GENBEAM_EDGES_TO_REFERENCE.mcr\n\n## Overview\nThis script automates the dimensioning of General Beam (GenBeam) edges within a Paper Space viewport. It calculates dimensions relative to reference outlines and allows interactive adjustment via grip points directly in the drawing layout.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script is designed for Layouts. |\n| Paper Space | Yes | This is the primary environment. |\n| Shop Drawing | Yes | Works specifically with viewports linked to 3D Elements. |\n\n## Prerequisites\n- **Required Entities**: A Paper Space Layout containing a Viewport linked to a valid 3D Element (containing GenBeams).\n- **Minimum Beam Count**: 0 (but at least one GenBeam must exist in the element to be dimensioned).\n- **Required Settings**: The script requires configuration via a Property Map ('UserSelectedValues') accessible through the context menu after insertion.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `NA_DIM_GENBEAM_EDGES_TO_REFERENCE.mcr`\n\n### Step 2: Select Viewport\n```\nCommand Line: Select element viewport\nAction: Click on the viewport in the current layout that displays the 3D element you wish to dimension.\n```\n\n### Step 3: Configure Properties (If First Run)\n```\nAction: Since no configuration exists initially, right-click the new script instance and select \"Edit dimension properties\".\n```\n*Note: You must select which GenBeams to dimension and set offsets here for dimensions to appear.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | Standard OPM properties are not used for this script. All configuration is handled via the Right-Click Context Menu. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Edit dimension properties** | Opens a configuration dialog to select which GenBeams to dimension, set text styles, and define offset distances. Updates the global settings map. |\n| **Add properties override for current element** | Saves the current configuration specifically for the Element handle currently linked to the script. This allows different elements to have different dimension settings in the same drawing. |\n| **Remove properties override for current element** | Deletes the element-specific settings, causing the script to revert to the global default settings for this element. |\n| **Reset grip points for current element** | Clears the saved positions of dimension grips, allowing you to re-snap them to default edges. |\n\n## Settings Files\n- **Internal Map**: `UserSelectedValues` (Global) and `UserSelectedValues~<ElementHandle>` (Overrides).\n- **Location**: Stored within the drawing data.\n- **Purpose**: Saves user preferences for which beams to dimension, layer styles, and specific grip point locations.\n\n## Tips\n- **Grip Point Editing**: After dimensions are drawn, you can click and drag the blue grip points. The script will automatically snap the dimension to the nearest edge of the associated GenBeam.\n- **Element Specifics**: Use the \"Add properties override\" option if you have one detail view that requires larger dimension text or different offsets than the rest of your drawing.\n- **Viewport Linking**: Ensure the viewport you select during insertion is actually looking at a 3D hsbCAD Element. If the script vanishes immediately, it usually means the viewport content was invalid.\n\n## FAQ\n- **Q: The script erased itself immediately after insertion.**\n  - **A:** This usually means you selected a viewport that does not contain a valid 3D Element, or the Element is empty. Ensure the viewport is correctly linked to a model with GenBeams.\n\n- **Q: The script inserted, but I don't see any dimensions.**\n  - **A:** By default, the script does not know which beams to dimension. Right-click the script instance, choose \"Edit dimension properties\", and select the GenBeams you wish to include in the \"Genbeams to dimension\" list.\n\n- **Q: Can I use this in Model Space?**\n  - **A:** No, this script is explicitly designed for Paper Space (Layouts) to dimension 2D projections of 3D elements."
+      },
+      "tokens_used": 5067,
+      "error": null
+    }
+  }
+}

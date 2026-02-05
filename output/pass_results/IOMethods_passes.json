@@ -1,0 +1,271 @@
+{
+  "filename": "IOMethods.mcr",
+  "status": "completed",
+  "total_tokens": 19669,
+  "processing_time": 214.1687684059143,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2614,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script entry point is `_bOnMapIO`, indicating it runs as a data processor triggered by internal events or ERP connections rather than standard graphical insertion. No `#Type E`, `sd_` prefixes, or `_Viewport` logic present indicating Shop Drawing or Paper Space usage. It operates on a generic `Entity` object passed via `_Map`."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Entity"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "None (runs in Map I/O context)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2976,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 1899,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Extracts and returns manufacturing properties (Type Name, Material, and Grade) from a specific entity's extended data (MapX) based on a provided Beam Type ID.",
+          "category": "DataProcessor/Utility",
+          "typicalUseCase": "Used by ERP systems or other scripts via Map I/O to retrieve human-readable names and material specs for an element given a numerical type ID, ensuring data consistency across the production workflow."
+        },
+        "parameters": [
+          {
+            "name": "nType",
+            "technicalDefault": "None (Required)",
+            "businessMeaning": "The integer identifier of the specific beam configuration or cross-section to look up.",
+            "validRange": "Any positive integer corresponding to a valid Beam Type in the database.",
+            "unit": "count",
+            "affectsOutput": "Determines which 'Name' is returned from the list of available beam types stored in the entity."
+          },
+          {
+            "name": "Element",
+            "technicalDefault": "None (Required)",
+            "businessMeaning": "The specific timber entity or beam that holds the property data (MapX) to be queried.",
+            "validRange": "Any valid hsbCAD Entity object containing BEAMPROPERTIES MapX data.",
+            "unit": "entity",
+            "affectsOutput": "Provides the source database of materials, grades, and type names. If the entity lacks this data, the function fails."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Input 'nType' is provided",
+            "effect": "The script searches the entity's internal property list for a matching ID.",
+            "cascade": [
+              "NAME"
+            ]
+          },
+          {
+            "trigger": "Input 'Element' is provided",
+            "effect": "The script reads the BEAMPROPERTIES MapX from this entity to populate Material and Grade.",
+            "cascade": [
+              "MATERIAL",
+              "GRADE"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Map",
+            "description": "Returns a Map object containing the keys 'NAME', 'MATERIAL', and 'GRADE' populated with the string values found in the entity's properties.",
+            "appliedTo": "Returned to the calling process (Map I/O context)."
+          }
+        ]
+      },
+      "tokens_used": 2428,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script triggered via Map I/O with execute key 'GETBEAMPROPERTIES'.",
+          "Read input Map '_Map' to check for integer key 'nType'.",
+          "Read input Map '_Map' to check for entity key 'Element'.",
+          "Validate that the retrieved Entity is valid (not null/deleted).",
+          "Reset the Map '_Map' to prepare for output data.",
+          "Check if the Entity contains 'BEAMPROPERTIES' in its MapX data.",
+          "Parse 'BEAMPROPERTIES' MapX: collect all 'BEAMTYPE' entries (ID and Name) and read global 'BEAMMATERIAL' and 'BEAMGRADE'.",
+          "Search the collected Type IDs for a match with the input 'nType'.",
+          "Populate '_Map' with 'NAME', 'MATERIAL', and 'GRADE' strings.",
+          "Return the populated Map to the calling process."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Input Map contains 'nType' key",
+            "path1": {
+              "name": "Type Found",
+              "steps": [
+                "Retrieve nType value",
+                "Proceed to check for Entity"
+              ]
+            },
+            "path2": {
+              "name": "Type Missing",
+              "steps": [
+                "Report notice 'Map does not contain type key'",
+                "Set error message in Map",
+                "Return immediately"
+              ]
+            }
+          },
+          {
+            "condition": "Input Map contains 'Element' key",
+            "path1": {
+              "name": "Entity Found",
+              "steps": [
+                "Retrieve Entity object",
+                "Proceed to validate Entity"
+              ]
+            },
+            "path2": {
+              "name": "Entity Missing",
+              "steps": [
+                "Report notice 'Map does not contain entity'",
+                "Set error message in Map",
+                "Return immediately"
+              ]
+            }
+          },
+          {
+            "condition": "Entity is valid (bIsValid)",
+            "path1": {
+              "name": "Valid Entity",
+              "steps": [
+                "Proceed to check MapX data"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Entity",
+              "steps": [
+                "Report notice 'Entity is not valid'",
+                "Set error message in Map",
+                "Return immediately"
+              ]
+            }
+          },
+          {
+            "condition": "Entity MapX contains 'BEAMPROPERTIES'",
+            "path1": {
+              "name": "Properties Exist",
+              "steps": [
+                "Extract types, materials, and grades",
+                "Proceed to match Type ID"
+              ]
+            },
+            "path2": {
+              "name": "Properties Missing",
+              "steps": [
+                "Report notice 'Entity does not contain mapX'",
+                "Set error message in Map",
+                "Return immediately"
+              ]
+            }
+          },
+          {
+            "condition": "Input 'nType' matches a Type ID in the Entity's property list",
+            "path1": {
+              "name": "Type Matched",
+              "steps": [
+                "Retrieve the corresponding Name",
+                "Return Map with NAME, MATERIAL, GRADE"
+              ]
+            },
+            "path2": {
+              "name": "Type Not Found",
+              "steps": [
+                "Report notice 'Beam type not found'",
+                "Set error message in Map",
+                "Return immediately"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Input Map contains integer key 'nType'",
+            "errorMessage": "Map does not contain type key",
+            "recovery": "Ensure the calling process or script provides a valid 'nType' integer in the input Map."
+          },
+          {
+            "check": "Input Map contains entity key 'Element'",
+            "errorMessage": "Map does not contain entity",
+            "recovery": "Ensure the calling process or script provides the target entity in the input Map."
+          },
+          {
+            "check": "Entity object is valid",
+            "errorMessage": "Entity is not valid",
+            "recovery": "Verify the passed Entity refers to an existing object in the drawing that has not been deleted."
+          },
+          {
+            "check": "Entity contains 'BEAMPROPERTIES' MapX data",
+            "errorMessage": "Entity does not contain mapX",
+            "recovery": "Check if the selected element is a valid hsbCAD beam or element that has been processed/assigned properties."
+          },
+          {
+            "check": "Requested 'nType' ID exists in the Entity's BEAMPROPERTIES list",
+            "errorMessage": "Beam type not found",
+            "recovery": "Ensure the 'nType' ID requested corresponds to one of the Type IDs defined in the element's property set."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "This is a Map I/O utility script that executes and returns data immediately. It does not create graphical elements, define OPM properties, or support post-insertion modification via grips or context menus."
+          }
+        ]
+      },
+      "tokens_used": 4722,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# IOMethods.mcr\n\n## Overview\nThis is a background utility script that retrieves manufacturing details (Type Name, Material, and Grade) from a timber element based on a specific numerical ID. It is typically used by ERP systems or other scripts to look up property data without user interaction.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Operates on existing entities within the model. |\n| Paper Space | No | Not designed for layout or annotation usage. |\n| Shop Drawing | No | Not intended for production drawing views. |\n\n## Prerequisites\n- **Required entities**: An existing hsbCAD Entity (e.g., a beam or wall) that contains `BEAMPROPERTIES` data in its extended attributes (MapX).\n- **Minimum beam count**: 0 (This script processes data passed to it, it does not require pre-selection of beams).\n- **Required settings**: None.\n\n## Usage Steps\n\n### Step 1: Usage Context\n**Note:** This script is designed for **Map I/O (Input/Output)** processing. It does not function as a standard interactive tool. You generally do not run this script manually by typing commands or clicking screen prompts.\n\n### Step 2: Automatic Execution\nThis script is triggered automatically by other processes (such as an ERP export or a parent script).\n- **Action:** The calling system sends a \"Map\" containing the **Element** and the **nType** (numerical ID) to this script.\n- **Result:** The script reads the entity's properties and returns the corresponding Name, Material, and Grade to the calling system.\n\n## Properties Panel Parameters\nThis script does not create graphical elements and does not expose any parameters in the AutoCAD Properties Palette.\n\n## Right-Click Menu Options\nThis script does not add any options to the Entity right-click context menu.\n\n## Settings Files\nNo external settings files (XML) are used by this script.\n\n## Tips\n- **Data Consistency:** Ensure your elements have valid `BEAMPROPERTIES` MapX data assigned. If the script returns an error, check if the selected element is a standard hsbCAD component that has been properly generated/processed.\n- **Debugging:** If an external system reports \"Beam type not found,\" verify that the numerical Type ID being requested actually exists in the element's property list.\n\n## FAQ\n- **Q: Can I insert this script into my drawing?**\n  - A: While you can load the script, it will not generate any geometry or ask for input. It acts as a hidden function for other programs to use.\n- **Q: Why does the script fail with \"Entity does not contain mapX\"?**\n  - A: The element being queried is missing its internal property definitions. This often happens if the element is a plain CAD line or a generic block rather than a native hsbCAD parametric object.\n- **Q: How do I change the material it returns?**\n  - A: You must change the material properties of the source element itself (the one being queried). This script only reads existing data; it does not modify it."
+      },
+      "tokens_used": 5030,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,316 @@
+{
+  "filename": "NA_DIM_GENBEAMS_AT_VIEWPORT_SIDE.mcr",
+  "status": "completed",
+  "total_tokens": 32963,
+  "processing_time": 1131.8718466758728,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5865,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script calls getViewport() during insert routine and validates _Viewport array. It calculates modelToPaperTransformation based on viewport coordinates and draws dimensions transformed to paper space."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Paper Space containing a valid Viewport with an Element",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5902,
+      "error": null
+    },
+    "3": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "Request timeout after retries"
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the creation of associative dimensions for General Beams within a Paper Space Viewport, transforming 3D model coordinates into 2D drawing dimensions.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "When creating production drawings (floor plans or elevations) where specific beams need to be dimensioned consistently relative to the viewport borders, with support for element-specific overrides."
+        },
+        "parameters": [
+          {
+            "name": "Dimensioned entities",
+            "technicalDefault": "Dimensioned only",
+            "businessMeaning": "Selects the logical group of beams to be measured. 'Dimensioned only' measures the main beams. 'Referenced only' draws extension lines from beams without dimensions. 'Reference to self' creates a dimension chain referencing the selected beams only.",
+            "validRange": "List Selection: [Dimensioned only, Referenced only, Reference to self]",
+            "unit": "enum",
+            "affectsOutput": "Determines whether dimension lines with text are drawn, or if only extension lines (witness lines) are generated for specific beams."
+          },
+          {
+            "name": "Text height",
+            "technicalDefault": "2.5",
+            "businessMeaning": "The height of the dimension text in Paper Space units.",
+            "validRange": "1.5 - 10.0 mm (standard architectural text sizes)",
+            "unit": "mm",
+            "affectsOutput": "Visual size and legibility of the dimension annotation in the layout."
+          },
+          {
+            "name": "Dimension style",
+            "technicalDefault": "Standard",
+            "businessMeaning": "The predefined CAD dimension style (DimStyle) that controls arrowheads, text font, and line weights.",
+            "validRange": "Any valid DimStyle defined in the CAD template",
+            "unit": "string",
+            "affectsOutput": "Aesthetic appearance of the dimension (arrow style, color, layer properties)."
+          },
+          {
+            "name": "Dimension line direction",
+            "technicalDefault": "X-axis",
+            "businessMeaning": "The orientation in which the dimension is measured (e.g., along the beam length, perpendicular to the beam, or strictly horizontal/vertical relative to the viewport).",
+            "validRange": "List Selection: [X-axis, Y-axis, Z-axis, Perpendicular to beam, Along beam]",
+            "unit": "enum",
+            "affectsOutput": "Calculates which axis of the beam is measured (Length vs Width vs Height) and the rotation of the dimension line."
+          },
+          {
+            "name": "Position relative to beam",
+            "technicalDefault": "Right",
+            "businessMeaning": "Defines which side of the beam the dimension line is placed (e.g., Left, Right, Top, Bottom relative to the viewport or beam orientation).",
+            "validRange": "List Selection: [Left, Right, Top, Bottom]",
+            "unit": "enum",
+            "affectsOutput": "The location of the generated dimension line and extension lines relative to the beam geometry."
+          },
+          {
+            "name": "Offset",
+            "technicalDefault": "10",
+            "businessMeaning": "The clearance distance between the beam and the dimension line.",
+            "validRange": "5 - 100 mm (depending on drawing scale and crowding)",
+            "unit": "mm",
+            "affectsOutput": "Moves the dimension line closer to or further from the beam."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing 'Position relative to beam'",
+            "effect": "Updates the calculation vector for the dimension line origin point.",
+            "cascade": [
+              "Offset"
+            ]
+          },
+          {
+            "trigger": "Changing 'Dimension line direction'",
+            "effect": "Recalculates the points used for the dimension (Start/End vs Top/Bottom points of the beam).",
+            "cascade": [
+              "Dimensioned entities"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Dim",
+            "description": "Associative dimension entities drawn in Paper Space, transformed from Model Space coordinates.",
+            "appliedTo": "GenBeams filtered by Painter Definition within the selected Viewport."
+          }
+        ]
+      },
+      "tokens_used": 7501,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script launched via insert or recalculation",
+          "2. Initial setup: Retrieve global map for 'Genbeams at viewport side' and available GenBeam painter definitions",
+          "3. Insert Phase: Prompt user to select a Viewport",
+          "4. Validation Phase: Check if Viewport array contains a valid object and retrieve the associated Element",
+          "5. Coordinate Calculation: Establish transformation matrices (Model to Paper and Paper to Model) and unit conversion factors",
+          "6. Context Menu Registration: Add triggers for editing properties, adding/removing overrides, and resetting grips",
+          "7. Map Logic: Check for Element-specific property overrides in the global map; remove override if 'Remove' trigger activated",
+          "8. Determine Beams: Fetch GenBeams to dimension and/or reference based on the 'Dimensioned entities' property setting",
+          "9. Calculate Points: Compute 3D points for dimension lines and extension lines based on beam geometry, direction, and offset properties",
+          "10. Transformation: Transform calculated Model Space points to Paper Space coordinates",
+          "11. Grip Handling: If a grip is being dragged, dynamically update the dimension line position without recalculating base geometry",
+          "12. Generation: Create the Dim entity and draw it in Paper Space with the specified style and text height"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count",
+            "path1": {
+              "name": "Subsequent Cycle (>1)",
+              "steps": [
+                "Erase current script instance",
+                "Stop execution"
+              ]
+            },
+            "path2": {
+              "name": "First Cycle (1)",
+              "steps": [
+                "Execute standard logic"
+              ]
+            }
+          },
+          {
+            "condition": "Viewport Validity",
+            "path1": {
+              "name": "Invalid Viewport",
+              "steps": [
+                "Report message: 'No valid viewport. Erasing this instance.'",
+                "Erase instance",
+                "Stop execution"
+              ]
+            },
+            "path2": {
+              "name": "Valid Viewport",
+              "steps": [
+                "Retrieve Element from Viewport",
+                "Proceed to Element check"
+              ]
+            }
+          },
+          {
+            "condition": "Property Override Existence",
+            "path1": {
+              "name": "Override exists for current Element",
+              "steps": [
+                "Load 'UserSelectedValues~[ElementHandle]' map",
+                "Report warning: 'This is an override for element [Number]'",
+                "Use override settings"
+              ]
+            },
+            "path2": {
+              "name": "No override exists",
+              "steps": [
+                "Load default 'UserSelectedValues' map",
+                "Use default settings"
+              ]
+            }
+          },
+          {
+            "condition": "Dimensioned Entities Property",
+            "path1": {
+              "name": "Dimensioned only",
+              "steps": [
+                "Populate 'genbeamsToDimension' array",
+                "Calculate dimension points",
+                "Skip reference beams logic"
+              ]
+            },
+            "path2": {
+              "name": "Referenced only",
+              "steps": [
+                "Skip dimension beam logic",
+                "Populate 'genbeamsToReference' array",
+                "Calculate reference points"
+              ]
+            },
+            "path3": {
+              "name": "Reference to self",
+              "steps": [
+                "Populate 'genbeamsToDimension' array",
+                "Set 'genbeamsToReference' equal to 'genbeamsToDimension'",
+                "Calculate both point sets"
+              ]
+            }
+          },
+          {
+            "condition": "Grip Point Interaction",
+            "path1": {
+              "name": "Dragging Grip (_bOnGripPointDrag)",
+              "steps": [
+                "Identify moved grip index",
+                "Update dimension line position based on new grip location",
+                "Draw dynamic preview",
+                "Stop execution (skip static draw)"
+              ]
+            },
+            "path2": {
+              "name": "Static Execution / Grip Released",
+              "steps": [
+                "Calculate standard geometry",
+                "Draw final dimension entity"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Viewport Selection",
+            "errorMessage": "\nNA_DIM_GENBEAMS_AT_VIEWPORT_SIDE.mcr: No valid viewport. Erasing this instance.",
+            "recovery": "User must ensure a valid viewport is selected during the insert prompt."
+          },
+          {
+            "check": "Element Validity",
+            "errorMessage": "\nNo valid element in viewport",
+            "recovery": "User must ensure the selected viewport contains a valid hsbCAD Element."
+          },
+          {
+            "check": "Beam Availability",
+            "errorMessage": "\nNA_DIM_GENBEAMS_AT_VIEWPORT_SIDE.mcr No genbeams to dimension or reference",
+            "recovery": "User must adjust the 'Dimensioned entities' filter or ensure the view contains GenBeams matching the Painter Definition."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Edit Dimension Properties",
+            "how": "AutoCAD Properties Palette (OPM)",
+            "effect": "Modifies dimension style, text height, direction, offset, and position relative to beam."
+          },
+          {
+            "action": "Add Element Override",
+            "how": "Right-click Context Menu -> 'Add properties override for current element'",
+            "effect": "Creates a unique set of properties for the specific Element in the viewport, distinct from other instances of the script."
+          },
+          {
+            "action": "Remove Element Override",
+            "how": "Right-click Context Menu -> 'Remove properties override for current element'",
+            "effect": "Deletes the specific Element's settings from the map, reverting the script to default global values."
+          },
+          {
+            "action": "Move Dimension Line",
+            "how": "Grip Point Dragging",
+            "effect": "Updates the position of the dimension line along its axis. The new position is saved to the map."
+          },
+          {
+            "action": "Reset Dimension Position",
+            "how": "Right-click Context Menu -> 'Reset grip points for current element'",
+            "effect": "Clears the grip position data in the map, causing the dimension to snap back to its calculated default location."
+          }
+        ]
+      },
+      "tokens_used": 8388,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# NA_DIM_GENBEAMS_AT_VIEWPORT_SIDE.mcr\n\n## Overview\nThis script automates the creation of associative dimensions for General Beams within a Paper Space Viewport, transforming 3D model coordinates into 2D drawing dimensions. It is designed for creating production drawings (floor plans or elevations) where specific beams need to be dimensioned consistently relative to the viewport borders.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | The script operates specifically in Layouts (Paper Space). |\n| Paper Space | Yes | The script calculates transformations from the Model Space view to Paper Space. |\n| Shop Drawing | Yes | Useful for detailing floor plans and elevations. |\n\n## Prerequisites\n- **Required Entities**: A Viewport containing a valid hsbCAD Element with General Beams (GenBeams).\n- **Minimum Beams**: At least 1 GenBeam must be present in the filtered view.\n- **Required Settings**: None required, though GenBeam Painter Definitions are used to filter beams.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `NA_DIM_GENBEAMS_AT_VIEWPORT_SIDE.mcr`\n\n### Step 2: Select Viewport\n```\nCommand Line: Select viewport:\nAction: Click on the border of the viewport in Paper Space that contains the element you wish to dimension.\n```\n\n### Step 3: Validation and Generation\n- The script checks if the selected viewport contains a valid Element.\n- It identifies the beams associated with the element and draws dimensions in Paper Space based on the default properties.\n- If the viewport is invalid or contains no element, the script will report an error and erase itself.\n\n### Step 4: Adjust Position (Optional)\n- Click on the dimension to select it.\n- Drag the **Grip Point** (usually a square handle on the dimension line) to move the dimension line to a preferred location.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Dimensioned entities | dropdown | Dimensioned only | Selects the group of beams to measure. Options: <br>- *Dimensioned only*: Draws dimensions for main beams. <br>- *Referenced only*: Draws extension lines without dimensions. <br>- *Reference to self*: Creates a dimension chain referencing only selected beams. |\n| Text height | number | 2.5 mm | Sets the height of the dimension text in Paper Space units. |\n| Dimension style | string | Standard | Defines the CAD dimension style (controls arrowheads, font, color). |\n| Dimension line direction | dropdown | X-axis | Sets the orientation of measurement. Options: *X-axis, Y-axis, Z-axis, Perpendicular to beam, Along beam*. |\n| Position relative to beam | dropdown | Right | Defines the side of the beam where the dimension is placed (Left, Right, Top, Bottom). |\n| Offset | number | 10 mm | Sets the distance between the beam and the dimension line. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Add properties override for current element | Saves a unique set of dimension settings specifically for the current Element, allowing different layouts to have different dimension settings without changing the script defaults. |\n| Remove properties override for current element | Deletes the saved unique settings for this Element and reverts to the script's default global properties. |\n| Reset grip points for current element | Moves the dimension line back to its original calculated position, clearing any manual adjustments made via grip dragging. |\n\n## Settings Files\nNo external XML settings files are required. The script utilizes internal global maps to store user overrides and grip positions.\n\n## Tips\n- **Grip Editing**: Use the grip point to quickly resolve clashes with other notes or dimensions in the drawing.\n- **Element Overrides**: Use the \"Add properties override\" option if you have multiple drawings on one sheet that require different text heights or offset distances.\n- **Filtering**: If dimensions are not appearing for specific beams, check your GenBeam Painter Definitions to ensure the beams are correctly categorized.\n\n## FAQ\n- **Q: The script erased itself immediately after I selected a viewport. Why?**\n  A: This usually means the selected viewport did not contain a valid hsbCAD Element, or there were no GenBeams found in the view. Ensure the viewport is active and contains the desired model data.\n\n- **Q: Can I dimension beams that are not part of the main element?**\n  A: No, this script specifically targets beams associated with the Element found within the selected viewport.\n\n- **Q: How do I change the arrow style of the dimensions?**\n  A: Change the \"Dimension style\" property in the Properties Palette to a style defined in your CAD template that has your preferred arrowheads."
+      },
+      "tokens_used": 5307,
+      "error": null
+    }
+  }
+}

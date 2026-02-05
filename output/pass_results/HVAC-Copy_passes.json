@@ -1,0 +1,340 @@
+{
+  "filename": "HVAC-Copy.mcr",
+  "status": "completed",
+  "total_tokens": 39830,
+  "processing_time": 242.5010952949524,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.3",
+            "date": "21nov2018",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": " offset selection can be done at any segment of the system "
+          },
+          {
+            "version": "1.2",
+            "date": "08aug2018",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": " bugfix radius 0 "
+          },
+          {
+            "version": "1.1",
+            "date": "19jul2018",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": " supports new HVAC-System "
+          },
+          {
+            "version": "1.0",
+            "date": "18jul2018",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": " renamed "
+          },
+          {
+            "version": "1.0",
+            "date": "18jul2018",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": " initial "
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7774,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Explicit usage of `_kModelSpace` argument in the `tslNew.dbCreate` method call. The script performs 3D geometric operations including `getPoint`, `PLine` analysis, and `CoordSys` transformations on beams and TSL instances. No PaperSpace or ShopDrawing specific keywords (sd_*, Multipage, _Viewport) are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "TslInst (HVAC)",
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5817,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select an HVAC system|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "|Pick reference location near the HVAC system|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "PrPoint",
+              "promptOriginal": "|Select new location|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6879,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Duplicates an existing HVAC ductwork system to a new location while preserving geometry, sequence, and internal connections (G-connections).",
+          "category": "MEP / Utilities",
+          "typicalUseCase": "Used when a specific configuration of ductwork (e.g., a specific offset or bend assembly) needs to be replicated elsewhere in the model without manually redrawing individual segments."
+        },
+        "parameters": [
+          {
+            "name": "hvac (Selection)",
+            "technicalDefault": "User Selection",
+            "businessMeaning": "The source HVAC system instance to be copied. This determines the geometry, dimensions, and properties of the new system.",
+            "validRange": "Any valid TSL Instance of script type 'HVAC'",
+            "unit": "Entity",
+            "affectsOutput": "Defines the template for all generated beams and connections. The properties (Map) of this instance are transferred to the new system."
+          },
+          {
+            "name": "ptRef (Reference Point)",
+            "technicalDefault": "User Pick",
+            "businessMeaning": "The anchor point on the source system used to determine alignment. The script finds the closest duct segment to this point to define the source coordinate system.",
+            "validRange": "Any 3D point near the source HVAC beams",
+            "unit": "mm (3D Coordinates)",
+            "affectsOutput": "Determines which beam is used as the primary reference for rotation and position. Changing this point can rotate the final copy if the system has complex bends."
+          },
+          {
+            "name": "_Pt0 (Destination Point)",
+            "technicalDefault": "User Pick",
+            "businessMeaning": "The target insertion point where the reference point of the new system will be placed.",
+            "validRange": "Any 3D point in Model Space",
+            "unit": "mm (3D Coordinates)",
+            "affectsOutput": "Controls the final global location and orientation of the entire copied HVAC system."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of ptRef",
+            "effect": "Identifies the 'Reference Beam' (bmRef) from the source HVAC system.",
+            "cascade": [
+              "vecMove",
+              "_Pt0 transformation"
+            ]
+          },
+          {
+            "trigger": "Selection of _Pt0",
+            "effect": "Calculates the transformation vector (vecMove) required to move the Reference Beam from its original location to the new location.",
+            "cascade": [
+              "Position of all copied beams",
+              "Position of all generated HVAC-G connectors"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam",
+            "description": "Copied physical duct segments transformed to the new location.",
+            "appliedTo": "New HVAC System"
+          },
+          {
+            "type": "TslInst (HVAC)",
+            "description": "A new logical instance wrapping the copied beams, inheriting properties from the source.",
+            "appliedTo": "New HVAC System"
+          },
+          {
+            "type": "TslInst (HVAC-G)",
+            "description": "Connection instances (G-connections) automatically inserted between orthogonal beams in the new system.",
+            "appliedTo": "Junctions between copied beams"
+          }
+        ]
+      },
+      "tokens_used": 6825,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Launch Script",
+          "Check if Insert Mode (_bOnInsert)",
+          "User Selects HVAC System Instance (PrEntity)",
+          "Script Validates Selected Entity is 'HVAC' TSL",
+          "Extract Beam References and PLine Geometry from HVAC Map",
+          "User Picks Reference Point near HVAC (getPoint)",
+          "Script Identifies Closest Beam Segment to Reference Point (Reference Beam)",
+          "User Picks New Location (PrPoint)",
+          "Script Calculates Transformation Vector from Reference Beam to Base Beam",
+          "Transform New Location Point into Base Beam Coordinate System",
+          "End Insertion (Script Returns)",
+          "Script Recalculates (Post-Insertion Cycle)",
+          "Validate Entity Reference and Retrieve Source HVAC",
+          "Retrieve Source Beams and Sort by Sequence Index",
+          "Loop Through Each Beam in Sequence",
+          "Calculate Displacement Vector for Current Beam",
+          "Copy Beam and Apply Transformation",
+          "Check if Beam is Orthogonal to Previous Beam",
+          "If Orthogonal: Calculate Intersection Plane and Insert 'HVAC-G' Connector",
+          "Update Previous Beam References for Next Iteration",
+          "Finalize: Create New HVAC Instance Containing All Copied Beams and Connectors",
+          "Erase Temporary Script Instance"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User Selection Validation",
+            "path1": {
+              "name": "Valid Selection",
+              "steps": [
+                "Process Map Data",
+                "Prompt for Reference Point"
+              ]
+            },
+            "path2": {
+              "name": "Invalid/No Selection",
+              "steps": [
+                "Report 'no valid hvac found'",
+                "Erase Instance",
+                "Exit"
+              ]
+            }
+          },
+          {
+            "condition": "Destination Point Input (PrPoint)",
+            "path1": {
+              "name": "Valid Point Input",
+              "steps": [
+                "Store Point in _Pt0",
+                "Calculate Coordinate Transformation",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "Cancelled/Invalid Input",
+              "steps": [
+                "Report 'Invalid input'",
+                "Erase Instance",
+                "Exit"
+              ]
+            }
+          },
+          {
+            "condition": "Geometry Relationship (During Loop)",
+            "path1": {
+              "name": "Orthogonal Beams (bIsGConnected)",
+              "steps": [
+                "Calculate Intersection of Previous and Current Beam Axis",
+                "Create 'HVAC-G' Connector TSL",
+                "Add Connector to Collection"
+              ]
+            },
+            "path2": {
+              "name": "Parallel/Linear Beams",
+              "steps": [
+                "Skip Connector Creation",
+                "Continue to Next Beam"
+              ]
+            }
+          },
+          {
+            "condition": "Debug Mode",
+            "path1": {
+              "name": "Debug Enabled (bDebug=true)",
+              "steps": [
+                "Visualize Envelopes and Transformation Vectors",
+                "Skip 'dbCopy' and 'dbCreate' commands",
+                "Keep Script Instance Visible"
+              ]
+            },
+            "path2": {
+              "name": "Standard Mode (bDebug=false)",
+              "steps": [
+                "Create Real Geometry (Beams & Connectors)",
+                "Erase Script Instance upon Completion"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Selected Entity is a valid TSL instance with script name 'HVAC'",
+            "errorMessage": "no valid hvac found",
+            "recovery": "User must select a correct HVAC ductwork system instance."
+          },
+          {
+            "check": "HVAC Map contains defining beams (BeamRef[] array is not empty)",
+            "errorMessage": "no defining beam found",
+            "recovery": "Check source HVAC integrity; ensure it has generated beams."
+          },
+          {
+            "check": "Valid input for Reference Point and New Location",
+            "errorMessage": "Invalid input",
+            "recovery": "User must provide a valid point or press Escape correctly."
+          },
+          {
+            "check": "Reference entity integrity on recalculation",
+            "errorMessage": "invalid tsl reference",
+            "recovery": "Ensure the linked source HVAC instance has not been deleted."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Source HVAC",
+            "how": "Edit Beams / Grips / OPM Properties",
+            "effect": "No effect. The script runs a 'Copy' operation upon insertion. It does not maintain a dynamic link to the source HVAC for updates after the new system is created."
+          },
+          {
+            "action": "Modify Generated HVAC",
+            "how": "Edit Beams / Grips / OPM Properties",
+            "effect": "Standard HVAC editing capabilities apply. The new system is an independent instance."
+          }
+        ]
+      },
+      "tokens_used": 7427,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HVAC-Copy.mcr\n\n## Overview\nDuplicates an existing HVAC ductwork system to a new location while preserving geometry, sequence, and internal connections (G-connections). This is useful for replicating complex duct assemblies without manually redrawing them.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in the 3D model environment. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | Not applicable for generating drawings. |\n\n## Prerequisites\n- **Required Entities:** An existing HVAC System (TSL Instance) already present in the model.\n- **Minimum Beams:** The source HVAC system must contain at least one generated beam.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HVAC-Copy.mcr` from the list.\n\n### Step 2: Select Source HVAC System\n```\nCommand Line: Select an HVAC system\nAction: Click on the existing HVAC TSL instance (the blue bounding box/grips of the HVAC system) that you want to copy.\n```\n\n### Step 3: Pick Reference Point\n```\nCommand Line: Pick reference location near the HVAC system\nAction: Click a point near the specific segment of the source ductwork you wish to align from.\nNote: This point determines the \"handle\" and orientation of the copy. The script will snap to the closest beam segment.\n```\n\n### Step 4: Select New Location\n```\nCommand Line: Select new location\nAction: Click the point in the model where you want the new HVAC system to be placed.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not expose editable parameters in the Properties Palette. All inputs are collected via the command line during insertion. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | This script does not add specific custom options to the right-click context menu. |\n\n## Settings Files\nNone required. This script operates independently of external settings files.\n\n## Tips\n- **Precise Alignment:** When picking the reference point (Step 3), select a point near the specific duct segment that defines the direction you want to copy. The script uses the closest segment to calculate the rotation.\n- **Automatic Connections:** You do not need to manually re-create the bends or connections. The script automatically inserts 'HVAC-G' connectors where beams are orthogonal (90 degrees) to each other.\n- **Independent Copy:** Once created, the new HVAC system is fully independent. Modifying the original system will not update the copy.\n\n## FAQ\n- **Q: I selected an object but got the error \"no valid hvac found\". Why?**\n  A: You must select the specific HVAC TSL instance (the logical container), not just individual timber beams or lines within the ductwork.\n- **Q: Does this script copy the dimensions of the ducts?**\n  A: Yes. The new system is an exact geometric duplicate of the source system at the moment of copying.\n- **Q: Can I use this to copy systems between different floors?**\n  A: Yes, provided you can see/select the source system and pick a 3D point on the target floor in the current view."
+      },
+      "tokens_used": 5108,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,310 @@
+{
+  "filename": "HSB_G-RotateBlockingSide.mcr",
+  "status": "completed",
+  "total_tokens": 26522,
+  "processing_time": 215.66396713256836,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 1,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "26.04.2017",
+            "author": "YB",
+            "changes": "Pilot version"
+          },
+          {
+            "version": "1.01",
+            "date": "26.04.2017",
+            "author": "YB",
+            "changes": "Properties now come with the TSL"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4201,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script interacts with 3D model entities (_Beam[], _Entity[]) and uses geometric operations like dbCreate, dbErase, and envelopeBody().getSlice. It lacks sd_*, Multipage*, or _Viewport prefixes. The insert comment explicitly states 'Select a set of elements', and the logic involves manipulating beam geometry in 3D space."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam (The blocking beam)",
+            "Element (The parent element containing the blocking)"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space. The script includes a check to ensure it is not inserted manually (`if(!_bOnDbCreated ... eraseInstance()`), reporting that it 'can only get inserted through HSB_G-SplitWithBlocking!'.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2034,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dBlockingLength",
+            "type": "PropDouble",
+            "displayName": "Blocking length",
+            "defaultValue": "U(100)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 2,
+            "variable": "dBlockingWidth",
+            "type": "PropDouble",
+            "displayName": "Blocking width",
+            "defaultValue": "U(25)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "dBlockingHeight",
+            "type": "PropDouble",
+            "displayName": "Blocking height",
+            "defaultValue": "U(25)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "Flip side",
+            "handler": "Flip side",
+            "action": "Moves the insertion point by the width of the selected beam and inverts the blocking beam's Y-axis vector to flip the side.",
+            "alsoTriggeredBy": "TslDoubleClick"
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 4725,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically re-positions a blocking timber piece (noggin) to the opposite side of a selected structural beam and regenerates the geometry to fit the opening.",
+          "category": "Framing/Connection",
+          "typicalUseCase": "Used during the automatic generation of wall or floor panels (via HSB_G-SplitWithBlocking) or manually via right-click to correct the orientation of blocking when it is initially placed on the wrong face of a beam."
+        },
+        "parameters": [
+          {
+            "name": "dBlockingLength",
+            "technicalDefault": "U(100)",
+            "businessMeaning": "The longitudinal length of the blocking piece (noggin).",
+            "validRange": "20 mm to 3000 mm",
+            "unit": "mm",
+            "affectsOutput": "Changes the X-axis dimension of the generated blocking beam."
+          },
+          {
+            "name": "dBlockingWidth",
+            "technicalDefault": "U(25)",
+            "businessMeaning": "The thickness of the blocking piece (material width/depth).",
+            "validRange": "15 mm to 100 mm",
+            "unit": "mm",
+            "affectsOutput": "Changes the Y-axis dimension of the generated blocking beam, affecting how far it protrudes from the reference beam."
+          },
+          {
+            "name": "dBlockingHeight",
+            "technicalDefault": "U(25)",
+            "businessMeaning": "The vertical height of the blocking piece.",
+            "validRange": "15 mm to 300 mm",
+            "unit": "mm",
+            "affectsOutput": "Changes the Z-axis dimension of the generated blocking beam."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Beam (GenBeam)",
+            "description": "A new timber blocking beam is created at the calculated coordinates. The original blocking beam is erased.",
+            "appliedTo": "N/A (New entity created)"
+          },
+          {
+            "type": "Modified Geometry",
+            "description": "Existing beams within the parent element that intersect with the new blocking are stretched to fit against the new blocking geometry.",
+            "appliedTo": "Neighboring beams in the selected Element"
+          }
+        ]
+      },
+      "tokens_used": 4362,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Start: Triggered via insertion or recalculation.",
+          "2. Insertion Validation: Verify if the instance is being created programmatically (via HSB_G-SplitWithBlocking) or manually via Map flag.",
+          "3. Entity Count Validation: Ensure exactly 2 entities are attached to the script.",
+          "4. Beam Selection Validation: Ensure at least 1 beam is selected.",
+          "5. Parameter Validation: Check that Blocking Length, Width, and Height are greater than 0.",
+          "6. Entity Identification: Separate the attached entities into the blocking beam and the parent element.",
+          "7. Orientation Calculation: Calculate the Y-vector of the blocking beam relative to the selected reference beam.",
+          "8. Trigger Check: Detect if the 'Flip side' context menu or Double Click event triggered the recalculation.",
+          "9. [Conditional] Geometry Transformation: If triggered, shift the insertion point across the reference beam and invert the Y-vector.",
+          "10. Geometry Generation: Create a new beam with the calculated position and dimensions.",
+          "11. Cleanup: Erase the original blocking beam.",
+          "12. Intersection Processing: Identify all beams in the parent element that intersect with the new blocking beam.",
+          "13. Stretching: Stretch the intersecting beams to fit against the new blocking geometry."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script Insertion Method",
+            "path1": {
+              "name": "Manual Insertion (Invalid)",
+              "steps": [
+                "Check flags (!_bOnDbCreated && !manualInserted)",
+                "Report notice: 'TSL can only get inserted through HSB_G-SplitWithBlocking!'",
+                "Execute eraseInstance()",
+                "Terminate script"
+              ]
+            },
+            "path2": {
+              "name": "Programmatic/Valid Insertion",
+              "steps": [
+                "Proceed to Entity Validation"
+              ]
+            }
+          },
+          {
+            "condition": "Entity and Beam Count",
+            "path1": {
+              "name": "Invalid Input",
+              "steps": [
+                "Check if _Entity.length != 2 OR _Beam.length < 1",
+                "Report notice regarding invalid amount of entities/beams",
+                "Execute eraseInstance()",
+                "Terminate script"
+              ]
+            },
+            "path2": {
+              "name": "Valid Input",
+              "steps": [
+                "Parse Blocking Beam and Element",
+                "Proceed to Parameter Validation"
+              ]
+            }
+          },
+          {
+            "condition": "Property Values",
+            "path1": {
+              "name": "Non-positive Dimensions",
+              "steps": [
+                "Detect dBlockingLength/Width/Height <= 0",
+                "Report notice and set specific defaults (100, 25, 25)",
+                "Continue execution with safe defaults"
+              ]
+            },
+            "path2": {
+              "name": "Valid Dimensions",
+              "steps": [
+                "Use input values directly"
+              ]
+            }
+          },
+          {
+            "condition": "Recalculation Trigger",
+            "path1": {
+              "name": "Flip Side / Double Click",
+              "steps": [
+                "Verify _kExecuteKey == 'Flip side' OR 'TslDoubleClick'",
+                "Update _Pt0 by moving along blockingY by selected beam depth",
+                "Invert blockingY vector direction",
+                "Regenerate beam on new side"
+              ]
+            },
+            "path2": {
+              "name": "Standard Update",
+              "steps": [
+                "Regenerate beam at existing coordinates",
+                "Re-stretch neighbors"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insertion Origin",
+            "errorMessage": "TSL can only get inserted through HSB_G-SplitWithBlocking!",
+            "recovery": "Run the parent script 'HSB_G-SplitWithBlocking' or ensure the Map contains 'ManualInserted' = 1."
+          },
+          {
+            "check": "Entity Count",
+            "errorMessage": "Invalid amount of entities found!",
+            "recovery": "Ensure the script is executed with exactly 2 entities (1 Beam, 1 Element)."
+          },
+          {
+            "check": "Beam Selection",
+            "errorMessage": "Invalid amount of beams found!",
+            "recovery": "Select at least one beam to serve as the reference for the blocking operation."
+          },
+          {
+            "check": "Blocking Dimensions (Length/Width/Height)",
+            "errorMessage": "Blocking [Dimension] can't be lower than 0! [Dimension] set to [Default].",
+            "recovery": "Script automatically resets to default values (100mm for length, 25mm for width/height). User can modify these via Properties Palette."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Flip Side",
+            "how": "Context Menu (Right-click) -> 'Flip side' OR Double-click",
+            "effect": "Moves the blocking beam to the opposite side of the reference beam and rotates it 180 degrees to face the new direction. Intersecting beams are stretched to meet the new position."
+          },
+          {
+            "action": "Resize Blocking",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changing 'Blocking length', 'Blocking width', or 'Blocking height' immediately updates the geometry and re-stretches intersecting beams."
+          }
+        ]
+      },
+      "tokens_used": 5674,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_G-RotateBlockingSide.mcr\n\n## Overview\nThis script manages the placement and orientation of blocking timber (noggins) within a structural element. It allows you to flip the blocking to the opposite side of a reference beam and automatically stretches intersecting beams to fit the new geometry.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D beams and elements. |\n| Paper Space | No | Not applicable for 2D drawings. |\n| Shop Drawing | No | Not applicable for shop drawing generation. |\n\n## Prerequisites\n- **Required Entities**: The script must be attached to 1 GenBeam (the blocking) and 1 Element (the parent structure).\n- **Insertion Method**: This script is typically not run manually. It is designed to be inserted automatically by the script `HSB_G-SplitWithBlocking`. Attempting to insert it manually via `TSLINSERT` will result in the instance being automatically deleted unless specific Map flags are set.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Generate the Blocking\nSince this script is a sub-component, you generally launch it by running the parent script.\n1.  Run `HSB_G-SplitWithBlocking` to generate the initial blocking elements.\n2.  The `HSB_G-RotateBlockingSide` instance is automatically attached to the created blocking beam.\n\n### Step 2: Adjust Blocking Orientation\nIf the generated blocking is on the wrong side of the beam:\n1.  Select the **Blocking Beam** in the model.\n2.  **Right-click** to open the context menu.\n3.  Select **Flip side**.\n    *   *Alternative*: **Double-click** the blocking beam to achieve the same result.\n4.  The script will move the blocking to the opposite face of the reference beam and rotate it 180 degrees.\n\n### Step 3: Resize Blocking (Optional)\nIf the blocking dimensions need adjustment:\n1.  Select the **Blocking Beam**.\n2.  Open the **Properties Palette** (Ctrl + 1).\n3.  Modify **Blocking length**, **Blocking width**, or **Blocking height**.\n4.  The geometry updates immediately, and intersecting beams are stretched to fit.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Blocking length | Number | 100 mm | The longitudinal length of the blocking timber (noggin). |\n| Blocking width | Number | 25 mm | The thickness of the blocking (depth relative to the beam). |\n| Blocking height | Number | 25 mm | The vertical height of the blocking. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Flip side | Moves the insertion point of the blocking across the reference beam and inverts the Y-axis vector. This effectively toggles the blocking between the left and right sides of the beam while regenerating connections. |\n\n## Settings Files\n- None.\n\n## Tips\n- **Quick Access**: Use the **Double-Click** feature to rapidly flip blocking sides without navigating the right-click menu.\n- **Auto-Stretching**: When you flip the side or change dimensions, the script automatically identifies and stretches any beams in the parent element that intersect with the blocking. You do not need to manually trim these beams.\n- **Error Handling**: If you accidentally insert this script manually without the proper parent context, it will display a message \"TSL can only get inserted through HSB_G-SplitWithBlocking!\" and delete itself to prevent errors.\n\n## FAQ\n- **Q: Why does the script disappear when I try to insert it?**\n  - A: This script is a child script designed to be called programmatically. It checks its origin upon insertion and deletes itself if it was not created by `HSB_G-SplitWithBlocking`.\n- **Q: What happens if I set the Blocking Width to 0?**\n  - A: The script includes a validation rule. If any dimension (Length, Width, or Height) is 0 or negative, it resets that specific value to a safe default (100mm for length, 25mm for others) and displays a notice in the command line.\n- **Q: Does this work on curved beams?**\n  - A: The script calculates orientation based on the Y-vector of the selected beams. It is primarily designed for standard rectangular blocking within elements."
+      },
+      "tokens_used": 5526,
+      "error": null
+    }
+  }
+}

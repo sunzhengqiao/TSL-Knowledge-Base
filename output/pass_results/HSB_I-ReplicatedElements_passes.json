@@ -1,0 +1,280 @@
+{
+  "filename": "HSB_I-ReplicatedElements.mcr",
+  "status": "completed",
+  "total_tokens": 20804,
+  "processing_time": 388.36161828041077,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 4939,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Prompt 'Select a viewport' during _bOnInsert. Logic relies on _Viewport collection and vp.element() to retrieve the context. Collects entities using Group().collectEntities(..., _kModelSpace) but operates within the viewport context."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Requires selection of a viewport on a layout.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1224,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getViewport",
+              "promptOriginal": "|Select a viewport|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "|Select a position|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dimStyle",
+            "type": "PropString",
+            "displayName": "|Dimension style|",
+            "defaultValue": "_DimStyles",
+            "inputType": "dropdown",
+            "options": [],
+            "category": null,
+            "description": "|Sets the dimension style to use|"
+          },
+          {
+            "index": 0,
+            "variable": "textSize",
+            "type": "PropDouble",
+            "displayName": "|Text size|",
+            "defaultValue": "-1",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "|Sets the text size.| The text size of the dimension style is used if the text size is zero or negative."
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3432,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Identifies and displays a list of Element numbers that are replicas of the element associated with a selected viewport, placing the text list at a user-defined location on the drawing layout.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "A user places this on a manufacturing drawing sheet to explicitly list all unique elements that share the same geometry (sub-type) as the main element shown in a viewport, ensuring full traceability of replicated components."
+        },
+        "parameters": [
+          {
+            "name": "dimStyle",
+            "technicalDefault": "_DimStyles",
+            "businessMeaning": "Defines the graphical style (font, arrowheads, color, line type) used to render the text annotation in the drawing.",
+            "validRange": "Any existing Dimension Style name available in the current hsbCAD project.",
+            "unit": "N/A",
+            "affectsOutput": "Alters the visual presentation of the list of element numbers, ensuring it matches the drafting standards of the current layout."
+          },
+          {
+            "name": "textSize",
+            "technicalDefault": "-1",
+            "businessMeaning": "Overrides the text height for the annotation. A negative or zero value forces the script to use the default text height defined by the selected Dimension Style.",
+            "validRange": "Typically 2.5mm to 10.0mm for paper space legibility; 0 to use style default.",
+            "unit": "mm",
+            "affectsOutput": "Directly scales the text height of the element list in the viewport. If set to 0 or less, the size is determined by the 'dimStyle' setting."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "textSize is set to 0 or a negative value",
+            "effect": "The script ignores the 'textSize' value and instead uses the text height defined within the 'dimStyle'.",
+            "cascade": [
+              "dimStyle"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Text Entity",
+            "description": "A comma-separated string of Element numbers (e.g., \"EL-101, EL-105, EL-109\") drawn at the selected insertion point.",
+            "appliedTo": "PaperSpace Layout"
+          }
+        ]
+      },
+      "tokens_used": 2347,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script triggered for insertion or recalculation",
+          "Check insert cycle count; if greater than 1, erase instance and stop",
+          "Prompt user to select a Viewport",
+          "Prompt user to select a Position (insertion point)",
+          "Check if a Viewport exists in the _Viewport array",
+          "Retrieve the Element associated with the selected Viewport",
+          "Collect all Elements from ModelSpace",
+          "Initialize string with current Element number",
+          "Iterate through all collected Elements",
+          "Check if collected Element's subtype matches current Element's number",
+          "If match found, append collected Element's number to the string",
+          "Configure Display properties (Dimension style and Text size)",
+          "Draw the final comma-separated string of Element numbers at the selected Position"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion cycle check",
+            "path1": {
+              "name": "Re-insertion/Cyclic Update",
+              "steps": [
+                "Erase the current script instance",
+                "Exit script immediately"
+              ]
+            },
+            "path2": {
+              "name": "First Insertion",
+              "steps": [
+                "Proceed to command line prompts"
+              ]
+            }
+          },
+          {
+            "condition": "Viewport array check",
+            "path1": {
+              "name": "No Viewport Data",
+              "steps": [
+                "Report warning: 'No viewport selected'",
+                "Erase the script instance",
+                "Exit"
+              ]
+            },
+            "path2": {
+              "name": "Viewport Data Present",
+              "steps": [
+                "Retrieve viewport object",
+                "Continue to Element extraction"
+              ]
+            }
+          },
+          {
+            "condition": "Element Validity check",
+            "path1": {
+              "name": "Invalid Element",
+              "steps": [
+                "Exit script silently without drawing"
+              ]
+            },
+            "path2": {
+              "name": "Valid Element",
+              "steps": [
+                "Proceed to collect other elements for comparison"
+              ]
+            }
+          },
+          {
+            "condition": "Text Size Property value",
+            "path1": {
+              "name": "Value > 0",
+              "steps": [
+                "Apply user-defined text height to Display"
+              ]
+            },
+            "path2": {
+              "name": "Value <= 0",
+              "steps": [
+                "Use default text height from the selected Dimension Style"
+              ]
+            }
+          },
+          {
+            "condition": "Replication Logic (Subtype comparison)",
+            "path1": {
+              "name": "Subtype matches Element Number",
+              "steps": [
+                "Append Element number to the result string"
+              ]
+            },
+            "path2": {
+              "name": "Subtype does not match",
+              "steps": [
+                "Skip element and move to next iteration"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Viewport selection existence (_Viewport array length)",
+            "errorMessage": "No viewport selected",
+            "recovery": "The script automatically erases itself; the user must re-run the command and ensure a viewport is selected."
+          },
+          {
+            "check": "Validity of the Element inside the Viewport (el.bIsValid())",
+            "errorMessage": "(Silent - no error message displayed)",
+            "recovery": "User must ensure the selected viewport actually contains an Element entity, otherwise the script produces no output."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Dimension Style",
+            "how": "OPM (Object Properties Palette)",
+            "effect": "Updates the visual style (font, arrows) of the text label upon recalculation."
+          },
+          {
+            "action": "Change Text Size",
+            "how": "OPM (Object Properties Palette)",
+            "effect": "If set > 0, overrides the dimension style's text height; if <= 0, reverts to style default."
+          },
+          {
+            "action": "Move Label Position",
+            "how": "Grip Edit (Drag Point)",
+            "effect": "Moves the start point of the text string to a new location."
+          },
+          {
+            "action": "Update Element List",
+            "how": "System Recalculation (e.g., Generate/Update Model)",
+            "effect": "Re-scans ModelSpace for any new Elements that match the replication criteria (Subtype == Element Number) and updates the text string."
+          }
+        ]
+      },
+      "tokens_used": 4235,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_I-ReplicatedElements\n\n## Overview\nThis script identifies and displays a comma-separated list of Element numbers that are replicas of the element shown in a selected viewport. It places this text annotation directly on your drawing layout at a location of your choice.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script is intended for use on layouts. |\n| Paper Space | Yes | The script must be inserted on a layout with a viewport. |\n| Shop Drawing | No | This is a generic TSL script, not a specific shop drawing generator. |\n\n## Prerequisites\n- **Required Entities**: A layout containing at least one viewport that is linked to an Element (Model Space entity).\n- **Minimum Beam Count**: 0 (Scans all elements in the model).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n```\nCommand: TSLINSERT\nAction: Browse to select 'HSB_I-ReplicatedElements.mcr' and click Open.\n```\n\n### Step 2: Select Viewport\n```\nCommand Line: Select a viewport\nAction: Click on the border of the viewport on your layout that displays the element you want to analyze.\n```\n\n### Step 3: Select Position\n```\nCommand Line: Select a position\nAction: Click anywhere on the Paper Space layout where you want the list of element numbers to appear.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Dimension style | Dropdown | _DimStyles | Select the graphical style (font, color, arrows) to be applied to the text annotation. |\n| Text size | Number | -1 | Sets the height of the text. If set to 0 or a negative number, the default height defined in the selected Dimension style is used. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| (None) | This script does not add specific items to the right-click context menu. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Moving the Text**: After insertion, you can click the text and use the grip point to drag it to a new location without re-inserting the script.\n- **Updating the List**: If elements are added or modified in the model, the text will automatically update to reflect the current replication status when the drawing or project is recalculated.\n- **Text Sizing**: For best results, set the **Text size** to `0` initially to match your standard drafting dimensions. Adjust only if the specific label needs to be larger or smaller than the standard dimensions.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I selected the position?**\n  - **A:** This usually happens if the selected viewport does not contain a valid Element or if no viewport was selected. Ensure you click a viewport that is linked to a model element.\n- **Q: The list of numbers is too small to read.**\n  - **A:** Select the script instance in the drawing, open the Properties palette (Ctrl+1), and increase the **Text size** value to a positive number (e.g., 2.5 or 5.0 mm).\n- **Q: How are \"Replicas\" determined?**\n  - **A:** The script finds all elements in the model that share the same geometry subtype (or definition) as the element currently inside the selected viewport."
+      },
+      "tokens_used": 4627,
+      "error": null
+    }
+  }
+}

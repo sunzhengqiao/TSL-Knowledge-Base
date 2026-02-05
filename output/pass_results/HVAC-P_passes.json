@@ -1,0 +1,240 @@
+{
+  "filename": "HVAC-P.mcr",
+  "status": "completed",
+  "total_tokens": 34282,
+  "processing_time": 299.2454390525818,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7544,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Explicit use of `_kModelSpace` in `tslNew.dbCreate(...)`. Script manipulates `Beam` objects directly via `dbJoin`, `dbSplit`, and `addTool`. It generates 3D geometry (`Body`, `Quader`) and uses standard `Display` classes for Model/Plan views rather than viewport-specific ShopDrawing functions."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space (3D environment)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5094,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select 2 beam(s) to connect or 1 beam to split|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "|Select split location|",
+              "condition": "_bOnInsert && beams.length() == 1",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "|Join|",
+            "handler": "sTriggerJoin",
+            "action": "Joins the two connected beams into a single beam",
+            "alsoTriggeredBy": "TslDoubleClick"
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 6227,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the connection of two parallel HVAC or duct beams, handling either seamless joins for identical profiles or creating reduction transition pieces for different sizes.",
+          "category": "Joinery/Connection",
+          "typicalUseCase": "Used when aligning two sections of rectangular or round ductwork in a model to ensure they are geometrically connected or visually represented as a continuous transition."
+        },
+        "parameters": [],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects two beams with identical cross-sections (Width and Height)",
+            "effect": "The script automatically triggers the 'Join' command to merge the two beams into a single entity, removing the connector script.",
+            "cascade": [
+              "_Beam[0]",
+              "_Beam[1]"
+            ]
+          },
+          {
+            "trigger": "User selects two beams with differing cross-sections",
+            "effect": "The script calculates a transition body (reduction) between the two sizes and applies cuts to the beam ends to meet at the transition.",
+            "cascade": [
+              "dReductionLength",
+              "Body Geometry"
+            ]
+          },
+          {
+            "trigger": "User selects 1 beam",
+            "effect": "The script enters split mode, prompting the user for a split location.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "GenBeam Modification (Join/Split)",
+            "description": "If two beams are identical, they are joined into one. If one beam is selected, it is split into two.",
+            "appliedTo": "Selected Beam(s)"
+          },
+          {
+            "type": "Reduction Body (3D Solid)",
+            "description": "A geometric body (Box or Cone) representing the transition ductwork between two different sized beams. It handles the taper in height, width, or both.",
+            "appliedTo": "Connection point between Beam 1 and Beam 2"
+          },
+          {
+            "type": "Cut (End Trim)",
+            "description": "Trim cuts applied to the ends of the connected beams to fit the reduction geometry, or to meet cleanly if identical.",
+            "appliedTo": "Ends of Beam 1 and Beam 2"
+          },
+          {
+            "type": "Visual Representation (Plan/Model)",
+            "description": "Draws the reduction as a solid body or projected linework depending on view settings.",
+            "appliedTo": "Model Space and Plan Views"
+          }
+        ]
+      },
+      "tokens_used": 4997,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script invoked via command or palette",
+          "Prompt user to select 1 or 2 beams using PrEntity",
+          "Branch based on selection count",
+          "Validate beam parallelism (if 2 beams)",
+          "Create TSL instance attached to the beam(s)",
+          "Erase the temporary insertion instance",
+          "Run main logic (recalculation)",
+          "Check for duplicate TSL instances on same beams",
+          "Check beam alignment/offset tolerance",
+          "Determine if beams have identical cross-sections",
+          "Generate Join trigger or Reduction geometry based on cross-section",
+          "Apply cuts to beam ends",
+          "Generate visualization (Body or Linework)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Number of beams selected during insertion",
+            "path1": {
+              "name": "Split Mode (1 Beam)",
+              "steps": [
+                "Prompt for split point with getPoint",
+                "Execute beam.dbSplit at point",
+                "Append resulting split beam to array",
+                "Create TSL linking original and new beam"
+              ]
+            },
+            "path2": {
+              "name": "Connect Mode (2 Beams)",
+              "steps": [
+                "Calculate center points and local axes",
+                "Check if vectors are parallel",
+                "Calculate midpoint between beams",
+                "Create TSL linking the two beams"
+              ]
+            }
+          },
+          {
+            "condition": "Beam cross-section comparison (Post-Insertion)",
+            "path1": {
+              "name": "Identical Sections",
+              "steps": [
+                "Add 'Join' recalc trigger",
+                "Wait for user trigger or double-click",
+                "Execute beam.dbJoin to merge entities",
+                "Erase TSL instance"
+              ]
+            },
+            "path2": {
+              "name": "Different Sections (Reduction)",
+              "steps": [
+                "Calculate reduction length based on max dimensions",
+                "Create Cuts at beam ends (addTool)",
+                "Construct 3D Body (Box or Cone) for transition",
+                "Trim Body geometry to match tapers if necessary",
+                "Draw Body in Model and Plan views"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam Parallelism (vecX0.isParallelTo(vecX1))",
+            "errorMessage": "HVAC-P: beams are not parallel",
+            "recovery": "Script restarts insertion loop; user must select parallel beams"
+          },
+          {
+            "check": "Alignment Tolerance (Offset > Max Dimension)",
+            "errorMessage": "HVAC-P: beams are not in line",
+            "recovery": "Script erases itself; user must align beams closer along the axis"
+          },
+          {
+            "check": "Duplicate TSL Instances",
+            "errorMessage": "Removing dupliacte of HVAC-P",
+            "recovery": "Script automatically erases the new duplicate instance to prevent conflicts"
+          },
+          {
+            "check": "Invalid Selection Set (< 2 beams attached to TSL after insert)",
+            "errorMessage": "HVAC-P: invalid selection set.",
+            "recovery": "Script erases itself; user must re-run command correctly"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Join Beams",
+            "how": "Right-click Context Menu ('Join') or Double-Click (TslDoubleClick)",
+            "effect": "Merges the two connected beams into a single GenBeam and removes the connector script. Available only if profiles are identical."
+          },
+          {
+            "action": "Visual Update / Stretch",
+            "how": "Grip edit of connected beams",
+            "effect": "The reduction body and cuts are recalculated and updated (_kStretchOnToolChange). The reduction length adapts to new positions or profile sizes."
+          }
+        ]
+      },
+      "tokens_used": 6082,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HVAC-P.mcr\n\n## Overview\nThis script connects two parallel HVAC or duct beams, either merging them if they have identical profiles or creating a reduction transition piece between different sizes. It also allows splitting a single beam into two segments at a specific point.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script manipulates 3D beam geometry. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required entities:** GenBeam (representing HVAC ducts).\n- **Minimum beam count:** 1 (to split) or 2 (to connect).\n- **Required settings files:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HVAC-P.mcr`\n\n### Step 2: Select Beams\n```\nCommand Line: |Select 2 beam(s) to connect or 1 beam to split|\nAction: Select either 1 or 2 beams in the model.\n```\n\n### Step 3: Define Split Location (Conditional)\n*This step only appears if you selected 1 beam in Step 2.*\n```\nCommand Line: |Select split location|\nAction: Click on the selected beam to define the exact point where the beam should be divided.\n```\n\n### Step 4: Automatic Processing\n- **If connecting 2 beams:** The script checks if they are parallel and aligned. If the profiles are different, it generates a 3D transition body. If they are identical, it prepares a join function.\n- **If splitting 1 beam:** The script cuts the beam at the selected point and manages the resulting segments.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script has no user-editable properties in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Join | Merges the two connected beams into a single entity and removes this script. Only available if the beams have identical dimensions. Can also be triggered by double-clicking the connection. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Alignment Tolerance:** Ensure the two beams you want to connect are parallel and roughly in line. If the offset is too large, the script will display an error (\"beams are not in line\") and erase itself.\n- **Modifying Connections:** You can use AutoCAD grips to stretch or move the connected beams. The script will automatically recalculate and resize the reduction piece to fit the new geometry.\n- **Splitting:** Use this script as a quick way to break a long duct run into two separate segments without manually trimming.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I selected the beams?**\n  - A: The beams likely failed the validation check. Ensure they are parallel. Check the command line for specific errors such as \"HVAC-P: beams are not in line\" or \"beams are not parallel.\"\n- **Q: How do I remove the transition piece and make the beams one single duct?**\n  - A: You must change the beam profiles to be identical (same width and height). Once identical, right-click the connection and select \"Join\" to merge them.\n- **Q: Can I change the angle of the reduction?**\n  - A: The reduction geometry is automatically calculated based on the difference in size between the two beams and their positions. To change the taper angle, adjust the size of the beam profiles or the distance between them."
+      },
+      "tokens_used": 4338,
+      "error": null
+    }
+  }
+}

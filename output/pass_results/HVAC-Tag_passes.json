@@ -1,0 +1,137 @@
+{
+  "filename": "HVAC-Tag.mcr",
+  "status": "completed",
+  "total_tokens": 50279,
+  "processing_time": 465.3451635837555,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9221,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly uses the constant '_kModelSpace' in the 'tslNew.dbCreate' method call within the '_bOnInsert' block. It processes 3D geometry (Point3d, Vector3d, PLine) relative to the model and contains no logic for Viewports or Paper Space layouts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "TslInst (Entity with 'HVAC Collection' map data)",
+            "Beam (referenced within the HVAC system)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing a valid HVAC system instance",
+          "requiredSettings": [
+            "HVAC.xml (Located in <company>\\tsl\\settings)"
+          ]
+        }
+      },
+      "tokens_used": 6793,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select an HVAC system|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrPoint",
+              "promptOriginal": "|Select point|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "getInt",
+              "promptOriginal": "|Enter the index of the property which you want to add or remove|",
+              "condition": "_bOnRecalc && _kExecuteKey==|Set Format Expression|",
+              "required": false
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "_bOnInsert (if no ExecuteKey)",
+            "title": null,
+            "dataSource": "OPM Properties (sFormat)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sFormat",
+            "type": "PropString",
+            "displayName": "|Format|",
+            "defaultValue": "@(Name)",
+            "inputType": "text",
+            "options": [],
+            "category": "|General|",
+            "description": "|Defines the format of the composed value.||Samples||   @(Label)@(SubLabel)||   @(Label:L2) |the first two characters of Label||   @(Label:T1; |the second part of Label if value is separated by blanks, i.e. 'EG AW 2' will return AW'|)||   @(Width:RL1) |the rounded value of width with one decimal.||R |Right: Takes the specified number of characters from the right of the string.||L |Left: Takes the specified number of characters from the left of the string.||S |SubString: Given one number will take all characters starting at the position (zero based).|| |Given two numbers will start at the first number and take the second number of characters.||T |​Tokeniser: Returns the member of a delimited list using the specified index (zero based). A delimiter can be specified as an optional parameter with the default delimiter being the semcolon character..||# |Rounds a number. Specify the number of decimals to round to. Trailing zero's are removed.||RL |​Round Local: Rounds a number using the local regional settings..|"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "|Set Format Expression|",
+            "handler": "|Set Format Expression|",
+            "action": "Lists available format variables in the command line history and prompts user to enter an index to add or remove that variable from the Format property.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "HVAC.xml",
+            "searchPaths": [
+              "<company>\\TSL\\Settings"
+            ],
+            "purpose": "Provides default configuration for the tag appearance and logic, including TextHeight, DisplayRepresentation, DimStyle, SymbolSize, Offset, Color, and Transparency.",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 9155,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10261,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"User launches script (e.g., via command HSB_HVACTAG or Catalog)\",\n    \"Script checks _kExecuteKey: if set, applies catalog properties; otherwise, displays Properties/Dialog (Format string)\",\n    \"User selects an HVAC System Entity (filtered for TslInst containing 'HVAC Collection' map)\",\n    \"Validation: If selection is invalid, instance is erased and script stops\",\n    \"User selects an insertion point for the tag\",\n    \"Script creates the TSL instance in ModelSpace and erases the temporary script\",\n    \"Script retrieves referenced Beams and TSLs from the HVAC Collection maps\",\n    \"Script extracts stream polylines (plHvac) from all referenced entities\",\n    \"Script calculates the closest point on the nearest stream polyline to the insertion point\",\n    \"Script projects the insertion point onto the coordinate system of the nearest duct\",\n    \"Script retrieves properties from the referenced Beam to format the tag text\",\n    \"Script draws the Flow Arrow, Text Label, and (if applicable) Guide Line\",\n    \"Process completes. Instance updates on property changes or geometry moves.\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Insertion Trigger (_kExecuteKey)\",\n      \"path1\": {\n        \"name\": \"Catalog Insert\",\n        \"steps\": [\n          \"Check if ExecuteKey matches a catalog entry\",\n          \"Apply catalog property values to sFormat\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Standard Insert\",\n        \"steps\": [\n          \"Execute showDialog() to open OPM/Properties Palette\",\n          \"User manually configures 'Format' property before selection\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Setting 'SymbolOffset' (bHasOffset)\",\n      \"path1\": {\n        \"name\": \"Offset Enabled\",\n        \"steps\": [\n          \"During creation (_bOnDbCreated), the insertion point (_Pt0) is moved to the calculated closest point on the duct (ptNext)\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Offset Disabled\",\n        \"steps\": [\n          \"The insertion point remains exactly where the user clicked\",\n          \"Visual projection adjusts tag orientation but not the grip location\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Distance to Duct (Guide Line Logic)\",\n      \"path1\": {\n        \"name\": \"Long Distance\",\n        \"steps\": [\n          \"If distance between tag and duct > dGuideLineMinimalLength\",\n          \"Draw a line (Guide Line) connecting the text to the duct\"\n        ]\n      },\n    {\n        \"name\": \"Short Distance\",\n        \"steps\": [\n          \"If distance <= dGuideLineMinimalLength\",\n          \"Skip drawing the guide line\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Format Variable Manipulation (Context Menu)\",\n      \"path1\": {\n        \"name\": \"Add Variable\",\n        \"steps\": [\n          \"User selects index\",\n          \"Script checks if variable exists in sFormat\",\n          \"If not found, append '@(Variable)' to the Format string\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Remove Variable\",\n        \"steps\": [\n          \"User selects index\",\n          \"Script checks if variable exists in sFormat\",\n          \"If found, locate '@(Variable)' and remove it from the string\"\n        ]\n      }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"HVAC Entity Selection\",\n      \"errorMessage\": \"Script silently erases instance if valid HVAC system not found\",\n      \"recovery\": \"User must re-run script and ensure they select an entity with the 'HVAC Collection' map data\"\n    },\n    {\n      \"check\": \"Recalc Dependency\",\n      \"errorMessage\": \"Error: 'no valid hvac found'\",\n      \"recovery\": \"Ensure the referenced HVAC entity has not been deleted or unloaded from the drawing\"\n    },\n    {\n      \"check\": \"Settings File Availability\",\n      \"errorMessage\": \"Potential default values or missing settings if HVAC.xml is not found in <company>\\\\TSL\\\\Settings\",\n      \"recovery\": \"Ensure HVAC.xml exists in the correct network or local folder structure\"\n    }\n  ],\n  \"postInsertionActions\": [\n    {\n      \"action\": \"Edit Format Text\",\n      \"how\": \"OPM (Properties Palette) -> General -> Format\",\n      \"effect\": \"Immediately updates the tag text content based on new format string (e.g., adding @(Width))\"\n    },\n    {\n      \"action\": \"Set Format Expression (Interactive)\",\n      \"how\": \"Right-click Context Menu -> 'Set Format Expression'\",\n      \"effect\": \"Lists available properties in command line; prompts for index; adds or removes the selected variable from the Format string\"\n    },\n    {\n      \"action\": \"Move Tag\",\n      \"how\": \"Grip Edit (Drag the insertion point grip)\",\n      \"effect\": \"Recalculates the closest duct, projects the new position, redraws the arrow, and redraws the guide line if necessary\"\n    },\n    {\n      \"action\": \"Update Geometry\",\n      \"how\": \"Modify the underlying HVAC beams/ducts\",\n      \"effect\": \"The script updates its position, orientation, and text data to match the modified HVAC system automatically\"\n    }\n  ]\n}\n```"
+      },
+      "tokens_used": 9412,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HVAC-Tag.mcr\n\n## Overview\nThis script inserts a dynamic annotation tag linked to an HVAC system (e.g., ducts). It displays formatted text based on the properties of the referenced HVAC elements and automatically updates if the geometry moves. It includes a flow arrow and an optional guide line.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in 3D model space. |\n| Paper Space | No | Not supported for layouts. |\n| Shop Drawing | No | Not supported for shop drawings. |\n\n## Prerequisites\n- **Required Entities**: An existing HVAC System entity in the model (specifically an entity containing 'HVAC Collection' map data).\n- **Required Settings File**: `HVAC.xml` located in your company folder `<company>\\TSL\\Settings`.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or select from Catalog/Browser) → Select `HVAC-Tag.mcr`\n\n### Step 2: Configure Format (Optional)\nUpon launch, the Properties Palette may open automatically. You can pre-configure the **Format** string here, or modify it after insertion.\n*   *Action:* Enter the desired text format in the Properties Palette (e.g., `@(Name)`).\n\n### Step 3: Select HVAC System\n```\nCommand Line: Select an HVAC system\nAction: Click on the HVAC duct or system object you wish to tag.\n```\n*   *Note:* If you select an invalid object (not an HVAC system), the script will cancel.\n\n### Step 4: Select Insertion Point\n```\nCommand Line: Select point\nAction: Click in the model space to place the tag.\n```\n*   *Result:* The tag instance is created. The script automatically finds the closest point on the duct, aligns the arrow, and draws the text label.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Format | String | `@(Name)` | Defines the text displayed on the tag. You can use dynamic placeholders for various properties.<br><br>**Syntax Examples:**<br>- `@(Label)`: Shows the Label property.<br>- `@(Label:L2)`: Shows the first 2 characters of the Label.<br>- `@(Width:RL1)`: Shows Width rounded to 1 decimal.<br>- `@(Name) @(Width)`: Combines Name and Width with a space.<br><br>**Modifiers:**<br>- `L`: Left characters (e.g., `:L5`)<br>- `R`: Right characters<br>- `#`: Round number (e.g., `:#0`)<br>- `T`: Token/Split (e.g., `:T1` gets the second word) |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Set Format Expression | Opens an interactive list of available properties in the command line history. Type the index number of the property you want to add or remove from the Format string. |\n\n## Settings Files\n- **Filename**: `HVAC.xml`\n- **Location**: `<company>\\TSL\\Settings`\n- **Purpose**: Defines default appearance settings, including:\n    - Text Height\n    - Arrow/Symbol Size\n    - Offset behavior (whether the tag snaps to the duct or stays where clicked)\n    - Colors and Transparency\n\n## Tips\n- **Building Format Strings**: Instead of typing complex syntax manually, use the **Set Format Expression** right-click option. It lists all available data fields (like Flow, Width, Height) and lets you add them by number.\n- **Automatic Snapping**: If the tag insertion point \"jumps\" to the duct centerline after you click, the `SymbolOffset` setting in your XML is enabled.\n- **Guide Lines**: If you place the tag far away from the duct, a guide line (leader line) will automatically draw connecting the text to the duct arrow.\n- **Moving Tags**: Use the grip point to drag the tag. If you drag it closer to a different duct section, it will automatically snap and update to reference that new section.\n\n## FAQ\n- **Q: How do I show the duct width in the tag?**\n  A: Select the tag, open the Properties Palette, and change the Format to `@(Width)`.\n- **Q: The tag disappeared. What happened?**\n  A: The tag relies on the linked HVAC entity. If the original HVAC duct was deleted or erased from the drawing, the tag will also be removed.\n- **Q: How do I round the dimensions shown in the text?**\n  A: Use the `#` or `RL` modifiers in the Format string. For example, use `@(Width:#0)` to round to the nearest whole number."
+      },
+      "tokens_used": 5437,
+      "error": null
+    }
+  }
+}

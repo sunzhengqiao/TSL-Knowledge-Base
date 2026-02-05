@@ -1,0 +1,339 @@
+{
+  "filename": "HSB_R-ChangeInternalSheeting.mcr",
+  "status": "completed",
+  "total_tokens": 47606,
+  "processing_time": 370.09363770484924,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8102,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly passes _kModelSpace to the dbCreate() function during insertion. It manipulates 3D model entities (Element, Beam, Sheet) by modifying properties like Material, Thickness, and Color. No usage of _kPaperSpace, Viewport handling, or sd_ prefixes."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Sheet"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing Elements with Sheets in the specified zone index.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5767,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"Select elements\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [\n    {\n      \"type\": \"showDialog\",\n      \"trigger\": \"On Insert (unless _kExecuteKey is set)\",\n      \"title\": \"Script Properties\",\n      \"dataSource\": \"OPM Properties\",\n      \"features\": {\n        \"searchable\": false,\n        \"multiSelect\": false\n      }\n    }\n  ],\n  \"opmProperties\": [\n    {\n      \"index\": 0,\n      \"variable\": \"znIndex\",\n      \"type\": \"PropInt\",\n      \"displayName\": \"Zone index\",\n      \"defaultValue\": \"0\",\n      \"inputType\": \"dropdown\",\n      \"options\": [\n        6,\n        7,\n        8,\n        9,\n        10\n      ],\n      \"category\": \"Selection\",\n      \"description\": \"Sets the zone to change\"\n    },\n    {\n      \"index\": 0,\n      \"variable\": \"beamCodeLowerSupportingBeam\",\n      \"type\": \"PropString\",\n      \"displayName\": \"Beamcode of lower supporting beam\",\n      \"defaultValue\": \"\",\n      \"inputType\": \"text\",\n      \"options\": [],\n      \"category\": \"Lower supporting beam\",\n      \"description\": \"Change material for sheeting below this beam.\"\n    },\n    {\n      \"index\": 1,\n      \"variable\": \"colorBelowSupportingBeam\",\n      \"type\": \"PropInt\",\n      \"displayName\": \"Color below supporting beam\",\n      \"defaultValue\": \"52\",\n      \"inputType\": \"number\",\n      \"options\": [],\n      \"category\": \"Lower supporting beam\",\n      \"description\": \"Sets the color of the sheeting below the specified supporting beam.\"\n    },\n    {\n      \"index\": 4,\n      \"variable\": \"nameBelowSupportingBeam\",\n      \"type\": \"PropString\",\n      \"displayName\": \"Name below supporting beam\",\n      \"defaultValue\": \"\",\n      \"inputType\": \"text\",\n      \"options\": [],\n      \"category\": \"Lower supporting beam\",\n      \"description\": \"Sets the name of the sheeting below the specified supporting beam.\"\n    },\n    {\n      \"index\": 1,\n      \"variable\": \"materialBelowSupportingBeam\",\n      \"type\": \"PropString\",\n      \"displayName\": \"Material below supporting beam\",\n      \"defaultValue\": \"\",\n      \"inputType\": \"text\",\n      \"options\": [],\n      \"category\": \"Lower supporting beam\",\n      \"description\": \"Sets the material of the sheeting below the specified supporting beam.\"\n    },\n    {\n      \"index\": "
+      },
+      "tokens_used": 8795,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Modifies the properties (material, thickness, color, naming) of internal sheeting layers within roof elements based on their spatial relationship to specific structural beams (e.g., knee walls or floor beams).",
+          "category": "Finishing/Sheeting",
+          "typicalUseCase": "Changing the lining material or thickness of roof insulation/boarding below a knee wall, above an attic floor, or between specific rafters/beams without redrawing the elements."
+        },
+        "parameters": [
+          {
+            "name": "znIndex",
+            "technicalDefault": "0 (First zone from dropdown)",
+            "businessMeaning": "Selects which specific sheeting layer (zone) within the roof construction to modify. Roof elements often have multiple sheeting layers (e.g., exterior sheathing, interior vapor barrier, insulation finish).",
+            "validRange": "Indices defined in the element's sheeting setup (usually 0, 1, or 2).",
+            "unit": "Index/Count",
+            "affectsOutput": "Determines which set of sheets in the model are selected for modification."
+          },
+          {
+            "name": "beamCodeLowerSupportingBeam",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Identifies a specific structural beam (e.g., a purlin, tie beam, or knee wall top plate) that acts as the lower boundary. Any sheets in the target zone located 'below' this beam will be modified.",
+            "validRange": "Any valid BeamCode string existing in the model (e.g., 'KNEE_WALL_TOP', 'FLOOR_BEAM').",
+            "unit": "String",
+            "affectsOutput": "Acts as a spatial filter. If empty, no 'below' modifications occur. The script finds beams matching this code and checks sheet positions relative to them."
+          },
+          {
+            "name": "beamCodeUpperSupportingBeam",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Identifies a specific structural beam that acts as the upper boundary. Any sheets in the target zone located 'above' this beam will be modified.",
+            "validRange": "Any valid BeamCode string existing in the model (e.g., 'COLLAR_TIE', 'RIDGE_BEAM').",
+            "unit": "String",
+            "affectsOutput": "Acts as a spatial filter. If empty, no 'above' modifications occur."
+          },
+          {
+            "name": "applyBetweenSupportingBeams",
+            "technicalDefault": "\"No\"",
+            "businessMeaning": "Activates the modification of sheets located between the defined Upper and Lower supporting beams. If 'Yes', these sheets receive the 'Between' properties regardless of vertical position relative to the beams.",
+            "validRange": "Yes / No",
+            "unit": "Enumeration",
+            "affectsOutput": "Switches the logic to apply the 'Between...' properties to the target sheets."
+          },
+          {
+            "name": "materialBelowSupportingBeam",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Assigns the material name (e.g., 'OSB', 'Gypsum', 'Insulation') to sheets located below the defined supporting beam.",
+            "validRange": "Any material name defined in the hsbCAD catalogs.",
+            "unit": "String",
+            "affectsOutput": "Updates the material property and rendering of the sheet."
+          },
+          {
+            "name": "materialAboveSupportingBeam",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Assigns the material name to sheets located above the defined supporting beam.",
+            "validRange": "Any material name defined in the hsbCAD catalogs.",
+            "unit": "String",
+            "affectsOutput": "Updates the material property and rendering of the sheet."
+          },
+          {
+            "name": "materialBetweenSupportingBeam",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Assigns the material name to sheets located between the defined supporting beams.",
+            "validRange": "Any material name defined in the hsbCAD catalogs.",
+            "unit": "String",
+            "affectsOutput": "Updates the material property and rendering of the sheet."
+          },
+          {
+            "name": "thicknessBelowSupportingBeam",
+            "technicalDefault": "11 mm",
+            "businessMeaning": "Sets the geometric thickness of the sheets below the supporting beam.",
+            "validRange": "Typical boarding thicknesses (e.g., 12.5mm for plasterboard, 18mm for OSB, up to 200mm for rigid insulation).",
+            "unit": "mm",
+            "affectsOutput": "Modifies the 3D body of the sheet. Crucially, it shifts the sheet position to maintain the correct face alignment (moving the opposite face)."
+          },
+          {
+            "name": "thicknessAboveSupportingBeam",
+            "technicalDefault": "11 mm",
+            "businessMeaning": "Sets the geometric thickness of the sheets above the supporting beam.",
+            "validRange": "Typical boarding thicknesses.",
+            "unit": "mm",
+            "affectsOutput": "Modifies the 3D body of the sheet and shifts its position."
+          },
+          {
+            "name": "thicknessBetweenSupportingBeam",
+            "technicalDefault": "11 mm",
+            "businessMeaning": "Sets the geometric thickness of the sheets between the supporting beams.",
+            "validRange": "Typical boarding thicknesses.",
+            "unit": "mm",
+            "affectsOutput": "Modifies the 3D body of the sheet and shifts its position."
+          },
+          {
+            "name": "colorBelowSupportingBeam",
+            "technicalDefault": "52",
+            "businessMeaning": "Sets the CAD display color (index) for the sheets below the beam.",
+            "validRange": "0-255 (AutoCAD color index).",
+            "unit": "Index",
+            "affectsOutput": "Visual representation in the 3D model and drawings."
+          },
+          {
+            "name": "nameBelowSupportingBeam",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Assigns a descriptive name to the sheet entity below the beam.",
+            "validRange": "String",
+            "unit": "String",
+            "affectsOutput": "Data management and listing properties."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "applyBetweenSupportingBeams set to 'Yes'",
+            "effect": "Enables the modification of sheets based on the 'Between' property set (Material, Thickness, Name, etc.) rather than just relative to the beams.",
+            "cascade": [
+              "materialBetweenSupportingBeam",
+              "thicknessBetweenSupportingBeam",
+              "colorBetweenSupportingBeam",
+              "nameBetweenSupportingBeam"
+            ]
+          },
+          {
+            "trigger": "beamCodeLowerSupportingBeam or beamCodeUpperSupportingBeam is empty",
+            "effect": "The script will skip the logic for modifying sheets relative to that specific beam (Below or Above).",
+            "cascade": [
+              "materialBelowSupportingBeam",
+              "thicknessBelowSupportingBeam",
+              "materialAboveSupportingBeam",
+              "thicknessAboveSupportingBeam"
+            ]
+          },
+          {
+            "trigger": "Modification of 'Thickness' properties",
+            "effect": "The script automatically calculates a transformation to shift the sheet geometry. This ensures the sheet stays in the correct plane (usually the exterior or interior face) rather than expanding equally in both directions which would misalign it with other elements.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Sheet",
+            "description": "Existing sheet entities within the selected Element are modified. Their material, dimensions, and metadata properties are updated.",
+            "appliedTo": "Sheets belonging to the selected Element(s) that match the Zone Index and spatial criteria (Above, Below, or Between beams)."
+          }
+        ]
+      },
+      "tokens_used": 8392,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Started",
+          "Check for Execute Key (_kExecuteKey)",
+          "If Execute Key exists, load properties from corresponding catalog",
+          "Check Insertion Cycle Count",
+          "If Cycle Count > 1, erase instance and exit (prevent duplicate processing)",
+          "Check if Dialog is needed (No Execute Key or Key not in catalog)",
+          "Display Properties Dialog (OPM) for user configuration",
+          "Save current settings to '_LastInserted' catalog",
+          "Prompt user to Select Elements",
+          "Iterate through selected Elements",
+          "Create script instance attached to each Element in ModelSpace",
+          "Erase original temporary instance",
+          "Child Instance Loaded for Element",
+          "Check Element validity",
+          "Load properties from '_LastInserted' catalog (if manually inserted)",
+          "Resolve logical properties (e.g., parse 'Yes/No' strings)",
+          "Calculate Zone Index (normalize indices > 5)",
+          "Search Element for Beams matching 'Beamcode of lower supporting beam'",
+          "Search Element for Beams matching 'Beamcode of upper supporting beam'",
+          "Filter Beams: Ensure they are perpendicular to Element Y-axis",
+          "Retrieve all Sheets in the specified Zone Index",
+          "Iterate through each Sheet",
+          "Apply 'Between' Properties (if active)",
+          "Check spatial relationship to Lower Supporting Beam (if found)",
+          "Apply 'Below' Properties if Sheet Center is below Lower Beam",
+          "Check spatial relationship to Upper Supporting Beam (if found)",
+          "Apply 'Above' Properties if Sheet Center is above Upper Beam",
+          "Update Sheet Thickness and Geometry (transform position if needed)",
+          "Script Complete (Instance remains attached to Element)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Apply Between Sheets Property (applyBetweenSupportingBeams)",
+            "path1": {
+              "name": "Yes",
+              "steps": [
+                "For all sheets in zone: Set Material, Name, Grade, Color, etc., to 'Between' values",
+                "Check if thickness changed",
+                "Update thickness and shift sheet geometry along -elZ to maintain position"
+              ]
+            },
+            "path2": {
+              "name": "No",
+              "steps": [
+                "Skip 'Between' property assignment",
+                "Proceed to check beam-specific (Above/Below) conditions"
+              ]
+            }
+          },
+          {
+            "condition": "Lower Supporting Beam Found",
+            "path1": {
+              "name": "Beam Found",
+              "steps": [
+                "Calculate vector difference (BeamCenter - SheetCenter)",
+                "Project onto Element Y-axis",
+                "If result > 0 (Sheet is below Beam in local coords): Apply 'Below' properties"
+              ]
+            },
+            "path2": {
+              "name": "Beam Not Found",
+              "steps": [
+                "Skip modification based on lower beam logic"
+              ]
+            }
+          },
+          {
+            "condition": "Upper Supporting Beam Found",
+            "path1": {
+              "name": "Beam Found",
+              "steps": [
+                "Calculate vector difference (BeamCenter - SheetCenter)",
+                "Project onto Element Y-axis",
+                "If result < 0 (Sheet is above Beam in local coords): Apply 'Above' properties"
+              ]
+            },
+            "path2": {
+              "name": "Beam Not Found",
+              "steps": [
+                "Skip modification based on upper beam logic"
+              ]
+            }
+          },
+          {
+            "condition": "Zone Index Input",
+            "path1": {
+              "name": "Index <= 5",
+              "steps": [
+                "Use index as is to select sheet layer"
+              ]
+            },
+            "path2": {
+              "name": "Index > 5",
+              "steps": [
+                "Calculate Zone = 5 - Index",
+                "Use calculated zone to select sheet layer"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insertion Cycle Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script automatically erases duplicate instances on re-insertion or recalculation loops."
+          },
+          {
+            "check": "Element Selection",
+            "errorMessage": "invalid or no element selected.",
+            "recovery": "User must select valid Element entities in ModelSpace. Script erases itself if selection is empty."
+          },
+          {
+            "check": "Beam Orientation",
+            "errorMessage": "None (Silent)",
+            "recovery": "Beams matching the code but running parallel to the Element's Y-axis are ignored, as they cannot serve as a 'height' reference."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify OPM Properties",
+            "how": "Select the Element and change the TSL instance properties in the Properties Palette (OPM)",
+            "effect": "The script recalculates and applies new material, color, or thickness settings to the sheets immediately."
+          },
+          {
+            "action": "Recalculate Script",
+            "how": "Right-click context menu -> 'Recalculate'",
+            "effect": "Re-runs the logic, useful if the underlying Element geometry changed or beams were added/removed."
+          },
+          {
+            "action": "Change Beam Codes",
+            "how": "Edit the 'Beamcode of lower/upper supporting beam' fields in OPM to target different structural members",
+            "effect": "The script targets the new beams for the spatial filtering logic."
+          }
+        ]
+      },
+      "tokens_used": 8993,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_R-ChangeInternalSheeting.mcr\n\n## Overview\nThis script modifies the properties of internal sheeting layers (such as insulation or boarding) within roof elements based on their spatial relationship to specific structural beams (e.g., knee walls, purlins, or floor beams). It allows you to automatically change materials, thickness, colors, and names for sheets located below, above, or between defined support beams.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be inserted into the model. |\n| Paper Space | No | Not applicable for layouts. |\n| Shop Drawing | No | Not applicable for shop drawings. |\n\n## Prerequisites\n- **Required Entities**: At least one Element (e.g., Roof or Wall) containing internal sheeting layers.\n- **Supporting Beams**: Structural beams with specific BeamCodes assigned to act as references (if using \"Below\" or \"Above\" logic).\n- **Settings**: Standard hsbCAD catalogs must contain the materials you wish to assign.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command:** `TSLINSERT`\n**Action:** Select `HSB_R-ChangeInternalSheeting.mcr` from the file dialog.\n\n### Step 2: Select Elements\n```\nCommand Line: Select elements\nAction: Click on the Element(s) in the model that contain the sheeting you wish to modify and press Enter.\n```\n\n### Step 3: Configure Properties\n**Action:** After insertion, select the Element and open the **Properties Palette** (Ctrl+1). Scroll down to the \"TSL\" or \"Script\" section to configure the parameters (Zone Index, BeamCodes, Materials, etc.).\n\n### Step 4: Apply Changes\n**Action:** Change a property value (e.g., Material or Thickness) in the palette. The script will automatically update the sheets in the model. If automatic updates are disabled, right-click the Element and select **Recalculate**.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Zone index** | dropdown | 6 | Selects which specific sheeting layer (zone) within the construction to modify. Options: 6, 7, 8, 9, 10. |\n| **Beamcode of lower supporting beam** | text | (Empty) | Enter the BeamCode of the beam acting as the lower boundary (e.g., \"FLOOR_BEAM\"). |\n| **Material below supporting beam** | text | (Empty) | Sets the material name for sheets located below the lower beam. |\n| **Thickness below supporting beam** | number | 11 mm | Sets the geometric thickness for sheets below the lower beam. |\n| **Color below supporting beam** | integer | 52 | Sets the display color index (0-255) for sheets below the lower beam. |\n| **Name below supporting beam** | text | (Empty) | Assigns a custom name to the sheet entity below the lower beam. |\n| **Beamcode of upper supporting beam** | text | (Empty) | Enter the BeamCode of the beam acting as the upper boundary. |\n| **Material above supporting beam** | text | (Empty) | Sets the material name for sheets located above the upper beam. |\n| **Thickness above supporting beam** | number | 11 mm | Sets the geometric thickness for sheets above the upper beam. |\n| **Color above supporting beam** | integer | 52 | Sets the display color index for sheets above the upper beam. |\n| **Name above supporting beam** | text | (Empty) | Assigns a custom name to the sheet entity above the upper beam. |\n| **Apply Between Supporting Beams** | dropdown | No | If \"Yes\", applies the \"Between\" properties to sheets between the defined beams. |\n| **Material between supporting beam** | text | (Empty) | Sets the material for sheets between the beams (when Apply Between is Yes). |\n| **Thickness between supporting beam** | number | 11 mm | Sets the thickness for sheets between the beams. |\n| **Color between supporting beam** | integer | 52 | Sets the color for sheets between the beams. |\n| **Name between supporting beam** | text | (Empty) | Assigns a name for sheets between the beams. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Re-runs the script logic. Use this if you have manually changed BeamCodes in the model or modified the Element geometry. |\n| Erase | Removes the script instance from the Element (does not delete the sheets themselves). |\n\n## Settings Files\n- **Catalog Name**: `_LastInserted`\n- **Location**: Internal hsbCAD Catalog\n- **Purpose**: Stores the last used configuration (Material, Thickness, Codes) so that the next time you insert the script, it remembers your previous settings.\n\n## Tips\n- **Thickness Update Behavior**: When you change the thickness, the script shifts the sheet geometry to maintain the correct face alignment (usually the interior face), rather than expanding equally in both directions.\n- **Beam Orientation**: The script logic works best when the supporting beams are perpendicular to the Element's Y-axis. Beams running parallel to the main element axis are ignored as height references.\n- **Zone Selection**: Ensure the \"Zone index\" matches the actual sheeting layer index generated by your wall/roof construction preset. (e.g., If your exterior sheathing is layer 0 and your interior lining is layer 1, select the appropriate index from the list).\n- **Finding BeamCodes**: If you don't know the BeamCode of your support beam, select the beam in the model and check its Properties under \"General\" or \"Identification\" properties.\n\n## FAQ\n- **Q: Why didn't my sheets change color or material?**\n- **A:** Check that the **Zone index** corresponds to the sheet layer you intend to change. Also, verify that the **Beamcode** entered exactly matches the code of the supporting beams in your model (case-sensitive).\n- **Q: What happens if I leave the Beamcode fields empty?**\n- **A:** The script will skip the logic for \"Above\" and \"Below\" modifications. It will only process the \"Between\" logic if that option is enabled.\n- **Q: How does the script define \"Below\" or \"Above\"?**\n- **A:** It calculates the center point of the sheet and compares it to the center point of the supporting beam along the Element's Y-axis (vertical/horizontal orientation)."
+      },
+      "tokens_used": 7557,
+      "error": null
+    }
+  }
+}

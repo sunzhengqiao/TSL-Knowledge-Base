@@ -1,0 +1,242 @@
+{
+  "filename": "HSB_R-Tube.mcr",
+  "status": "completed",
+  "total_tokens": 52994,
+  "processing_time": 311.12059473991394,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9447,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script generates 3D geometry (GenBeam, Beam, Sheet, Body) and applies CNC tooling (Cut, Drill). It uses 'dbCreate' for entity creation which defaults to Model Space. There are no references to 'sd_' prefixes, 'Multipage', '_Viewport', or '#Type E' which are indicative of Paper Space or Shop Drawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Must be attached to a roof element (Element) which provides the coordinate system and geometry for the tube insertion.",
+          "requiredSettings": [
+            "HSB_G-FilterGenBeams (optional filter)"
+          ]
+        }
+      },
+      "tokens_used": 5828,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10178,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Inserts a ventilation or service tube (chimney/soil stack) through a roof element, including structural framing (trimmers), sheathing cutouts, and CNC tooling.\",\n    \"category\": \"Framing / Hardware\",\n    \"typicalUseCase\": \"Adding a roof penetration for ventilation pipes or flues, ensuring structural support is added around the opening and the sheathing is cut correctly.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"tubeDiameter\",\n      \"technicalDefault\": \"U(100)\",\n      \"businessMeaning\": \"The physical outer diameter of the tube being installed.\",\n      \"validRange\": \"50 - 500\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Defines the size of the cutouts in rafters/sheets and the size of the opening framed by trimmers.\"\n    },\n    {\n      \"name\": \"lengthExtension\",\n      \"technicalDefault\": \"U(0)\",\n      \"businessMeaning\": \"Additional length added to the tube geometry beyond the roof surface intersection.\",\n      \"validRange\": \"0 - 1000\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Visually extends the tube model to ensure it protrudes through insulation or roofing tiles.\"\n    },\n    {\n      \"name\": \"angleToVertical\",\n      \"technicalDefault\": \"U(0)\",\n      \"businessMeaning\": \"The deviation angle from vertical (plumb) for the tube installation.\",\n      \"validRange\": \"0 - 90\",\n      \"unit\": \"degrees\",\n      \"affectsOutput\": \"Rotates the tube. If 0, the tube is plumb. If non-zero (matching roof pitch), the tube is perpendicular to the roof surface.\"\n    },\n    {\n      \"name\": \"referencePosition\",\n      \"technicalDefault\": \"\\\"\\\"\",\n      \"businessMeaning\": \"The vertical reference line used to calculate the insertion point (e.g., Eaves, Ridge, Valley).\",\n      \"validRange\": \"N/A (Dropdown)\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Determines where the tube is placed along the slope of the roof relative to key structural lines.\"\n    },\n    {\n      \"name\": \"offsetFromLeft / offsetFromRight\",\n      \"technicalDefault\": \"U(0)\",\n      \"businessMeaning\": \"Horizontal distance from the selected insertion point to the center of the tube.\",\n      \"validRange\": \"Unlimited\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Shifts the entire tube and framing assembly horizontally.\"\n    },\n    {\n      \"name\": \"applyHorizontalTrimmers\",\n      \"technicalDefault\": \"1\",\n      \"businessMeaning\": \"Enable/disable the creation of top and bottom framing timbers (trimmers) parallel to the rafters.\",\n      \"validRange\": \"0/1\",\n      \"unit\": \"Boolean\",\n      \"affectsOutput\": \"If true, creates beams to frame the top and bottom of the tube opening.\"\n    },\n    {\n      \"name\": \"applyVerticalTrimmers\",\n      \"technicalDefault\": \"1\",\n      \"businessMeaning\": \"Enable/disable the creation of side framing timbers (studs/trimmers) perpendicular to the rafters.\",\n      \"validRange\": \"0/1\",\n      \"unit\": \"Boolean\",\n      \"affectsOutput\": \"If true, creates beams to frame the left and right sides of the tube opening.\"\n    },\n    {\n      \"name\": \"dBmW\",\n      \"technicalDefault\": \"U(45)\",\n      \"businessMeaning\": \"The width (thickness) of the trimmer beams being inserted.\",\n      \"validRange\": \"36 - 100\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Controls the cross-sectional width of the generated framing beams.\"\n    },\n    {\n      \"name\": \"dHTrimmers\",\n      \"technicalDefault\": \"U(-1)\",\n      \"businessMeaning\": \"The height of the trimmer beams. A value of -1 matches the height of the parent roof beam.\",\n      \"validRange\": \"-1 or 45 - 300\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Controls the cross-sectional height of the generated framing beams.\"\n    },\n    {\n      \"name\": \"splitRafters\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"Structural option to cut the existing roof rafters in two at the tube location rather than just drilling a hole.\",\n      \"validRange\": \"0/1\",\n      \"unit\": \"Boolean\",\n      \"affectsOutput\": \"If true, modifies existing geometry by splitting rafters and stretching them to the trimmers.\"\n    },\n    {\n      \"name\": \"createTubeAsBeam\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"Represents the tube as a Beam entity (for listing/material tracking) instead of just a graphical body.\",\n      \"validRange\": \"0/1\",\n      \"unit\": \"Boolean\",\n      \"affectsOutput\": \"Creates a GenBeam with a round profile instead of a simple Body or Hardware.\"\n    },\n    {\n      \"name\": \"applySheet\",\n      \"technicalDefault\": \"1\",\n      \"businessMeaning\": \"Controls whether the roof sheathing (sheeting) is cut to accommodate the tube.\",\n      \"validRange\": \"0/1\",\n      \"unit\": \"Boolean\",\n      \"affectsOutput\": \"Adds CNC cutouts to the sheeting layer specified.\"\n    },\n    {\n      \"name\": \"sheetZone\",\n      \"technicalDefault\": \"5\",\n      \"businessMeaning\": \"The specific layer/zone of the roof sheathing to be cut (e.g., Zone 5 for top layer).\",\n      \"validRange\": \"0 - 10\",\n      \"unit\": \"Integer\",\n      \"affectsOutput\": \"Targets the machining tool to the correct sheet material.\"\n    },\n    {\n      \"name\": \"integratedTimberTslCatalog\",\n      \"technicalDefault\": \"\\\"\\\"\",\n      \"businessMeaning\": \"Specifies a joinery catalog (e.g., for dovetails/tenons) to automatically machine connections between new trimmers and existing rafters.\",\n      \"validRange\": \"N/A (Catalog Name)\",\n      \"unit\": \"String\",\n      \"affectsOutput"
+      },
+      "tokens_used": 9758,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Initialization: Clear previous maps/entities and load OPM properties.",
+          "Element Selection: User selects a roof element to provide the coordinate system.",
+          "Geometry Calculation: Calculate insertion point based on reference position (Eaves/Ridge), offsets, and roof pitch.",
+          "Validation: Verify if the calculated origin is still within the element profile (checks for corrupt copy/mirror instances).",
+          "Profile Definition: Determine tube cross-section shape (Circle vs. Rectangle/Oval) based on width vs. height input.",
+          "Reference Point Projection: Project the insertion point onto the roof surface using the specified reference line.",
+          "Trimmer Calculation: Calculate start/end points and vectors for horizontal (top/bottom) and vertical (left/right) trimmers.",
+          "Rafter Interaction: Identify rafters intersecting the tube volume.",
+          "Entity Generation Phase 1 (Structural):",
+          "  - Create Horizontal Trimmers (if enabled).",
+          "  - Create Vertical Trimmers (if enabled).",
+          "  - Apply Flipped Trimmer logic (if enabled and vertical trimmers exist).",
+          "  - If 'splitRafters' is True: Split existing rafters, create new beam segments, and stretch them to the new trimmers.",
+          "  - If 'splitRafters' is False: Drill/Cut holes in existing rafters.",
+          "  - Apply Integrated Timber TSL (if catalog specified) to machine trimmer connections.",
+          "Entity Generation Phase 2 (Tube):",
+          "  - Calculate tube body geometry based on angle and length.",
+          "  - If 'createTubeAsBeam': Create a GenBeam with round profile and cuts.",
+          "  - If 'createTubeSectionAsSheet': Create a Sheet entity representing the tube cross-section.",
+          "  - Else: Create Hardware and graphical Body representation.",
+          "Entity Generation Phase 3 (Sheeting):",
+          "  - Identify sheeting layers in specified zones (internal/external/top sheet).",
+          "  - Apply profile cutouts to sheeting based on tube shape.",
+          "  - Cut counter-battens/tile laths if applicable.",
+          "Finalization: Assign materials, labels, colors, and Hardware data. Update Map keys for comparison."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Profile Shape Calculation",
+            "path1": {
+              "name": "Circular Profile",
+              "steps": [
+                "Condition: Width equals Height.",
+                "Action: Generate circular geometry.",
+                "Tooling: Use standard drilling/circular cutout tools."
+              ]
+            },
+            "path2": {
+              "name": "Rectangular/Oval Profile",
+              "steps": [
+                "Condition: Width does not equal Height.",
+                "Action: Generate FreeProfile (arc approximations or rectangle).",
+                "Tooling: Use FreeProfile cutouts. Apply specific rectangular offsets if shape is box-type."
+              ]
+            }
+          },
+          {
+            "condition": "Rafter Modification Strategy",
+            "path1": {
+              "name": "Split Rafters",
+              "steps": [
+                "Condition: 'splitRafters' property is True.",
+                "Action: Cut existing rafters at intersection.",
+                "Result: Create new rafter segments that stretch to the horizontal trimmers, effectively cutting the opening."
+              ]
+            },
+            "path2": {
+              "name": "Drill Rafters",
+              "steps": [
+                "Condition: 'splitRafters' property is False.",
+                "Action: Keep rafters continuous.",
+                "Result: Drill holes (or profile cutouts) through the rafters for the tube to pass through."
+              ]
+            }
+          },
+          {
+            "condition": "Vertical Trimmer Orientation",
+            "path1": {
+              "name": "Standard Vertical",
+              "steps": [
+                "Condition: 'applyFlippedTrimmers' is False.",
+                "Action: Create vertical trimmers standing upright (width/thickness is horizontal)."
+              ]
+            },
+            "path2": {
+              "name": "Flipped Vertical",
+              "steps": [
+                "Condition: 'applyFlippedTrimmers' is True AND Vertical Trimmers are applied.",
+                "Action: Create vertical trimmers laying flat (width/thickness is vertical)."
+              ]
+            }
+          },
+          {
+            "condition": "Tube Entity Type",
+            "path1": {
+              "name": "Beam Representation",
+              "steps": [
+                "Condition: 'createTubeAsBeam' is True.",
+                "Action: Use GenBeam with Round ExtrProfile.",
+                "Usage: Appears in BOMs/lists as a beam."
+              ]
+            },
+            "path2": {
+              "name": "Hardware/Sheet Representation",
+              "steps": [
+                "Condition: 'createTubeAsBeam' is False.",
+                "Action: Create Body or Sheet entity + HardWrComp.",
+                "Usage: Treated as accessory/hardware."
+              ]
+            }
+          },
+          {
+            "condition": "Origin Validation (Instance Integrity)",
+            "path1": {
+              "name": "Valid",
+              "steps": [
+                "Condition: Calculated origin is within the element's profile polygon.",
+                "Action: Continue script execution."
+              ]
+            },
+            "path2": {
+              "name": "Invalid / Corrupt",
+              "steps": [
+                "Condition: Calculated origin is outside the element's profile.",
+                "Action: Erase the TSL instance immediately to prevent errors.",
+                "Context: Prevents issues after mirroring or copying elements."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Origin in Profile",
+            "errorMessage": "(None, silent failure)",
+            "recovery": "The script self-destructs (erases instance) if the insertion point calculation lands outside the element bounds. User must re-insert on a valid element or undo mirroring."
+          },
+          {
+            "check": "Horizontal Trimmer Availability",
+            "errorMessage": "Potential generation failure for vertical trimmers.",
+            "recovery": "Vertical trimmers require horizontal trimmers to stretch against. Ensure horizontal trimmers are enabled or present."
+          },
+          {
+            "check": "Sheet/Body Volume/Area",
+            "errorMessage": "Entities not created.",
+            "recovery": "Checks against 'volumeTolerance' and 'areaTolerance'. If the calculated tube or sheet is too small, it is skipped. Adjust diameter/height."
+          },
+          {
+            "check": "Element Handle",
+            "errorMessage": "Map reconstruction errors.",
+            "recovery": "The script checks the TSL handle to decide whether to recreate split entities from the map or use current geometry (prevents duplication on copy)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Geometry Parameters",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changing 'tubeDiameter', 'angleToVertical', 'offsets', or 'lengthExtension' triggers recalculation of the tube body and all associated cuts/trimmers."
+          },
+          {
+            "action": "Toggle Structural Options",
+            "how": "Properties Palette (OPM)",
+            "effect": "Toggling 'splitRafters' or 'applyHorizontalTrimmers' regenerates the framing—either drilling holes or splitting beams and adding new trimmer beams."
+          },
+          {
+            "action": "Change Appearance/BOM",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changing 'createTubeAsBeam' swaps the tube entity type between a Beam (for listing) and a Hardware/Body (for visualization)."
+          },
+          {
+            "action": "Apply Joinery",
+            "how": "Properties Palette (OPM) - 'integratedTimberTslCatalog'",
+            "effect": "Clones a specified TSL (e.g., dovetail script) onto the new trimmers to create machineable connections."
+          },
+          {
+            "action": "Delete Instance",
+            "how": "AutoCAD Erase or Context Menu",
+            "effect": "Removes the TSL. The script attempts to restore split rafters to their original state using stored map data before deleting the generated trimmers."
+          },
+          {
+            "action": "Copy to Element",
+            "how": "Right-click Context Menu (Custom Option)",
+            "effect": "Prompts user to select a new element and duplicates the tube configuration to that element."
+          }
+        ]
+      },
+      "tokens_used": 10602,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_R-Tube\n\n## Overview\nInserts a ventilation or service tube (chimney/soil stack) through a roof element. It automatically generates structural framing trimmers, cuts holes in rafters/sheathing, and applies CNC tooling based on specified dimensions.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Generates 3D beams, sheets, and bodies. |\n| Paper Space | No | Not designed for 2D shop drawings. |\n| Shop Drawing | No | Model-space script only. |\n\n## Prerequisites\n- **Required Entities**: A Roof Element (e.g., `Element` or flat roof).\n- **Minimum Beam Count**: 1 (The element must contain structural beams to trim or drill).\n- **Required Settings**: None strictly required, though a Joinery Catalog file is needed if using the integrated timber connections option.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_R-Tube.mcr` from the list.\n\n### Step 2: Select Roof Element\n```\nCommand Line: Select Roof Element:\nAction: Click on the roof element (or the surface of the element) where you want to insert the tube.\n```\nThe script will attach to the element and generate initial geometry at the origin (0,0) of that element's coordinate system.\n\n### Step 3: Configure Position\n1. Select the inserted script instance.\n2. Open the **Properties Palette** (Ctrl+1).\n3. Adjust the **Reference Position** (e.g., Eaves, Ridge) to align the insertion logic.\n4. Set **OffsetFromLeft** and **OffsetFromRight** to move the tube to the desired location on the roof slope.\n\n### Step 4: Adjust Geometry and Structure\n1. Modify **Tube Diameter** to match your specific pipe size.\n2. Toggle **Apply Horizontal Trimmers** and **Apply Vertical Trimmers** as needed for structural support.\n3. Set **Split Rafters** to `Yes` to cut existing rafters and frame the opening, or `No` to simply drill holes through them.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **TubeDiameter** | Number | 100 mm | The outer diameter (or width if rectangular) of the tube. Defines cutout sizes. |\n| **LengthExtension** | Number | 0 mm | Additional length added to the tube model beyond the roof surface (useful for insulation/flashings). |\n| **AngleToVertical** | Number | 0° | Tilt of the tube. 0° = Plumb (vertical). Set to roof pitch to make tube perpendicular to the roof surface. |\n| **ReferencePosition** | Dropdown | Eaves | Determines the reference line for calculating the tube's insertion point (e.g., Eaves, Ridge, Valley). |\n| **OffsetFromLeft** | Number | 0 mm | Horizontal distance from the reference line to the tube center. |\n| **OffsetFromRight** | Number | 0 mm | Horizontal offset from the right reference point. |\n| **ApplyHorizontalTrimmers** | Boolean | Yes | Creates top and bottom trimmers parallel to the rafters. |\n| **ApplyVerticalTrimmers** | Boolean | Yes | Creates side trimmers (studs) perpendicular to the rafters. |\n| **dBmW** (Trimmer Width) | Number | 45 mm | The width/thickness of the generated trimmer beams. |\n| **dHTrimmers** (Trimmer Height) | Number | -1 mm | The height of the trimmer beams. A value of -1 matches the parent rafter height. |\n| **SplitRafters** | Boolean | No | If Yes, cuts existing rafters and creates new segments stopping at the trimmers. If No, drills holes through rafters. |\n| **CreateTubeAsBeam** | Boolean | No | If Yes, creates the tube as a structural GenBeam (for BOM listing). If No, creates it as a graphical Hardware body. |\n| **ApplySheet** | Boolean | Yes | If Yes, cuts the roof sheathing to accommodate the tube. |\n| **SheetZone** | Integer | 5 | Specifies which layer of the roof sheathing (e.g., top layer) to cut. |\n| **IntegratedTimberTslCatalog** | String | (Empty) | Name of a joinery catalog (e.g., dovetails) to apply auto-connections between trimmers and rafters. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Copy to Element** | Prompts you to select a different roof element and duplicates the current tube configuration to the new element. |\n| **Recalculate** | Refreshes the script geometry based on current property values (useful if manual edits broke associations). |\n| **Erase** | Deletes the script instance. If rafters were split, the script attempts to restore/merge them back into their original state. |\n\n## Settings Files\n- **Beam Filters**: `HSB_G-FilterGenBeams` (Optional)\n  - Used if you need to filter which specific beams within the element are treated as rafters for trimming/drilling.\n- **Joinery Catalogs**: User-defined catalogs (e.g., `.cat` or specific TSL catalogs).\n  - Referenced by the `IntegratedTimberTslCatalog` property to add woodworking joints to the trimmers.\n\n## Tips\n- **Splitting vs. Drilling**: Use **Split Rafters** (`Yes`) for large openings that require structural headers. Use **Drill** (`No`) for small vents where keeping the rafter continuous is acceptable.\n- **Vertical vs. Perpendicular**: Most ventilation pipes need to be plumb (`AngleToVertical` = 0). However, some flues must exit perpendicular to the roof surface; set `AngleToVertical` to your roof pitch angle in this case.\n- **Mirroring Roofs**: If you mirror a roof element that contains this script, the script may self-delete if the new insertion point falls outside the element profile. Simply re-run the script on the mirrored element.\n- **Oval Tubes**: You can create a rectangular or oval profile by setting the `TubeDiameter` (Width) and ensuring a secondary height dimension is active (if the script supports separate height inputs, otherwise it assumes circular based on available parameters).\n\n## FAQ\n- **Q: Why did my roof rafters disappear or get split unexpectedly?**\n  - A: You likely have the **Split Rafters** property set to `Yes`. Change it to `No` if you only want a hole drilled through the rafters without cutting them into segments.\n- **Q: The tube is not cutting through the roof sheathing.**\n  - A: Check that **ApplySheet** is set to `Yes` and verify that the **SheetZone** number corresponds to the layer where your sheathing exists.\n- **Q: I copied the script to another roof, but it positioned wrong.**\n  - A: The position depends on the **Reference Position** and **Offsets**. Since different roof elements may have different lengths/widths, the same offset value might place the tube in a different relative spot. Adjust the **OffsetFromLeft** property for the new instance."
+      },
+      "tokens_used": 7181,
+      "error": null
+    }
+  }
+}

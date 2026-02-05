@@ -1,0 +1,304 @@
+{
+  "filename": "NA_GROUP_WALLS_FOR_SHOP_DRAWINGS.mcr",
+  "status": "completed",
+  "total_tokens": 23761,
+  "processing_time": 509.19798016548157,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2930,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses PrEntity with ElementWallSF() to select elements from the drawing during _bOnInsert. It uses Display dp(-1) to draw the combined outline directly into the 3D model. It manipulates _Element[] manually and writes to _ThisInst.setSubMapX, which is characteristic of a Model Space utility script used to prepare data (group walls) for downstream processes, rather than a script that generates layout views."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "ElementWall"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (Walls must exist in the model to be selected)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3200,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\n Select wall(s) to display in a shop drawing as a group",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "Add wall(s)",
+            "handler": "addWalls",
+            "action": "Prompts user to select additional walls to append to the group.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Remove wall(s)",
+            "handler": "removeWalls",
+            "action": "Prompts user to select walls to remove from the group.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 2366,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Groups multiple wall elements together into a single logical entity to be processed by downstream shop drawing scripts, and provides a visual outline of the combined walls in the model.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Used when a set of adjacent or related walls needs to be detailed on a single shop drawing or layout, rather than detailing them individually. It defines the 'collective' wall data structure."
+        },
+        "parameters": [
+          {
+            "name": "Wall Selection (Insertion)",
+            "technicalDefault": "Prompt Required",
+            "businessMeaning": "The initial selection of wall elements that define the group to be detailed.",
+            "validRange": "1 or more Wall Elements",
+            "unit": "Count",
+            "affectsOutput": "Initializes the group list stored in the script instance and defines the initial geometry for the visual outline drawn in the model."
+          },
+          {
+            "name": "Add wall(s)",
+            "technicalDefault": "N/A",
+            "businessMeaning": "Command to expand the current group by appending additional wall elements selected from the model.",
+            "validRange": "1 or more valid Wall Elements not currently in the group",
+            "unit": "Count",
+            "affectsOutput": "Updates the internal list of grouped walls and redraws the visual outline to include the new geometry."
+          },
+          {
+            "name": "Remove wall(s)",
+            "technicalDefault": "N/A",
+            "businessMeaning": "Command to shrink the current group by removing specific wall elements from the selection.",
+            "validRange": "1 or more Wall Elements currently in the group",
+            "unit": "Count",
+            "affectsOutput": "Updates the internal list of grouped walls and redraws the visual outline to exclude the removed geometry."
+          },
+          {
+            "name": "Outline Offset (Hardcoded)",
+            "technicalDefault": "U(0.5)",
+            "businessMeaning": "A fixed visual inset applied to the wall outline perimeter before drawing the group outline.",
+            "validRange": "Fixed at 0.5 length units",
+            "unit": "Length (Model Units)",
+            "affectsOutput": "The visual outline (DASHED2) drawn in 3D model space is slightly smaller than the actual wall footprint to clean up corner intersections visually."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Attempting to add/select a wall that is already grouped in another instance",
+            "effect": "The script detects a conflict via the 'mpElementShop' map check, reports the specific wall numbers and the conflicting group, and then erases itself (aborts).",
+            "cascade": [
+              "_Element",
+              "mpElementShop",
+              "Instance Existence"
+            ]
+          },
+          {
+            "trigger": "Removing all walls from the group",
+            "effect": "The script detects the count is < 1 and erases the instance.",
+            "cascade": [
+              "Instance Existence"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Map Data",
+            "description": "Creates a sub-map named 'mpElementShop' on the script instance containing an array of the grouped Entity handles. This acts as the data source for shop drawing generation.",
+            "appliedTo": "The Script Instance (TslInst)"
+          },
+          {
+            "type": "3D Geometry (Visual)",
+            "description": "Draws the combined, slightly shrunken outline of all grouped walls in the model using a Dashed line type. Also assigns the walls to an Element Group for CAD organization.",
+            "appliedTo": "Model Space (Display dp -1)"
+          }
+        ]
+      },
+      "tokens_used": 4995,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution initiated",
+          "Check insertCycleCount; if > 1, erase instance immediately",
+          "Prompt user to select initial wall(s) via PrEntity",
+          "Validate selection: If no walls selected, erase instance",
+          "Iterate through selected walls to check for grouping conflicts",
+          "If a wall is found in another 'mpElementShop' map (existing group), build error string",
+          "If errors exist, report message listing conflicting walls/groups and erase instance",
+          "Store the array of valid walls in the instance sub-map 'mpElementShop'",
+          "Initialize display properties for Model Space (Display dp -1, LineType DASHED2)",
+          "Loop through walls to generate geometry: assign to Element Group and get outline profile",
+          "Apply shrink offset of U(0.5) to each wall outline",
+          "Union all individual wall outlines into a single combined profile",
+          "Draw the final combined outline in the model",
+          "Script instance persists in model"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle Count",
+            "path1": {
+              "name": "Recursive Insert Detected",
+              "steps": [
+                "eraseInstance() called",
+                "Script terminates immediately"
+              ]
+            },
+            "path2": {
+              "name": "First Insert",
+              "steps": [
+                "Proceed to selection prompt"
+              ]
+            }
+          },
+          {
+            "condition": "Wall Selection Count",
+            "path1": {
+              "name": "Empty Selection",
+              "steps": [
+                "eraseInstance() called",
+                "Script terminates"
+              ]
+            },
+            "path2": {
+              "name": "Valid Selection",
+              "steps": [
+                "Populate _Element array",
+                "Proceed to conflict validation"
+              ]
+            }
+          },
+          {
+            "condition": "Grouping Conflict Detection",
+            "path1": {
+              "name": "Conflict Found",
+              "steps": [
+                "Concatenate error details (Wall # and conflicting Group #)",
+                "reportMessage() displays error",
+                "eraseInstance() called",
+                "Script terminates"
+              ]
+            },
+            "path2": {
+              "name": "No Conflicts",
+              "steps": [
+                "Update mpElementShop map",
+                "Generate and draw geometry"
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Trigger (_kExecuteKey)",
+            "path1": {
+              "name": "Add wall(s)",
+              "steps": [
+                "Prompt user for new walls",
+                "Filter valid walls",
+                "Append walls not already in _Element",
+                "Re-run validation and drawing"
+              ]
+            },
+            "path2": {
+              "name": "Remove wall(s)",
+              "steps": [
+                "Prompt user for walls to remove",
+                "Iterate _Element backwards",
+                "Remove matched walls",
+                "Re-run validation (which erases instance if count < 1)",
+                "Redraw geometry"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "N/A - Script self-destructs to prevent recursion."
+          },
+          {
+            "check": "Element Count (_Element.length())",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Select at least one valid wall during insertion."
+          },
+          {
+            "check": "Unique Grouping (mpElementShop map check)",
+            "errorMessage": "Wall [Number] is already grouped with: [List of Wall Numbers]. Please modify existing wall groups (tsls). Erasing this instance.",
+            "recovery": "Identify the conflicting group instance mentioned in the error and remove the specific wall from that group before retrying."
+          },
+          {
+            "check": "Wall Validity",
+            "errorMessage": "None (Internal filter)",
+            "recovery": "Ensure selected entities are valid Walls/Elements."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Add wall(s)",
+            "how": "Right-click Context Menu",
+            "effect": "Appends new selected walls to the group and regenerates the combined outline. Validates against conflicts."
+          },
+          {
+            "action": "Remove wall(s)",
+            "how": "Right-click Context Menu",
+            "effect": "Removes selected walls from the group. Updates outline. If all walls are removed, the script instance deletes itself."
+          }
+        ]
+      },
+      "tokens_used": 5278,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# NA_GROUP_WALLS_FOR_SHOP_DRAWINGS\n\n## Overview\nThis script allows you to group multiple wall elements into a single logical entity, preparing them for downstream shop drawing processes. It automatically generates a visual dashed outline in the model to represent the combined geometry of the grouped walls.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script must be inserted in the model where the walls exist. |\n| Paper Space | No | This script does not function in Paper Space. |\n| Shop Drawing | No | This script is used to prepare data *before* generating shop drawings. |\n\n## Prerequisites\n- **Required Entities**: Wall Elements must already exist in the model.\n- **Minimum Selection**: You must select at least one wall during insertion.\n- **Conflict Check**: Selected walls must not already be part of another wall group.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or run via your hsbCAD toolbar) → Select `NA_GROUP_WALLS_FOR_SHOP_DRAWINGS.mcr`.\n\n### Step 2: Select Initial Walls\n```\nCommand Line: Select wall(s) to display in a shop drawing as a group\nAction: Click on the wall elements you want to include in the group. Press Enter to confirm selection.\n```\n*Note: If you select walls that are already assigned to another group, the script will report an error and cancel.*\n\n### Step 3: Verify Group Creation\nOnce inserted, you will see a dashed outline encompassing the selected walls. This outline represents the grouped area for the shop drawing.\n\n### Step 4: Modify Group (Optional)\nRight-click on the script instance (the dashed outline or the insertion point) to access context menu options.\n\n## Properties Panel Parameters\nThis script does not expose any editable parameters in the AutoCAD Properties Palette. All interaction is handled via the command line during insertion and the Right-Click Context Menu.\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Add wall(s)** | Prompts you to select additional walls from the model to append to the current group. The visual outline will update to include the new walls. |\n| **Remove wall(s)** | Prompts you to select specific walls to remove from the group. The visual outline will update. If you remove all walls, the script instance will delete itself. |\n\n## Settings Files\nNo external settings files are required for this script.\n\n## Tips\n- **Conflict Resolution**: If the script exits immediately with an error message like \"Wall [#] is already grouped...\", locate the existing group instance mentioned in the error, use the \"Remove wall(s)\" option on that group, and then try creating your new group again.\n- **Visual Cleanup**: The script applies a small inset (0.5 units) to the visual outline. This makes it easier to see overlapping corners when walls meet at angles.\n- **Grouping Non-Adjacent Walls**: You can select walls that are not physically touching. The script will create a unified outline that encompasses all selected elements.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I selected the walls?**\n  - A: This usually happens if one of the walls you selected is already part of an existing group. Check the command line history for a conflict message.\n  \n- **Q: Can I use this to group beams or floors?**\n  - A: No, this script is designed specifically for Wall Elements. Selecting other entity types may result in errors or unexpected behavior.\n\n- **Q: How do I delete the group entirely?**\n  - A: Use the \"Remove wall(s)\" context menu option to remove walls one by one. When the last wall is removed, the script instance deletes itself automatically. Alternatively, you can simply erase the script instance like a normal CAD entity, though the walls themselves will remain."
+      },
+      "tokens_used": 4992,
+      "error": null
+    }
+  }
+}

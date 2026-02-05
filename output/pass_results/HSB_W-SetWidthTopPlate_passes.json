@@ -1,0 +1,126 @@
+{
+  "filename": "HSB_W-SetWidthTopPlate.mcr",
+  "status": "completed",
+  "total_tokens": 23849,
+  "processing_time": 412.51835799217224,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "05.12.2017",
+            "author": "AS",
+            "changes": "Pilot version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3153,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Uses _kModelSpace explicitly in dbCreate(). No sd_*, Multipage*, or _Viewport references found. Does not use #Type E _Entity[] pattern typical of ShopDrawing scripts. Logic handles Element and Beam geometry in 3D context."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Requires selection of an Element containing beams. Beams are filtered based on their orientation relative to the Element's Y-axis.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2044,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "_bOnInsert (if _kExecuteKey is empty or not in catalog)",
+            "title": null,
+            "dataSource": "Properties (newWidth)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "newWidth",
+            "type": "PropDouble",
+            "displayName": "|New beam width|",
+            "defaultValue": "U(19)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "|Sets the new width.|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2818,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6247,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. Script launch: Initialize properties.\",\n    \"2. Check for '_kExecuteKey' (Catalog Usage).\",\n    \"3. [Conditional] If key is invalid or empty, show Dynamic Dialog to get 'newWidth'.\",\n    \"4. Check Insert Cycle: If count > 1, erase instance and return (Prevent recursion).\",\n    \"5. Prompt user to select Elements ('PrEntity').\",\n    \"6. Iterate through selected Elements:\",\n    \"   a. Remove any existing instances of this script attached to the element.\",\n    \"   b. Create a new attached instance ('dbCreate') passing 'ManualInserted'=true via Map.\",\n    \"7. Erase the standalone insertion script instance.\",\n    \"8. [Attached Instance Execution]:\",\n    \"9. Validate Element existence. If invalid, report warning and erase.\",\n    \"10. Retrieve Element coordinate system and all Beams within the Element.\",\n    \"11. Filter Beams: Keep beams where the length vector is orthogonal to Element Y-axis (Parallel to Element X).\",\n    \"12. Sort the filtered beams along the Element's Y-axis (Bubble sort ascending).\",\n    \"13. [Conditional] If valid beams exist:\",\n    \"   a. Select the last beam in the sorted list (Highest Y coordinate).\",\n    \"   b. Record current width.\",\n    \"   c. Set beam width to 'newWidth'.\",\n    \"   d. Transform beam position along -Y to center the change (0.5 * width delta).\",\n    \"14. Erase the attached script instance and finish.\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Property Source (_kExecuteKey)\",\n      \"path1\": {\n        \"name\": \"Catalog Execute Key\",\n        \"steps\": [\"Load properties from catalog defined by _kExecuteKey.\", \"Skip dialog.\"]\n      },\n      \"path2\": {\n        \"name\": \"Manual Input\",\n        \"steps\": [\"Trigger ShowDynamicDialog.\", \"User inputs 'newWidth'.\", \"Save state to '_LastInserted' catalog.\"]\n      }\n    },\n    {\n      \"condition\": \"Beam Detection & Filtering\",\n      \"path1\": {\n        \"name\": \"Top Plate Found\",\n        \"steps\": [\"Identify beams orthogonal to Element Y.\", \"Sort beams to find highest Y.\", \"Modify width of the top-most beam.\"]\n      },\n      \"path2\": {\n        \"name"
+      },
+      "tokens_used": 6219,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_W-SetWidthTopPlate.mcr\n\n## Overview\nThis script modifies the width of the top plate beam within a selected wall element. It automatically identifies the top-most beam based on the element's orientation and adjusts its dimensions to your specification.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Use in the 3D model to modify wall geometry. |\n| Paper Space | No | Not supported in 2D layouts. |\n| Shop Drawing | No | This is a modeling script, not a detailing script. |\n\n## Prerequisites\n- **Required entities**: A wall Element containing Beams.\n- **Minimum beam count**: At least one beam running parallel to the element's X-axis.\n- **Required settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_W-SetWidthTopPlate.mcr` from the file dialog.\n\n### Step 2: Specify New Width\n```\nDialog Box: Enter the new width.\nAction: Type the desired width value (e.g., 45) and click OK.\n```\n*Note: A default value is provided in the properties or dialog.*\n\n### Step 3: Select Wall Element\n```\nCommand Line: Select elements\nAction: Click on the wall element that contains the top plate you want to resize.\n```\n*Note: The script will automatically attach, process the wall, update the beam, and then detach itself.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| New beam width | Number | 19mm | Sets the new width for the top plate beam. |\n\n## Right-Click Menu Options\nNone. This script executes immediately upon insertion and does not remain attached to the element for future right-click interactions.\n\n## Settings Files\nNone required.\n\n## Tips\n- **Orientation matters**: The script calculates the \"top\" based on the element's local Y-axis. Ensure your element is correctly rotated in the model before running the script.\n- **Beam alignment**: The script specifically looks for beams whose length vector is orthogonal to the Element Y-axis (effectively parallel to the wall plates).\n- **Positioning**: When the width changes, the script automatically shifts the beam position along the Y-axis to keep the modification centered relative to the original position.\n\n## FAQ\n- **Q: Why didn't my beam change?**\n  **A**: Ensure the beam you want to modify is actually the top-most beam in the element's local Y-direction and that it runs parallel to the element's X-axis.\n- **Q: Does this work on multiple walls at once?**\n  **A**: You can select multiple elements during the \"Select elements\" prompt, and the script will attempt to apply the change to all of them."
+      },
+      "tokens_used": 3368,
+      "error": null
+    }
+  }
+}

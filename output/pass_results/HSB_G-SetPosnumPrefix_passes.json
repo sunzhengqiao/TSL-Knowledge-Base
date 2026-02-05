@@ -1,0 +1,326 @@
+{
+  "filename": "HSB_G-SetPosnumPrefix.mcr",
+  "status": "completed",
+  "total_tokens": 24348,
+  "processing_time": 287.44135999679565,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "01.11.2016",
+            "author": "AS",
+            "changes": "Pilot version"
+          },
+          {
+            "version": "1.01",
+            "date": "01.11.2016",
+            "author": "AS",
+            "changes": "Correct material index"
+          },
+          {
+            "version": "1.02",
+            "date": "02.10.2017",
+            "author": "AS",
+            "changes": "Use different name for posnum mapx because it will not be resolved in the exporter"
+          }
+        ],
+        "settingsFiles": [
+          "Posnum.xml"
+        ],
+        "dependencies": []
+      },
+      "tokens_used": 4005,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses `Group().collectEntities(true, GenBeam(), _kModelSpace);` to explicitly target elements in Model Space. There are no references to `sd_*`, `_Viewport`, `_kPaperSpace`, or Multipage logic. It displays a visual feedback text directly in the 3D model."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing beams to be processed.",
+          "requiredSettings": [
+            "Posnum.xml"
+          ]
+        }
+      },
+      "tokens_used": 2240,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getPoint",
+              "promptOriginal": "|Select a position|",
+              "condition": "_bOnInsert && insertCycleCount() <= 1",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "|Assign posnum prefixes|",
+            "handler": "recalcTriggers[0]",
+            "action": "Reads Posnum.xml and assigns prefixes to GenBeams based on Material or BeamCode.",
+            "alsoTriggeredBy": "Double-click, Insert"
+          },
+          {
+            "menuItem": "|Clear data|",
+            "handler": "recalcTriggers[1]",
+            "action": "Removes PositionNumber submap data from all GenBeams in Model Space.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "Posnum.xml",
+            "searchPaths": [
+              "_kPathHsbCompany + \"\\Custom\\Posnum.xml\""
+            ],
+            "purpose": "Defines the prefix mappings for Material names and Beam Codes.",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 3084,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the assignment of position number prefixes to timber beams based on predefined rules matching material names or beam codes to specific prefixes.",
+          "category": "Data Management",
+          "typicalUseCase": "Used to batch-assign shop floor or production prefixes (e.g., 'W' for walls, 'R' for roof) to structural elements in the 3D model to prepare for export or labeling."
+        },
+        "parameters": [
+          {
+            "name": "_Pt0 (insertionPoint)",
+            "technicalDefault": "User selected via getPoint",
+            "businessMeaning": "The location in the model space where the status text (confirming execution) is displayed.",
+            "validRange": "Any X, Y, Z coordinate in Model Space.",
+            "unit": "mm",
+            "affectsOutput": "Determines the screen position of the feedback text showing how many entities were processed."
+          },
+          {
+            "name": "clear",
+            "technicalDefault": "false",
+            "businessMeaning": "Determines whether the script should apply prefixes or remove existing prefix data from the beams.",
+            "validRange": "true / false",
+            "unit": "Boolean",
+            "affectsOutput": "If true, it strips the 'PositionNumber' submap data from beams. If false, it applies the prefixes defined in Posnum.xml."
+          },
+          {
+            "name": "fileName (Posnum.xml)",
+            "technicalDefault": "_kPathHsbCompany + \"\\Custom\\Posnum.xml\"",
+            "businessMeaning": "Path to the external configuration file that contains the logic linking Material names and Beam Codes to specific Position Number prefixes.",
+            "validRange": "Valid file path string on the local or network drive.",
+            "unit": "String",
+            "affectsOutput": "If the file is missing or malformed, no prefixes are assigned. The content dictates exactly which prefix is written to each beam."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects 'Assign posnum prefixes' or Insert",
+            "effect": "Sets 'execute' to true and 'clear' to false, prompting the script to read Posnum.xml and write data to beams.",
+            "cascade": [
+              "clear",
+              "execute"
+            ]
+          },
+          {
+            "trigger": "User selects 'Clear data'",
+            "effect": "Sets 'execute' to true and 'clear' to true, prompting the script to remove data from beams.",
+            "cascade": [
+              "clear",
+              "execute"
+            ]
+          },
+          {
+            "trigger": "BeamCode or Material property on a GenBeam",
+            "effect": "Determines which prefix string is selected from the Posnum.xml map.",
+            "cascade": [
+              "prefix",
+              "posnumPrefix SubMap"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "SubMap (PositionNumber)",
+            "description": "Metadata attached to a GenBeam entity containing the assigned 'Prefix'. This is data-only, not geometry.",
+            "appliedTo": "All valid GenBeams in Model Space."
+          },
+          {
+            "type": "Text Display",
+            "description": "Visual feedback in the model showing the count of processed entities and the timestamp of the last execution.",
+            "appliedTo": "Model Space at the user's insertion point."
+          }
+        ]
+      },
+      "tokens_used": 3823,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script inserted via command or toolbar",
+          "2. Check if Insertion Cycle > 1 (if so, erase instance and stop)",
+          "3. Prompt user for a graphical position point ('Select a position') to place status text",
+          "4. Set internal execution flag ('Insert') to true and return to trigger calculation",
+          "5. Upon recalculation, determine execution mode based on trigger (Insert, Context Menu, or Double-Click)",
+          "6. Initialize variables and define path to configuration file (Posnum.xml)",
+          "7. [Mode: Assign] Read Posnum.xml and parse mappings for Material and BeamCode prefixes",
+          "8. Collect all GenBeam entities from Model Space",
+          "9. Iterate through collected GenBeams",
+          "10. [Mode: Clear] If 'Clear data' triggered, remove 'PositionNumber' submap and skip to next beam",
+          "11. [Mode: Assign] Compare BeamCode (token 0) and Material name against loaded XML mappings",
+          "12. [Mode: Assign] Determine correct prefix (Material overrides BeamCode if both match)",
+          "13. [Mode: Assign] Write 'Prefix' string to the 'PositionNumber' submap of the GenBeam",
+          "14. Store entity count and execution timestamp in script instance map",
+          "15. Draw feedback text at insertion point showing count of processed entities and timestamp"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Trigger Source",
+            "path1": {
+              "name": "Insert Mode",
+              "steps": [
+                "Prompt for Point",
+                "Set flag 'Insert'=true",
+                "Run 'Assign' logic (sets clear=false)"
+              ]
+            },
+            "path2": {
+              "name": "Context Menu / Recalc",
+              "steps": [
+                "Check _kExecuteKey",
+                "If 'Assign posnum prefixes': Run logic (clear=false)",
+                "If 'Clear data': Run logic (clear=true)",
+                "If Double Click: Run logic (clear=false)"
+              ]
+            }
+          },
+          {
+            "condition": "Prefix Matching Logic (Inside Assign Mode)",
+            "path1": {
+              "name": "BeamCode Match",
+              "steps": [
+                "Check if GenBeam beamCode exists in XML BeamCode list",
+                "If match found, assign corresponding prefix"
+              ]
+            },
+            "path2": {
+              "name": "Material Match",
+              "steps": [
+                "Check if GenBeam material exists in XML Material list",
+                "If match found, assign corresponding prefix",
+                "Note: If both BeamCode and Material match, Material prefix takes precedence"
+              ]
+            },
+            "path3": {
+              "name": "No Match",
+              "steps": [
+                "Skip beam and do not modify data"
+              ]
+            }
+          },
+          {
+            "condition": "Clear vs Assign Data Operation",
+            "path1": {
+              "name": "Assign Prefixes",
+              "steps": [
+                "Read XML file",
+                "Parse data into arrays",
+                "Match beam properties",
+                "Write 'PositionNumber' SubMap to beam"
+              ]
+            },
+            "path2": {
+              "name": "Clear Data",
+              "steps": [
+                "Skip XML reading",
+                "Find all GenBeams",
+                "Remove 'PositionNumber' SubMap from beam"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Posnum.xml file existence",
+            "errorMessage": "(Implicit) No prefixes assigned",
+            "recovery": "Ensure Posnum.xml exists in the hsbCompany\\Custom\\ folder with correct XML structure."
+          },
+          {
+            "check": "GenBeam presence in Model Space",
+            "errorMessage": "Feedback text shows '0 entities'",
+            "recovery": "Create or import beams into the Model Space before running the script."
+          },
+          {
+            "check": "Beam Material or BeamCode matching XML entries",
+            "errorMessage": "Beam skipped (prefix not assigned)",
+            "recovery": "Verify that the Material names and BeamCodes in the model exactly match the keys defined in Posnum.xml (case-sensitive)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Re-assign Prefixes",
+            "how": "Right-click context menu -> 'Assign posnum prefixes' OR Double-click",
+            "effect": "Re-reads the XML file and updates the PositionNumber prefix for all beams in Model Space based on current properties."
+          },
+          {
+            "action": "Clear Prefixes",
+            "how": "Right-click context menu -> 'Clear data'",
+            "effect": "Deletes the 'PositionNumber' submap from all beams in Model Space."
+          },
+          {
+            "action": "Move Status Text",
+            "how": "Drag the script instance grip at _Pt0",
+            "effect": "Relocates the feedback text displaying the entity count and timestamp."
+          }
+        ]
+      },
+      "tokens_used": 6027,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_G-SetPosnumPrefix\n\n## Overview\nThis script automatically assigns specific position number prefixes (e.g., \"W\" for Wall, \"R\" for Roof) to all timber beams in your model based on their Material names or Beam Codes. It can also be used to clear this prefix data from the entire model.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script processes all `GenBeam` entities in the current 3D model. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | Not applicable for 2D drawings. |\n\n## Prerequisites\n- **Required Entities**: Any number of `GenBeam` (timber beams) in the model.\n- **Minimum Beam Count**: 0 (Script will run successfully but report 0 entities processed).\n- **Required Settings**: A configuration file named `Posnum.xml` must exist in your company folder (`hsbCompany\\Custom\\`).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_G-SetPosnumPrefix.mcr`\n\n### Step 2: Select Status Text Position\n```\nCommand Line: |Select a position|\nAction: Click anywhere in the Model Space (3D view) to place the script anchor point. \n```\n*Note: This point determines where the feedback text (showing the count of processed beams) will appear.*\n\n### Step 3: Automatic Execution\nOnce placed, the script automatically executes the \"Assign\" logic immediately. It scans the entire Model Space, matches your beams against the rules in `Posnum.xml`, and writes the prefixes. A text element will appear at your selected point confirming how many entities were processed.\n\n## Properties Panel Parameters\nThis script does not expose user-editable properties in the AutoCAD Properties Palette. All configuration is handled via the external XML file and the right-click menu.\n\n## Right-Click Menu Options\nSelect the script instance in the model (usually indicated by the anchor point or text) and right-click to access the following options:\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Assign posnum prefixes** | Reads the `Posnum.xml` file and updates the position number prefixes for all beams in the model based on their current Material or Beam Code. |\n| **Clear data** | Removes all position number prefix data from the `PositionNumber` submap of every beam in the model. |\n\n## Settings Files\n- **Filename**: `Posnum.xml`\n- **Location**: `_kPathHsbCompany\\Custom\\` (Usually located in your hsbCAD company directory on the network or local drive).\n- **Purpose**: Defines the mapping rules. It contains lists of Material names and Beam Codes that correspond to specific Prefix strings.\n\n## Tips\n- **Precedence Rule**: If a beam matches both a Beam Code rule *and* a Material rule in the XML file, the **Material** rule takes precedence.\n- **Feedback Text**: You can move the feedback text (showing the count and time) by using the standard AutoCAD grips on the text object.\n- **Re-running**: If you change beam properties or update the XML file, simply double-click the script instance or select \"Assign posnum prefixes\" from the right-click menu to update all beams instantly.\n- **Case Sensitivity**: Ensure the spelling and case of Material names and Beam Codes in the XML file exactly match those in your hsbCAD catalog.\n\n## FAQ\n- **Q: Why did the script process 0 entities?**\n  - A: Ensure you are in Model Space and that there are valid GenBeams. Also, check that the `Posnum.xml` file is correctly located in the `hsbCompany\\Custom\\` folder.\n- **Q: How do I define which prefix applies to which wall?**\n  - A: You must manually edit the `Posnum.xml` file. Add entries mapping your specific Material names (e.g., \"GL24h\") or Beam Codes to the desired prefix string (e.g., \"W\").\n- **Q: Does this script only work on selected beams?**\n  - A: No, this script processes **all** GenBeam entities found in the entire Model Space.\n- **Q: How do I remove the prefixes?**\n  - A: Right-click the script instance and select **Clear data**. This will strip the prefix information from all beams."
+      },
+      "tokens_used": 5169,
+      "error": null
+    }
+  }
+}

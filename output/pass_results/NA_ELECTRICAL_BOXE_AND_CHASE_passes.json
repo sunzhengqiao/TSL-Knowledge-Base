@@ -1,0 +1,403 @@
+{
+  "filename": "NA_ELECTRICAL_BOXE_AND_CHASE.mcr",
+  "status": "completed",
+  "total_tokens": 50278,
+  "processing_time": 447.6085093021393,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7310,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script interacts with GenBeam entities, uses 3D coordinate systems (Point3d, Vector3d), draws 3D Bodies, and creates new Beam entities (Blocking). No usage of sd_* prefixes, _Viewport logic, or #Type E + _Entity[] arrays typical of Paper Space or Shop Drawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (requires interaction with structural beams/walls)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5874,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "Create Blocking",
+            "handler": "_kExecuteKey == \"Create Blocking\"",
+            "action": "Creates a blocking beam (type '_kBlocking') with a width of 1.5 inches and a length defined by 'dBlockL'. The blocking is positioned relative to the outlet location and chase direction, and assigned to the parent element group.",
+            "alsoTriggeredBy": "_bOnInsert"
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 9171,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the creation and placement of electrical boxes (outlets, switches, vents) and associated wiring chases in timber framing beams/walls.",
+          "category": "Hardware/Preparation",
+          "typicalUseCase": "Used during the design phase to mill out slots for electrical boxes and drill vertical wiring chases in walls, floors, or roof trusses."
+        },
+        "parameters": [
+          {
+            "name": "strType",
+            "technicalDefault": "Selected from arTypes list (e.g., 'Std receptacle, bell and cable single')",
+            "businessMeaning": "The specific type or category of electrical item to be installed. This selection presets the dimensions (width, height) and mounting height (elevation) of the box.",
+            "validRange": "Any string present in the internal arTypes array (Receptacles, Switches, Fans, Vents, Range, etc.)",
+            "unit": "Enumeration",
+            "affectsOutput": "Determines the width/height of the milled box, the elevation offset from the floor/ceiling, and the specific export name."
+          },
+          {
+            "name": "dWidhts",
+            "technicalDefault": "Mapped to strType (e.g., 2.0 inches)",
+            "businessMeaning": "The horizontal width of the electrical box opening (along the wall/beam length).",
+            "validRange": "1.0 to 20.0 inches (approx 25mm to 500mm)",
+            "unit": "inch",
+            "affectsOutput": "Defines the width of the rectangular milling or the size of the octagonal fixture."
+          },
+          {
+            "name": "dHeights",
+            "technicalDefault": "Mapped to strType (e.g., 3.0 inches)",
+            "businessMeaning": "The vertical height of the electrical box opening.",
+            "validRange": "1.0 to 20.0 inches (approx 25mm to 500mm)",
+            "unit": "inch",
+            "affectsOutput": "Defines the height of the milling area."
+          },
+          {
+            "name": "dElevations",
+            "technicalDefault": "Mapped to strType (e.g., 16.0 inches)",
+            "businessMeaning": "The vertical mounting height of the electrical box measured from the bottom plate (floor) or top plate (ceiling).",
+            "validRange": "4.0 to 120.0 inches (approx 100mm to 3000mm)",
+            "unit": "inch",
+            "affectsOutput": "Positions the box vertically along the beam/stud."
+          },
+          {
+            "name": "nReferencePoints",
+            "technicalDefault": "-1",
+            "businessMeaning": "Reference point for the elevation measurement relative to the box geometry (-1=Bottom, 0=Center, 1=Top).",
+            "validRange": "-1, 0, 1",
+            "unit": "Integer",
+            "affectsOutput": "Calculates the precise vertical placement of the milling profile based on the elevation value."
+          },
+          {
+            "name": "dDistanceFromBm",
+            "technicalDefault": "0 (Implicit)",
+            "businessMeaning": "How far the electrical box protrudes or is set back from the face of the beam/wall surface.",
+            "validRange": "-2.0 to 6.0 inches",
+            "unit": "inch",
+            "affectsOutput": "Shifts the box profile into or out of the material relative to the beam's coordinate system."
+          },
+          {
+            "name": "nChaseDir",
+            "technicalDefault": "0",
+            "businessMeaning": "Direction of the vertical wiring chase relative to the box (-1=Down towards floor, 1=Up towards ceiling, 0=None).",
+            "validRange": "-1, 0, 1",
+            "unit": "Integer",
+            "affectsOutput": "Creates a cylindrical drill (chase) extending vertically from the box to connect to floor/ceiling wiring."
+          },
+          {
+            "name": "dChaseRadius",
+            "technicalDefault": "U(0.5) (0.5 inches)",
+            "businessMeaning": "Radius of the vertical wiring chase/hole.",
+            "validRange": "0.25 to 1.0 inches",
+            "unit": "inch",
+            "affectsOutput": "Diameter of the cylindrical routing hole for the wire."
+          },
+          {
+            "name": "nSide",
+            "technicalDefault": "Beam Face Index",
+            "businessMeaning": "Specifies which side of the beam the box is mounted on (e.g., Left, Right, Front, Back).",
+            "validRange": "0 to 5 (Standard hsbCAD Side Indices)",
+            "unit": "Integer",
+            "affectsOutput": "Determines which face of the solid receives the milling operation."
+          },
+          {
+            "name": "dBlockL",
+            "technicalDefault": "Variable definition in code",
+            "businessMeaning": "Length of the blocking beam installed to reinforce the opening.",
+            "validRange": "12.0 to 96.0 inches",
+            "unit": "inch",
+            "affectsOutput": "Length of the generated '_kBlocking' beam entity."
+          },
+          {
+            "name": "dBodyDepth",
+            "technicalDefault": "U(3)",
+            "businessMeaning": "Depth of the electrical box body (how deep it goes into the wall).",
+            "validRange": "1.5 to 4.0 inches",
+            "unit": "inch",
+            "affectsOutput": "Depth of the 3D extrusion for the octagonal or rectangular box visualization."
+          },
+          {
+            "name": "dSpecialHoleDiameter",
+            "technicalDefault": "U(1)",
+            "businessMeaning": "Diameter of the hole used for 'Exterior GFI' or 'Brick' fixtures where a full box mill is not required, just a pass-through.",
+            "validRange": "0.75 to 1.5 inches",
+            "unit": "inch",
+            "affectsOutput": "Diameter of the circle milled for specific exterior fixtures."
+          },
+          {
+            "name": "nDirFromBeam",
+            "technicalDefault": "1",
+            "businessMeaning": "Determines if the box is placed to the left or right of the reference point or beam center.",
+            "validRange": "-1, 1",
+            "unit": "Integer",
+            "affectsOutput": "Flips the box orientation horizontally relative to the beam axis."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "strType selection",
+            "effect": "Populates dWidhts, dHeights, dElevations, nReferencePoints, and sNameToExport.",
+            "cascade": [
+              "dWidhts",
+              "dHeights",
+              "dElevations",
+              "nReferencePoints",
+              "sNameToExport"
+            ]
+          },
+          {
+            "trigger": "strType == 'Exterior GFI' or 'Brick'",
+            "effect": "Switches logic from rectangular box milling to simple circular hole milling using dSpecialHoleDiameter.",
+            "cascade": [
+              "bNoBoxMillButHoleMill"
+            ]
+          },
+          {
+            "trigger": "strType == 'Stucco' or 'Interior Light Fix'",
+            "effect": "Activates Octagon drawing logic instead of Rectangle logic.",
+            "cascade": [
+              "bIsOctagon",
+              "dOctagonMaxSide"
+            ]
+          },
+          {
+            "trigger": "strType == 'Dryer' or 'Range' or 'Valence'",
+            "effect": "Enables 'Create Blocking' right-click option and generates a blocking beam on insert.",
+            "cascade": [
+              "Create Blocking",
+              "dBlockL"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "ElemMill",
+            "description": "A rectangular or octagonal pocket milled into the beam face to house the electrical box.",
+            "appliedTo": "The selected wall stud or beam (el)."
+          },
+          {
+            "type": "ElemMill (Drill)",
+            "description": "A vertical cylindrical hole (chase) for wiring, extending up or down from the box.",
+            "appliedTo": "The selected beam and potentially intersecting top/bottom plates."
+          },
+          {
+            "type": "Beam (Blocking)",
+            "description": "A solid lumber block (Type: Blocking) used to reinforce the rough opening for specific heavy fixtures (Dryer, Range).",
+            "appliedTo": "Generated adjacent to the main element and assigned to the same element group."
+          },
+          {
+            "type": "Mark",
+            "description": "Text labeling the specific electrical type (e.g., ' - 2x3') placed near the box location for shop floor identification.",
+            "appliedTo": "The selected beam."
+          },
+          {
+            "type": "Body (Visual)",
+            "description": "3D representation of the electrical box geometry for visualization in the CAD model.",
+            "appliedTo": "Model Space."
+          }
+        ]
+      },
+      "tokens_used": 9922,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User inserts script into model.",
+          "2. User selects target structural beam (GenBeam).",
+          "3. User selects Electrical Type from list (populates defaults for Width, Height, Elevation, Reference Point).",
+          "4. Script calculates insertion point (_Pt0) based on Elevation (Floor vs Ceiling) and Beam dimensions.",
+          "5. Script determines Box Geometry type (Standard Rectangle vs Octagon).",
+          "6. Script constructs 3D Body representation of the box.",
+          "7. Script checks for Zone Intersection (safety check).",
+          "8. Script applies Milling operation to beam (Box Mill or Hole Mill).",
+          "9. Script evaluates Chase Direction (Up/Down) and drills vertical wire chase.",
+          "10. Script evaluates Type for Blocking requirements (Dryer/Range).",
+          "11. Script adds Text Mark and DXA entities for export.",
+          "12. Script finalizes geometry."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Elevation Value (dElevations)",
+            "path1": {
+              "name": "Floor Reference (Positive)",
+              "steps": [
+                "Measure vertical distance from bottom plate (ptInsertionOnBottom).",
+                "Calculate _Pt0 relative to bottom of beam."
+              ]
+            },
+            "path2": {
+              "name": "Ceiling Reference (Negative)",
+              "steps": [
+                "Measure vertical distance from top plate (ptInsertionOnTop).",
+                "Calculate _Pt0 relative to top of beam."
+              ]
+            }
+          },
+          {
+            "condition": "Fixture Type (Shape)",
+            "path1": {
+              "name": "Octagon (Stucco/Light Fix)",
+              "steps": [
+                "Calculate vertices for 8-sided polygon.",
+                "Create 3D Body from Octagon Polyline.",
+                "Apply Milling based on Octagon profile."
+              ]
+            },
+            "path2": {
+              "name": "Standard Rectangle",
+              "steps": [
+                "Create Rectangular Polyline (Width x Height).",
+                "Create 3D Body (Box).",
+                "Proceed to Milling Strategy check."
+              ]
+            }
+          },
+          {
+            "condition": "Milling Strategy (For Standard Rectangles)",
+            "path1": {
+              "name": "Full Box Mill",
+              "steps": [
+                "Extract face profile from the Box Body.",
+                "Apply rectangular 'ElemMill' to beam surface."
+              ]
+            },
+            "path2": {
+              "name": "Hole Mill Only (Exterior GFI/Brick)",
+              "steps": [
+                "Calculate center point of box area.",
+                "Create circular PLine.",
+                "Apply circular 'ElemMill' (pass-through) to beam surface."
+              ]
+            }
+          },
+          {
+            "condition": "Chase Direction (nChaseDir)",
+            "path1": {
+              "name": "Chase Down",
+              "steps": [
+                "Start chase at bottom of box.",
+                "Extend cylinder down to or past bottom plate."
+              ]
+            },
+            "path2": {
+              "name": "Chase Up",
+              "steps": [
+                "Start chase at top of box.",
+                "Extend cylinder up to or past top plate."
+              ]
+            }
+          },
+          {
+            "condition": "Heavy Fixture Support (Blocking)",
+            "path1": {
+              "name": "Blocking Required (Dryer/Range/Valence)",
+              "steps": [
+                "If _bOnInsert OR User clicks 'Create Blocking':",
+                "Generate new Beam entity (Type: _kBlocking).",
+                "Position blocking relative to chase.",
+                "Assign to same element group as host beam."
+              ]
+            },
+            "path2": {
+              "name": "No Blocking",
+              "steps": [
+                "Skip beam generation.",
+                "Only perform milling and marking."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Zone Intersection",
+            "errorMessage": "No explicit error message shown, but operation is skipped silently.",
+            "recovery": "Ensure the selected beam is large enough to contain the box dimensions at the specified elevation. The script checks 'arShOnZone' length; if 0, it skips the 'el.addTool(mill)' step."
+          },
+          {
+            "check": "Type Selection",
+            "errorMessage": "String mismatch.",
+            "recovery": "User must select a string strictly matching the internal 'arTypes' array (e.g., 'Dryer', 'Std receptacle...')."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Properties",
+            "how": "OPM (Object Properties Manager)",
+            "effect": "Changing 'strType' auto-updates dimensions (W/H/Elev) and visual geometry. Changing numeric dimensions directly overrides type defaults."
+          },
+          {
+            "action": "Generate Blocking",
+            "how": "Right-click Context Menu -> 'Create Blocking'",
+            "effect": "Manually triggers the creation of the reinforcement blocking beam if it wasn't created on insert, or if the type was changed to a heavy fixture post-insertion."
+          },
+          {
+            "action": "Move / Stretch",
+            "how": "Grip Edit / Move Command",
+            "effect": "Moving the script insertion point recalculates the box location (_Pt0) relative to the new coordinates."
+          }
+        ]
+      },
+      "tokens_used": 11121,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# NA_ELECTRICAL_BOXE_AND_CHASE.mcr\n\n## Overview\nAutomates the placement and milling of electrical boxes (outlets, switches, vents) and vertical wiring chases within timber framing beams or walls. It generates 3D visual representations, applies milling operations to the structure, and can automatically create reinforcement blocking for heavy fixtures.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Must be used on structural beams or studs in 3D model. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | Not applicable for drawings. |\n\n## Prerequisites\n- **Required entities**: GenBeam (e.g., Wall studs, floor joists, rafters).\n- **Minimum beam count**: 1.\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `NA_ELECTRICAL_BOXE_AND_CHASE.mcr`\n\n### Step 2: Select Structural Beam\n```\nCommand Line: Select element\nAction: Click on the wall stud or beam where you want to install the electrical box.\n```\n\n### Step 3: Select Electrical Type\n```\nCommand Line: [Dialog Appears]\nAction: Select the fixture type from the list (e.g., \"Std receptacle\", \"Dryer\", \"Switch\", \"Fan\").\nNote: This selection automatically sets the default dimensions (width, height) and elevation.\n```\n\n### Step 4: Position and Configure\n```\nAction: The script inserts based on default logic. Use the Properties Palette to fine-tune the position (Elevation), Side (which face of the beam), and Chase direction (Up/Down).\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **strType** | Dropdown | *Varies* | Select the electrical category (e.g., Receptacle, Switch, Dryer). Changing this updates width, height, and elevation automatically. |\n| **dWidhts** | Number (inch) | 2.0 | The horizontal width of the electrical box opening. |\n| **dHeights** | Number (inch) | 3.0 | The vertical height of the electrical box opening. |\n| **dElevations** | Number (inch) | 16.0 | Height of the box from the floor (positive) or ceiling (negative). |\n| **nReferencePoints** | Integer | -1 | Reference point for Elevation (-1=Bottom of box, 0=Center, 1=Top of box). |\n| **dDistanceFromBm** | Number (inch) | 0 | Setback from the face of the beam (positive = out, negative = in). |\n| **nChaseDir** | Integer | 0 | Direction of the wiring chase (-1 = Down, 0 = None, 1 = Up). |\n| **dChaseRadius** | Number (inch) | 0.5 | Radius of the vertical wiring chase hole. |\n| **nSide** | Integer | 0 | Index of the beam face where the box is mounted. |\n| **dBlockL** | Number (inch) | *Variable* | Length of the blocking beam (used for Dryer/Range reinforcement). |\n| **dBodyDepth** | Number (inch) | 3.0 | Visual depth of the 3D box representation. |\n| **dSpecialHoleDiameter** | Number (inch) | 1.0 | Diameter for simple pass-through holes (used for Exterior GFI/Brick). |\n| **nDirFromBeam** | Integer | 1 | Orientation along the beam length (1 or -1). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Create Blocking** | Manually inserts a solid lumber blocking beam (1.5\" wide) to reinforce the opening. Typically used for Dryers, Ranges, or Valences where the box requires structural support. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: Uses internal logic and defaults; no external XML settings file required.\n\n## Tips\n- **Elevation Logic**: If you enter a positive `dElevations`, it measures from the bottom plate up. If you enter a negative value, it measures from the top plate down.\n- **Visual Geometry**: The script draws an Octagon shape for \"Stucco\" or \"Interior Light Fix\" types, and a Rectangle for standard receptacles.\n- **Exterior Fixtures**: For \"Exterior GFI\" or \"Brick\" types, the script mills a simple round hole instead of a full rectangular box pocket.\n- **Updating Types**: If you change the `strType` property after insertion, the dimensions (Width/Height/Elevation) will update to match the new standard, but manual overrides will be lost.\n\n## FAQ\n- **Q: Why didn't the script create a blocking beam?**\n  - **A:** Blocking is only created automatically during insertion for specific types like \"Dryer\", \"Range\", or \"Valence\". If you need it for other types, right-click the script instance and select \"Create Blocking\".\n- **Q: Can I adjust the box size manually?**\n  - **A:** Yes. Modify `dWidhts` or `dHeights` in the Properties Palette. Note that if you subsequently change the `strType`, your manual values will be overwritten by the type's defaults.\n- **Q: The wire chase isn't going through the top plate.**\n  - **A:** Ensure `nChaseDir` is set to `1` (Up) and verify that the `dChaseRadius` is large enough. The chase drills relative to the selected beam; if the plate is a separate beam, ensure alignment or check if the drill depth reaches the intersection."
+      },
+      "tokens_used": 6880,
+      "error": null
+    }
+  }
+}

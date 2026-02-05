@@ -1,0 +1,285 @@
+{
+  "filename": "PunchMarkerSip.mcr",
+  "status": "completed",
+  "total_tokens": 35458,
+  "processing_time": 267.51246666908264,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7248,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Insert logic explicitly uses 'tslNew.dbCreate(..., _kModelSpace, mapTsl);'. While the summary mentions 'Showed in Shopdrawings', the script achieves this by generating 'DimRequest' maps from the Model Space entity, rather than running as a ShopDrawing script (which would use #Type E or _Viewport)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam (Sip) and EntPLine (PLine) for Mode 0",
+            "MasterPanel for Mode 1"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4949,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select a Sip or select MasterPanel|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getEntPLine",
+              "promptOriginal": "|Select tool path|",
+              "condition": "_bOnInsert && selection is GenBeam",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "vertexRadius",
+            "type": "PropDouble",
+            "displayName": "|Vertex display radius|",
+            "defaultValue": "20mm",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "vertexDistance",
+            "type": "PropDouble",
+            "displayName": "|Vertex distance|",
+            "defaultValue": "0",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4462,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates a CNC punch marker path on Structural Insulated Panels (SIPs) to indicate assembly locations or future machining references, and visualizes these markers in the model and shop drawings.",
+          "category": "Machining/CAM",
+          "typicalUseCase": "Used during the detailing phase to mark the centerline of elements or specific alignment points on a SIP panel that will be physically punched by the CNC machine for on-site assembly guidance."
+        },
+        "parameters": [
+          {
+            "name": "vertexRadius",
+            "technicalDefault": "20mm",
+            "businessMeaning": "The visual diameter of the punch mark representation. This defines how large the 'dot' appears in the 3D model and on generated shop drawings to denote the punch location.",
+            "validRange": "5mm - 50mm",
+            "unit": "mm",
+            "affectsOutput": "Visual geometry (circles) in Model Space and Shop Drawings (via DimRequest). Does not alter the CNC tool path geometry, only the visual annotation size."
+          },
+          {
+            "name": "vertexDistance",
+            "technicalDefault": "0",
+            "businessMeaning": "The linear spacing interval for punch marks along the selected path. A value of 0 places punch marks only at the corners/vertices of the selected polyline. A positive value places punches distributed evenly at this specific interval along the entire path.",
+            "validRange": "0 (Vertices only) - 1200mm (Max spacing)",
+            "unit": "mm",
+            "affectsOutput": "Determines the number of punch points and the geometry of the generated CNC path (PLine). If > 1mm, it reconstructs the tool path by interpolating points along the polyline."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "vertexDistance > 1mm",
+            "effect": "The script switches from 'Vertex Mode' (using polyline corners) to 'Interval Mode' (calculating new points along the line length).",
+            "cascade": [
+              "CNC Path Geometry",
+              "Visual PLine Geometry",
+              "Number of Punch Marks"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "CncExport (PUNCHMARKER)",
+            "description": "A machine instruction that tells the CNC machine to indent or mark the material at specific locations.",
+            "appliedTo": "Selected GenBeam (Sip) in Mode 0"
+          },
+          {
+            "type": "DimRequest",
+            "description": "Graphic visualization requests to display the punch path and markers in Shop Drawings.",
+            "appliedTo": "Model Space (projected to Shop Drawings) or MasterPanel (Mode 1)"
+          },
+          {
+            "type": "Visual PLine and Circles",
+            "description": "3D geometry showing the location and path of the punches within the CAD model.",
+            "appliedTo": "Model Space"
+          }
+        ]
+      },
+      "tokens_used": 6249,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User launches script (TSLCONTENT or hsb_ScriptInsert).",
+          "2. [Insert Phase] Command prompt: '|Select a Sip or select MasterPanel|' (PrEntity).",
+          "3. [Conditional Branch] User selects either a GenBeam (Sip) or a MasterPanel.",
+          "4. [Branch A - Sip Selected] Command prompt: '|Select tool path|' (EntPLine).",
+          "5. Script creates a new TSL instance in ModelSpace with a Map entry 'Mode' = 0.",
+          "6. [Branch B - MasterPanel Selected] Script creates a new TSL instance in ModelSpace with a Map entry 'Mode' = 1.",
+          "7. Original instance erases itself. New instance executes logic based on Mode.",
+          "8. [Mode 0 Logic] Validates GenBeam and PLine. Transforms PLine to SIP surface.",
+          "9. [Mode 0 Logic] Checks property 'vertexDistance'. If > 1mm, reconstructs path at intervals; otherwise uses vertices.",
+          "10. [Mode 0 Logic] Generates Visual PLine/Circles, DimRequests for ShopDrawings, and CncExport (PUNCHMARKER) tool.",
+          "11. [Mode 1 Logic] Validates MasterPanel. Searches ChildPanels for attached instances of this script.",
+          "12. [Mode 1 Logic] Retrieves DimRequests from ChildPanel instances, transforms them to MasterPanel coordinates, and draws them."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Entity Type Selection on Insert",
+            "path1": {
+              "name": "Mode 0 (Single SIP)",
+              "steps": [
+                "Select GenBeam (SIP)",
+                "Select EntPLine (Tool Path)",
+                "Instance created on GenBeam",
+                "Output: 3D Geometry + CNC Tool + ShopDrawing Map on SIP"
+              ]
+            },
+            "path2": {
+              "name": "Mode 1 (MasterPanel Aggregate)",
+              "steps": [
+                "Select MasterPanel",
+                "Instance created on MasterPanel",
+                "Reads existing Mode 0 instances from nested ChildPanels",
+                "Output: Aggregated visual projection in MasterPanel context"
+              ]
+            }
+          },
+          {
+            "condition": "vertexDistance Property Value (Mode 0)",
+            "path1": {
+              "name": "Vertex Mode (Default 0)",
+              "steps": [
+                "Uses corners of the selected Polyline",
+                "Places punch marks only at vertices"
+              ]
+            },
+            "path2": {
+              "name": "Interval Mode (> 1mm)",
+              "steps": [
+                "Iterates along Polyline length",
+                "Interpolates points at 'vertexDistance' interval",
+                "Reconstructs path with new points"
+              ]
+            }
+          },
+          {
+            "condition": "Duplicate Instance on MasterPanel (Mode 1)",
+            "path1": {
+              "name": "Unique Instance",
+              "steps": [
+                "No matching script found attached",
+                "Proceeds to visualize markers"
+              ]
+            },
+            "path2": {
+              "name": "Duplicate Instance",
+              "steps": [
+                "Detects existing TSL with same script name on MasterPanel",
+                "Reports error: 'tsl already created on this masterpanel'",
+                "Erases current instance"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Mode 0: GenBeam and PLine presence",
+            "errorMessage": "N/A (Silent fail via eraseInstance)",
+            "recovery": "User must ensure the script is attached to a valid GenBeam and PLine."
+          },
+          {
+            "check": "Mode 0: PLine Validity",
+            "errorMessage": "N/A (Silent fail)",
+            "recovery": "Ensure the selected entity is a valid EntPLine."
+          },
+          {
+            "check": "Mode 1: MasterPanel Validity",
+            "errorMessage": "N/A (Silent fail)",
+            "recovery": "Ensure the selected entity is a valid MasterPanel."
+          },
+          {
+            "check": "Mode 1: ChildPanel Tool Data",
+            "errorMessage": "N/A (Silent fail)",
+            "recovery": "Ensure the ChildPanels within the MasterPanel have valid PunchMarker tools attached."
+          },
+          {
+            "check": "Mode 1: Duplicate Instance",
+            "errorMessage": "|tsl already created on this masterpanel|",
+            "recovery": "Delete the existing instance via catalog browser or context menu before inserting a new one."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Adjust Visual Marker Size",
+            "how": "OPM Property: 'Vertex display radius'",
+            "effect": "Updates the diameter of the visual circles drawn in Model Space and Shop Drawings. Does not affect CNC path."
+          },
+          {
+            "action": "Change Punch Distribution",
+            "how": "OPM Property: 'Vertex distance'",
+            "effect": "If changed from 0 to >1mm, recalculates the PLine path to distribute punches at the specified interval (Interval Mode). If reset to 0, reverts to vertex corners (Vertex Mode). Updates CNC path and visual geometry."
+          },
+          {
+            "action": "Modify Geometry",
+            "how": "Grip Edit (PLine) or SIP modification",
+            "effect": "Script has dependency on PLine (setDependencyOnEntity). Recalculation triggers automatic update of punch path and visualization to match new geometry."
+          },
+          {
+            "action": "Update MasterPanel View",
+            "how": "Modify underlying ChildPanel SIPs or their PunchMarkers",
+            "effect": "Mode 1 instances aggregate data from ChildPanels. Updates to ChildPanel geometry or attached TSLs will propagate to the MasterPanel visualization upon recalculation."
+          }
+        ]
+      },
+      "tokens_used": 6913,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# PunchMarkerSip.mcr\n\n## Overview\nThis script generates CNC punch markers on Structural Insulated Panels (SIPs) to indicate assembly locations or machining references. It creates visual geometry in the model and automatically generates data for shop drawings and CNC exports.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script runs and attaches to entities here. |\n| Paper Space | No | Not applicable. |\n| Shop Drawing | Indirectly | Visuals appear here automatically via DimRequests generated in Model Space. |\n\n## Prerequisites\n- **Required Entities**:\n  - For individual panels: A **GenBeam (Sip)** and an **EntPLine** (Polyline) to define the path.\n  - For aggregate panels: A **MasterPanel** containing ChildPanels with existing markers.\n- **Minimum Beam Count**: 1\n- **Required Settings**: None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `hsb_ScriptInsert` (or `TSLINSERT`) → Select `PunchMarkerSip.mcr`\n\n### Step 2: Select Panel\n```\nCommand Line: |Select a Sip or select MasterPanel|\nAction: Click on the Structural Insulated Panel (GenBeam) you wish to mark.\n```\n*Note: If you select a MasterPanel, the script will aggregate markers from its sub-panels.*\n\n### Step 3: Select Tool Path\n```\nCommand Line: |Select tool path|\nAction: Click on the Polyline (PLine) that defines where the punch marks should be placed.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Vertex display radius | Number | 20 mm | Sets the visual size of the punch mark circles in the model and shop drawings. |\n| Vertex distance | Number | 0 mm | Sets the spacing between punch marks. <br>• **0**: Marks placed only at polyline corners (vertices). <br>• **> 1**: Marks distributed evenly along the line at this interval. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| *None* | This script does not add specific custom items to the right-click context menu. |\n\n## Settings Files\n- **None**: This script does not require external settings files.\n\n## Tips\n- **Distribute Marks Evenly**: To create a dashed line of punches along a curve instead of just corners, set the **Vertex distance** property to a value greater than 1 (e.g., 600mm).\n- **Update Path**: You can move or reshape the original Polyline using AutoCAD grips. The script will automatically recalculate and move the punch markers to match the new geometry.\n- **MasterPanel Visualization**: If you use this script on individual ChildPanels inside a MasterPanel, you can insert the script on the MasterPanel itself to visualize all punch markers in the aggregated view.\n\n## FAQ\n- **Q: The marks are too small to see clearly in the shop drawing. How do I fix this?**\n  - A: Increase the **Vertex display radius** property in the Properties Palette. This only affects the visual size, not the CNC punch depth.\n- **Q: I want marks every 500mm, but currently, they are only at the corners.**\n  - A: Change the **Vertex distance** from `0` to `500`.\n- **Q: Does this change the actual CNC machining?**\n  - A: Yes, the script generates a `PUNCHMARKER` tool instruction. Changing the path or spacing will update the CNC code generated for the machine."
+      },
+      "tokens_used": 5637,
+      "error": null
+    }
+  }
+}

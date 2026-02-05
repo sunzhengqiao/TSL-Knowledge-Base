@@ -1,0 +1,211 @@
+{
+  "filename": "HSB_S-CorrectOrientation.mcr",
+  "status": "completed",
+  "total_tokens": 19682,
+  "processing_time": 157.09776282310486,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "Changes the x-axis of the sips if the width is greater than the length.",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "04.05.2016",
+            "author": "AS",
+            "changes": "Pilot version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4252,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses _kModelSpace in dbCreate. It processes Elements found via selection or mapping, indicating a Model Space context. There are no references to ShopDrawing entities, sd_ prefixes, Viewports, or Paper Space tokens."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing Elements with SIPs",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1620,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "During insertion if no execute key is provided",
+            "title": null,
+            "dataSource": "Properties Palette (OPM)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2258,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically corrects the orientation of Structural Insulated Panels (SIPs) by rotating them 90 degrees if their width is greater than their length, ensuring the X-axis aligns with the longest side.",
+          "category": "Sips / Automation / Model Maintenance",
+          "typicalUseCase": "Correcting SIP orientation within imported elements or manually created elements where the local coordinate system is not aligned with the panel length for optimal processing."
+        },
+        "parameters": [],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Sip",
+            "description": "The local coordinate system (X-axis) of the SIP is updated. If the panel width exceeds its length, the X-axis is set to the direction of the original Y-axis, effectively rotating the panel orientation within the element.",
+            "appliedTo": "SIPS contained within the Elements selected by the user during script insertion."
+          }
+        ]
+      },
+      "tokens_used": 4690,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution starts (Insertion or Database Event)",
+          "If _bOnInsert is true: Check insertCycleCount",
+          "If insertCycleCount > 1: Erase instance and exit (Prevent ghosting)",
+          "If insertCycleCount == 1: Check for valid Execute Key",
+          "If Execute Key invalid/missing: Show Properties Dialog",
+          "Save current properties as '_LastInserted' catalog",
+          "Prompt user to Select Elements (PrEntity)",
+          "If selection successful: Loop through selected Elements",
+          "For each Element: Create a new mapped instance of the script attached to the Element",
+          "Erase the initial 'Command' instance",
+          "Mapped instance initializes with specific Element context",
+          "Verify Element is valid (_Element.length > 0)",
+          "If invalid: Report warning and erase instance",
+          "Retrieve 'ManualInserted' flag from Map data",
+          "If _bOnDbCreated or manualInserted: Retrieve SIPs from Element",
+          "Loop through each SIP found in the Element",
+          "Compare SIP Width (dW) vs Length (dL)",
+          "If Width > Length: Update SIP X-axis to align with Y-axis",
+          "Erase the mapped instance and finish"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Phase (Cycle Count)",
+            "path1": {
+              "name": "Initial Command Insert (Cycle 1)",
+              "steps": [
+                "Validate Execute Key",
+                "Show Dialog if needed",
+                "Prompt Element Selection",
+                "Map instances to Elements",
+                "Erase self"
+              ]
+            },
+            "path2": {
+              "name": "Ghost Cycle (Cycle > 1)",
+              "steps": [
+                "Erase self immediately",
+                "Exit"
+              ]
+            }
+          },
+          {
+            "condition": "SIP Dimensions",
+            "path1": {
+              "name": "Width > Length",
+              "steps": [
+                "sip.setXAxisDirectionInXYPlane(sip.vecY())",
+                "Rotate orientation 90 degrees"
+              ]
+            },
+            "path2": {
+              "name": "Width <= Length",
+              "steps": [
+                "No change"
+              ]
+            }
+          },
+          {
+            "condition": "Element Selection",
+            "path1": {
+              "name": "Valid Element Selected",
+              "steps": [
+                "Process SIPS",
+                "Apply Orientation Correction"
+              ]
+            },
+            "path2": {
+              "name": "No/Invalid Element",
+              "steps": [
+                "Report Warning",
+                "Erase Instance"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Validity",
+            "errorMessage": "invalid or no element selected.",
+            "recovery": "User must ensure valid Elements are selected in the Model Space before running the script."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 3239,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_S-CorrectOrientation\n\n## Overview\nAutomatically corrects the orientation of Structural Insulated Panels (SIPs) within selected elements. The script rotates the local X-axis of the panel by 90 degrees if the panel's width is greater than its length, ensuring the X-axis aligns with the longest side.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates on Elements within the Model Space. |\n| Paper Space | No | Not designed for use in Paper Space. |\n| Shop Drawing | No | Not designed for use in Shop Drawings. |\n\n## Prerequisites\n- **Required Entities**: Elements (containing SIPS).\n- **Minimum Beam Count**: N/A (Processes Elements, not individual beams).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_S-CorrectOrientation.mcr`\n\n### Step 2: Select Elements\n```\nCommand Line: |Select elements|\nAction: Click on the desired Elements in the model that contain the SIPs you wish to check. Press Enter to confirm selection.\n```\n\n*(Note: The script will automatically process the selected elements and erase itself upon completion.)*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| None | N/A | N/A | This script does not expose any user-configurable properties in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu items are added by this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Best for Imported Data**: This script is particularly useful for correcting elements imported from other formats where the local coordinate system of the SIPs may not align with the panel length.\n- **Automatic Cleanup**: The script instance is removed from the drawing automatically after the correction is applied, keeping your drawing clean.\n- **Selection**: You can select multiple elements at once to batch-process orientation corrections.\n\n## FAQ\n\n- **Q: How do I know if a panel has been corrected?**\n  A: The script only modifies panels where the Width is strictly greater than the Length. You can check the orientation of the local X-axis (often indicated by the UCS icon or material direction) of the SIP before and after running the script.\n\n- **Q: Why did the script disappear after I ran it?**\n  A: The script is designed as a \"command\" script. It performs the check, updates the geometry, and then removes its own instance from the model automatically.\n\n- **Q: Can I use this on individual beams without an Element?**\n  A: No, this script requires an Element entity to function. It searches for SIPS contained within the selected Elements."
+      },
+      "tokens_used": 3623,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,253 @@
+{
+  "filename": "HSB_W-OpeningPositions.mcr",
+  "status": "completed",
+  "total_tokens": 21892,
+  "processing_time": 367.1509027481079,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "10.03.2016",
+            "author": "AS",
+            "changes": "Pilot version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4682,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script operates on an Element object selected via getElement(). It uses Display dp(-1) to draw text dimensions directly in the 3D/model context based on the element's opening geometry. It lacks ShopDrawing specific keywords (sd_ prefix, sdPageSet), does not check for _Viewport, and is not typed as #Type E."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "An existing Element (likely a wall) must be selected during insertion.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1840,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getElement",
+              "promptOriginal": "|Select an element|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "precision",
+            "type": "PropInt",
+            "displayName": "Precision",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3679,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically dimensions the lengths of solid wall segments (panels) between window or door openings directly in the 3D model.",
+          "category": "Annotation/Visualization",
+          "typicalUseCase": "Used during the design phase to quickly verify wall panel widths or stud bay lengths between openings without generating full 2D shop drawings."
+        },
+        "parameters": [
+          {
+            "name": "precision",
+            "technicalDefault": "0",
+            "businessMeaning": "Specifies the number of decimal places to display for the dimension text labels.",
+            "validRange": "0 to 3",
+            "unit": "decimal places",
+            "affectsOutput": "Changes the formatting of the text string drawn in the model (e.g., '2500' vs '2500.00'). It does not affect geometry, only the readability of the label."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Text/Dimension",
+            "description": "Text labels drawn in Model Space (Display -1) indicating the calculated length of each wall segment between openings.",
+            "appliedTo": "Selected Wall Element (visualized on the face defined by the element's X and Z axes)."
+          }
+        ]
+      },
+      "tokens_used": 3475,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script from hsbCAD palette or command line.",
+          "Check if script is in insertion mode (_bOnInsert is true).",
+          "Prompt user to Select an element.",
+          "Store selected element in _Element[0] and exit initial run.",
+          "Script recalculates (OnInsert = false).",
+          "Retrieve Element el from _Element[0].",
+          "Assign script to element's entity group 'T' and set dependency.",
+          "Search for existing instances of this script attached to the same element.",
+          "Delete any duplicate instances found (keeping only the current one).",
+          "Initialize Display dp(-1) for Model Space drawing.",
+          "Calculate element's local coordinate system (elX, elY, elZ) and boundary points (ptTR, ptBL).",
+          "Create a PlaneProfile of the element's wall outline.",
+          "Iterate through all openings in the element.",
+          "For each opening, subtract its shape from the element's PlaneProfile.",
+          "Iterate through the resulting rings (contours) of the profile.",
+          "Filter out rings that represent holes (openings), keeping only the remaining solid wall segments.",
+          "For each solid wall segment ring, calculate its length along the X-axis.",
+          "Draw formatted text string (dimension) at the center of the segment.",
+          "Script finishes calculation."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Initial Insertion vs. Recalculation",
+            "path1": {
+              "name": "Insertion Mode",
+              "steps": [
+                "Check _bOnInsert flag.",
+                "Execute getElement() to prompt user.",
+                "Append selection to _Element array.",
+                "Return immediately to stop execution."
+              ]
+            },
+            "path2": {
+              "name": "Recalculation Mode",
+              "steps": [
+                "Check _bOnInsert flag (false).",
+                "Proceed to main logic processing.",
+                "Retrieve stored element.",
+                "Update geometry and text labels."
+              ]
+            }
+          },
+          {
+            "condition": "Handling of Openings",
+            "path1": {
+              "name": "Element has Openings",
+              "steps": [
+                "Retrieve openings array from element.",
+                "For each opening: calculate 2D projection.",
+                "Subtract opening rectangle from Element Profile.",
+                "Result: Profile consists of multiple disjoint solid rings (wall segments)."
+              ]
+            },
+            "path2": {
+              "name": "Element has No Openings",
+              "steps": [
+                "Openings array is empty.",
+                "Element Profile remains intact.",
+                "Result: Profile consists of one single solid ring (the full wall outline)."
+              ]
+            }
+          },
+          {
+            "condition": "Processing Profile Rings",
+            "path1": {
+              "name": "Is Opening Ring",
+              "steps": [
+                "Check ringIsOpening() status.",
+                "If true (Is Opening): Skip drawing text for this ring."
+              ]
+            },
+            "path2": {
+              "name": "Is Solid Ring",
+              "steps": [
+                "Check ringIsOpening() status.",
+                "If false (Is Solid): Calculate length.",
+                "Draw dimension text at the midpoint of the segment."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "Implicit failure if user cancels the 'Select an element' prompt.",
+            "recovery": "User must relaunch the script and select a valid Element."
+          },
+          {
+            "check": "Element Geometry",
+            "errorMessage": "Potential crash or empty output if el.plOutlineWall() returns an empty or invalid PLine.",
+            "recovery": "Ensure selected element is a valid Wall element with a calculable outline."
+          },
+          {
+            "check": "Duplicate Script Instances",
+            "errorMessage": "None (Handled automatically).",
+            "recovery": "Script automatically detects and dbErase()s older instances of itself on the same element to ensure only one set of dimensions exists."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Dimension Precision",
+            "how": "OPM (Object Properties Manager)",
+            "effect": "Updates the 'precision' variable, causing the text format to change (e.g., from '2500' to '2500.00') on the next recalculation."
+          },
+          {
+            "action": "Modify Wall Geometry",
+            "how": "Standard hsbCAD element editing (move grips, resize, add/remove openings)",
+            "effect": "Script detects dependency changes. The PlaneProfile is recalculated, rings are updated, and dimensions move/resize to match new wall segments."
+          },
+          {
+            "action": "Delete Wall",
+            "how": "Standard CAD erase command",
+            "effect": "Because the script is assigned to the element group ('T'), deleting the element will also delete the script instance."
+          }
+        ]
+      },
+      "tokens_used": 4241,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_W-OpeningPositions\n\n## Overview\nThis script automatically creates dimension text labels for wall segments located between window or door openings directly in the 3D model. It is used to quickly verify the widths of solid wall panels or stud bays during the design phase without generating full 2D shop drawings.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Dimensions are drawn directly on the wall element in 3D. |\n| Paper Space | No | This script does not function in Layout viewports. |\n| Shop Drawing | No | This is for model visualization only, not production drawings. |\n\n## Prerequisites\n- **Required Entities**: An existing Wall Element must be present in the model.\n- **Minimum Beams**: 1 (One Wall Element).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_W-OpeningPositions.mcr`\n\n### Step 2: Select Wall Element\n```\nCommand Line: Select an element\nAction: Click on the desired Wall element in the drawing that contains openings.\n```\n\n### Step 3: View Results\nThe script will immediately attach to the element and draw text labels on the wall face, showing the length of every solid section between openings.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Precision | Number | 0 | Sets the number of decimal places for the dimension text (e.g., 0 displays \"2500\", 2 displays \"2500.00\"). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| *None* | This script does not add custom items to the right-click context menu. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script operates independently without external settings files.\n\n## Tips\n- **Auto-Update**: The dimensions are associative. If you move the wall, resize it, or modify the size/position of the openings, the text labels will automatically update to reflect the new dimensions.\n- **Precision**: If you need to see millimeter or fractional precision, select the script instance (it is usually attached near the wall) and change the \"Precision\" value in the Properties palette.\n- **Cleanup**: The script automatically removes old instances of itself from the same wall to prevent duplicate labels.\n\n## FAQ\n- **Q: I see the script in the selection, but no text is appearing.**\n  - **A:** Ensure the selected element is a valid Wall Element with a calculable outline. If the wall has no geometry or is an empty reference, the script cannot calculate dimensions.\n- **Q: Can I use this on floor or roof elements?**\n  - **A:** No, this script is specifically designed to calculate segments between wall openings (windows/doors).\n- **Q: How do I remove the dimensions?**\n  - **A:** Select the dimension text or the script instance and press `Delete`. Since the script is linked to the wall, deleting the wall will also remove the dimensions."
+      },
+      "tokens_used": 3975,
+      "error": null
+    }
+  }
+}

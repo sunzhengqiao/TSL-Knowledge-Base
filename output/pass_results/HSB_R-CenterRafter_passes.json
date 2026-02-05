@@ -1,0 +1,312 @@
+{
+  "filename": "HSB_R-CenterRafter.mcr",
+  "status": "completed",
+  "total_tokens": 32165,
+  "processing_time": 376.8402650356293,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 0,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "17.12.2014",
+            "author": "AS",
+            "changes": "Pilot version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4968,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script utilizes Element, Beam, and Sheet objects directly from the 3D model; employs 3D geometry operations such as CoordSys, Vector3d calculations, and Plane intersections; uses model modification methods like addToolStatic() and dbSplit(); lacks any Paper Space indicators (sd_ functions, _Viewport, #Type E) or 2D drawing entities."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam",
+            "Sheet"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "3D Model Space within a valid ElementRoof context",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3715,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getBeam",
+              "promptOriginal": "|Select the rafter to adjust.|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getBeam",
+              "promptOriginal": "|Select a rafter as a reference in a connecting roof plane.|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "_bOnInsert when _kExecuteKey is empty or invalid",
+            "title": "Properties",
+            "dataSource": "Internal TSL Property definitions",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sSeparator01",
+            "type": "PropString",
+            "displayName": "|Center Rafter|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sBmCodeToCut",
+            "type": "PropString",
+            "displayName": "     |Beamcode to stretch to center rafter|",
+            "defaultValue": "HRL*",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5511,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the construction of a center rafter connection between two intersecting roof planes, calculating the correct miters for the center beam and trimming surrounding members to fit.",
+          "category": "Framing/Roof",
+          "typicalUseCase": "Used when creating a 'butterfly' roof, M-roof, or any dual-pitch roof configuration where a central vertical rafter acts as the valley or ridge connection between two opposing slopes."
+        },
+        "parameters": [
+          {
+            "name": "sSeparator01",
+            "technicalDefault": "",
+            "businessMeaning": "Visual grouping header used solely to organize the Properties Palette; does not affect geometry.",
+            "validRange": "N/A (Static Label)",
+            "unit": "String",
+            "affectsOutput": "None."
+          },
+          {
+            "name": "sBmCodeToCut",
+            "technicalDefault": "HRL*",
+            "businessMeaning": "The naming convention (Beam Code) used to identify which perpendicular beams (typically common rafters or joists) intersecting the center rafter need to be trimmed to fit against it.",
+            "validRange": "Text string with optional wildcard '*' (e.g., 'RL*', 'PURLIN*', 'HCB').",
+            "unit": "String",
+            "affectsOutput": "Determines which beams in the element receive saw cuts. Beams matching this code are cut to meet the faces of the center rafter."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User Input (Beam Selection)",
+            "effect": "The geometric calculation of the cut planes depends entirely on the spatial relationship between the 'Rafter to adjust' and the 'Reference rafter' from the connecting roof plane.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Saw Cut",
+            "description": "A compound cut applied to the top end of the selected center rafter to match the slope of the intersecting roof plane defined by the reference beam.",
+            "appliedTo": "The primary beam selected by the user (_Beam[0])."
+          },
+          {
+            "type": "Saw Cut",
+            "description": "Two perpendicular cuts (left and right sides) applied to intersecting beams to fit them flush against the center rafter.",
+            "appliedTo": "Beams within the element matching the code defined in 'sBmCodeToCut'."
+          },
+          {
+            "type": "Sheet Modification",
+            "description": "Splits the roof sheathing (specifically in Zone -2) along the vertical plane of the center rafter and erases the overlapping portion to prevent clashes.",
+            "appliedTo": "Sheets associated with the ElementRoof."
+          }
+        ]
+      },
+      "tokens_used": 5981,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Start (Trigger)",
+          "2. Check Cycle Count (If > 1, erase instance and exit)",
+          "3. Check Execute Key / Catalog Existence",
+          "4. [Conditional] Display Properties Dialog (If no Execute Key)",
+          "5. User Input: Select 'Rafter to adjust' (Beam 1)",
+          "6. User Input: Select 'Reference rafter' from connecting roof (Beam 2)",
+          "7. Return and Trigger Recalculation",
+          "8. Validation: Check if 2 Beams are selected",
+          "9. Validation: Check if Beam 1 belongs to a valid ElementRoof",
+          "10. Calculation: Extract Element Coordinate System",
+          "11. Validation: Check if Reference Beam Z-vector is parallel to Element Z-vector (Different slopes required)",
+          "12. Geometry: Calculate Reference Plane based on Reference Beam geometry",
+          "13. Collection: Gather all Beams from Element",
+          "14. Filtering: Filter beams by 'sBmCodeToCut' property",
+          "15. Sorting: Sort filtered beams by code",
+          "16. Geometry: Calculate Cut Planes (Left/Right) for intersecting beams",
+          "17. Action: Apply Saw Cuts to filtered beams (Left or Right side based on position)",
+          "18. Geometry: Calculate Intersection Line (Vertical Cut) for Center Rafter",
+          "19. Action: Apply Vertical Compound Cut to Center Rafter (Beam 1)",
+          "20. Action: Rename Center Rafter to 'Center Rafter'",
+          "21. Action: Split Sheathing (Zone -2) along Center Rafter plane",
+          "22. Action: Erase Sheathing portion on one side of split",
+          "23. Cleanup: Erase Script Instance"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Existence of _kExecuteKey in Catalog",
+            "path1": {
+              "name": "Catalog Load",
+              "steps": [
+                "Load properties from catalog entry",
+                "Skip property dialog"
+              ]
+            },
+            "path2": {
+              "name": "Manual Input",
+              "steps": [
+                "Execute Properties Dialog",
+                "User confirms properties"
+              ]
+            }
+          },
+          {
+            "condition": "Relative position of intersecting beam to center rafter",
+            "path1": {
+              "name": "Right Side Cut",
+              "steps": [
+                "Calculate Right Cut Plane",
+                "Apply addToolStatic with cutRight"
+              ]
+            },
+            "path2": {
+              "name": "Left Side Cut",
+              "steps": [
+                "Calculate Left Cut Plane",
+                "Apply addToolStatic with cutLeft"
+              ]
+            }
+          },
+          {
+            "condition": "Reference Roof Slope (Parallelism check)",
+            "path1": {
+              "name": "Invalid Slope",
+              "steps": [
+                "Report Warning: 'Select a rafter as reference from a connected roof plane.'",
+                "Erase Instance",
+                "Exit"
+              ]
+            },
+            "path2": {
+              "name": "Valid Slope",
+              "steps": [
+                "Continue geometry calculation",
+                "Calculate Reference Plane"
+              ]
+            }
+          },
+          {
+            "condition": "Beams found to cut (arBmToCut.length)",
+            "path1": {
+              "name": "No Beams Found",
+              "steps": [
+                "Report Message: 'No beams to cut found'",
+                "Continue script execution (Only center rafter is modified)"
+              ]
+            },
+            "path2": {
+              "name": "Beams Found",
+              "steps": [
+                "Proceed to cutting loop",
+                "Apply cuts to all filtered beams"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Minimum of 2 beams selected",
+            "errorMessage": "|Invalid element found!| or Implicit erasure",
+            "recovery": "Restart script and ensure both rafters are selected before closing the command."
+          },
+          {
+            "check": "Primary beam is part of a valid ElementRoof",
+            "errorMessage": "|Invalid element found!|",
+            "recovery": "Ensure the first beam selected is part of an ElementRoof structure, not a standalone beam."
+          },
+          {
+            "check": "Reference beam belongs to a different roof plane (non-parallel Z-vectors)",
+            "errorMessage": "|Select a rafter as reference from a connected roof plane.|",
+            "recovery": "Select a reference rafter from an intersecting roof slope (e.g., the other side of a valley or M-roof), not the same plane."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Edit Geometry/Cuts",
+            "how": "Native CAD Grips/Entity Editing",
+            "effect": "Since the TSL instance is erased after execution, the resulting cuts and split sheets become standard geometry. Users must use native AutoCAD/hsbCAD editing tools to modify them further; the script cannot be re-run to update existing instances."
+          }
+        ]
+      },
+      "tokens_used": 6699,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_R-CenterRafter.mcr\n\n## Overview\nAutomates the connection of a center rafter between two intersecting roof planes (e.g., butterfly or M-shaped roofs). It calculates and applies the necessary compound miter cuts to the center rafter and trims intersecting common rafters to fit flush against it.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required. Script operates on 3D beams and roof elements. |\n| Paper Space | No | Not applicable. |\n| Shop Drawing | No | Not applicable. |\n\n## Prerequisites\n- **Required Entities:** An existing `ElementRoof` containing the rafters.\n- **Minimum Beams:** 2 (The center rafter to be adjusted and a reference rafter from an intersecting roof plane).\n- **Required Settings:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command:** `TSLINSERT`\n**Action:** Browse to and select `HSB_R-CenterRafter.mcr`.\n\n### Step 2: Configure Properties (Optional)\n**Dialog:** Properties Palette\n**Action:** If not using a catalog entry, a properties dialog may appear.\n- Review the **Beamcode to stretch to center rafter**.\n- The default is usually `HRL*`. Ensure this matches the code of the perpendicular rafters you wish to cut.\n\n### Step 3: Select Rafter to Adjust\n```\nCommand Line: |Select the rafter to adjust.|\nAction: Click on the beam that will act as the center rafter (the vertical/valley beam).\n```\n\n### Step 4: Select Reference Rafter\n```\nCommand Line: |Select a rafter as a reference in a connecting roof plane.|\nAction: Click on a rafter from the *other* roof slope that intersects the center rafter.\n```\n\n### Step 5: Execution\n**Action:** The script will automatically calculate the intersection geometry, apply cuts to the center rafter, trim the perpendicular rafters, and split the roof sheathing. The script instance will then delete itself.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Center Rafter | Text/Label | N/A | Visual separator for the property group. |\n| Beamcode to stretch to center rafter | Text | HRL* | The naming filter used to find perpendicular beams (e.g., common rafters) that need to be trimmed against the center rafter. Supports wildcards (e.g., RL*, PURLIN*). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not add persistent context menu items as it deletes itself after running. |\n\n## Settings Files\n- **Filename:** None\n- **Location:** N/A\n- **Purpose:** This script relies on internal property definitions and does not require external settings files.\n\n## Tips\n- **Slope Requirement:** Ensure the \"Reference rafter\" is from a roof plane with a *different* slope than the center rafter. If they are parallel, the script will fail with a roof plane warning.\n- **Fire-and-Forget:** The script instance erases itself immediately after execution. You cannot double-click the result to re-run the script. To make changes, you must undo or manually edit the resulting cuts.\n- **Sheathing Zone:** The script specifically splits roof sheathing in \"Zone -2\". Ensure your roof sheets are correctly assigned if you expect the sheets to be split.\n\n## FAQ\n- **Q: I received the error \"Select a rafter as reference from a connected roof plane.\"**\n  **A:** This means the two rafters you selected are parallel (on the same slope). You must select a reference rafter from an opposing or intersecting roof slope (e.g., the other side of the valley).\n- **Q: The script ran, but my common rafters weren't cut.**\n  **A:** Check the `sBmCodeToCut` property. The rafters you want to cut must have a Beam Code that matches the filter (default is `HRL*`).\n- **Q: Can I modify the connection later?**\n  **A:** No. Because the script erases itself, the cuts become standard static geometry. Use native CAD editing tools to modify the beams afterward."
+      },
+      "tokens_used": 5291,
+      "error": null
+    }
+  }
+}

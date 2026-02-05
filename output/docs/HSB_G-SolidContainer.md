@@ -1,116 +1,68 @@
-# HSB_G-SolidContainer
+# HSB_G-SolidContainer.mcr
 
-A diagnostic tool for comparing imported solid geometry with the actual GenBeam body in hsbCAD. This script visualizes differences between an imported body (stored in the script's Map) and the real solid body of a beam, sheet, or panel.
+## Overview
+This script performs a visual quality control check by comparing the current geometry of a timber beam (GenBeam) against a reference solid stored in the hsbCAD Map. It is used to visualize clashes, gaps, or volume differences between the actual timber model and an imported design state (e.g., from an architectural model).
 
-## Script Type
+## Usage Environment
+| Space | Supported | Notes |
+|-------|-----------|-------|
+| Model Space | Yes | This script only operates in the 3D Model environment. |
+| Paper Space | No | Not applicable for 2D layouts. |
+| Shop Drawing | No | Does not generate 2D drawing views. |
 
-**Type O (Object)** - This is a standalone object script that attaches to GenBeam entities for solid body comparison and validation purposes.
+## Prerequisites
+- **Required Entities**: At least one `GenBeam` (Timber Beam) must be present in the model.
+- **Minimum Beam Count**: 1.
+- **Required Settings**: The script requires a Map entry attached to the element (or globally) with the key `RealSolid` containing a valid 3D Body object. Without this reference data, the script cannot perform the comparison.
 
-**Important**: This script cannot be manually inserted by users. It is designed to be created programmatically through the property dialog for catalog creation or by other automation workflows.
+## Usage Steps
 
-## Purpose
+### Step 1: Launch Script
+Command: `TSLINSERT`
+Action: In the file dialog, select `HSB_G-SolidContainer.mcr` and click Open.
 
-The SolidContainer script serves as a quality assurance tool to:
-- Store and display imported solid geometry alongside the actual hsbCAD GenBeam body
-- Calculate and visualize volume differences between imported and actual bodies
-- Provide visual feedback (green/red text) indicating whether a valid imported body was found
-- Support formatted variable display for beam identification
+### Step 2: Select Beams
+```
+Command Line: Select genBeam(s)
+Action: Click on the timber beam(s) you wish to compare against the reference solid. Press Enter to confirm selection.
+```
+*Note: Upon selection, the script attaches to the beam and performs an initial calculation based on default properties.*
 
-## User Properties
+## Properties Panel Parameters
 
-### General
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| View | dropdown | Difference | Determines what is visualized: <br>• **Nothing**: Hides the comparison body.<br>• **Imported body**: Shows the reference solid only.<br>• **Difference**: Shows the volume discrepancy (gaps or clashes) between the beam and the reference. |
+| Color | dropdown | Yellow | Sets the display color of the visualized solid (Imported body or Difference). |
+| Offset | number | 300 | Sets the distance (in mm) the visualized body is shifted away from the beam to prevent visual overlap. |
+| Offset Direction (GenBeam) | dropdown | Z | Specifies the axis direction (relative to the beam's local coordinate system) to apply the Offset. Options include X, -X, Y, -Y, Z, -Z. |
+| Text Height | number | 200 | Defines the height of the text annotation displayed in the model. |
+| Text Offset | number | 350 | Defines the distance from the beam's reference point where the text label is positioned. |
+| Custom Text | text | - | Defines the text content displayed next to the beam. Supports formatted variables like `@(Posnum)`, `@(Length)`, or `@(Volume)`. If left empty, it defaults to the Position Number. |
+| Show Import Error | dropdown | No | If the imported reference solid is invalid, set to **Yes** to display wireframe face loops for debugging purposes. |
+| Group | dropdown | - | Assigns the script instance to a specific CAD group for organizational control. |
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Color | Dropdown | Green | Display color for the body visualization. Options: Default, Red, Yellow, Green, Cyan, Blue, Magenta, White, Black, Gray, Dark brown, Light brown |
-| Group | Dropdown | (varies) | Assigns the script instance to a hsbCAD Group for organization |
+## Right-Click Menu Options
 
-### Body Display
+| Menu Item | Description |
+|-----------|-------------|
+| *None* | This script does not add custom items to the right-click context menu. All modifications are made via the Properties Palette. |
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| View | Dropdown | Difference | Controls what is displayed. Options: Nothing, Imported body, Difference |
-| Offset | Double | 300 mm | Distance to offset the displayed body from the original position |
-| Offset Direction (GenBeam) | Dropdown | Z | Direction relative to GenBeam's coordinate system. Options: X, -X, Y, -Y, Z, -Z |
-| Show Import Error | Yes/No | Yes | When enabled, displays face loops if no valid body was stored in the Map |
+## Settings Files
+- **Map Key**: `RealSolid`
+- **Location**: Internal hsbCAD Element Map
+- **Purpose**: Stores the reference 3D Body geometry (usually imported from an external CAD file) used for the comparison. This data must be populated by an import script or process before running this script.
 
-### Text Display
+## Tips
+- **Visual Clarity**: If the visualized body overlaps perfectly with your beam (Z-fighting), increase the **Offset** value or change the **Offset Direction** (e.g., set to Z to shift it vertically above the beam).
+- **Finding Errors**: Set **View** to `Difference`. If you see colored geometry appear, it indicates areas where the timber beam does not match the reference solid (either too much material or too little).
+- **Data Labels**: Use the **Custom Text** property to display dynamic data. For example, entering `Vol: @(Volume)` will display the text "Vol: " followed by the actual calculated volume of the discrepancy.
+- **Data Integrity**: If the script reports errors, ensure the import process successfully created a valid solid in the Map and not just a collection of surfaces. Enable **Show Import Error** to diagnose bad data.
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Text Height | Double | 200 mm | Height of the displayed text labels |
-| Text Offset | Double | 350 mm | Distance to offset the text from the beam center |
-| Custom Text | String | (empty) | Custom text to display using formatted variables |
-
-## Formatted Variables
-
-The following variables can be used in the Custom Text field:
-
-| Variable | Description |
-|----------|-------------|
-| @(Handler) | Entity handle ID |
-| @(Posnum) | Position number |
-| @(Length) | Solid length |
-| @(Width) | Solid width |
-| @(Height) | Solid height |
-| @(Volume) | Volume |
-| @(Grade) | Material grade |
-| @(Profile) | Profile name |
-| @(Material) | Material name |
-| @(Label) | Label |
-| @(SubLabel) | Sub-label |
-| @(SubLabel2) | Sub-label 2 |
-| @(Beamcode) | Beam code |
-| @(Type) | Type designation |
-| @(Information) | Information field |
-| @(Name) | Name |
-| @(PosnumAndText) | Position number with text |
-| @(Layer) | Layer name |
-| @(HsbId) | hsbCAD ID |
-| @(Module) | Module name |
-
-## Usage Workflow
-
-1. **Automatic Creation**: This script is typically created automatically by other hsbCAD processes that import solid geometry for comparison. Manual insertion is blocked with the message: "TSL cannot be manually added. Please use property dialog for catalogs creation."
-
-2. **Catalog Configuration**: Use the property dialog (shown on double-click) to configure and save catalog settings for different comparison scenarios.
-
-3. **Viewing Results**:
-   - **Green text** indicates a valid imported body was found and stored
-   - **Red text** indicates no valid body was found in the Map
-   - Set the "View" property to control what geometry is displayed
-
-4. **Comparing Volumes**:
-   - Set View to "Difference" to visualize geometric differences between imported and actual bodies
-   - The script calculates both A-B and B-A differences to show all discrepancies
-   - A volume tolerance of 15 cubic cm is applied by default to filter small numerical differences
-
-5. **Adjusting Display**:
-   - Use "Offset" and "Offset Direction" to move the displayed comparison geometry away from the original beam
-   - Adjust "Text Height" and "Text Offset" for better readability
-
-## Visual Indicators
-
-- **Position Number Color**:
-  - Green: Valid imported body found in Map
-  - Red: No valid body found or import failure
-
-- **Error Display**: When "Show Import Error" is enabled and no valid body exists, the script displays the face loops stored in the Map to help diagnose import issues.
-
-## Technical Notes
-
-- The script automatically removes duplicate instances attached to the same GenBeam
-- Supports Beam, Sheet, and Sip (Structural Insulated Panel) entity types
-- Volume differences are reported in mm3, cm3, and m3
-- The script's insertion point (_Pt0) is locked to the GenBeam center and cannot be manually relocated
-- A minimum volume threshold of 15 cubic cm (15,000,000 mm3) is used to filter insignificant geometry
-
-## Version History
-
-- **v1.12** (25 Jan 2020): Simplified View property options, improved difference visualization, added volume tolerance
-- **v1.11** (14 Jan 2020): Locked _Pt0 grip point, automatic removal of duplicate instances
-- **v1.10** (19 Nov 2019): Added Text Offset, Group, and Custom Text properties with formatted variables
-- **v1.09** (21 Oct 2019): Imported body visible even when volume difference is zero
-- **v1.08** (18 Oct 2019): Added volume comparison reporting in multiple units
-- **v1.07** (18 Oct 2019): Removed manual creation, added display options
-- **v1.00** (23 Sep 2019): Initial release
+## FAQ
+- **Q: I ran the script, but I don't see any new geometry.**
+  A: Check the **View** property in the Properties Palette. If it is set to "Nothing", change it to "Imported body" or "Difference". Also, verify that the `RealSolid` Map entry actually contains data.
+- **Q: Why does the text show "-1"?**
+  A: The script defaults to showing the Position Number. If the beam has not been assigned a position number yet, it may display -1 or an empty string. You can change the **Custom Text** property to show other data like `@(Length)`.
+- **Q: What does the "Difference" view actually show?**
+  A: It performs a Boolean operation. It shows the volume that exists in the Reference Solid but *not* in the Timber Beam (missing material) AND the volume that exists in the Timber Beam but *not* in the Reference Solid (extra material).

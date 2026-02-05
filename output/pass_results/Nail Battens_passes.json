@@ -1,0 +1,369 @@
+{
+  "filename": "Nail Battens.mcr",
+  "status": "completed",
+  "total_tokens": 31550,
+  "processing_time": 363.6560971736908,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6665,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly uses `_kModelSpace` during instance creation. It operates on `Element` and `GenBeam` entities to generate production data (`ElemNailCluster`), not drawing views. There are no `sd_` prefixes, `_Viewport` checks, or `#Type E` declarations indicative of ShopDrawing or Paper Space environments."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2960,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "showDialog",
+              "promptOriginal": null,
+              "condition": "_kExecuteKey == \"\" || catalogNames.find(_kExecuteKey) == -1",
+              "required": false
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "Select a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "Insertion if no execute key is provided",
+            "title": null,
+            "dataSource": "OPM Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "zoneIndexBattens",
+            "type": "PropInt",
+            "displayName": "|Zone index battens|",
+            "defaultValue": 0,
+            "inputType": "dropdown",
+            "options": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              -1,
+              -2,
+              -3,
+              -4,
+              -5
+            ],
+            "category": "|Battens|",
+            "description": "|Specifies the zone index of the battens.| |Battens in this zone will be nailed|."
+          },
+          {
+            "index": 1,
+            "variable": "toolIndex",
+            "type": "PropInt",
+            "displayName": "|Toolindex nailing|",
+            "defaultValue": 1,
+            "inputType": "number",
+            "options": [],
+            "category": "|Battens|",
+            "description": "|Specifies the tool index for the nailing.|"
+          },
+          {
+            "index": 0,
+            "variable": "maximumNailSpacing",
+            "type": "PropDouble",
+            "displayName": "|Maximum nail spacing|",
+            "defaultValue": 400.0,
+            "inputType": "number",
+            "options": [],
+            "category": "|Battens|",
+            "description": "|Specifies the maximum distance between the nails.| |The nails will be distrubuted evenly between the start and end. It will not exceed the maximum nail spacing|."
+          },
+          {
+            "index": 1,
+            "variable": "offsetFromBattenEnd",
+            "type": "PropDouble",
+            "displayName": "|Offset from batten end|",
+            "defaultValue": 100.0,
+            "inputType": "number",
+            "options": [],
+            "category": "|Battens|",
+            "description": "|Specifies the nail offset from the batten end.|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4522,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically calculates and assigns nail patterns for battens attached to timber wall or floor elements based on their geometric contact and zone settings.",
+          "category": "Machining/Fastening",
+          "typicalUseCase": "Used during the detailing phase to specify nailing instructions for battens (e.g., for siding, roofing, or insulation) ensuring nails are placed only where the batten actually touches the structure."
+        },
+        "parameters": [
+          {
+            "name": "zoneIndexBattens",
+            "technicalDefault": "0",
+            "businessMeaning": "Selects the construction layer (Zone) containing the battens that require nailing.",
+            "validRange": "Positive (1-5) or Negative (-1 to -5) integers",
+            "unit": "Zone Index",
+            "affectsOutput": "Determines which GenBeams are processed as battens. Nails are only generated for beams in this specific zone."
+          },
+          {
+            "name": "toolIndex",
+            "technicalDefault": "1",
+            "businessMeaning": "The specific machine identifier for the nail gun or stapler to use in the factory.",
+            "validRange": "Positive integers (machine specific)",
+            "unit": "Tool ID",
+            "affectsOutput": "Assigns the `ElemNailCluster` to a specific production tool in the CAM data."
+          },
+          {
+            "name": "maximumNailSpacing",
+            "technicalDefault": "400.0",
+            "businessMeaning": "The maximum distance allowed between nails along the batten.",
+            "validRange": "50mm to 1000mm",
+            "unit": "mm",
+            "affectsOutput": "Controls the density of the nailing pattern. The script calculates spacing to be even but never greater than this value."
+          },
+          {
+            "name": "offsetFromBattenEnd",
+            "technicalDefault": "100.0",
+            "businessMeaning": "The clearance distance from the batten tips where nailing must not occur.",
+            "validRange": "10mm to 300mm",
+            "unit": "mm",
+            "affectsOutput": "Shortens the effective nailing segment at both ends of the batten, preventing nails too close to edges where splitting might occur."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "maximumNailSpacing increases",
+            "effect": "Reduces the total number of nails per batten, provided the batten length is sufficient.",
+            "cascade": [
+              "numberOfNails",
+              "nailSpacing"
+            ]
+          },
+          {
+            "trigger": "offsetFromBattenEnd increases",
+            "effect": "Reduces the effective length available for nailing, potentially reducing the nail count on shorter battens.",
+            "cascade": [
+              "segmentLength",
+              "numberOfNails"
+            ]
+          },
+          {
+            "trigger": "zoneIndexBattens changes",
+            "effect": "Alters the geometry selection; if the selected zone contains no beams or no valid contact surface, no nails are generated.",
+            "cascade": [
+              "battens[]",
+              "nailPositions"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "ElemNailCluster",
+            "description": "Production data entities defining the coordinates and tool index for nails.",
+            "appliedTo": "Element (Targeting GenBeams within the specified zone index)"
+          }
+        ]
+      },
+      "tokens_used": 5006,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Start: Initialize TSL",
+          "Check Insertion State (_bOnInsert)",
+          "[Insert Mode] Check Cycle Count (InsertCycleCount)",
+          "[Insert Mode] Validate Execute Key (_kExecuteKey)",
+          "[Insert Mode] Prompt for Element Selection (PrEntity)",
+          "[Insert Mode] Loop through selected Elements",
+          "[Insert Mode] Create Instance for each selected Element (dbCreate)",
+          "[Insert Mode] Erase original Instance (EraseInstance)",
+          "[Execution Mode] Retrieve Map Properties (ManualInserted)",
+          "[Execution Mode] Set Properties from Catalog if needed (_bOnDbCreated)",
+          "[Execution Mode] Validate Element Count (_Element.length)",
+          "[Execution Mode] Extract Element Geometry (CoordSys, GenBeams)",
+          "[Execution Mode] Determine 'Brander' (Substrate) Zone Geometry",
+          "[Execution Mode] Aggregate Brander Contact Profiles",
+          "[Execution Mode] Validate Brander Profile Area",
+          "[Execution Mode] Iterate through Battens (Target Zone GenBeams)",
+          "[Execution Mode] Calculate Intersection of Batten and Brander Profiles",
+          "[Execution Mode] Split Intersection into Nail Segments",
+          "[Execution Mode] Apply Offsets and Validate Segment Length",
+          "[Execution Mode] Calculate Nail Distribution (Spacing & Count)",
+          "[Execution Mode] Generate and Add ElemNailCluster Entities",
+          "Generate Visualization Geometry",
+          "Script End"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "_bOnInsert is TRUE (Script is being inserted)",
+            "path1": {
+              "name": "Insertion Flow",
+              "steps": [
+                "Check if insertCycleCount > 1",
+                "If true, EraseInstance and return",
+                "If false, check if _kExecuteKey is empty or invalid",
+                "If key invalid, Show Dialog (OPM)",
+                "Save properties to '_LastInserted' catalog",
+                "Prompt user to select Elements (PrEntity)",
+                "For each selected element, dbCreate a new instance",
+                "EraseInstance and return"
+              ]
+            },
+            "path2": {
+              "name": "Execution/Update Flow",
+              "steps": [
+                "Check if instance was manually inserted via _Map",
+                "Check if just created (_bOnDbCreated)",
+                "Load properties from '_LastInserted' if applicable",
+                "Proceed to generation logic"
+              ]
+            }
+          },
+          {
+            "condition": "Number of Elements attached to instance",
+            "path1": {
+              "name": "Valid Single Element",
+              "steps": [
+                "Extract Element geometry",
+                "Proceed to Nail Generation"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Element Count",
+              "steps": [
+                "Report Notice 'Invalid number of elements selected'",
+                "EraseInstance",
+                "Return"
+              ]
+            }
+          },
+          {
+            "condition": "Brander (Substrate) Profile Area Check",
+            "path1": {
+              "name": "Valid Substrate Found",
+              "steps": [
+                "Area > 10mm",
+                "Proceed to iterate battens"
+              ]
+            },
+            "path2": {
+              "name": "No Valid Substrate",
+              "steps": [
+                "Area < 10mm",
+                "Report Message 'No valid branders found...'",
+                "EraseInstance",
+                "Return"
+              ]
+            }
+          },
+          {
+            "condition": "Batten Nail Segment Length after Offset",
+            "path1": {
+              "name": "Valid Segment",
+              "steps": [
+                "Length >= minimumLengthNailSegment (10mm)",
+                "Calculate Nail Count and Spacing",
+                "Create Nails"
+              ]
+            },
+            "path2": {
+              "name": "Segment Too Short",
+              "steps": [
+                "Length < minimumLengthNailSegment",
+                "Skip iteration (continue loop)",
+                "No nails created for this segment"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "(Silent - Instance erased)",
+            "recovery": "N/A (Prevents recursive insertion)"
+          },
+          {
+            "check": "Number of attached Elements",
+            "errorMessage": "Invalid number of elements selected!",
+            "recovery": "Re-insert the script ensuring only one Element is selected or implied."
+          },
+          {
+            "check": "Brander Profile Area (Substrate contact)",
+            "errorMessage": "No valid branders found for nailing battens in element [ElementNumber]",
+            "recovery": "Ensure the specified 'Brander' zone index (if applicable, though fixed to 0 in code) contains GenBeams that actually touch the Batten zone. Check the `allowedDistanceFromBattens` variable."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Script Properties",
+            "how": "OPM (Object Properties Palette)",
+            "effect": "Changing 'Zone index battens', 'Maximum nail spacing', or 'Offset from batten end' triggers a recalculation, updating the number and position of nail clusters."
+          },
+          {
+            "action": "Modify Batten Geometry",
+            "how": "Grip Edit or Properties of the Batten GenBeams",
+            "effect": "Updating the length or position of the battens triggers the script to re-evaluate intersections and redistribute nails."
+          },
+          {
+            "action": "Modify Element Geometry",
+            "how": "Standard Element Editing",
+            "effect": "Changes to the wall/floor geometry trigger an update, potentially altering the contact surface between battens and the main element."
+          }
+        ]
+      },
+      "tokens_used": 6620,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Nail Battens.mcr\n\n## Overview\nThis script automatically calculates and assigns nail patterns for battens attached to timber wall or floor elements. It ensures nails are placed only where the batten physically touches the main structure, adhering to specified spacing and offset rules for production data.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates on Elements and GenBeams to generate production nail data. |\n| Paper Space | No | This is a CAM/Modeling script, not a detailing script. |\n| Shop Drawing | No | Production data is generated in the model, not on drawing views. |\n\n## Prerequisites\n- **Required Entities**: One (1) Element (e.g., a wall or floor panel) containing GenBeams.\n- **Minimum Beam Count**: The Element must contain GenBeams assigned to specific zones (e.g., battens in one zone, structural beams in another).\n- **Required Settings**: None (uses internal variable defaults).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse and select `Nail Battens.mcr`.\n\n### Step 2: Configure Properties (Optional)\nIf a specific \"Execute Key\" (preset configuration) is not selected via catalog, a configuration dialog or the Properties Palette may appear automatically upon insertion.\nAction: Verify or set the default **Zone Index** and **Tool Index** for your specific project requirements.\n\n### Step 3: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the timber Element (wall/floor) that contains the battens you wish to nail.\n```\nAction: Press `Enter` to confirm selection. The script will process the element and generate nail clusters (`ElemNailCluster`).\n\n### Step 4: Adjust via Properties Palette (Optional)\nAction: Select the script instance in the model. Use the Properties Palette (Ctrl+1) to fine-tune settings like spacing or offsets if the initial result needs adjustment.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Zone index battens | dropdown | 0 | Specifies the construction layer (Zone) containing the battens to be nailed. Options range from -5 to 5. Only beams in this zone will be processed. |\n| Toolindex nailing | number | 1 | The machine identifier (Tool ID) for the nail gun or stapler to be used in production. |\n| Maximum nail spacing | number | 400.0 | The maximum allowable distance (mm) between nails along the batten. Nails are distributed evenly but will never exceed this gap. |\n| Offset from batten end | number | 100.0 | The clearance distance (mm) from both ends of the batten where no nails will be placed. Prevents splitting near the edges. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu items are added by this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script relies entirely on the properties defined in the Properties Palette; no external XML settings files are required.\n\n## Tips\n- **Zone Setup**: Ensure your Element composition (Layers/Zones) is set up correctly. The script looks for geometric contact between the beams in the \"Batten Zone\" and the main structure beams (often Zone 0 or the \"Brander\").\n- **Visualization**: If nails are not appearing, check the Element Number in the command line history. It may report \"No valid branders found,\" which implies the battens are not physically touching the main structure beams in the model.\n- **Production Data**: The generated objects are `ElemNailCluster` entities. These are visible in hsbCAD production lists but may not have a distinct graphical representation in standard AutoCAD views unless a specific layer style is active.\n\n## FAQ\n- **Q: Why did the script erase itself immediately after running?**\n  A: This is normal behavior for single-instance scripts. The logic creates a new instance attached to the selected Element and removes the temporary insertion instance. Check the Element you selected; the script should now be listed under its associated TSL instances.\n  \n- **Q: The nails are too far apart. How do I fix this?**\n  A: Select the script instance and lower the **Maximum nail spacing** value in the Properties Palette. The script will automatically redistribute the nails to be closer together.\n\n- **Q: Why are no nails generated on my battens?**\n  A: Check the **Zone index battens** property. It must match the exact zone index where your batten beams are defined. Also, ensure the battens are actually intersecting or touching the main structural beams of the element."
+      },
+      "tokens_used": 5777,
+      "error": null
+    }
+  }
+}

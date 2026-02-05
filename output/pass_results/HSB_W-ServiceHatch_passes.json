@@ -1,0 +1,260 @@
+{
+  "filename": "HSB_W-ServiceHatch.mcr",
+  "status": "completed",
+  "total_tokens": 34474,
+  "processing_time": 409.7720663547516,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 0,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl adds a service hatch to wall elements. Default locations are next to opening and at wall connections",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "29.01.2013",
+            "author": "AS",
+            "changes": "Pilot version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5562,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses `_kModelSpace` explicitly within the `dbCreate` function. It interacts directly with `ElementWallSF` entities, calculating geometry based on wall connections (`el.getConnectedElements`) and openings (`el.opening`). There are no `sd_` function calls, references to `_Viewport`, or `#Type E` / `_Entity` patterns characteristic of ShopDrawing or Paper Space scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWallSF"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing at least one Wall Element (ElementWallSF) that has either connected elements or openings to generate service hatch locations.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3372,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "showDialog",
+              "promptOriginal": null,
+              "condition": "_bOnInsert && _kExecuteKey==\"\"",
+              "required": false
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "TN(\"|Select a set of elements|\")",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dMinimumRequiredGap",
+            "type": "PropDouble",
+            "displayName": "|Minimum Required Gap|",
+            "defaultValue": "200 mm",
+            "inputType": "number",
+            "options": [],
+            "category": "General",
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 7396,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically identifies and visualizes valid locations for service hatches (utility pass-throughs) on wall elements, specifically targeting zones next to openings and wall connections where there is sufficient clearance between studs.",
+          "category": "Utility/Framing",
+          "typicalUseCase": "Used during the design or detailing phase to locate optimal spots for routing pipes, cables, or ducts through a timber wall panel without intersecting structural studs."
+        },
+        "parameters": [
+          {
+            "name": "dMinimumRequiredGap",
+            "technicalDefault": "U(200)",
+            "businessMeaning": "The minimum width of the clear opening required between structural studs to accommodate the service pipes or cable bundles. It ensures the hatch is placed only where there is enough physical space.",
+            "validRange": "50 mm - 600 mm",
+            "unit": "mm",
+            "affectsOutput": "Acts as a filter for geometry generation. Any calculated gap between studs that is smaller than this value is ignored. Increasing this value reduces the number of valid hatch locations displayed; decreasing it increases them."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Visualization Points",
+            "description": "Start and end points indicating the valid segment of the service hatch location. The script visualizes these points (using .vis()) to show the user exactly where the hatch can be placed between studs.",
+            "appliedTo": "ElementWallSF (Wall Elements)"
+          }
+        ]
+      },
+      "tokens_used": 5770,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch: User executes HSB_W-ServiceHatch",
+          "[Insert Phase] Check if 'insertCycleCount' > 1",
+          "[Insert Phase] If true, erase instance (prevent multiple copies) and exit",
+          "[Insert Phase] Show Configuration Dialog if _kExecuteKey is empty",
+          "[Insert Phase] Prompt user to select Wall Elements (ElementWallSF)",
+          "[Insert Phase] User confirms selection",
+          "[Insert Phase] Loop through selected elements: Create a 'Satellite' script instance for each wall using dbCreate",
+          "[Insert Phase] Transfer property settings to the Satellite instances",
+          "[Insert Phase] Erase the 'Master' script instance",
+          "[Satellite Phase] Satellite instance initializes",
+          "[Satellite Phase] Retrieve Wall geometry (CoordSys, Outline, Openings, Connected Elements)",
+          "[Satellite Phase] Validate Wall: Check if Openings exist OR Connected Elements exist",
+          "[Satellite Phase] If validation fails: Report message and erase instance",
+          "[Satellite Phase] If validation passes: Identify potential locations",
+          "[Satellite Phase] Calculate connection midpoints (checking if wall is 'Male' in intersection)",
+          "[Satellite Phase] Calculate opening side points (Left and Right of each opening)",
+          "[Satellite Phase] Generate 'Frame Profile': Union of all beam envelopes to locate studs",
+          "[Satellite Phase] Iterate through all potential hatch locations",
+          "[Satellite Phase] Locate the specific sheet material at the location",
+          "[Satellite Phase] Refine location to the vertical edge of the sheet",
+          "[Satellite Phase] If no sheet found, skip to next location",
+          "[Satellite Phase] Create test profile: Rectangle spanning sheet width",
+          "[Satellite Phase] Subtract Frame Profile: Identify voids between studs",
+          "[Satellite Phase] Measure void length along the wall axis",
+          "[Satellite Phase] Compare length against 'dMinimumRequiredGap'",
+          "[Satellite Phase] If valid: Visualize Start and End points of the hatch",
+          "Script completes: Visuals remain attached to wall"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Wall Geometry Content (Openings or Connections)",
+            "path1": {
+              "name": "Valid Geometry",
+              "steps": [
+                "Openings found OR Connected Elements found",
+                "Script proceeds to calculate potential hatch points"
+              ]
+            },
+            "path2": {
+              "name": "Empty Wall",
+              "steps": [
+                "No openings AND No connected elements",
+                "Display error message: 'No service hatch locations available for wall [Code][Number]'",
+                "Execute eraseInstance()",
+                "Script terminates"
+              ]
+            }
+          },
+          {
+            "condition": "Gap Size Validation (Calculated vs Minimum Required)",
+            "path1": {
+              "name": "Valid Gap",
+              "steps": [
+                "Calculated gap length >= dMinimumRequiredGap",
+                "Points are added to visualization list",
+                "Start point displayed (Vis 4), End point displayed (Vis 3)"
+              ]
+            },
+            "path2": {
+              "name": "Insufficient Gap",
+              "steps": [
+                "Calculated gap length < dMinimumRequiredGap",
+                "Points are discarded",
+                "No visualization generated for this specific location"
+              ]
+            }
+          },
+          {
+            "condition": "Sheet Detection",
+            "path1": {
+              "name": "Sheet Found",
+              "steps": [
+                "Sheet profile found at search point",
+                "Edge midpoint calculated",
+                "Hatch location refined to edge"
+              ]
+            },
+            "path2": {
+              "name": "Sheet Not Found",
+              "steps": [
+                "No sheet profile found at search point",
+                "Location skipped (continue loop)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Wall Features Existence",
+            "errorMessage": "TN(\"|No service hatch locations available for wall| \") + el.code() + el.number()",
+            "recovery": "Add openings (windows/doors) to the wall or connect the wall to another wall."
+          },
+          {
+            "check": "Gap Size",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Reduce the 'Minimum Required Gap' property value in the OPM."
+          },
+          {
+            "check": "Insertion Cycle",
+            "errorMessage": "None (Internal logic)",
+            "recovery": "None required (Automatic cleanup)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Adjust Gap Threshold",
+            "how": "OPM (Object Properties Palette) - Change 'Minimum Required Gap' value",
+            "effect": "Script recalculates geometry. Increasing value hides hatches; decreasing value reveals more hatches."
+          },
+          {
+            "action": "Modify Wall Structure",
+            "how": "Edit wall geometry (move studs, change openings)",
+            "effect": "Script automatically updates hatch visualization to reflect new stud positions or opening sizes."
+          }
+        ]
+      },
+      "tokens_used": 7803,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_W-ServiceHatch\n\n## Overview\nThis script automatically identifies and visualizes potential locations for service hatches (utility pass-throughs) on selected wall elements. It calculates these locations near wall openings and connections, ensuring there is sufficient clearance between structural studs for pipes or cables.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D Wall Elements (`ElementWallSF`). |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | Not applicable for manufacturing views. |\n\n## Prerequisites\n- **Required Entities**: `ElementWallSF` (Wall Elements).\n- **Minimum Beam Count**: N/A (Script requires Wall Elements, not beams).\n- **Required Conditions**: The selected walls must contain either **Openings** (windows/doors) or **Connected Elements** (wall intersections). Walls without these features will report an error and not generate hatch locations.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_W-ServiceHatch.mcr`\n\n### Step 2: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the Wall Elements you wish to analyze. Press Enter to confirm selection.\n```\n\n### Step 3: View Results\nThe script will process the selected walls. If valid locations are found (based on the default gap size), visual markers (points) will appear on the wall indicating the start and end of the service hatch locations.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Minimum Required Gap | Number | 200 mm | The minimum width of the clear opening required between studs. The script will only display hatch locations where the space between studs is equal to or larger than this value. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | There are no custom context menu options for this script. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A.\n- **Purpose**: N/A.\n\n## Tips\n- **Adjusting Sensitivity**: If you see too many potential locations, increase the **Minimum Required Gap** value in the Properties Palette. If you see too few, decrease it.\n- **Sheeting Required**: The script looks for the vertical edge of sheeting (cladding) material to refine the hatch location. Ensure your wall definition includes sheet material for accurate results.\n- **Dynamic Updates**: If you modify the wall structure (e.g., move a stud or resize a window), the service hatch visualization will automatically update to reflect the new geometry.\n\n## FAQ\n- **Q: Why did the script disappear after I selected the walls?**\n  A: This is normal behavior. The script acts as a \"master\" that creates \"satellite\" instances attached to each specific wall. The master instance deletes itself once the satellites are created.\n- **Q: No points appeared on my wall. Why?**\n  A: This usually happens for two reasons:\n  1. The wall has no openings or connected walls/elements to use as reference points.\n  2. The gap between the studs at the reference points is smaller than the **Minimum Required Gap** (default 200mm). Try reducing this value in the Properties Palette.\n- **Q: Can I use this on walls without sheathing?**\n  A: The script attempts to locate the vertical edge of the sheet material. If no sheet profile is found at the calculated location, that specific location is skipped."
+      },
+      "tokens_used": 4571,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,265 @@
+{
+  "filename": "HSB_P-Surface.mcr",
+  "status": "completed",
+  "total_tokens": 27574,
+  "processing_time": 375.2433092594147,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5970,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly uses '_kModelSpace' in the tsl.dbCreate() call. It does not contain 'sd_' or 'Multipage' prefixes, nor does it use Display(_Viewport) or Paper Space specific APIs. It acts as a helper to visualize surface properties on 3D panels (Sip)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sip"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "SipProperties submap attached to the selected Panel entity",
+            "String keys 'SurfaceReference' and 'SurfaceOpposite' inside the SipProperties map"
+          ]
+        }
+      },
+      "tokens_used": 3641,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select panels",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "Initial insertion if no execute key is specified or execute key is not found in catalog names",
+            "title": "Properties",
+            "dataSource": "Script default properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sDimStyle",
+            "type": "PropString",
+            "displayName": "Dimension style",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3075,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Visualizes surface finish classifications (e.g., Visible vs. Non-Visible) on structural panels by reading entity properties and drawing color-coded labels on the model.",
+          "category": "Annotation/Visualization",
+          "typicalUseCase": "Used during detailing or shop drawing generation to verify which sides of a timber panel require architectural finishing (exposed) versus structural only (hidden) based on specific property mappings."
+        },
+        "parameters": [
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "",
+            "businessMeaning": "Determines the graphical appearance (font size, text style) of the labels that indicate the surface type (VI, IVI, NVI) on the panel.",
+            "validRange": "Any existing Dimension Style name available in the current CAD drawing.",
+            "unit": "Textual (Style Name)",
+            "affectsOutput": "Alters the height and font of the text annotations projected onto the panel sides in the 3D model and plan views."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Annotation/Text",
+            "description": "Draws text labels (VI, IVI, NVI) representing surface qualities at calculated points on the reference and opposite sides of the panel. The text color changes based on the surface code (Red for VI, Cyan for IVI, White/Grey for NVI).",
+            "appliedTo": "The selected Sip (Structural Insulated Panel)."
+          }
+        ]
+      },
+      "tokens_used": 4412,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution begins",
+          "Check if insertCycleCount > 1 (Duplicate insertion check)",
+          "[Conditional] Check if an Execute Key is provided or if catalog exists",
+          "[Conditional] Show Properties Dialog if no Execute Key is found",
+          "Prompt user to Select Panels (PrEntity)",
+          "[Conditional] Check if user selected entities",
+          "Master script iterates through selected entities",
+          "For each valid Sip found: Prepare Map with MasterToSatellite flag",
+          "Master script inserts Satellite instance (dbCreate) onto each Sip",
+          "Master instance erases itself and terminates",
+          "Satellite instance initializes",
+          "Satellite applies properties from 'MasterToSatellite' catalog map",
+          "[Conditional] Validate linked Entity (Sip)",
+          "[Conditional] Retrieve and check 'SipProperties' submap",
+          "Retrieve Element associated with Sip",
+          "[Conditional] Validate Element validity",
+          "Calculate Reference and Opposite points based on Element Coordinate System",
+          "Loop through Reference and Opposite surfaces",
+          "[Conditional] Validate Surface String (VI, IVI, NVI)",
+          "Draw text labels at calculated points with specific colors"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle Check",
+            "path1": {
+              "name": "Cycle > 1",
+              "steps": [
+                "Erase current instance",
+                "Return immediately (Stop execution)"
+              ]
+            },
+            "path2": {
+              "name": "First Cycle",
+              "steps": [
+                "Continue to Execute Key check"
+              ]
+            }
+          },
+          {
+            "condition": "Execute Key / Dialog Check",
+            "path1": {
+              "name": "Valid Execute Key found",
+              "steps": [
+                "Load properties from catalog",
+                "Skip dialog"
+              ]
+            },
+            "path2": {
+              "name": "No/Invalid Execute Key",
+              "steps": [
+                "Execute showDialog()",
+                "User manually sets properties"
+              ]
+            }
+          },
+          {
+            "condition": "SipProperties Submap",
+            "path1": {
+              "name": "Submap 'SipProperties' exists",
+              "steps": [
+                "Read 'SurfaceReference' and 'SurfaceOpposite' strings",
+                "Continue to validation"
+              ]
+            },
+            "path2": {
+              "name": "Submap missing",
+              "steps": [
+                "Return immediately (No output, no error)",
+                "Instance remains dormant"
+              ]
+            }
+          },
+          {
+            "condition": "Surface String Validation (Per Side)",
+            "path1": {
+              "name": "String matches (VI, IVI, NVI)",
+              "steps": [
+                "Determine color index (Red, Cyan, White)",
+                "Draw text label at calculated point"
+              ]
+            },
+            "path2": {
+              "name": "String invalid/missing",
+              "steps": [
+                "Generate ReportNotice (e.g., 'Surface information is not set on the reference side')",
+                "Continue to next side (Skip drawing for this side only)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Selection",
+            "errorMessage": "No panel selected.",
+            "recovery": "Script instance erases itself. User must re-run and select a panel."
+          },
+          {
+            "check": "Entity Type",
+            "errorMessage": "Selected entity is not a panel.",
+            "recovery": "Script instance erases itself. User must select a valid Sip entity."
+          },
+          {
+            "check": "Element Association",
+            "errorMessage": "Selected panel is not part of an element.",
+            "recovery": "Script instance erases itself. User must assign the panel to an Element or select a different panel."
+          },
+          {
+            "check": "Surface Mapping Data",
+            "errorMessage": "Notice: The surface information is not set on the [Reference/Opposite] side.",
+            "recovery": "User must edit the 'SipProperties' submap on the panel entity to include valid keys ('SurfaceReference', 'SurfaceOpposite') with values ('VI', 'IVI', or 'NVI')."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Dimension Style",
+            "how": "OPM (Object Properties Palette) -> Property 'Dimension style'",
+            "effect": "Updates the text height and font style of the surface labels immediately."
+          },
+          {
+            "action": "Modify Panel Geometry or Element",
+            "how": "Move/Rotate Panel or change Element CoordSys",
+            "effect": "Triggers recalculation; labels move to maintain correct relative position on the panel faces."
+          },
+          {
+            "action": "Update SipProperties",
+            "how": "External tool or OPM editing the 'SipProperties' submap on the Panel",
+            "effect": "Triggers recalculation; Labels update text and color to reflect new surface classification (e.g., changing 'NVI' to 'VI')."
+          },
+          {
+            "action": "Delete Panel",
+            "how": "Standard CAD erase command",
+            "effect": "Dependent TSL instance is deleted automatically."
+          }
+        ]
+      },
+      "tokens_used": 5898,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_P-Surface.mcr\n\n## Overview\nThis script visualizes surface finish classifications (e.g., Visible vs. Non-Visible) on structural panels by reading entity properties. It draws color-coded labels (VI, IVI, NVI) directly on the panel faces in the 3D model to indicate which sides require architectural finishing.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be inserted into the Model Space. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | This is a modeling tool, not a drawing generation script. |\n\n## Prerequisites\n- **Required Entities**: A `Sip` (Structural Insulated Panel) or structural panel entity.\n- **Minimum Beams**: 0 (This script relies on Panels/Sips).\n- **Required Settings**:\n  - The selected panel must be assigned to an `Element`.\n  - The panel entity must have a specific property submap named `SipProperties`.\n  - This submap must contain the string keys `SurfaceReference` and `SurfaceOpposite` with valid values (e.g., \"VI\", \"IVI\", \"NVI\").\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_P-Surface.mcr` from the list.\n\n### Step 2: Configure Properties (If prompted)\n```\nCommand Line: (Dialog appears if no execute key is preset)\nAction: Set the Dimension style or other parameters in the dialog and click OK.\n```\n*Note: If the script is run from a catalog with preset values, this step may be skipped.*\n\n### Step 3: Select Panels\n```\nCommand Line: Select panels\nAction: Click on the panel(s) you wish to annotate in the 3D model and press Enter.\n```\n\n### Step 4: Verification\nThe script will process the selected panels. If the panel has the correct properties (SipProperties), text labels will appear on the Reference and Opposite sides. If properties are missing, the script may issue a notice in the command line and remain dormant on that panel.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Dimension style | dropdown/text | \"\" | Determines the text size and font style used for the surface labels. Select an existing Dimension Style from your drawing to control appearance. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu items are added by this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script relies on entity properties (`SipProperties` attached to the panel) rather than external XML settings files.\n\n## Tips\n- **Color Coding**: The script uses specific colors to indicate surface types:\n  - **Red**: VI (Visible Industrial)\n  - **Cyan**: IVI (Invisible Visible Industrial)\n  - **White/Grey**: NVI (Non-Visible Industrial)\n- **Updating Labels**: If you change the geometry of the panel or its position, the labels will automatically move to stay attached to the surface.\n- **Modifying Appearance**: You can change the text height/style at any time by selecting the script instance in the model and changing the \"Dimension style\" property in the AutoCAD Properties Palette (Ctrl+1).\n\n## FAQ\n- **Q: I ran the script, but no text appeared on my panel.**\n  **A:** Ensure the panel is assigned to an Element and has the `SipProperties` submap attached with valid `SurfaceReference` and `SurfaceOpposite` values. Check the command line for a \"Surface information is not set\" notice.\n\n- **Q: How do I change the text size of the labels?**\n  **A:** Select the script instance (hover over the panel to find it if necessary), open the Properties Palette (Ctrl+1), and change the \"Dimension style\" to a style with your desired text height.\n\n- **Q: Can I use this on standard beams?**\n  **A:** No, this script is designed specifically for `Sip` entities (Structural Insulated Panels)."
+      },
+      "tokens_used": 4578,
+      "error": null
+    }
+  }
+}

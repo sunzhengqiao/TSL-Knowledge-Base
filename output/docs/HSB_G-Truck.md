@@ -1,73 +1,68 @@
-# HSB_G-Truck
+# HSB_G-Truck.mcr
 
-This TSL script defines the bounding box of a truck and is used as a placeholder for stacks in timber construction logistics planning. It creates a 3D visual representation of a truck's cargo area dimensions to help plan and visualize how prefabricated elements will be loaded.
+## Overview
+This script creates a 3D bounding box representing a truck's cargo space. It is used to visualize and verify if timber packages or stacks fit within transport dimensions.
 
-## Script Information
+## Usage Environment
 
-| Property | Value |
-|----------|-------|
-| **Version** | 1.00 |
-| **Last Modified** | 04.04.2019 |
-| **Author** | Anno Sportel (support.nl@hsbcad.com) |
-| **Script Type** | O (Object) |
+| Space | Supported | Notes |
+|-------|-----------|-------|
+| Model Space | Yes | The script is inserted directly into the 3D model. |
+| Paper Space | No | Not intended for 2D layout sheets. |
+| Shop Drawing | No | Not intended for manufacturing views. |
 
-## Script Type Explanation
+## Prerequisites
+- **Required entities:** None.
+- **Minimum beam count:** 0.
+- **Required settings files:** None.
 
-This is an **O-Type (Object)** script. Object scripts create standalone entities in the drawing that are not directly attached to beams or elements. In this case, the truck placeholder is an independent 3D box that can be positioned anywhere in the model space to represent a truck's cargo area for logistics planning.
+## Usage Steps
 
-## User Properties
+### Step 1: Launch Script
+1. Type `TSLINSERT` in the command line.
+2. Browse and select `HSB_G-Truck.mcr`.
 
-The following properties are available in the AutoCAD Properties Palette (OPM) when the truck object is selected:
+### Step 2: Configure Dimensions
+If you are not using a pre-configured catalog entry, a dialog or property prompt will appear:
+1. Review the default dimensions (Length: 21000mm, Width: 2200mm, Height: 3000mm).
+2. Adjust the values if your truck has different loading specifications.
 
-| Property | Type | Default Value | Description |
-|----------|------|---------------|-------------|
-| **Length** | PropDouble | 21000 mm | The length of the truck cargo area (along the X-axis). Default represents a standard semi-trailer length. |
-| **Width** | PropDouble | 2200 mm | The width of the truck cargo area (along the Y-axis). Default represents standard truck width. |
-| **Height** | PropDouble | 3000 mm | The height of the truck cargo area (along the Z-axis). Default represents standard cargo height clearance. |
+### Step 3: Place Truck
+```
+Command Line: |Select a position|
+Action: Click in the Model Space to set the insertion point (usually the rear-left corner or center of the truck bed).
+```
+*Note: The script will generate the 3D volume immediately after clicking.*
 
-## Usage Workflow
+### Step 4: Adjust Dimensions (Post-Insertion)
+1. Select the inserted Truck object in the drawing.
+2. Open the **Properties Palette** (Ctrl+1).
+3. Modify the **Length**, **Width**, or **Height** values.
+4. The 3D box will automatically update to reflect the new dimensions.
 
-### Step 1: Insert the Script
+## Properties Panel Parameters
 
-1. Start the TSL script `HSB_G-Truck` from the hsbCAD menu or command line
-2. If no execute key (catalog preset) is specified, a dialog window will appear allowing you to configure the truck dimensions before placement
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Length | Number | 21000 mm | The usable cargo length of the truck trailer. |
+| Width | Number | 2200 mm | The internal width of the truck trailer. |
+| Height | Number | 3000 mm | The maximum vertical stacking height allowed (respecting road limits). |
 
-### Step 2: Configure Dimensions (Optional)
+## Right-Click Menu Options
+No specific custom options are added to the right-click menu. Standard AutoCAD/hsbCAD options (Move, Rotate, Copy, Erase) apply.
 
-- If the dialog appears, adjust the truck dimensions as needed for your specific logistics requirements
-- The dialog allows you to set custom Length, Width, and Height values
+## Settings Files
+No external settings files are required for this script.
 
-### Step 3: Place the Truck
+## Tips
+- **Yard Layout:** Use this script when planning production yard layouts to ensure stacks of timber do not exceed the size of the transport trucks.
+- **Visual Check:** Use the 3D visual to simulate how pallets will be loaded.
+- **Unit Independence:** The script automatically handles unit conversions; ensure your working units in CAD are set correctly (usually Millimeters for timber construction).
 
-1. When prompted with "Select a position", click in the drawing to place the truck's origin point
-2. The truck bounding box will be created at the selected location, aligned with the World Coordinate System (WCS)
-
-### Step 4: Modify Properties (Optional)
-
-After placement, you can modify the truck dimensions at any time:
-1. Select the truck object in the drawing
-2. Open the Properties Palette (Ctrl+1 or OPM command)
-3. Adjust Length, Width, or Height values as needed
-4. The truck geometry will automatically recalculate when these properties change
-
-## Visual Appearance
-
-The truck bounding box is displayed in **Color 3 (Green)** in the drawing, making it easily distinguishable from timber elements and other objects.
-
-## Catalog Support
-
-This script supports catalog presets. If executed with a valid catalog key, the truck dimensions will be automatically loaded from the catalog without showing the configuration dialog. This is useful for standardizing truck dimensions across a project or company.
-
-## Technical Notes
-
-- The truck body is cached in the script's internal Map for performance optimization
-- Changing any dimension property triggers a full recalculation of the truck geometry
-- The truck is aligned to the World Coordinate System (WCS), regardless of the current User Coordinate System (UCS)
-- The origin point (_Pt0) defines the corner of the truck bounding box
-
-## Typical Use Cases
-
-1. **Logistics Planning**: Visualize how prefabricated wall panels, roof trusses, or floor cassettes will fit on transport trucks
-2. **Stack Arrangement**: Plan the arrangement of multiple stacks within the truck cargo area
-3. **Shipping Documentation**: Create visual representations for shipping and logistics documentation
-4. **Clearance Checking**: Verify that assembled elements fit within standard truck dimensions before manufacturing
+## FAQ
+- **Q: Can I change the truck size after I have placed it?**
+  A: Yes. Select the object and change the dimensions in the Properties Palette.
+- **Q: Does this script generate manufacturing data?**
+  A: No, this is purely a visual aid (Body entity) for layout planning and checking.
+- **Q: The box is too small/big for my truck.**
+  A: Modify the `Length`, `Width`, and `Height` properties in the Properties Palette to match your specific truck model.

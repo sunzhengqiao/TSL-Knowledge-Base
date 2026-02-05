@@ -1,112 +1,58 @@
-# HSB_I-GenBeamDetails
+# HSB_I-GenBeamDetails.mcr
 
-A diagnostic utility script that displays detailed information about selected GenBeam entities (Beams, Sheets, or SIPs) in the hsbCAD command line.
+## Overview
+This script generates a detailed text report displaying geometric dimensions, material attributes, naming properties, and a list of attached TSLs for selected structural elements (Beams, Sheets, or SIPs). It acts as a quick auditing tool to review element properties without opening multiple property palettes.
 
-## Script Metadata
+## Usage Environment
+| Space | Supported | Notes |
+|-------|-----------|-------|
+| Model Space | Yes | This script must be run in Model Space. |
+| Paper Space | No | Not supported. |
+| Shop Drawing | No | Not supported. |
 
-| Property | Value |
-|----------|-------|
-| Version | 1.0 |
-| Date | 14 October 2019 |
-| Author | david.rueda@hsbcad.com |
-| Type | O (Object) |
-| Beams Required | 0 |
+## Prerequisites
+- **Required entities**: General Beam (GenBeam), Sheet, or Structural Insulated Panel (SIP).
+- **Minimum beam count**: 1 (supports multiple selection).
+- **Required settings**: None.
 
-## Script Type
+## Usage Steps
 
-**O-Type (Object Script)** - This is a standalone utility that does not require pre-selected beams. It prompts the user to select GenBeam entities during insertion and then displays their properties.
+### Step 1: Launch Script
+Command: `TSLINSERT` → Select `HSB_I-GenBeamDetails.mcr`
 
-## User Properties
-
-This script has **no user-configurable properties** in the Properties Palette. It is a one-time diagnostic tool that erases itself after displaying information.
-
-## Usage Workflow
-
-### Step 1: Launch the Script
-Insert the script into your drawing using the standard hsbCAD TSL insertion method.
-
-### Step 2: Select GenBeam(s)
-When prompted with "Select GenBeam(s)", click on one or more timber entities in your drawing:
-- Beams
-- Sheets (panels)
-- SIPs (Structural Insulated Panels)
-
-Press Enter when selection is complete.
-
-### Step 3: View Information
-For each selected GenBeam, the script displays a detailed report in the command line including:
-
-**Geometric Properties:**
-- Volume (in cubic meters)
-- Length (in meters)
-- Width (in meters)
-- Height (in meters)
-
-**Identification Properties:**
-- Position number (posnum)
-- Grade
-- Profile
-- Material
-- Label / Sublabel / Sublabel2
-- Beamcode
-- hsbId
-- Module
-- Type (as string and number)
-- Information field
-- Name
-- Position number and text
-- Layer name
-- Color
-- Dummy status (bIsDummy)
-
-**Attached TSL Scripts:**
-- Lists all TSL instances attached to the GenBeam
-- Shows the script name of each attached TSL
-
-### Step 4: Script Self-Erases
-After displaying the information, the script automatically removes itself from the drawing. No persistent entity is created.
-
-## Context Menu Commands
-
-This script has **no context menu commands**. It is a single-use diagnostic tool.
-
-## Output Example
-
-The script outputs information in the following format to the command line:
-
+### Step 2: Select Elements
 ```
--------------------- GenBeam [handle] is of type: Beam --------------------
-volume: 0.025
-length: 3.000
-width: 0.045
-height: 0.195
-posnum: A1
-grade: C24
-profile: 45x195
-material: Spruce
-label: Wall-01
-...
-Found 3 attached:
-    Hilti-X-HSN
-    hsbDrill
-    hsbCut
+Command Line: Select GenBeam(s)
+Action: Click on the desired beam, sheet, or SIP in the model. You can select multiple elements.
 ```
+**Note**: Press Enter to confirm your selection.
 
-## Technical Notes
+### Step 3: View Report
+```
+Action: A notice window will appear displaying the detailed report for the selected elements.
+```
+**Note**: Review the information and close the notice window. The script will automatically remove itself from the drawing once finished.
 
-- The script validates that selected entities are valid GenBeam types (Beam, Sheet, or SIP)
-- Invalid selections are skipped with error messages (visible in debug mode)
-- Multiple GenBeams can be selected; each creates a separate TSL instance that reports and self-erases
-- Units are automatically converted to meters for display regardless of drawing unit settings
-- Debug mode can be enabled via the hsbTSLDebugController MapObject
+## Properties Panel Parameters
 
-## Use Cases
+This script has no editable parameters in the Properties Palette.
 
-1. **Troubleshooting**: Quickly inspect all properties of a beam when investigating issues
-2. **Verification**: Confirm material assignments, grades, and position numbers
-3. **TSL Audit**: See which TSL scripts are attached to a specific beam
-4. **Data Export Preparation**: Review what information is stored on beams before export
+## Right-Click Menu Options
 
-## Related Scripts
+This script does not add custom options to the right-click menu.
 
-This script is part of the HSB_I (Information) family of diagnostic utilities in hsbCAD.
+## Settings Files
+No external settings files are required for this script.
+
+## Tips
+- **Batch Auditing**: You can select multiple elements at once during the prompt. The script will generate a separate report for each element found in the selection set.
+- **Troubleshooting**: Use this script to quickly verify which TSLs (scripts) are attached to a specific element if it is not behaving as expected.
+- **Clean Workflow**: The script is designed to "self-destruct" after running. You do not need to delete the script instance manually; it cleans itself up automatically.
+
+## FAQ
+- **Q: Can I run this on Walls?**
+  - A: Yes, provided the walls are defined as GenBeams, Sheets, or SIPs within the hsbCAD environment.
+- **Q: What happens if I select an element that is not a Beam or Sheet?**
+  - A: The script will report an error and skip that specific entity. Ensure you select valid structural timber elements.
+- **Q: Where does the text report appear?**
+  - A: The report appears in a standard hsbCAD ShowNotice (pop-up dialog) on your screen.

@@ -1,0 +1,201 @@
+{
+  "filename": "HSB_I-IdentifyEntityOwner.mcr",
+  "status": "completed",
+  "total_tokens": 20839,
+  "processing_time": 419.99157977104187,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5262,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "dbCreate(..., _kModelSpace, mapTsl); PrEntity selection loop; no ShopDrawing or Viewport references."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Entity"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "_kModelSpace",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2307,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select entities|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2010,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Identifies the parent construction element (e.g., Wall, Roof) of a selected drawing entity and reports how many other entities of the same type belong to that element.",
+          "category": "Inquiry/Debugging",
+          "typicalUseCase": "Used to troubleshoot model issues, such as determining why a specific dimension, hatch, or line is behaving unexpectedly, by finding its parent element and checking for duplicates."
+        },
+        "parameters": [
+          {
+            "name": "_Entity[0]",
+            "technicalDefault": "None (User selection required)",
+            "businessMeaning": "The target drawing object (e.g., a dimension line, text note, orCAD line) whose ownership is being investigated.",
+            "validRange": "Any valid Entity ( graphical object) existing in the hsbCAD ModelSpace",
+            "unit": "Object",
+            "affectsOutput": "Determines the content of the report message displayed to the user (Element Code/Number and count of similar entities)."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": []
+      },
+      "tokens_used": 3353,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched (Insertion or Recalculation)",
+          "Check if _bOnInsert is true",
+          "If Insertion: Check insertCycleCount(). If > 1, erase and exit.",
+          "If Insertion: Prompt user to select entities (PrEntity) with message '|Select entities|'.",
+          "If Insertion: Loop through each selected entity.",
+          "If Insertion: Create a new script instance (TslInst) for each selected entity, passing the entity in the _Entity array.",
+          "If Insertion: Erase the original script instance and exit.",
+          "If Recalculation/Execution Phase: Verify _Entity array is not empty. If empty, erase and exit.",
+          "Retrieve _Entity[0] and check validity. If invalid, report '|Selected entity invalid|' and proceed.",
+          "Report Entity type and handle to the command line.",
+          "Retrieve parent Element of the entity.",
+          "Check if Element is valid. If invalid, report '|Element could not be found|', erase instance, and exit.",
+          "Get Element code and number.",
+          "Check if codeAndNumber is not empty.",
+          "If Element data exists: Report owner element code and number.",
+          "If Element data missing: Report '|owner element's code not found|', erase instance, and exit.",
+          "Collect all Groups associated with the found Element.",
+          "Loop through Groups to collect all Entities within them.",
+          "Filter entities: Compare type name and handle to find 'similar' entities owned by the same element.",
+          "Report the count of similar entities found.",
+          "Erase instance and exit."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Initial Insertion (_bOnInsert == true)",
+            "path1": {
+              "name": "Insertion Mode",
+              "steps": [
+                "Check insertCycleCount",
+                "Prompt User Selection",
+                "Spawn Child Instances",
+                "Self-Erase"
+              ]
+            },
+            "path2": {
+              "name": "Execution Mode",
+              "steps": [
+                "Validate Input Data",
+                "Identify Parent Element",
+                "Count Similar Entities",
+                "Report Results"
+              ]
+            }
+          },
+          {
+            "condition": "Parent Element Retrieval",
+            "path1": {
+              "name": "Element Found",
+              "steps": [
+                "Check Code/Number",
+                "Report Owner Details"
+              ]
+            },
+            "path2": {
+              "name": "Element Not Found",
+              "steps": [
+                "Report '|Element could not be found|'",
+                "Erase Instance"
+              ]
+            }
+          },
+          {
+            "condition": "Element Code/Number Content",
+            "path1": {
+              "name": "Valid Code/Number",
+              "steps": [
+                "Report owner element code and number",
+                "Calculate similar entities"
+              ]
+            },
+            "path2": {
+              "name": "Missing Code/Number",
+              "steps": [
+                "Report '|owner element's code not found|'",
+                "Erase Instance"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity array presence",
+            "errorMessage": "None (Silent exit)",
+            "recovery": "N/A (Script logic error if reached without input)"
+          },
+          {
+            "check": "Entity validity (bIsValid)",
+            "errorMessage": "|Selected entity invalid|",
+            "recovery": "Select a valid graphical object during the insertion phase."
+          },
+          {
+            "check": "Parent Element validity",
+            "errorMessage": "|Element could not be found|",
+            "recovery": "Ensure the selected entity belongs to an hsbCAD Element (e.g., Wall, Roof). Standard CAD entities without hsb ownership will fail here."
+          },
+          {
+            "check": "Element Code/Number existence",
+            "errorMessage": "|owner element's code not found|",
+            "recovery": "Check the Element properties in the model to ensure it has a valid Code and Number assigned."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 3469,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_I-IdentifyEntityOwner\n\n## Overview\nThis tool helps you investigate the model structure by identifying which construction element (such as a Wall or Roof) owns a specific drawing entity (like a dimension, line, or text). It also counts how many other entities of the same type belong to that parent element.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script only operates within the 3D model environment. |\n| Paper Space | No | Not designed for layouts or viewports. |\n| Shop Drawing | No | Not designed for 2D detailing drawings. |\n\n## Prerequisites\n- **Required Entities**: You must have at least one drawing entity (e.g., a dimension, hatch, or line) visible in the model.\n- **Minimum Beam Count**: None.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_I-IdentifyEntityOwner.mcr` from the file dialog.\n*(Alternatively, click the custom toolbar icon if assigned by your administrator.)*\n\n### Step 2: Select Entities\n```\nCommand Line: Select entities\nAction: Click on the drawing object(s) you wish to investigate (e.g., a specific dimension line or annotation).\n```\n*You can select multiple objects at once using window selection or Ctrl+click.*\n\n### Step 3: Confirm Selection\n```\nCommand Line: (Right-click or Press Enter to finish selection)\nAction: Press Enter or Right-click to confirm your choice.\n```\n\n### Step 4: View Results\nThe script will display the results in the **AutoCAD Command Line**. Look for the following information:\n- The type and handle of the selected entity.\n- The **Code and Number** of the parent Element (e.g., \"Wall 1\").\n- The **count** of similar entities owned by that same Element.\n\n*Tip: Press **F2** on your keyboard to open the full command line history if the text scrolls off the screen.*\n\n## Properties Panel Parameters\n\nThis script does not expose any adjustable parameters in the Properties Panel. It runs automatically upon selection.\n\n## Right-Click Menu Options\n\nThis script does not add specific options to the right-click context menu, as it performs its task and removes itself immediately.\n\n## Settings Files\nNo specific settings files are required for this script.\n\n## Tips\n- **Check the Command Line**: Since the script erases itself immediately after running, the only place to see the results is the command line history. Make sure to read the output before drawing other commands that might clear the text.\n- **Select Valid hsbCAD Entities**: Ensure the entity you select was created by hsbCAD. If you select a standard AutoCAD line (e.g., one drawn manually with the LINE command) that is not associated with an hsbCAD element, the script will report that the element could not be found.\n- **Batch Processing**: You can select multiple items at once. The script will generate a separate report for every item selected, which is useful for quickly checking if multiple dimensions belong to different walls.\n\n## FAQ\n- **Q: Why did the script disappear after I ran it?**\n  **A:** This is a \"fire-and-forget\" inquiry tool. It automatically deletes its instance from the drawing after reporting the information to keep your model clean.\n- **Q: The script says \"Element could not be found\". What does that mean?**\n  **A:** This means the object you selected is not linked to a valid hsbCAD construction element. It might be a standard AutoCAD object or an orphaned entity that lost its connection to the main element data.\n- **Q: Can I use this on Shop Drawing dimensions?**\n  **A:** No, this script is designed for Model Space only. It will not work on entities inside detail drawings."
+      },
+      "tokens_used": 4438,
+      "error": null
+    }
+  }
+}

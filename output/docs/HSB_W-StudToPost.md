@@ -1,107 +1,63 @@
-# HSB_W-StudToPost
+# HSB_W-StudToPost.mcr
 
-Converts selected wall studs into posts with customizable dimensions, positioning, and beam properties. This tool is commonly used in timber frame wall construction when standard studs need to be upgraded to larger posts for structural purposes (e.g., at openings, corners, or load-bearing points).
+## Overview
+This script converts selected wall studs into structural posts with customizable dimensions and properties. It handles adjustments for width, height, positioning, and can automatically cut through top plates if required.
 
-## Script Type
+## Usage Environment
+| Space | Supported | Notes |
+|-------|-----------|-------|
+| Model Space | Yes | This script operates on 3D model geometry. |
+| Paper Space | No | Not designed for 2D layout or drawing views. |
+| Shop Drawing | No | Does not generate shop drawing views or labels. |
 
-**Type: O (Object)**
+## Prerequisites
+- **Required Entities**: Existing Beams (studs) in the model.
+- **Minimum Beam Count**: At least 1 beam must be selected.
+- **Required Settings**: No external settings files required.
 
-This is an Object-type script that operates on selected beam entities. It does not require pre-selected beams at invocation but prompts the user to select studs during the insertion process. After processing, the script instance is automatically erased (one-time operation tool).
+## Usage Steps
 
-## Version History
+### Step 1: Launch Script
+Command: `TSLINSERT` → Select `HSB_W-StudToPost.mcr` from the list.
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.00 | 19.02.2018 | Anno Sportel | First revision |
-| 1.01 | 20.02.2018 | Anno Sportel | Add option to change post height, position and properties |
-| 1.02 | 21.02.2018 | Anno Sportel | Add option to set catalog through map |
-
-## User Properties
-
-### Size and Position
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Width post | Double | 105 mm | Sets the width of the posts. Must be a positive value. |
-| Height post | Double | 0 mm | Sets the height of the posts. Setting it to zero will not change the height. |
-| Post position | String (List) | Center | Determines the vertical alignment of the post relative to the original stud. Options: Front, Center, Back. |
-| Stretch above top plate | String (Yes/No) | No | Specifies whether the post should stretch through the top plate. When enabled, the post will extend through and split the top plate. |
-
-### Beam Properties
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Beam type | String (List) | (from catalog) | Sets the beam type of the post. Uses standard hsbCAD beam types. |
-| Name | String | (empty) | Sets the name of the post. |
-| hsbCAD Material | String | (empty) | Sets the material field of the post. |
-| Grade | String | (empty) | Sets the grade field of the post (e.g., C24, GL24h). |
-| Information | String | (empty) | Sets the information field of the post. |
-| Label | String | (empty) | Sets the label field of the post. |
-| Sublabel | String | (empty) | Sets the sublabel field of the post. |
-| Sublabel 2 | String | (empty) | Sets the sublabel 2 field of the post. |
-| Beam code | String | (empty) | Sets the beam code field of the post. |
-| Color | Integer | -1 | Sets the color of the post. -1 means no color change. |
-
-## Usage Workflow
-
-### Step 1: Launch the Script
-Run the HSB_W-StudToPost script from the TSL menu or command line.
-
-### Step 2: Configure Settings (Dialog)
-If no execute key or catalog preset is specified, a settings dialog will appear allowing you to configure:
-- Post dimensions (width and height)
-- Post positioning within the wall thickness
-- Whether posts should extend through top plates
-- Beam property assignments (type, name, material, grade, etc.)
+### Step 2: Configure Properties
+The Properties Palette will open automatically upon launch.
+Action: Adjust the parameters (Width, Height, Position, etc.) to your requirements before selecting beams.
 
 ### Step 3: Select Studs
-When prompted with "Select studs to convert", select one or more wall studs that you want to convert to posts. You can use window selection or pick individual studs.
+```
+Command Line: Select studs to convert
+Action: Click on the studs you wish to convert into posts. Press Enter to confirm selection.
+```
 
-### Step 4: Automatic Conversion
-The script will process each selected stud:
-1. Resize the stud to the specified post width
-2. Adjust the height if specified (non-zero value)
-3. Reposition the post based on the selected position option (Front/Center/Back)
-4. Apply all beam properties (type, name, material, grade, etc.)
-5. If "Stretch above top plate" is enabled:
-   - Extend the post through any overlapping top plate
-   - Automatically split the top plate around the post
+## Properties Panel Parameters
 
-### Step 5: Completion
-After all studs are converted, the script instance is automatically erased. The converted posts remain as permanent beam modifications in the model.
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Width post | Number | 105 | Sets the width of the posts. A positive value is required. |
+| Height post | Number | 0 | Sets the height of the posts. If set to 0, the current height of the stud is maintained. |
+| Post position | Dropdown | Front | Sets the alignment of the post relative to the structure (Front, Center, or Back). |
+| Stretch above top plate | Dropdown | No | Specifies whether the post should stretch through and cut the top plate (Yes/No). |
+| Beam type | Dropdown | *[Empty]* | Sets the beam type of the post from the available catalog types. |
 
-## Catalog Support
+## Right-Click Menu Options
 
-This script supports catalog presets for quick application of commonly used post configurations:
+| Menu Item | Description |
+|-----------|-------------|
+| (Standard hsbCAD Context) | This script typically runs as a "fire and forget" tool. Once executed, the script instance is erased. Right-click options apply primarily if the script is intercepted or if editing the resulting beams directly. |
 
-- **Execute Key**: Launch with a predefined catalog name to skip the dialog
-- **Map Parameter**: Pass `"Catalog"` key in the script's Map to apply catalog settings programmatically
-- **Last Inserted**: Settings from the most recent insertion are automatically saved as `_LastInserted` for quick reuse
+## Settings Files
+- **Filename**: None
+- **Location**: N/A
+- **Purpose**: This script relies on standard hsbCAD catalogs for Beam Types and Materials; no specific external XML settings file is required.
 
-## Technical Notes
+## Tips
+- **Maintaining Height**: To convert a stud to a post without changing its length, leave the `Height post` value set to 0.
+- **Wall Integration**: If you select "Yes" for **Stretch above top plate**, ensure the studs are part of a valid wall element. The script will automatically identify and split the top plate to accommodate the post height.
+- **Positioning**: Use the **Post position** property to quickly align the post flush with the outside (Front/Back) or center of the construction.
 
-### Element Association
-- When studs are part of an Element (wall assembly), the script uses the element's coordinate system for proper positioning
-- Standalone studs (not in an element) are processed using their local beam coordinate system
-
-### Top Plate Integration
-When "Stretch above top plate" is enabled:
-- The script searches for top plates (beam type `_kSFTopPlate`) within the same element
-- Only top plates that overlap the post position horizontally are affected
-- A stretch cut is applied to extend the post through the top plate
-- The top plate is split at the post location using `dbSplit()`
-
-### Validation
-- Width must be a positive value (script will show warning and cancel if zero or negative)
-- At least one beam must be selected (script will show warning if no valid beams)
-- Height of 0 means "keep original height" (no height modification)
-
-## Context Menu Commands
-
-This script does not define custom context menu commands. All configuration is done through the initial dialog and OPM properties.
-
-## Related Scripts
-
-- **HSB_W-Stud**: Standard stud generation for walls
-- **HSB_W-Post**: Direct post creation
-- **HSB_W-TopPlate**: Top plate generation and management
+## FAQ
+- **Q: Why did the script fail with an error?**
+  **A:** Ensure you have entered a positive value greater than 0 for the `Width post` property. A width of 0 is not valid.
+- **Q: Can I use this on a beam that is not part of a wall?**
+  **A:** Yes. If the beam is standalone (not part of a wall element), the script will apply the width and height changes based on the beam's local coordinate system. The "Stretch above top plate" logic will only apply if the beam is within a recognized wall structure.

@@ -1,0 +1,179 @@
+{
+  "filename": "HSB_G-SplitWithBlocking.mcr",
+  "status": "completed",
+  "total_tokens": 52712,
+  "processing_time": 486.99768328666687,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8737,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly creates new instances in '_kModelSpace' using 'dbCreate(strScriptName, ..., _kModelSpace, ...)'. It operates on '_Element[0]' to extract 'Beam' objects and modifies 3D model geometry using 'GenBeam', 'addToolStatic', and 'stretchStaticTo'. There is no usage of ShopDrawing APIs (sd_*) or Viewport handling."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "Catalog entry for HSB_G-SplitWithBlocking",
+            "Catalog entry for HSB_G-FilterGenBeams (referenced for filtering beam sets)"
+          ]
+        }
+      },
+      "tokens_used": 6837,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"|Select elements|\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [],\n  \"opmProperties\": [\n    {\n      \"index\": 0,\n      \"variable\": \"filterDefinition\",\n      \"type\": \"PropString\",\n      \"displayName\": \"|Filter definition beams|\",\n      \"defaultValue\": \"\",\n      \"inputType\": \"dropdown\",\n      \"options\": [\n        \"Catalog entries from HSB_G-FilterGenBeams\"\n      ],\n      \"category\": \"|Filter|\",\n      \"description\": \"|Filter definition for beams.|Use HSB_G-FilterGenBeams to define the filters.\"\n    },\n    {\n      \"index\": 3,\n      \"variable\": \"sSecondaryFilter\",\n      \"type\": \"PropString\",\n      \"displayName\": \"|Beamcode|\",\n      \"defaultValue\": \"\",\n      \"inputType\": \"text\",\n      \"options\": [],\n      \"category\": \"|Filter|\",\n      \"description\": null\n    },\n    {\n      \"index\": 2,\n      \"variable\": \"sInclExcl\",\n     "
+      },
+      "tokens_used": 9476,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Automatically splits selected beams within a timber element and inserts blocking (nogging) members at the split locations, with options to stretch to adjacent members.\",\n    \"category\": \"Framing\",\n    \"typicalUseCase\": \"Inserting blocking between studs or joists at specific intervals, or creating spacer blocks where a beam needs to be interrupted for a penetration or splice.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"filterDefinition\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Selects a predefined group of beams (from the Filter GenBeams catalog) to be processed by the script.\",\n      \"validRange\": \"Any catalog entry from 'HSB_G-FilterGenBeams'\",\n      \"unit\": \"Catalog Selection\",\n      \"affectsOutput\": \"Determines which beams within the selected Element are candidates for splitting and blocking.\"\n    },\n    {\n      \"name\": \"sSecondaryFilter\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Refines the beam selection based on a specific text Beamcode.\",\n      \"validRange\": \"Text string (wildcards typically supported)\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Further restricts the set of beams to be split based on their naming/code.\"\n    },\n    {\n      \"name\": \"sInclExcl\",\n      \"technicalDefault\": \"|Include|\",\n      \"businessMeaning\": \"Determines if the Secondary Filter acts as a whitelist (Include) or blacklist (Exclude).\",\n      \"validRange\": \"Include / Exclude\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Controls whether beams matching the Beamcode are processed or ignored.\"\n    },\n    {\n      \"name\": \"dSplitLength\",\n      \"technicalDefault\": 1000,\n      \"businessMeaning\": \"The distance along the beam from the start (or previous split) where the split and blocking insertion should occur.\",\n      \"validRange\": \"> Blocking Length (e.g., 200mm - 6000mm)\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Sets the longitudinal position of the cut and the blocking member along the beam.\"\n    },\n    {\n      \"name\": \"dSecondSplitLength\",\n      \"technicalDefault\": 0,\n      \"businessMeaning\": \"An alternative split position used if the standard Split Length would place the blocking partially outside the beam's length (e.g., too close to the end).\",\n      \"validRange\": \"0 (disabled) or > Blocking Length\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Ensures blocking is fully supported by the beam when splitting near ends; overrides standard split length in edge cases.\"\n    },\n    {\n      \"name\": \"sSingleSplit\",\n      \"technicalDefault\": \"|No|\",\n      \"businessMeaning\": \"Determines if the script performs only one split per beam or repeats the split along the beam length.\",\n      \"validRange\": \"Yes / No\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"If No, splits occur repeatedly along the beam based on the Split Length interval. If Yes, only one split is made.\"\n    },\n    {\n      \"name\": \"sFlipDir\",\n      \"technicalDefault\": \"|No|\",\n      \"businessMeaning\": \"Reverses the direction in which the split distance is calculated from the beam's origin.\",\n      \"validRange\": \"Yes / No\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Moves the split location to the opposite end of the beam relative to the calculated vector.\"\n    },\n    {\n      \"name\": \"dBlockingLength\",\n      \"technicalDefault\": 100,\n      \"businessMeaning\": \"The thickness (length along the split beam's axis) of the blocking member being inserted.\",\n      \"validRange\": \"20mm - 300mm\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Defines the physical size of the blocking piece along the beam axis.\"\n    },\n    {\n      \"name\": \"dBlockingHeight\",\n      \"technicalDefault\": 25,\n      \"businessMeaning\": \"The vertical depth (height) of the blocking member. Special values -1 (match underlying beam) or -2 (match split beam, capped by rafter height).\",\n      \"validRange\": \"Positive: Custom size; -1: Inherit beam height; -2: Smart height\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Defines the vertical size of the blocking piece.\"\n    },\n    {\n      \"name\": \"dBlockingWidth\",\n      \"technicalDefault\": 25,\n      \"businessMeaning\": \"The width (thickness perpendicular to height and length) of the blocking member. Value -1 matches the underlying beam's width.\",\n      \"validRange\": \"Positive: Custom size; -1: Inherit beam width\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Defines the lateral size of the blocking piece.\"\n    },\n    {\n      \"name\": \"sBlockingElementHeight\",\n      \"technicalDefault\": \"|No|\",\n      \"businessMeaning\": \"Automatically stretches the blocking height to fit exactly between the top and bottom planes of the element assembly.\",\n      \"validRange\": \"Yes / No\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Overrides 'dBlockingHeight' to make the blocking a full-height filler (e.g., floor-to-floor or top-plate-to-bottom-plate).\"\n    },\n    {\n      \"name\": \"dBlockingMaterial\",\n      \"technicalDefault\": \"-1\",\n      \"businessMeaning\": \"Assigns a material to the blocking. -1 inherits the material from the beam being split.\",\n      \"validRange\": \"Material Code string or -1\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Controls the material properties and costing of the generated blocking.\"\n    },\n    {\n      \"name\": \"iBlockingColor\",\n      \"technicalDefault\": -1,\n      \"businessMeaning\": \"Assigns a display color to the blocking. -1 inherits the color from the beam being split.\",\n      \"validRange\": \"Color Index (integer) or -1\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Visual representation in the CAD model.\"\n    },\n    {\n      \"name\": \"sBeamCode\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Assigns a specific Beam Code (name) to the generated blocking members.\",\n      \"validRange\": \"Text string\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Identification and reporting of the new blocking entities.\"\n    },\n    {\n      \"name\": \"sBeamStretch\",\n      \"technicalDefault\": \"|No|\",\n      \"businessMeaning\": \"If enabled, extends the blocking to intersect and connect with the nearest perpendicular beams.\",\n      \"validRange\": \"Yes / No\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Modifies the blocking geometry to fill gaps between adjacent structural members (e.g., full depth dwang).\"\n    }\n  ],\n  \"parameterDependencies\": [\n    {\n      \"trigger\": \"sInclExcl is set\",\n      \"effect\": \"Activates or deactivates the filtering logic of sSecondaryFilter.\",\n      \"cascade\": [\n        \"sSecondaryFilter\"\n      ]\n    },\n    {\n     "
+      },
+      "tokens_used": 9399,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script (HSB_G-SplitWithBlocking.mcr).",
+          "Script checks for ExecuteKey (Catalog usage).",
+          "[Branch] If no ExecuteKey, display Properties Dialog to user.",
+          "User selects Elements via PrEntity prompt ('Select elements').",
+          "Script spawns a new instance in ModelSpace attached to each selected Element.",
+          "Temporary insert instance is erased.",
+          "Processing instance validates properties (Split length vs Blocking length).",
+          "Script retrieves beams from the attached Element.",
+          "Script filters beams based on 'Filter definition' and 'Beamcode' properties.",
+          "[Loop] Script iterates through filtered beams.",
+          "Script calculates split position along the beam (handling Flip and Alternative Split Length logic).",
+          "Script generates a new GenBeam for the Blocking.",
+          "[Branch] Script determines Blocking Height based on properties (Element Height, Inherit, or Custom).",
+          "[Branch] If 'Stretch to nearest beam' is enabled, script identifies adjacent beams and applies stretch logic (Horizontal vs Vertical alignment).",
+          "Script adds the Blocking entity to a list.",
+          "[Branch] If 'Single split' is Yes, loop terminates; otherwise continues for next interval.",
+          "[Loop] Script iterates through generated Blocking entities.",
+          "Script detects intersections between Blocking and existing Element beams.",
+          "Script stretches intersecting beams to align with the new Blocking (using stretchStaticTo).",
+          "Script erases the processing instance, leaving only the modified geometry."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "sBlockingElementHeight (Set to elementheight) configuration",
+            "path1": {
+              "name": "Element Height Calculation",
+              "steps": [
+                "Script calculates intersection of Blocking center line with Element Top and Bottom planes.",
+                "Script sets Blocking height to distance between intersection points.",
+                "Script positions Blocking vertically centered between these points."
+              ]
+            },
+            "path2": {
+              "name": "Fixed or Inherited Height",
+              "steps": [
+                "Check dBlockingHeight value.",
+                "If -2: Inherit height from split beam (capped by rafter height).",
+                "If -1: Inherit height from underlying beam (Default logic).",
+                "If > 0: Use custom dBlockingHeight value."
+              ]
+            }
+          },
+          {
+            "condition": "sBeamStretch (Stretch to nearest beam) alignment",
+            "path1": {
+              "name": "Horizontal Stretch (Blocking aligned with Element X)",
+              "steps": [
+                "Identify perpendicular (Vertical) beams.",
+                "Find closest beams to left and right of Blocking.",
+                "Apply Cut tools to Blocking edges to match Vertical beam positions."
+              ]
+            },
+            "path2": {
+              "name": "Vertical Stretch (Blocking perpendicular to Element X)",
+              "steps": [
+                "Identify perpendicular (Horizontal) beams.",
+                "Check distance: Skip if stretch distance > 3 * Split Length.",
+                "Use stretchStaticTo to extend Blocking to nearest Horizontal beams."
+              ]
+            }
+          },
+          {
+            "condition": "Split Length availability",
+            "path1": {
+              "name": "Standard Split",
+              "steps": [
+                "Use dSplitLength position.",
+                "Proceed with Blocking generation."
+              ]
+            },
+            "path2": {
+              "name": "Alternative Split",
+              "steps": [
+                "Check if standard split creates Blocking larger than the remaining beam length.",
+                "If yes and dSecondSplitLength > 0, use dSecondSplitLength instead."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Split Length vs Blocking Length",
+            "errorMessage": "|Split length can't be lower than blocking length!| |TSL will be deleted!|",
+            "recovery": "Increase 'dSplitLength' or decrease 'dBlockingLength' in properties."
+          },
+          {
+            "check": "Second Split Length validity",
+            "errorMessage": "|SecondSplit length can't be lower than blocking length!| or |SecondSplit length can't be bigger than the initial split length|",
+            "recovery": "Ensure 'dSecondSplitLength' is between 'dBlockingLength' and 'dSplitLength'."
+          },
+          {
+            "check": "Element Selection",
+            "errorMessage": "|No element selected!|",
+            "recovery": "Script must be run attached to a valid Element."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Dimensions/Layout",
+            "how": "OPM Properties (Properties Palette)",
+            "effect": "Changing 'Split length', 'Blocking dimensions', or 'Filter' triggers recalculation. Existing blocking is removed and regenerated based on new parameters."
+          },
+          {
+            "action": "Delete Script",
+            "how": "Select and Erase",
+            "effect": "Deletes the script instance. Note: The generated Blocking beams are physical GenBeams; they may remain in the model unless the script manages their lifecycle via element grouping or manual deletion."
+          }
+        ]
+      },
+      "tokens_used": 11095,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_G-SplitWithBlocking.mcr\n\n## Overview\nAutomatically splits selected beams within a timber element and inserts blocking (nogging) members at the split locations, with options to stretch the blocking to adjacent structural members.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script creates new instances and modifies geometry in `_kModelSpace`. |\n| Paper Space | No | This script does not operate in Shop Drawings or Paper Space. |\n| Shop Drawing | No | This script is for model generation only. |\n\n## Prerequisites\n- **Entities**: At least one timber `Element` must exist in the model.\n- **Configuration**: Catalog entries for `HSB_G-SplitWithBlocking` and `HSB_G-FilterGenBeams` must be installed.\n- **Filters**: If using specific beam filters, definitions must be created in the `HSB_G-FilterGenBeams` catalog.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_G-SplitWithBlocking.mcr`\n\n### Step 2: Configure Properties (Optional)\n```\nCommand Line: [Properties Palette updates]\nAction: Before or after insertion, you can adjust settings like Filter definition, Split length, and Blocking dimensions in the Properties Palette (OPM).\n```\n\n### Step 3: Select Elements\n```\nCommand Line: Select elements\nAction: Click on the timber Element(s) containing the beams you wish to process. Press Enter to confirm selection.\n```\n\n### Step 4: Processing\n```\nAction: The script attaches to the selected Element, filters the beams, calculates split points, and generates the blocking members. The temporary script instance is erased, leaving only the new geometry.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Filter definition | dropdown | | Selects a predefined group of beams (from the Filter GenBeams catalog) to be processed. |\n| Beamcode | text | | Refines the beam selection based on a specific text Beamcode (supports wildcards). |\n| Incl/Excl | dropdown | Include | Determines if the Beamcode filter acts as a whitelist (Include) or blacklist (Exclude). |\n| Split length | number | 1000 mm | The distance along the beam from the start (or previous split) where the blocking is inserted. |\n| SecondSplit length | number | 0 mm | Alternative split position used if the standard Split Length is invalid near beam ends. |\n| Single split | dropdown | No | If Yes, only one split is made per beam. If No, splits repeat along the beam length. |\n| Flip Dir | dropdown | No | Reverses the direction in which the split distance is calculated from the beam's origin. |\n| Blocking length | number | 100 mm | The length (thickness) of the blocking member along the split beam's axis. |\n| Blocking height | number | 25 mm | The vertical depth of the blocking. Use -1 to match beam height or -2 for smart height. |\n| Blocking width | number | 25 mm | The width of the blocking. Use -1 to match the underlying beam's width. |\n| BlockingElementHeight | dropdown | No | If Yes, automatically stretches the blocking height to fit exactly between the element's top and bottom planes. |\n| BlockingMaterial | text | -1 | Assigns material to the blocking. -1 inherits from the beam being split. |\n| BlockingColor | number | -1 | Assigns display color. -1 inherits from the beam being split. |\n| BeamCode | text | | Assigns a specific Beam Code (name) to the generated blocking members. |\n| BeamStretch | dropdown | No | If Yes, extends the blocking to intersect and connect with the nearest perpendicular beams. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Regenerates the blocking and splits based on the current property values if you manually trigger the script instance. |\n\n## Settings Files\n- **Filename**: Catalog entries for `HSB_G-FilterGenBeams`\n- **Location**: hsbCAD Catalog\n- **Purpose**: Provides the filter definitions used to select specific sets of beams (e.g., \"All Studs\", \"All Joists\") within the element without manually selecting individual beams.\n\n## Tips\n- **Validation Error**: If the script disappears after insertion, check the command line. Ensure **Split length** is greater than **Blocking length**.\n- **Full Height Blocking**: To create blocking that fills the entire space between top and bottom plates (e.g., for fire blocking), set **BlockingElementHeight** to Yes.\n- **Smart Sizing**: Use **Blocking height** or **width** set to `-1` to automatically match the dimensions of the beam you are splitting, ensuring a perfect fit.\n\n## FAQ\n- Q: Why is my blocking not appearing?\n- A: Ensure the **Filter definition** actually matches beams within your selected Element, and that the **Split length** is not longer than the beams themselves.\n- Q: Can I stretch the blocking to reach other walls?\n- A: The script stretches blocking to intersect *perpendicular* beams within the same element. It does not typically stretch across different elements.\n- Q: What does the SecondSplit length do?\n- A: It prevents the blocking from being partially unsupported near the ends of a beam. If the remaining space is too short for a standard split interval, the script uses this value instead."
+      },
+      "tokens_used": 7168,
+      "error": null
+    }
+  }
+}

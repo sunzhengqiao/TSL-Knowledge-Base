@@ -1,78 +1,66 @@
-# HSB_G-NumberGenBeams
+# HSB_G-NumberGenBeams.mcr
 
-This TSL script automatically assigns position numbers to all selected GenBeams (timber members). It provides a quick way to number beams in your model, which is essential for fabrication documentation and shop drawings.
+## Overview
+This script automatically assigns or resets Position Numbers (PosNum) for generic beams in your model. It ensures unique identification for fabrication lists, processing either a user-selected set of beams or all beams in the drawing.
 
-**Author:** Robert Pol (support.nl@hsbcad.com)
-**Version:** 1.00
-**Last Modified:** 14.08.2020
+## Usage Environment
 
-## Script Type
+| Space | Supported | Notes |
+|-------|-----------|-------|
+| Model Space | Yes | This script is designed to run exclusively in Model Space. |
+| Paper Space | No | Not supported. |
+| Shop Drawing | No | Not supported. |
 
-**Type O (Object Script)**
+## Prerequisites
+- **Required entities:** Generic Beams (`GenBeam`) must exist in the drawing.
+- **Minimum beam count:** 0 (You can run this on an empty selection to process all beams).
+- **Required settings files:** None.
 
-This is an Object-type script that operates independently without requiring pre-selected beams. It runs once to process beams and then erases itself from the drawing - it does not persist as a parametric entity.
+## Usage Steps
 
-## User Properties
+### Step 1: Launch Script
+Command: Type `TSLINSERT` in the command line and select `HSB_G-NumberGenBeams.mcr` from the file browser, or use your assigned custom toolbar button.
 
-This script has no user-configurable properties in the Properties Palette (OPM). It operates automatically based on beam selection.
+### Step 2: Select Beams
+```
+Command Line: Select one or more genbeams, <ENTER> to select all genbeams
+Action: Click on the specific beams you want to number, or press ENTER without selecting anything to process every Generic Beam in the Model Space.
+```
 
-## Usage Workflow
+### Step 3: Processing
+The script will automatically reset the position numbers to 0 and then trigger the calculation to assign the correct unique numbers.
 
-### Step 1: Launch the Script
-Run the script from the hsbCAD TSL menu or command line.
+### Step 4: Completion
+Once finished, the script instance will automatically erase itself from the drawing. Only the updated Position Numbers on your beams will remain.
 
-### Step 2: Select GenBeams
-When prompted, you have two options:
+## Properties Panel Parameters
 
-| Action | Result |
-|--------|--------|
-| **Select specific beams** | Click on one or more GenBeams in your model to number only those beams |
-| **Press ENTER without selecting** | The script will automatically select ALL GenBeams in Model Space |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| N/A | N/A | N/A | This script has no user-editable properties in the Properties Palette. It runs entirely via command line interaction. |
 
-The command line displays:
-> "Select one or more genbeams, ENTER to select all genbeams"
+## Right-Click Menu Options
 
-### Step 3: Automatic Numbering
-After selection, the script:
-1. Iterates through all selected GenBeams
-2. Assigns position numbers using the `assignPosnum(0)` method
-3. Verifies that all beams have been properly numbered
-4. Automatically erases itself from the drawing when complete
+| Menu Item | Description |
+|-----------|-------------|
+| N/A | This script does not add any custom options to the right-click context menu. |
 
-### Step 4: Verify Results
-Check the assigned position numbers in:
-- The beam properties (OPM panel)
-- Shop drawings generated from the numbered beams
-- Part lists and schedules
+## Settings Files
+- **Filename:** None
+- **Location:** N/A
+- **Purpose:** This script operates independently of external XML or settings files.
 
-## Technical Details
+## Tips
+- **Global Renumbering:** If you want to renumber the entire project, simply press `ENTER` immediately when prompted. This selects all Generic Beams in the Model Space.
+- **Validation:** The script includes an automatic check (up to 50 retries) to ensure the CAD engine successfully assigns the numbers. You do not need to run the script multiple times manually if there is a slight delay.
+- **Clean Up:** Do not be alarmed if the script object disappears after running; this is intended behavior to keep your drawing clean.
 
-### How Numbering Works
-- The script calls `gBm.assignPosnum(0)` on each beam
-- The parameter `0` tells hsbCAD to use automatic position number assignment
-- Beams with `posnum() == -1` indicate numbering has not yet completed
-- The script includes a safety loop (max 50 iterations) to ensure all beams are processed
+## FAQ
+- **Q: What happens if I select nothing?**
+- **A:** If you press ENTER without selecting any beams, the script will automatically select and process every Generic Beam currently in the Model Space.
 
-### Behavior Notes
-- **Non-persistent**: The script erases itself after execution - it does not remain in your drawing
-- **One-time execution**: If you need to renumber beams, run the script again
-- **Multiple insert protection**: If launched multiple times accidentally, duplicate instances are automatically removed
+- **Q: Why did the script disappear after I used it?**
+- **A:** The script is designed to "erase itself" (`eraseInstance`) immediately after updating the beam properties. It is a utility tool, not a permanent object in your design.
 
-## Context Menu Commands
-
-This script has no context menu commands as it does not persist in the drawing after execution.
-
-## Related Scripts
-
-This numbering script works in conjunction with:
-- Shop drawing scripts (`sd_*`) that display position numbers
-- Part list generation tools that use position numbers for BOM creation
-- Other `HSB_G-*` general utility scripts
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| Some beams not numbered | Run the script again and select ALL beams (press ENTER at selection prompt) |
-| Position numbers not visible | Check that position number display is enabled in your drawing settings |
-| Script seems to hang | The script has a 50-iteration safety limit; if beams cannot be numbered due to model issues, it will eventually complete |
+- **Q: Can I use this in a shop drawing layout?**
+- **A:** No, this script only detects and processes entities in the 3D Model Space.

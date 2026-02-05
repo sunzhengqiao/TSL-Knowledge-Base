@@ -1,78 +1,81 @@
 # GA.mcr
 
 ## Overview
-Inserts and manages generic angle bracket connections (metal L-plates) between timber elements. It automates the creation of 3D geometry, beam milling/pocketing, and BOM data for manufacturing lists.
+Inserts a configurable metal angle bracket for single or double timber connections, automatically generating the necessary 3D representation and material milling (cutouts) for a flush installation.
 
 ## Usage Environment
 | Space | Supported | Notes |
 |-------|-----------|-------|
-| Model Space | Yes | Required for 3D geometry and beam processing. |
-| Paper Space | No | |
-| Shop Drawing | No | |
+| Model Space | Yes | Script operates in 3D to modify beams and generate hardware bodies. |
+| Paper Space | No | Not designed for 2D detailing or views. |
+| Shop Drawing | No | Does not generate shop drawing views directly. |
 
 ## Prerequisites
-- **Required entities**: GenBeam, GenSheet, or GenPanel (1 or 2 elements).
-- **Minimum beam count**: 1.
-- **Required settings files**: `AngleBracketCatalog.xml` (or `GenericAngle.xml`) located in the Company or Content\General installation folder.
+- **Required Entities**: At least one `GenBeam` (Timber Beam).
+- **Minimum Beam Count**: 1 (Supports 2 beams for connections).
+- **Required Settings**: `GenericAngle.xml` (Located in Company folder or default Install folder).
 
 ## Usage Steps
 
 ### Step 1: Launch Script
-**Command:** `TSLINSERT`
-**Action:** Browse to the script location and select `GA.mcr`.
+Command: `TSLINSERT` → Select `GA.mcr` from the list.
 
-### Step 2: Select Timber Elements
+### Step 2: Select Beams and Insert
 ```
-Command Line: Select GenBeam/GenSheet/GenPanel:
-Action: Click on the primary timber element you wish to connect.
+Command Line: Select beams:
+Action: Click on the primary beam. If connecting two beams, click the second intersecting beam.
 ```
-*(Note: The script allows selecting a second element immediately after for beam-to-beam connections, or you can press Enter to proceed with a single beam).*
-
-### Step 3: Define Insertion Point
 ```
 Command Line: Specify insertion point:
-Action: Click on the face or edge of the selected beam where the bracket should be placed.
+Action: Click near the end or intersection of the beam where the bracket should be placed.
 ```
-*   **Single Beam:** The script snaps to the nearest edge based on your click.
-*   **Two Beams:** The point defines the intersection line where the two beams meet.
 
-### Step 4: Configure Properties
-**Action:** The script inserts the default bracket. Use the **Properties Palette** (Ctrl+1) to select the specific Family, Manufacturer, and Product code required for your design.
+### Step 3: Configure Bracket
+1.  Select the inserted script object (it may be represented by a grip point or the bracket body).
+2.  Open the **Properties Palette** (Ctrl+1).
+3.  Select the desired **Family** (e.g., Simpson AA).
+4.  Select the specific **Product** code (e.g., AA60280).
+5.  Adjust dimensions or milling settings if necessary.
 
 ## Properties Panel Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| sFamily | Dropdown | From XML | The profile family of the angle bracket (e.g., Standard L-Bracket). This determines the base geometric dimensions (Height, Width, Thickness). |
-| sProduct | Dropdown | From XML | The specific article number or SKU for purchasing and production lists. |
-| sManufacturer | Dropdown | From XML | The supplier of the hardware component. |
-| sNail | String | From XML | The article number of the fasteners (nails/screws) used to secure the bracket. |
-| iMillingType | Integer | 1 | Machining strategy: 1 (Standard/Surface), 2, or 3 (Recessed/Pocket). Determines how deep the timber is cut. |
-| dTolerance | Double | 0.0 mm | Additional clearance added to the cut dimensions. Increase this if the bracket fits too tightly. |
-| iRotate180 | Integer | 0 | Flips the orientation of the bracket 180 degrees around the insertion axis (0 = No, 1 = Yes). |
+| sFamily | String | AA | The manufacturer series or family of the angle bracket. |
+| sProduct | String | AA60280 | The specific product code defining dimensions and fasteners. |
+| Manufacturer | String | (From XML) | The supplier/brand name for BOM export. |
+| bRotate180 | Boolean | 0 (No) | Rotates the bracket 180 degrees relative to the beam face. |
+| bSwapLegs | Boolean | 0 (No) | Swaps which leg attaches to the primary vs. secondary beam (swaps width/depth usage). |
+| iMillingType | Integer | 1 | Type of material removal: 0=None, 1=Rectangular Pocket, 2=One Side, 3=Both Sides. |
+| dTolerance | Double (mm) | 1.0 | Extra clearance added to the milling pocket for fit. |
+| dB | Double (mm) | (Product) | Horizontal width of the bracket (Leg 1). |
+| dA | Double (mm) | (Product) | Horizontal depth of the bracket (Leg 2). |
+| dC | Double (mm) | (Product) | Vertical height of the bracket. |
+| dt | Double (mm) | (Product) | Thickness of the steel material. |
 
 ## Right-Click Menu Options
 
 | Menu Item | Description |
 |-----------|-------------|
-| Swap Legs | Swaps the primary and secondary beam roles (flips the connection orientation). Available only for 2-beam connections. |
-| Rotate 180 | Flips the bracket orientation relative to the insertion axis without changing the assigned beams. |
+| Swap Legs | Toggles the `bSwapLegs` property, switching the orientation of the bracket legs. |
+| Rotate 180 | Toggles the `bRotate180` property, flipping the bracket orientation. |
+| Update | Forces a recalculation of the script geometry. |
 
 ## Settings Files
-- **Filename**: `AngleBracketCatalog.xml` or `GenericAngle.xml`
-- **Location**: `hsbCompany` folder or `Content\General` installation path.
-- **Purpose**: Provides the database of available manufacturers, families, product codes, dimensions (dA, dB, dC, dt), and associated fasteners.
+- **Filename**: `GenericAngle.xml`
+- **Location**: `_kPathHsbCompany\TSL\Settings` (or fallback to `_kPathHsbInstall\Content\General\TSL\Settings`)
+- **Purpose**: Defines the catalog of available brackets, including dimensions (dA, dB, dC, dt), default part numbers, and associated fastener (nail/screw) configurations.
 
 ## Tips
-- **Grip Editing:** Select the inserted bracket to reveal the grip point. Drag the grip along the beam edge to reposition the connection quickly.
-- **Double-Click:** Double-clicking an existing connection on two beams acts as a shortcut to "Swap Legs."
-- **Recessing:** If you need the bracket to sit inside the timber (flush mount), change the `iMillingType` to 3.
-- **Clearance:** If the manufacturing report indicates the pocket is too small, increase the `dTolerance` value in small increments (e.g., 1.0 mm).
+- **Moving the Bracket**: Select the script and drag the **Grip Point** (blue square) to move the bracket along the beam.
+- **Connecting Two Beams**: If you select two beams, the script attempts to place the bracket at their intersection. Double-clicking the object can swap the primary and secondary beam roles.
+- **Face Selection (Single Beam)**: When inserting on a single beam, the bracket attaches to the face nearest to your click point.
+- **Tolerance Adjustment**: If the timber swells or for easier assembly, increase the `dTolerance` value to create a slightly larger pocket in the wood.
 
 ## FAQ
-- **Q: What happens if the script asks for an XML file?**
-  **A:** The script cannot find the required catalog. Ensure your CAD administrator has placed the correct `AngleBracketCatalog.xml` in the correct Company or Content folder.
-- **Q: Can I connect more than two beams?**
-  **A:** No, this script is designed for single-beam anchoring or connections between exactly two beams.
-- **Q: Why does my bracket look rotated wrong?**
-  **A:** Use the `iRotate180` property in the Properties Palette or select "Rotate 180" from the right-click context menu.
+- **Q: Why is the bracket not cutting into the wood?**
+  A: Check the `iMillingType` property. If it is set to `0`, no cuts are generated. Set it to `1` (Rectangular Pocket) for standard inset applications.
+- **Q: How do I switch to a different manufacturer?**
+  A: Change the `sFamily` property in the dropdown menu. The `sProduct` list will update automatically to show available codes for that family.
+- **Q: The bracket is facing the wrong way.**
+  A: Use the Right-Click menu option **Rotate 180** or toggle the **bSwapLegs** property to flip the orientation.

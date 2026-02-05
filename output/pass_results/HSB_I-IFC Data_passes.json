@@ -1,0 +1,273 @@
+{
+  "filename": "HSB_I-IFC Data.mcr",
+  "status": "completed",
+  "total_tokens": 21638,
+  "processing_time": 323.91725420951843,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5105,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses PrEntity for generic entity selection and executes eraseInstance() immediately after processing, indicating a one-time utility command rather than a persistent drawing object. It manipulates Property Sets (createPropSetDefinition, attachPropSet) on model entities (Element/Group) for IFC export purposes. There is no usage of Viewport, _kPaperSpace, sd_ prefixes, or drawing generation logic."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Entity"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2551,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select one or more entity|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 1914,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Attaches project structural metadata (Element ID, Floor, House, Zone) to selected entities as IFC Property Sets for export purposes.",
+          "category": "Data Management",
+          "typicalUseCase": "Used before an IFC export to ensure BIM models contain necessary structural hierarchy information required by architects or engineers."
+        },
+        "parameters": [
+          {
+            "name": "ssE (Entity Selection)",
+            "technicalDefault": "User Selection",
+            "businessMeaning": "The timber components (beams, walls, panels) or assemblies that will receive the structural data tags.",
+            "validRange": "Any valid hsbCAD entity (Beams, Elements, etc.)",
+            "unit": "N/A",
+            "affectsOutput": "Determines which objects in the IFC file will have the 'hsbIFCGroupStructure' data populated."
+          },
+          {
+            "name": "propSetDefinitionMap.Element",
+            "technicalDefault": "\"-\"",
+            "businessMeaning": "The specific Element Number (e.g., Production ID) assigned to the component in the hsbCAD project.",
+            "validRange": "Standard Element Numbers (alphanumeric)",
+            "unit": "Text",
+            "affectsOutput": "Populates the 'Element' property in the IFC export, linking the object to the production model."
+          },
+          {
+            "name": "propSetDefinitionMap.FloorGroup",
+            "technicalDefault": "\"-\"",
+            "businessMeaning": "The name of the floor level the component belongs to (extracted from the 2nd segment of the Group name).",
+            "validRange": "Floor names (e.g., 'GroundFloor', '1stFloor')",
+            "unit": "Text",
+            "affectsOutput": "Populates the 'FloorGroup' property in the IFC export for spatial organization."
+          },
+          {
+            "name": "propSetDefinitionMap.HouseGroup",
+            "technicalDefault": "\"-\"",
+            "businessMeaning": "The name of the building or house the component belongs to (extracted from the 1st segment of the Group name).",
+            "validRange": "House/Project names (e.g., 'HouseA', 'Block1')",
+            "unit": "Text",
+            "affectsOutput": "Populates the 'HouseGroup' property in the IFC export for multi-building project organization."
+          },
+          {
+            "name": "propSetDefinitionMap.ZoneIndex",
+            "technicalDefault": "0",
+            "businessMeaning": "The internal zone index assigned to the element's position within the architectural layout.",
+            "validRange": "Integer indices",
+            "unit": "Count",
+            "affectsOutput": "Populates the 'ZoneIndex' property in the IFC export for spatial analysis or scheduling."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Entity Selection",
+            "effect": "Retrieves the Group hierarchy and Element Number from the selected entity.",
+            "cascade": [
+              "FloorGroup",
+              "HouseGroup",
+              "Element",
+              "ZoneIndex"
+            ]
+          },
+          {
+            "trigger": "Group Hierarchy",
+            "effect": "Derives Floor and House names based on the Group name parts.",
+            "cascade": [
+              "FloorGroup",
+              "HouseGroup"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Property Set (IFC Data)",
+            "description": "Non-geometric data attached to the entity containing structural hierarchy information.",
+            "appliedTo": "The entities selected by the user during script execution."
+          }
+        ]
+      },
+      "tokens_used": 2964,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Execution Starts",
+          "2. Check Insertion Cycle: Is this a re-insert/update (cycle > 1)?",
+          "3. [If Cycle > 1] Erase Instance and Exit (Prevent duplicate execution)",
+          "4. [If Cycle == 1] Prompt user to select entities (PrEntity)",
+          "5. [User Input] Select one or more entities (Beams/Walls/etc)",
+          "6. Store selection in global _Entity list",
+          "7. Check if selection list is empty",
+          "8. [If Empty] Display notice 'No entity selected' and Erase Instance",
+          "9. [If Not Empty] Define Property Set Name 'hsbIFCGroupStructure'",
+          "10. Check if Property Set Definition exists in the drawing",
+          "11. Loop through each selected entity",
+          "12. Retrieve Entity groups and Element data",
+          "13. Map data: Element Number (or '-'), Floor (or '-'), House (or '-'), Zone",
+          "14. [Check] Does Property Set Definition exist?",
+          "15. [If No] Create Property Set Definition globally using mapped data structure",
+          "16. Attach Property Set to the current entity",
+          "17. Populate Property Set on the current entity with mapped values",
+          "18. End Loop (Repeat for next entity)",
+          "19. Erase Script Instance (Self-destruct)",
+          "20. Script Ends"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle Count",
+            "path1": {
+              "name": "Update/Re-run (Cycle > 1)",
+              "steps": [
+                "Script detects it is being updated or re-inserted",
+                "EraseInstance() called immediately",
+                "Execution stops (No user prompts)"
+              ]
+            },
+            "path2": {
+              "name": "Fresh Insert (Cycle == 1)",
+              "steps": [
+                "Proceed to Entity Selection prompt",
+                "Execute main logic"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Selection Status",
+            "path1": {
+              "name": "No Selection",
+              "steps": [
+                "Check _Entity.length() == 0",
+                "Show ReportNotice: 'No entity selected.'",
+                "EraseInstance() called",
+                "Exit"
+              ]
+            },
+            "path2": {
+              "name": "Valid Selection",
+              "steps": [
+                "Iterate through selected entities",
+                "Extract and attach IFC data"
+              ]
+            }
+          },
+          {
+            "condition": "Property Set Definition Existence",
+            "path1": {
+              "name": "Definition Missing",
+              "steps": [
+                "Entity().createPropSetDefinition() executed",
+                "Definition created based on first entity's valid structure",
+                "Flag propSetExists set to true"
+              ]
+            },
+            "path2": {
+              "name": "Definition Exists",
+              "steps": [
+                "Skip creation step",
+                "Proceed to attach existing definition to entity"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Data Availability",
+            "path1": {
+              "name": "Element/Group Attached",
+              "steps": [
+                "Extract Element Number from ent.element().number()",
+                "Extract House/Floor from group.namePart(0/1)",
+                "Extract Zone from ent.myZoneIndex()"
+              ]
+            },
+            "path2": {
+              "name": "No Element/Group",
+              "steps": [
+                "Element Number set to '-'",
+                "FloorGroup set to '-'",
+                "HouseGroup set to '-'",
+                "ZoneIndex set to 0 (or uninitialized)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Selection",
+            "errorMessage": "No entity selected.",
+            "recovery": "User must restart the command and make a valid selection of hsbCAD entities (Beams, Walls, etc)."
+          },
+          {
+            "check": "Property Set Definition Creation",
+            "errorMessage": "Implicit failure (No explicit error message in code, but createPropSetDefinition returns bool)",
+            "recovery": "If creation fails, subsequent attachment fails. Usually requires CAD write permissions or valid catalog entries."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None (Script Self-Destructs)",
+            "how": "N/A",
+            "effect": "The script calls eraseInstance() at the end of execution. It does not remain in the model to be edited via OPM or context menus. The changes (Property Sets) are applied directly to the selected entities."
+          }
+        ]
+      },
+      "tokens_used": 4622,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_I-IFC Data.mcr\n\n## Overview\nThis script attaches structural metadata (Element ID, Floor, House, and Zone) to selected timber entities as IFC Property Sets. It is used to prepare hsbCAD models for BIM export by embedding necessary project hierarchy information directly into the components.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be run in the model where your timber components are located. |\n| Paper Space | No | Not applicable for layout or drawing views. |\n| Shop Drawing | No | Not applicable for shop drawing generation. |\n\n## Prerequisites\n- **Required Entities**: You must have at least one entity (Beam, Wall, or Element) in the model.\n- **Data Preparation**: Entities should be assigned to an **Element** (with a production number) and belong to a **Group** (with House/Floor hierarchy) before running the script for best results.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the command line.\n2. Select `HSB_I-IFC Data.mcr` from the file dialog.\n\n### Step 2: Select Entities\n```\nCommand Line: Select one or more entity\nAction: Click on the beams, walls, or assemblies you want to export data for. Press Enter to confirm selection.\n```\n\n### Step 3: Completion\nThe script will automatically process the selection, attach the property data, and then remove itself from the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script runs as a one-time command and does not create a persistent object with editable properties. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | This script does not remain in the model to offer right-click menu options. |\n\n## Settings Files\n- **None**: This script operates entirely on existing project data and does not require external settings files.\n\n## Tips\n- **Check Group Structure**: Ensure your Groups are named consistently (e.g., `HouseName.FloorName`) so the script can correctly identify the \"House\" and \"Floor\" data.\n- **Re-running**: You can run this script multiple times on the same entities if you update their Element Numbers or Group assignments. It will update the existing IFC properties.\n- **Verification**: To verify the data was attached, select an entity and look at the Extended Data or Property Sets in the AutoCAD Properties palette (depending on your hsbCAD/IFC configuration viewer).\n\n## FAQ\n- **Q: The script disappeared after I ran it. Is that normal?**\n  - A: Yes. This is a \"utility\" script designed to perform a task and delete itself (`eraseInstance`) so it does not clutter your model.\n- **Q: Why does the IFC data show \"-\" for Floor or House?**\n  - A: The script extracts this information from the entity's Group name. If the entity is not assigned to a Group, or the Group name does not follow the expected hierarchy, it will default to \"-\".\n- **Q: Can I use this to manually type in IFC data?**\n  - A: No. This script acts as a bridge between your internal hsbCAD Element/Group data and the IFC export format. Edit the Element or Group properties in hsbCAD, then run this script to update the IFC tags."
+      },
+      "tokens_used": 4482,
+      "error": null
+    }
+  }
+}

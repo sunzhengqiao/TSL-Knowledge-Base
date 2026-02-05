@@ -1,91 +1,64 @@
-# HSB_G-ProjectGrouping
+# HSB_G-ProjectGrouping.mcr
 
-Assign group information to elements for batch processing, stacking, or truck loading organization.
+## Overview
+This script allows you to assign logical production groups (such as Batches, Stacks, or Trucks) to selected Elements in the 3D model. It writes metadata to the elements, enabling better organization for production lists and drawings.
 
-## Script Type
+## Usage Environment
+| Space | Supported | Notes |
+|-------|-----------|-------|
+| Model Space | Yes | Required for selecting Elements. |
+| Paper Space | No | Not supported. |
+| Shop Drawing | No | Not supported. |
 
-**O-Type (Object Script)** - This is a standalone object that can be inserted into model space without requiring pre-selected beams or other entities. It operates on elements you select during insertion.
+## Prerequisites
+- **Required Entities**: Element (e.g., walls, roofs).
+- **Minimum beam count**: 0 (Selects Elements, not single beams).
+- **Required settings files**: None.
 
-## Version History
+## Usage Steps
 
-| Version | Date | Description |
-|---------|------|-------------|
-| 1.00 | 31.01.2019 | First revision |
-| 1.01 | 31.01.2019 | Trigger show group info TSL |
-| 1.02 | 31.01.2019 | Correct typo in group |
-| 1.03 | 01.04.2019 | Support different grouping types |
-| 1.04 | 21.05.2019 | Trigger new show group info TSL |
-| 1.05 | 31.10.2019 | Remove padding of group name |
-| 1.06 | 09.12.2021 | Recalc all grouping info TSLs in the drawing |
+### Step 1: Launch Script
+Command: `TSLINSERT`
+- Browse and select `HSB_G-ProjectGrouping.mcr`.
 
-## User Properties
-
-| Property | Type | Default | Options | Description |
-|----------|------|---------|---------|-------------|
-| Group type | String (Dropdown) | Batch | Batch, Stacking, Truck | Select the standard grouping category for organizing elements |
-| Custom group type | String (Dropdown) | (empty) | (empty), SalesOrder | Optional custom grouping type that overrides standard type if set |
-| Group name | String | (empty) | User-defined | The identifier/name for this group assignment |
-
-## Purpose
-
-This script allows you to organize hsbCAD elements (walls, floors, roofs) into logical groups for:
-
-- **Batch** - Grouping elements for batch production or processing
-- **Stacking** - Organizing elements for stacking order in the factory
-- **Truck** - Assigning elements to specific truck loads for delivery
-- **SalesOrder** - Custom grouping by sales order (when using custom group type)
-
-## Usage Workflow
-
-### Step 1: Insert the Script
-
-1. Run the script command `HSB_G-ProjectGrouping`
-2. A dialog will appear automatically with the grouping options
-
-### Step 2: Configure Group Settings
-
-1. **Group type**: Select from the dropdown:
-   - `Batch` - For production batch organization
-   - `Stacking` - For factory stacking sequence
-   - `Truck` - For delivery truck assignment
-
-2. **Custom group type** (optional): If you need a custom category like `SalesOrder`, select it here. When a custom type is selected, it overrides the standard group type.
-
-3. **Group name**: Enter the group identifier (e.g., "Batch-001", "Truck-A", "Stack-03")
+### Step 2: Configure Properties
+- **Action**: The Properties Palette (OPM) will display the script parameters. Set your desired Group Type and Group Name before proceeding.
 
 ### Step 3: Select Elements
+```
+Command Line: |Select elements|
+Action: Click on the Elements you wish to group, then press Enter.
+```
+- The script will immediately apply the grouping data to the selected elements and refresh any visible grouping labels.
 
-After confirming the dialog:
-1. The command line will prompt: "Select elements"
-2. Select the wall, floor, or roof elements you want to assign to this group
-3. Press Enter to confirm the selection
+## Properties Panel Parameters
 
-### Step 4: Automatic Updates
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Group type | Dropdown | Batch | Select the standard production category (Batch, Stacking, Truck). This defines the context for the group (e.g., logistics vs. assembly). |
+| Custom group type | Dropdown | [Empty] | Select an alternative category if the standard types do not fit (e.g., SalesOrder). **Note:** If a value is selected here, it overrides "Group type". |
+| Group name | Text | [Empty] | Enter the specific identifier for this group (e.g., "Batch-101", "Truck-A", "Order-500"). |
 
-Once elements are assigned:
-- The group information is stored in each element's metadata
-- Any `HSB_I-ShowGroupingInformation` or `Batch & Stack Info` TSL instances in the drawing are automatically recalculated to display updated grouping information
+## Right-Click Menu Options
 
-## Technical Details
+| Menu Item | Description |
+|-----------|-------------|
+| None | This script does not add specific items to the right-click context menu. |
 
-### Data Storage
+## Settings Files
+- **Filename**: None.
+- **Location**: N/A
+- **Purpose**: This script does not require external settings files.
 
-The script stores group information in each selected element using the key format:
-- `Hsb_BatchChild` (for Batch type)
-- `Hsb_StackingChild` (for Stacking type)
-- `Hsb_TruckChild` (for Truck type)
-- `Hsb_SalesOrderChild` (for SalesOrder custom type)
+## Tips
+- **Visual Feedback**: If you have the "HSB_I-ShowGroupingInformation" or "Batch & Stack Info" scripts loaded in your model, they will automatically update to show the new group names immediately.
+- **Overwriting**: Running the script again on the same elements with a different "Group name" will overwrite the previous data.
+- **Custom vs Standard**: Use the "Custom group type" dropdown for non-physical groupings (like Sales Orders). If left empty, the script uses the "Group type" setting.
 
-Each element receives a `ParentUID` value matching the Group name you specified.
-
-### Related Scripts
-
-This script works in conjunction with:
-- `HSB_I-ShowGroupingInformation` - Displays grouping information visually
-- `Batch & Stack Info` - Alternative grouping information display
-
-## Notes
-
-- The script can only be inserted once per action (multiple insertions are blocked)
-- Group names are stored without padding for cleaner data handling
-- When the script runs, it automatically triggers recalculation of all grouping information display TSLs in the drawing
+## FAQ
+- **Q: Can I group beams individually?**
+  - A: No, this script is designed to group Elements (walls/roofs) as whole units.
+- **Q: Why didn't the group name appear?**
+  - A: Ensure you have entered text in the "Group name" property in the Properties Palette before selecting the elements.
+- **Q: Can I undo this action?**
+  - A: Yes, you can use the standard AutoCAD Undo command (Ctrl+Z) immediately after running the script.

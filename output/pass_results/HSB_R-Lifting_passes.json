@@ -1,0 +1,201 @@
+{
+  "filename": "HSB_R-Lifting.mcr",
+  "status": "completed",
+  "total_tokens": 53000,
+  "processing_time": 402.09736824035645,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9182,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Filename starts with 'HSB_' (standard for hsbCAD Model Space scripts). Direct usage of Element, Beam, Drill, Sheet, and Body objects. 3D visualization logic using Display with ViewDirections. No usage of _Viewport, _kPaperSpace, or #Type E declarations."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space with an active element containing structural beams",
+          "requiredSettings": [
+            "HSB_G-FilterGenBeams (optional, for beam filtering)"
+          ]
+        }
+      },
+      "tokens_used": 6838,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9894,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Automatically generates lifting points (drills and reinforcement) on timber elements (roofs/floors) based on weight and center of gravity calculations.\",\n    \"category\": \"Hardware / Production Machining\",\n    \"typicalUseCase\": \"A user needs to prepare prefabricated roof or floor elements for transport by crane. The script calculates where the lifting hooks should go based on the element's balance (centroid) and adds structural blocking where needed to prevent the timber from crushing under the load.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"tslIdentifier\",\n      \"technicalDefault\": \"Pos 1\",\n      \"businessMeaning\": \"A unique name tag that allows multiple lifting configurations (e.g., different crane points) to exist on the same element without overwriting each other.\",\n      \"validRange\": \"Any alphanumeric string (e.g., 'MainLift', 'Transport')\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Determines which instance of the script is active; prevents duplicate scripts with the same ID.\"\n    },\n    {\n      \"name\": \"sPositionType\",\n      \"technicalDefault\": \"Above center\",\n      \"businessMeaning\": \"The logic used to calculate the longitudinal position of the lifting point along the element.\",\n      \"validRange\": \"List selection\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Moves the lifting holes along the length of the element (e.g., centered at 50%, or at a specific fraction).\"\n    },\n    {\n      \"name\": \"sLiftingPosition\",\n      \"technicalDefault\": \"Left, right\",\n      \"businessMeaning\": \"Orients the lifting mechanism relative to the element's width.\",\n      \"validRange\": \"Left/Right (side walls), Top/Bottom (front walls)\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Rotates the drilling/symbol direction 90 degrees or places the lifting points on gable ends vs eaves sides.\"\n    },\n    {\n      \"name\": \"dFraction\",\n      \"technicalDefault\": \"0.375\",\n      \"businessMeaning\": \"The percentage of the element's total length where the lifting point is placed.\",\n      \"validRange\": \"0.1 - 0.9\",\n      \"unit\": \"Ratio\",\n      \"affectsOutput\": \"Calculates the specific X-coordinate of the lifting point. 0.375 typically corresponds to the standard center of gravity for uniform loads.\"\n    },\n    {\n      \"name\": \"yOffsetFromReferencePoint\",\n      \"technicalDefault\": \"500 mm\",\n      \"businessMeaning\": \"A fixed distance from the top or bottom edge of the element to place the lifting point.\",\n      \"validRange\": \"100 mm - Element Width\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Moves the lifting point vertically relative to the element's origin.\"\n    },\n    {\n      \"name\": \"sTool\",\n      \"technicalDefault\": \"Symbol\",\n      \"businessMeaning\": \"The physical method of lifting.\",\n      \"validRange\": \"Symbol (2D only), Double Drill (through hole), Double Drill with Blocking (reinforced), Single Drill, Custom Block, Block with Symbol\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Determines if holes are drilled, if blocking beams are generated, and if 3D blocks or 2D symbols are drawn.\"\n    },\n    {\n      \"name\": \"dDrillDiameter\",\n      \"technicalDefault\": \"24 mm\",\n      \"businessMeaning\": \"The diameter of the lifting hole (must match the lifting pin/rod diameter).\",\n      \"validRange\": \"12 mm - 100 mm\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Size of the Drill entity.\"\n    },\n    {\n      \"name\": \"horizontalDistanceBetweenDrills\",\n      \"technicalDefault\": \"200 mm\",\n      \"businessMeaning\": \"The spacing between the two parallel holes that the lifting bar passes through.\",\n      \"validRange\": \"50 mm - 600 mm\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Separates the two drill points laterally.\"\n    },\n    {\n      \"name\": \"onlyPlaceBlockForWeightAbove\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"The minimum element weight required to trigger the creation of structural reinforcement (blocking).\",\n      \"validRange\": \"0 - 5000 kg\",\n      \"unit\": \"kg\",\n      \"affectsOutput\": \"If the element is lighter than this, no blocking beam is generated, saving material.\"\n    },\n    {\n      \"name\": \"sBmCodeBlock\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"The material code/identifier assigned to the generated blocking beam for production reports and CNC.\",\n      \"validRange\": \"Standard catalog beam codes\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Sets the property of the generated GenBeam.\"\n    },\n    {\n      \"name\": \"sDrillInsulation\",\n      \"technicalDefault\": \"Yes\",\n      \"businessMeaning\": \"Specifies whether the lifting drill should pierce through the insulation layer on top of the element.\",\n      \"validRange\": \"Yes/No\",\n      \"unit\": \"Bool\",\n      \"affectsOutput\": \"Adds Drill entities to insulation objects if 'Yes'.\"\n    },\n    {\n      \"name\": \"thicknessBlockingSheet\",\n      \"technicalDefault\": \"0 mm\",\n      \"businessMeaning\": \"Thickness of a sheet material reinforcement placed around the lifting hole.\",\n      \"validRange\": \"0 mm - 50 mm\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Creates a Sheet entity if > 0.\"\n    },\n    {\n      \"name\": \"sScriptNameWeight\",\n      \"technicalDefault\": \"HSB-Weight\",\n      \"businessMeaning\": \"The name of the script instance used to calculate the element's total weight.\",\n      \"validRange\": \"Valid TSL script name\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Used to read the element weight; if set to 'UNILIN', enables special alignment logic for insulation.\"\n    }\n  ],\n  \"parameterDependencies\": [\n    {\n      \"trigger\": \"sTool is set to 'Double drill with blocking'\",\n      \"effect\": \"Activates blocking generation logic.\",\n      \"cascade\": [\n        \"onlyPlaceBlockForWeightAbove\",\n        \"sBmCodeBlock\",\n        \"sBmMaterialBlock\"\n      ]\n    },\n    {\n      \"trigger\": \"sTool is set to any 'Drill' option\",\n      \"effect\": \"Activates drill dimensions.\",\n      \"cascade\": [\n        \"dDrillDiameter\",\n        \"horizontalDistanceBetweenDrills\",\n        \"offsetDrills\"\n      ]\n    },\n    {\n      \"trigger\": \"thicknessBlockingSheet > 0\",\n      \"effect\": \"Activates sheet generation parameters.\",\n      \"cascade\": [\n        \"heightBlockingSheet\",\n        \"materialBlockingSheet\",\n        \"offsetBlockingSheet\"\n      ]\n    },\n    {\n      \"trigger\": \"sScriptNameWeight is set to 'UNILIN'\",\n      \"effect\": \"Enables specific logic to drill into top sheets for alignment purposes.\",\n      \"cascade\": []\n    },\n    {\n      \"trigger\": \"sPositionType is set to 'Fraction of length'\",\n      \"effect\": \"Enables the fraction parameter.\",\n      \"cascade\": [\n        \"dFraction\"\n      ]\n    }\n  ],\n  \"outputEntities\": [\n    {\n      \"type\": \"Drill\",\n      \"description\": \"Cylindrical holes through structural beams.\",\n      \"appliedTo\": \"Filtered GenBeams within the element.\"\n    },\n    {\n      \"type\": \"Drill\",\n      \"description\": \"Cylindrical holes through insulation layers.\",\n      \"appliedTo\": \"Insulation objects (if enabled).\"\n    },\n    {\n      \"type\": \"GenBeam\",\n      \"description\": \"Structural blocking beam inserted internally to reinforce the lifting point.\",\n      \"appliedTo\": \"Element (stretched"
+      },
+      "tokens_used": 9474,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Execution Triggered (Insert or Edit)",
+          "2. Retrieve Element and Coordinate System",
+          "3. Filter GenBeams (Apply HSB_G-FilterGenBeams or Beamcode list)",
+          "4. Separate Structural Beams from Insulation/TopSheets",
+          "5. Calculate Element Weight (via linked Weight Script)",
+          "6. Determine Longitudinal Position (Center, Fraction, Centroid, or Fixed)",
+          "7. Determine Transverse Position (Left/Right or Top/Bottom)",
+          "8. Identify 'Side Rafters' intersecting the calculated position",
+          "9. [Conditional] Snap to nearest Tile Lath if Side Rafters not found (if enabled)",
+          "10. [Conditional] Check for duplicate TSL Identifier on Element (Abort if found)",
+          "11. Execute Tooling Logic based on 'Tool' selection (Drill, Symbol, Block)",
+          "12. [Conditional] Generate Blocking Beam and Sheet (if weight threshold met)",
+          "13. Update Visualization (3D and Plan View)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "sPositionType Selection",
+            "path1": {
+              "name": "Above Center / Above Centroid",
+              "steps": [
+                "Calculate geometric center or center of gravity",
+                "Calculate X-offset based on MinDistance property"
+              ]
+            },
+            "path2": {
+              "name": "Fraction of Length / Fixed Offset",
+              "steps": [
+                "Calculate X based on dFraction or yOffsetFromReferencePoint",
+                "Use Frame Vertices as reference boundaries"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Filtering Strategy",
+            "path1": {
+              "name": "Use Filter Definition TSL",
+              "steps": [
+                "Execute 'HSB_G-FilterGenBeams' catalog entry",
+                "Filter beams based on external configuration"
+              ]
+            },
+            "path2": {
+              "name": "Use Internal Beamcodes",
+              "steps": [
+                "Check sFilterBC property",
+                "Filter beams matching the code list string"
+              ]
+            }
+          },
+          {
+            "condition": "sTool Selection",
+            "path1": {
+              "name": "Symbol / Custom Block",
+              "steps": [
+                "Generate 2D/3D visual representation",
+                "Do not create Drill entities"
+              ]
+            },
+            "path2": {
+              "name": "Drill (Single/Double)",
+              "steps": [
+                "Calculate start/end points for drills",
+                "Add Drill entities to Side Rafters",
+                "Add Drill entities to Insulation (if enabled)"
+              ]
+            }
+          },
+          {
+            "condition": "Blocking Generation Requirement",
+            "path1": {
+              "name": "Requirements Met",
+              "steps": [
+                "Check if 'Double drill with blocking' selected",
+                "Check if elementWeight > onlyPlaceBlockForWeightAbove",
+                "Find beams left and right of lifting point",
+                "Create GenBeam (Blocking) and stretch to side rafters",
+                "Create Sheet (Blocking Sheet) if thickness > 0"
+              ]
+            },
+            "path2": {
+              "name": "Requirements Not Met",
+              "steps": [
+                "Skip blocking creation",
+                "Continue to visualization"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Side Rafter Intersection",
+            "errorMessage": "No side rafters found at the calculated position.",
+            "recovery": "Enable 'Snap to following tile lath' (Yes) or adjust the Position/Offset properties."
+          },
+          {
+            "check": "Duplicate TSL Instance",
+            "errorMessage": "Script cannot run. Another instance with the same Tsl Identifier exists on this element.",
+            "recovery": "Change the 'Tsl identifier' property to a unique value (e.g., 'Pos 2')."
+          },
+          {
+            "check": "Element Selection",
+            "errorMessage": "No element selected during insert.",
+            "recovery": "User must click on an Element in Model Space when prompted."
+          },
+          {
+            "check": "Beam Filter Results",
+            "errorMessage": "No beams found matching the filter criteria.",
+            "recovery": "Adjust the Filter Definition or Beamcode list, or ensure the element contains structural beams."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Geometry Position",
+            "how": "OPM (Properties Palette)",
+            "effect": "Changing 'Position', 'Fraction', or 'yOffset' recalculates drill/symbol coordinates instantly."
+          },
+          {
+            "action": "Change Tooling Type",
+            "how": "OPM - 'Tool' dropdown",
+            "effect": "Switches between Symbol, Drill, and Block modes. Updates generated entities (Drills vs Symbols)."
+          },
+          {
+            "action": "Adjust Reinforcement",
+            "how": "OPM - 'Only add blocking for weights above'",
+            "effect": "If the element weight drops below this threshold, the blocking beam and sheet are removed."
+          },
+          {
+            "action": "Recalculate Script",
+            "how": "Double-click the script or Right-click -> Recalculate",
+            "effect": "Forces a full refresh of calculations and entity regeneration."
+          }
+        ]
+      },
+      "tokens_used": 10609,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_R-Lifting\n\n## Overview\nThis script automates the creation of lifting points on timber roof or floor elements. It calculates the optimal position based on the element's center of gravity or user-defined offsets and generates the necessary drilling, symbols, or structural reinforcement blocks.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This is the primary environment for inserting the script. |\n| Paper Space | No | Not applicable for detail views. |\n| Shop Drawing | No | Not applicable for layouts. |\n\n## Prerequisites\n- **Required Entities**: An active Element (e.g., Roof or Floor) containing structural GenBeams.\n- **Minimum Beams**: At least one structural beam must be present within the element.\n- **Required Settings**: (Optional) `HSB_G-FilterGenBeams` if specific beam filtering is required by your project standards.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_R-Lifting.mcr` from the file dialog.\n\n### Step 2: Select Element\n```\nCommand Line: Select Element:\nAction: Click on the timber element (roof or floor) you wish to add lifting points to.\n```\n\n### Step 3: Configure Properties\n```\nAction: Press Enter to accept default placement. Immediately open the Properties Palette (Ctrl+1) to adjust the lifting point position, tool type, and dimensions.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Tsl identifier | String | Pos 1 | A unique name to distinguish this instance if multiple lifting points are used on the same element. |\n| Position type | Enum | Above center | Determines how the longitudinal position is calculated (e.g., Above center, Fraction of length, Above centroid). |\n| Lifting position | Enum | Left, right | Determines the orientation relative to the element width (e.g., on side walls vs. gable ends). |\n| Fraction | Number | 0.375 | The percentage of the element's length where the point is placed (only active if Position type is set to Fraction). |\n| Y offset from reference point | Number | 500 mm | A fixed distance from the top or bottom reference edge to place the lifting point. |\n| Tool | Enum | Symbol | Selects the physical method: Symbol (2D), Double Drill, Double Drill with Blocking, Single Drill, etc. |\n| Drill diameter | Number | 24 mm | Diameter of the hole to be drilled. |\n| Distance between drills | Number | 200 mm | Spacing between the two parallel holes (for double drill setups). |\n| Only add blocking for weights above | Number | 0 kg | Minimum weight required to generate internal structural blocking beams. |\n| BmCodeBlock | String | [Empty] | The material code assigned to the generated blocking beam for production lists. |\n| Drill insulation | Enum | Yes | If \"Yes\", drills will also pierce through insulation layers. |\n| Thickness blocking sheet | Number | 0 mm | Thickness of any sheet material reinforcement used around the hole. |\n| Script name weight | String | HSB-Weight | The name of the script instance used to calculate the element's weight (e.g., \"HSB-Weight\" or \"UNILIN\"). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Refreshes the script to update geometry based on changes to the element or properties. |\n| Erase | Removes the script instance and all associated entities (drills/blocks) from the element. |\n\n## Settings Files\n- **HSB_G-FilterGenBeams**: Catalog entry used to define which structural beams are valid for drilling. This prevents the script from drilling into non-structural or sheathing materials unless specified.\n- **Weight Script Links**: Typically connects to `HSB-Weight` or `UNILIN` scripts to pull real-time mass data for the element.\n\n## Tips\n- **Multiple Lifting Points**: If you need four lifting points instead of two, insert the script a second time but change the **Tsl identifier** to \"Pos 2\" to prevent conflicts.\n- **Heavy Elements**: For heavy roof elements, select **Tool** as \"Double drill with blocking\" and set a weight threshold. This will automatically generate solid timber blocking inside the element to prevent crushing.\n- **Alignment**: If the script reports \"No side rafters found,\" try adjusting the **Y offset from reference point** or changing the **Lifting position** (e.g., from Left/Right to Top/Bottom) to align with existing structural beams.\n\n## FAQ\n- **Q: Why did the script fail to insert?**\n  **A:** Ensure you clicked on a valid Element and that no other instance of the script with the same **Tsl identifier** already exists on that element.\n- **Q: The holes are not appearing in the insulation.**\n  **A:** Check the **Drill insulation** property in the palette. It must be set to \"Yes\" to penetrate insulation layers.\n- **Q: How do I switch from a visual symbol to actual machining holes?**\n  **A:** Change the **Tool** property from \"Symbol\" to \"Double Drill\" or \"Single Drill\" in the Properties Palette."
+      },
+      "tokens_used": 7003,
+      "error": null
+    }
+  }
+}

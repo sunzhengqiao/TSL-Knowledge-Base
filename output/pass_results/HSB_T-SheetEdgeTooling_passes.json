@@ -1,0 +1,272 @@
+{
+  "filename": "HSB_T-SheetEdgeTooling.mcr",
+  "status": "completed",
+  "total_tokens": 27088,
+  "processing_time": 216.3711907863617,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5969,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script operates on _Sheet entity in 3D model space. It uses getSheet(), sheet.addTool(), and interacts with 3D geometry (Point3d, Vector3d). No sd_* prefix, no _Viewport usage, and no #Type E detected."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sheet"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Requires a Sheet object in the Model Space. User must insert the script and select points to define tooling locations relative to the sheet's profile.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2300,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getSheet",
+              "promptOriginal": "Implicit (System prompt for Sheet selection)",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "|Select point|",
+              "condition": "_bOnInsert (Looped)",
+              "required": false
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "|Add linesegment|",
+            "handler": "|Add linesegment|",
+            "action": "Appends a new point selected via getPoint() to the _PtG list to define a new tooling segment.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Remove lineSegment|",
+            "handler": "|Remove lineSegment|",
+            "action": "Removes the point selected via getPoint() from the _PtG list to delete a tooling segment.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Delete",
+            "handler": "Delete",
+            "action": "Erases the current script instance.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 3193,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Assigns specific CNC edge tooling (a 'RoundingTool') to a selected structural plate or sheet by allowing the user to select points along the edges that require treatment.",
+          "category": "Manufacturing/CNC",
+          "typicalUseCase": "Applying edge rounding or profiling to specific sides of a CLT, plywood, or LVL panel during the detailing phase for production export."
+        },
+        "parameters": [
+          {
+            "name": "_Sheet",
+            "technicalDefault": "getSheet()",
+            "businessMeaning": "The structural plate or panel entity to which the tooling will be attached.",
+            "validRange": "Any valid Sheet object in the Model Space.",
+            "unit": "Entity",
+            "affectsOutput": "Defines the target geometry for the CNC operation. The script automatically calculates the correct orientation and deletes the tooling if this sheet is erased."
+          },
+          {
+            "name": "_PtG",
+            "technicalDefault": "getPoint()",
+            "businessMeaning": "A collection of user-selected points used to designate which edges of the sheet require the 'RoundingTool'. The script finds the closest edge segment to each point.",
+            "validRange": "3D coordinates in the vicinity of the target sheet edges.",
+            "unit": "mm (3D Coordinates)",
+            "affectsOutput": "Determines the specific location of the CNC tooling. Adding points adds tooling to new edges; removing points removes tooling from edges."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing the _Sheet geometry",
+            "effect": "The projection of the _PtG points onto the sheet profile updates, potentially moving the tooling location to the new edge position.",
+            "cascade": [
+              "_PtG"
+            ]
+          },
+          {
+            "trigger": "Adding/Removing _PtG points via Context Menu",
+            "effect": "Directly modifies the list of edges receiving the 'RoundingTool'.",
+            "cascade": [
+              "CncExport output"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "CncExport",
+            "description": "Generates a CNC machining instruction specifically named 'RoundingTool' along the selected edge segments of the sheet.",
+            "appliedTo": "The _Sheet entity selected during insertion."
+          }
+        ]
+      },
+      "tokens_used": 5315,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User launches script insertion.",
+          "2. Script checks for re-insertion cycle; if duplicate, self-destructs.",
+          "3. Command line prompts: 'Select point' (Implicitly waits for Sheet selection via getSheet).",
+          "4. User selects a target Sheet entity.",
+          "5. Loop initiates: Command line prompts 'Select point'.",
+          "6. User selects a point on the Sheet edge.",
+          "   -> Point is added to internal list.",
+          "   -> Loop repeats (Step 5).",
+          "7. User presses Enter or Esc to finish point selection.",
+          "8. Script calculates projection of points onto Sheet profile.",
+          "9. Script validates geometry (orientation, openings).",
+          "10. 'RoundingTool' CNC operation is applied to selected edges.",
+          "11. Script instance is created and saved."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script Insertion Cycle",
+            "path1": {
+              "name": "First Insertion",
+              "steps": [
+                "Proceed to Sheet selection",
+                "Execute Point Selection loop"
+              ]
+            },
+            "path2": {
+              "name": "Duplicate Cycle (>1)",
+              "steps": [
+                "Execute eraseInstance()",
+                "Terminate Script"
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Interaction (Post-Insertion)",
+            "path1": {
+              "name": "Add linesegment",
+              "steps": [
+                "Prompt user for point (getPoint)",
+                "Append point to _PtG list",
+                "Recalculate and add tooling to new edge"
+              ]
+            },
+            "path2": {
+              "name": "Remove lineSegment",
+              "steps": [
+                "Prompt user for point (getPoint)",
+                "Find matching point in _PtG list",
+                "Remove point from list",
+                "Recalculate and remove tooling from edge"
+              ]
+            },
+            "path3": {
+              "name": "Delete",
+              "steps": [
+                "Execute eraseInstance()",
+                "Remove script and associated tooling"
+              ]
+            }
+          },
+          {
+            "condition": "Geometry Processing (Internal)",
+            "path1": {
+              "name": "Valid Outer Edge",
+              "steps": [
+                "Point projects onto valid profile segment",
+                "CncExport 'RoundingTool' generated",
+                "Visual line drawn"
+              ]
+            },
+            "path2": {
+              "name": "Opening/Hole",
+              "steps": [
+                "Ring identified as opening",
+                "Loop skipped (continue)",
+                "No tooling applied to inner holes"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Sheet Entity Existence",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Script automatically erases itself if the linked Sheet is deleted or missing (_Sheet.length < 1)."
+          },
+          {
+            "check": "Duplicate Instance",
+            "errorMessage": "None",
+            "recovery": "Script scans for other instances of itself attached to the same Sheet and erases them to prevent conflict."
+          },
+          {
+            "check": "Point Location",
+            "errorMessage": "None (Silent filtering)",
+            "recovery": "Points selected on openings (holes) are ignored. Points must be on the outer boundary profile to generate tooling."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Add Tooling Segment",
+            "how": "Right-click Context Menu -> Select '|Add linesegment|' -> Select point on Sheet edge",
+            "effect": "Adds a new point to the definition, triggering the creation of a 'RoundingTool' on the nearest edge segment."
+          },
+          {
+            "action": "Remove Tooling Segment",
+            "how": "Right-click Context Menu -> Select '|Remove lineSegment|' -> Select existing tooling point",
+            "effect": "Removes the point from the definition, causing the 'RoundingTool' to be removed from that edge segment."
+          },
+          {
+            "action": "Delete Script",
+            "how": "Right-click Context Menu -> Select 'Delete'",
+            "effect": "Completely removes the script instance and all CNC tooling data associated with it."
+          },
+          {
+            "action": "Update Geometry",
+            "how": "Modify the Sheet geometry (e.g., resize, move)",
+            "effect": "Script recalculates (due to setDependencyOnEntity). Tooling projects to the new edge positions."
+          }
+        ]
+      },
+      "tokens_used": 5774,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_T-SheetEdgeTooling\n\n## Overview\nThis script allows you to assign specific CNC edge tooling (RoundingTool) to a structural plate or sheet by selecting points along the desired edges. It is used during detailing to define which sides of a panel require edge profiling for manufacturing export.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be run in the 3D Model Space. |\n| Paper Space | No | Not supported in Layouts/Shop Drawings. |\n| Shop Drawing | No | Not applicable for Shop Drawing contexts. |\n\n## Prerequisites\n- **Required Entities**: A single structural **Sheet** (plate/panel) entity must exist in the model.\n- **Minimum Beam Count**: 0 (This script targets Sheets, not beams).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nRun the `TSLINSERT` command in AutoCAD and select `HSB_T-SheetEdgeTooling.mcr` from the list.\n\n### Step 2: Select Target Sheet\n```\nCommand Line: [Implicit Prompt]\nAction: Click on the structural Sheet or Plate entity you wish to apply tooling to.\n```\n\n### Step 3: Define Edges\n```\nCommand Line: Select point\nAction: Click on the edge of the sheet where the CNC tooling should start/end.\n```\n*   Repeat this step for every edge segment that requires the 'RoundingTool'.\n*   The script will project your clicks onto the nearest edge.\n\n### Step 4: Finish Selection\n```\nCommand Line: [Press Enter or Esc]\nAction: Press Enter or right-click to finish selecting points.\n```\nThe script will automatically calculate the geometry and apply the CNC instructions to the selected edges.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not expose editable parameters in the Properties Palette. All configuration is done via command line input and context menus. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Add linesegment** | Prompts you to select a new point on the sheet. Adds a new tooling segment (RoundingTool) to the nearest edge. |\n| **Remove lineSegment** | Prompts you to select an existing point. Removes the tooling segment associated with that point. |\n| **Delete** | Removes the script instance and erases all associated CNC tooling data from the sheet. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script operates independently of external settings files.\n\n## Tips\n- **Openings are Ignored**: If you select a point on an inner hole or opening of the sheet, the script will skip it. Only points on the outer boundary profile will generate tooling.\n- **Automatic Updates**: If you modify the geometry of the sheet (e.g., resize or move it) after inserting the script, the tooling will automatically update to stay attached to the correct edges.\n- **Duplicate Prevention**: The script automatically detects if it is already attached to a sheet and will prevent duplicate instances.\n\n## FAQ\n- **Q: Can I use this to round the edges of an inner hole (cutout)?**\n  - A: No, this script is currently designed to only process and apply tooling to the outer boundary profile of the sheet. Points selected on openings will be ignored.\n- **Q: What happens if I delete the sheet the script is attached to?**\n  - A: The script will automatically detect that the sheet is missing and erase itself to keep the project clean.\n- **Q: How do I fix it if I selected the wrong edge?**\n  - A: Right-click the script instance, select **Remove lineSegment**, and click the point corresponding to the incorrect edge. You can then use **Add linesegment** to select the correct one."
+      },
+      "tokens_used": 4537,
+      "error": null
+    }
+  }
+}

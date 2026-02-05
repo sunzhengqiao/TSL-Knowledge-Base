@@ -1,0 +1,290 @@
+{
+  "filename": "Layout_Plan_section.mcr",
+  "status": "completed",
+  "total_tokens": 27669,
+  "processing_time": 231.78643488883972,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3750,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses `getViewport()` on insert and populates the `_Viewport` array. Logic retrieves the `Element` from the viewport (`vp.element()`) and transforms geometry using the Viewport's coordinate system (`_Viewport[0].coordSys()`). The comment `// dimstyle was adjusted for display in paper space` further confirms the target environment."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Paper Space (Layout)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3964,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getViewport",
+              "promptOriginal": "Select the viewport from which the element is taken",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 1,
+            "variable": "strDir",
+            "type": "PropString",
+            "displayName": "Direction",
+            "defaultValue": "Horizontal",
+            "inputType": "dropdown",
+            "options": [
+              "Horizontal",
+              "Vertical"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3934,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates a 2D schematic layout view in Paper Space by projecting beams from a selected 3D model viewport and overlaying specific symbolic markers (crosses, circles, text labels) based on the beam's hsbId.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Creating simplified foundation plans, floor plans, or elevation views where specific beam types or connection statuses (e.g., bracing directions, hardware presence) need to be represented by abstract symbols rather than complex geometry."
+        },
+        "parameters": [
+          {
+            "name": "strDir",
+            "technicalDefault": "Horizontal",
+            "businessMeaning": "Defines the orientation of the section or plan view to ensure the correct mapping of beam hsbIds to their respective schematic symbols. This effectively switches the script between a 'Plan Mode' and an 'Elevation Mode'.",
+            "validRange": "Horizontal, Vertical",
+            "unit": "Enumerated",
+            "affectsOutput": "Switches the internal lookup tables (`arHsbId` and `arCross`). A beam with a specific ID might be drawn with an 'X' symbol in one orientation but ignored or drawn with a different symbol in the other orientation."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User changes strDir (e.g., Horizontal to Vertical)",
+            "effect": "The script reloads the internal array lists for 'arHsbId' and 'arCross' to use the vertical set instead of the horizontal set.",
+            "cascade": [
+              "Beam recognition logic",
+              "Symbol rendering (X, /, \\, O, Text)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "2D Projection (Body)",
+            "description": "A 2D projection of the actual timber beam geometry, transformed from Model Space to the Paper Space Viewport coordinate system.",
+            "appliedTo": "All beams found within the Element of the selected Viewport."
+          },
+          {
+            "type": "Schematic Marker (PLine/Circle/Text)",
+            "description": "Abstract symbols overlaid on the beam projection. These include diagonal crosses ('X'), single diagonals ('/' or '\\'), circles ('O'), or text labels (e.g., 'Up', 'Dn', 'L', 'T', 'S') representing specific attributes, bracing directions, or hardware codes defined by the beam's hsbId.",
+            "appliedTo": "Specific beams whose hsbId matches an entry in the internal script arrays."
+          }
+        ]
+      },
+      "tokens_used": 5025,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User executes script command (Insertion mode active).",
+          "2. Command line prompts: 'Select the viewport from which the element is taken'.",
+          "3. User selects a Viewport entity in Paper Space.",
+          "4. Script stores the Viewport in the internal _Viewport array and pauses execution.",
+          "5. Script enters Calculation/Rendering mode (Recalc).",
+          "6. Script reads the 'strDir' property (Direction: Horizontal or Vertical).",
+          "7. [Branch] Script loads the appropriate internal lookup arrays (arHsbId and arCross) based on 'strDir'.",
+          "8. Script validates that the Viewport contains a valid Element; aborts if empty.",
+          "9. Script retrieves all GenBeams associated with the Viewport's Element.",
+          "10. Script initializes the coordinate system transformation (Model Space to Paper Space).",
+          "11. [Loop] For each Beam in the Element:",
+          "12. Script attempts to find the Beam's 'hsbId' property in the loaded lookup arrays.",
+          "13. [Branch] If hsbId is found:",
+          "14.   Script calculates the 2D projection geometry (Center, Body).",
+          "15.   Script draws the 2D Body projection.",
+          "16.   Script reads the corresponding symbol character (X, O, /, etc.) from the lookup array.",
+          "17.   [Branch] Script draws the specific schematic symbol based on the character.",
+          "18. [Branch] If hsbId is not found, the beam is ignored.",
+          "19. Loop continues until all beams are processed.",
+          "20. Rendering completes."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Mode Check (_bOnInsert)",
+            "path1": {
+              "name": "Initial Insert",
+              "steps": [
+                "Prompt user for Viewport selection",
+                "Store Viewport reference",
+                "Return (Stop execution)"
+              ]
+            },
+            "path2": {
+              "name": "Recalc/Update",
+              "steps": [
+                "Read Properties",
+                "Process Geometry",
+                "Draw Entities"
+              ]
+            }
+          },
+          {
+            "condition": "Direction Property (strDir)",
+            "path1": {
+              "name": "Horizontal Mode",
+              "steps": [
+                "Load default arHsbId array",
+                "Load default arCross array",
+                "Match beams against horizontal definitions"
+              ]
+            },
+            "path2": {
+              "name": "Vertical Mode",
+              "steps": [
+                "Load arHsbIdVer array",
+                "Load arCrossVer array",
+                "Match beams against vertical definitions"
+              ]
+            }
+          },
+          {
+            "condition": "Viewport Data Validation",
+            "path1": {
+              "name": "Valid Element",
+              "steps": [
+                "Retrieve Element",
+                "Extract Beams",
+                "Proceed to Drawing"
+              ]
+            },
+            "path2": {
+              "name": "Invalid/Empty Element",
+              "steps": [
+                "Exit script immediately",
+                "Draw nothing"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Symbol Matching (arCross Char)",
+            "path1": {
+              "name": "Structural Cross (X)",
+              "steps": [
+                "Calculate diagonal endpoints",
+                "Draw two intersecting lines (L1, L2)"
+              ]
+            },
+            "path2": {
+              "name": "Single Diagonal (/ or \\)",
+              "steps": [
+                "Calculate diagonal endpoints",
+                "Draw single line (L1 for '/', L2 for '\\')"
+              ]
+            },
+            "path3": {
+              "name": "Circle (O)",
+              "steps": [
+                "Create circle geometry at beam center",
+                "Transform to Viewport CS",
+                "Draw Circle"
+              ]
+            },
+            "path4": {
+              "name": "Text Label (U, L, T, D, S)",
+              "steps": [
+                "Define string label (e.g., 'Up', 'Dn')",
+                "Draw text at beam center"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Viewport assigned to script",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "User must delete the script instance and re-insert it to select a viewport."
+          },
+          {
+            "check": "Viewport contains valid Element (Model data linked)",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "User must ensure the selected viewport in Paper Space is linked to a valid Model Space view containing an Element with beams."
+          },
+          {
+            "check": "Beam has matching hsbId",
+            "errorMessage": "None (Beam ignored)",
+            "recovery": "To mark a beam, its 'hsbId' property must match an entry in the script's internal array list."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Direction (Plan vs Elevation)",
+            "how": "OPM (Object Properties Manager) - Change 'Direction' property",
+            "effect": "Swaps the internal lookup tables. Beams marked as 'Horizontal' types might be unmarked, and 'Vertical' types will become marked with their respective symbols."
+          },
+          {
+            "action": "Update Model Geometry",
+            "how": "Modify beams in Model Space (move, resize, rename)",
+            "effect": "Script automatically recalculates on regenerate. Projections update to new locations. If hsbId changes, the symbol appears or disappears accordingly."
+          }
+        ]
+      },
+      "tokens_used": 5901,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Layout_Plan_section.mcr\n\n## Overview\nThis script creates a 2D schematic layout view in Paper Space by projecting beams from a selected 3D model viewport. It automatically overlays symbolic markers (such as crosses, circles, or text labels) on specific beams based on their `hsbId` property to indicate bracing directions or connection details.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | The script works via a Viewport selected in Paper Space. |\n| Paper Space | Yes | The script must be inserted into a Layout tab containing a Viewport. |\n| Shop Drawing | Yes | Used for creating simplified foundation plans or elevation schematics. |\n\n## Prerequisites\n- **Required Entities**: A Layout tab with at least one Viewport displaying a 3D Element containing GenBeams.\n- **Minimum Beam Count**: 0 (However, beams are only marked if they match specific internal criteria).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `Layout_Plan_section.mcr`\n\n### Step 2: Select Source Viewport\n```\nCommand Line: Select the viewport from which the element is taken\nAction: Click on the border of the viewport in your Layout that displays the model structure you wish to diagram.\n```\n*Note: The script will automatically detect the element linked to this viewport and generate the projection.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Direction | Dropdown | Horizontal | Switches the symbol logic between \"Horizontal\" (Plan view) and \"Vertical\" (Elevation view) modes. This changes which beams are marked based on their `hsbId`. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu items are defined for this script. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: All logic and symbol mappings are contained within the script.\n\n## Tips\n- **Updating Symbols**: If you modify the 3D model (e.g., move beams or change their `hsbId`), run the `REGEN` command in AutoCAD to update the schematic symbols in Paper Space.\n- **Symbol Visibility**: Not all beams will receive a symbol. The script specifically looks for beams with `hsbId` values that match its internal list (e.g., specific bracing or hardware codes). Other beams will appear as standard 2D projections.\n- **Troubleshooting**: If you insert the script and see nothing, ensure the selected Viewport is actually linked to a valid Element in the Model Space.\n\n## FAQ\n- **Q: Why are some beams marked with an 'X' or 'O' while others are just plain lines?**\n  - A: The script only applies specific markers to beams whose `hsbId` property matches the internal lookup tables of the script. Plain lines represent beams that do not match these specific IDs.\n- **Q: How do I switch between a floor plan view and a side elevation view using this script?**\n  - A: Select the script instance in Paper Space, open the Properties palette (Ctrl+1), and change the **Direction** property from \"Horizontal\" to \"Vertical\".\n- **Q: I selected the wrong viewport. How do I fix it?**\n  - A: Delete the script instance and insert it again to select the correct viewport."
+      },
+      "tokens_used": 5095,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,197 @@
+{
+  "filename": "HSB_G-ResetLayers.mcr",
+  "status": "completed",
+  "total_tokens": 18337,
+  "processing_time": 209.39095330238342,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "25.11.2013",
+            "author": "AS",
+            "changes": "Pilot version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4054,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses `_kModelSpace` explicitly in `tsl.dbCreate` and collects entities via `grpElement.collectEntities(true, GenBeam(), _kModelSpace)`. It lacks `sd_` prefixes, `_Viewport` handling, and `#Type E` declarations found in ShopDrawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1694,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select a set of elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4115,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "This script resets the layer of all generated beams (GenBeams) within selected elements to layer '0' and re-assigns them to the element group. It functions as a cleanup utility to correct layer properties and ensure elements are properly grouped after model modifications or imports.",
+          "category": "Utility/Management",
+          "typicalUseCase": "Used when beams within an element have been scattered onto various incorrect layers or lost their element association, standardizing them back to the default layer '0' and restoring the correct element grouping."
+        },
+        "parameters": [],
+        "parameterDependencies": [],
+        "outputEntities": []
+      },
+      "tokens_used": 1958,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch",
+          "Check if Insert Mode (_bOnInsert)",
+          "Check if Insert Cycle Count > 1",
+          "Prompt User to Select Element Set (PrEntity)",
+          "Iterate through selected elements",
+          "Check for existing instances of 'HSB_G-ResetLayers' attached to elements and erase them",
+          "Create new Satellite instances of the script on each selected element (dbCreate) with ExecuteMode",
+          "Erase Master Instance",
+          "[Satellite Phase] Check 'MasterToSatellite' map flag and load properties",
+          "[Satellite Phase] Validate Elements exist",
+          "Retrieve Element Group from the first element",
+          "Collect all GenBeams within that Element Group",
+          "Iterate through GenBeams",
+          "Reset GenBeam Layer to '0' and Assign to Element Group",
+          "Erase Satellite Instance"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count Check",
+            "path1": {
+              "name": "Cycle Count > 1 (Repeated Execution)",
+              "steps": [
+                "Erase Instance",
+                "Exit Script"
+              ]
+            },
+            "path2": {
+              "name": "Cycle Count == 1 (First Run)",
+              "steps": [
+                "Proceed to Selection Prompt"
+              ]
+            }
+          },
+          {
+            "condition": "Element Selection",
+            "path1": {
+              "name": "Selection Successful",
+              "steps": [
+                "Process Elements",
+                "Create Satellite Instances"
+              ]
+            },
+            "path2": {
+              "name": "Selection Failed/Canceled",
+              "steps": [
+                "Implicit Exit (No elements processed)"
+              ]
+            }
+          },
+          {
+            "condition": "Satellite Phase Element Validation",
+            "path1": {
+              "name": "Element Array Empty",
+              "steps": [
+                "Erase Instance",
+                "Exit Script"
+              ]
+            },
+            "path2": {
+              "name": "Element Array Populated",
+              "steps": [
+                "Retrieve GenBeams",
+                "Apply Layer Reset"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "GenBeam Validity (gBm.bIsValid())",
+            "errorMessage": "None (Silent Skip)",
+            "recovery": "Script skips invalid entities and continues with remaining beams."
+          },
+          {
+            "check": "Element Existence in Satellite Phase",
+            "errorMessage": "None (Silent Exit)",
+            "recovery": "Script erases itself if no element is found attached to the satellite instance."
+          },
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Silent Erase)",
+            "recovery": "Script prevents re-entrancy by checking cycle count and erasing immediately if > 1."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 3035,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_G-ResetLayers.mcr\n\n## Overview\nThis script serves as a cleanup utility to standardize the layer assignment of timber beams within your model. It automatically resets the layer of all generated beams (GenBeams) inside selected elements to layer '0' and ensures they are correctly grouped with their parent element.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be run in Model Space to interact with Elements and GenBeams. |\n| Paper Space | No | The script is not designed to process entities in Paper Space layouts. |\n| Shop Drawing | No | This is a model management tool and does not generate shop drawings. |\n\n## Prerequisites\n- **Required Entities**: Elements and GenBeams (Timber beams).\n- **Minimum Beam Count**: 0 (The script can process elements even if they contain no beams).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the AutoCAD command line.\n2. Navigate to the location of `HSB_G-ResetLayers.mcr` and select it.\n\n### Step 2: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the desired Elements in the model and press Enter to confirm selection.\n```\n*(Note: You can select multiple elements at once using window selection.)*\n\n### Step 3: Automatic Processing\nThe script will automatically process the selected elements, move all associated beams to layer '0', update their group assignments, and then remove itself from the drawing. No further user input is required.\n\n## Properties Panel Parameters\n\nThis script does not expose any user-editable parameters in the Properties Palette.\n\n## Right-Click Menu Options\n\nThis script does not add any custom options to the right-click context menu.\n\n## Settings Files\n\nThis script does not require any external settings files.\n\n## Tips\n- **One-Time Use**: This script acts as a \"run once\" utility. After processing the selected elements, the script instance automatically deletes itself from the drawing database to keep the project clean.\n- **Layer '0'**: Ensure layer '0' is not frozen or locked in your Layer Properties Manager before running this script, otherwise the changes may not be visible immediately.\n- **Batch Processing**: You can select as many elements as needed in Step 2. The script will iterate through the entire selection set efficiently.\n\n## FAQ\n- **Q: The script seems to disappear after I run it. Is this normal?**\n  - **A:** Yes, this is intended behavior. Once the layer reset is complete, the script erases itself to prevent cluttering the drawing with unused script instances.\n- **Q: Can I use this to change layers to something other than '0'?**\n  - **A:** No, this script is hard-coded specifically to reset entities to layer '0'.\n- **Q: I selected elements but nothing happened.**\n  - **A:** Ensure that the selected entities are valid hsbCAD Elements containing GenBeams. If the beams are already on layer '0' and correctly grouped, no visible change will occur."
+      },
+      "tokens_used": 3481,
+      "error": null
+    }
+  }
+}

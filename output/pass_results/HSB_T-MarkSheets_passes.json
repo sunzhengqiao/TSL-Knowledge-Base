@@ -1,0 +1,307 @@
+{
+  "filename": "HSB_T-MarkSheets.mcr",
+  "status": "completed",
+  "total_tokens": 28799,
+  "processing_time": 247.7234971523285,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 1,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl adds a mark to a sheet at the element zone vec-z side of the sheet.",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "24.06.2016",
+            "author": "AS",
+            "changes": "Pilot version"
+          },
+          {
+            "version": "1.01",
+            "date": "12.07.2016",
+            "author": "AS",
+            "changes": "Add option to mark the viewside or the opposite side."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4617,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly uses `_kModelSpace` during the `dbCreate` call in the insert cycle. It targets `Sheet` entities (PrEntity, `_Sheet[]`) and creates a `Mark` object, which is a 3D annotation entity. It lacks prefixes like `sd_` or `Multipage`, contains no logic for `Viewport` interaction, and does not use `#Type E` with `_Entity[]` typically found in ShopDrawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sheet"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space context containing a valid Sheet. The Sheet must be assigned to a valid Element (the script checks `el.bIsValid()`).",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2109,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "showDialog",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select sheets|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "markText",
+            "type": "PropString",
+            "displayName": "|Text|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "textSize",
+            "type": "PropDouble",
+            "displayName": "|Text size|",
+            "defaultValue": "U(15)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "propMarkViewSde",
+            "type": "PropString",
+            "displayName": "|Mark view side|",
+            "defaultValue": "yesNo",
+            "inputType": "dropdown",
+            "options": [
+              "|Yes|",
+              "|No|"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5752,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Adds a configurable text label and graphical outline to a sheet material based on the Element's Zone coordinates, used for identifying sheet orientation or location.",
+          "category": "Annotation / ShopDrawing",
+          "typicalUseCase": "Marking specific sheets in a wall or floor element (e.g., 'Front', 'Top', 'Installation Side') to guide assembly on site or in the factory."
+        },
+        "parameters": [
+          {
+            "name": "markText",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The actual inscription or label content to be applied to the sheet surface (e.g., 'A', 'Window', 'Ext').",
+            "validRange": "Any alphanumeric string.",
+            "unit": "String",
+            "affectsOutput": "Updates the text displayed in the 3D model and on the sheet. If the text is not empty, the standard leader line for the mark is suppressed."
+          },
+          {
+            "name": "textSize",
+            "technicalDefault": "U(15)",
+            "businessMeaning": "The height of the text characters and the overall scale of the graphical box drawn around the text.",
+            "validRange": "10 - 100 (Typical sizes range from 10mm for small parts to 50mm for large panels)",
+            "unit": "mm",
+            "affectsOutput": "Scales the text geometry and adjusts the width/height of the border/underline graphic drawn at the mark position."
+          },
+          {
+            "name": "propMarkViewSde",
+            "technicalDefault": "\"Yes\"",
+            "businessMeaning": "Determines which face of the sheet receives the mark relative to the Element's Zone vector Z (Front/Back).",
+            "validRange": "Yes, No",
+            "unit": "N/A (Boolean-like)",
+            "affectsOutput": "If 'Yes', the mark is placed on the side matching the Element Zone Z direction. If 'No', the mark is flipped to the opposite side of the sheet."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "textSize changes",
+            "effect": "The graphical outline (box/line) surrounding the text is resized. The text height is scaled.",
+            "cascade": [
+              "markOutline",
+              "markDisplay"
+            ]
+          },
+          {
+            "trigger": "markText length changes",
+            "effect": "The width of the graphical outline (box/line) is adjusted to accommodate the number of characters.",
+            "cascade": [
+              "markOutline"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Mark / PLine",
+            "description": "Creates a 'Mark' object (hsbCAD annotation) and draws a 3D text representation with a border/underline using a PLine on the sheet's surface.",
+            "appliedTo": "The selected Sheet entity."
+          }
+        ]
+      },
+      "tokens_used": 5650,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched via command or catalog.",
+          "System checks if an Execute Key (preset catalog) is active.",
+          "[Conditional] If no valid Execute Key is found, the Properties Dialog (showDialog) appears for user configuration.",
+          "System prompts user to select Sheets using PrEntity ('Select sheets').",
+          "[Conditional] User selects sheets or cancels.",
+          "If selection is valid, system iterates through each selected Sheet.",
+          "For each Sheet, a new script instance is created (dbCreate) in ModelSpace, attached to that specific Sheet.",
+          "The original 'commander' script instance erases itself.",
+          "New instances initialize: Properties are loaded from '_LastInserted' catalog.",
+          "System validates the Sheet's parent Element.",
+          "System calculates the insertion point (Sheet center) and orientation vectors.",
+          "System generates the Mark object and Text graphics based on properties.",
+          "Instance completes and draws the annotation in the model."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execute Key or Preset Catalog usage",
+            "path1": {
+              "name": "Preset Active",
+              "steps": [
+                "Properties are loaded from the Execute Key catalog.",
+                "Dialog is skipped.",
+                "Proceed directly to selection prompt."
+              ]
+            },
+            "path2": {
+              "name": "Manual Insert",
+              "steps": [
+                "showDialog() is executed.",
+                "User sets Text, Text Size, and Mark View Side.",
+                "Settings saved to '_LastInserted' catalog.",
+                "Proceed to selection prompt."
+              ]
+            }
+          },
+          {
+            "condition": "Mark View Side Property (propMarkViewSde)",
+            "path1": {
+              "name": "Yes (View Side)",
+              "steps": [
+                "Normal vector calculated as Sheet.vecD(ZoneZ).",
+                "Mark placed on the side facing the Element's positive Zone Z direction."
+              ]
+            },
+            "path2": {
+              "name": "No (Opposite Side)",
+              "steps": [
+                "Normal vector calculated as -1 * Sheet.vecD(ZoneZ).",
+                "Mark placed on the opposite side of the sheet relative to Zone Z."
+              ]
+            }
+          },
+          {
+            "condition": "Mark Text Content (markText)",
+            "path1": {
+              "name": "Text is Empty",
+              "steps": [
+                "Mark leader line is visible (default behavior).",
+                "Text width calculation defaults to 1 * textSize."
+              ]
+            },
+            "path2": {
+              "name": "Text is Populated",
+              "steps": [
+                "Mark leader line is suppressed (mark.suppressLine()).",
+                "Text width calculated based on character count * textSize."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Selected Sheet Entity",
+            "errorMessage": "|invalid or no sheet selected.|",
+            "recovery": "User must select valid Sheet entities when prompted, or the script instance will be erased."
+          },
+          {
+            "check": "Parent Element Validity",
+            "errorMessage": "|Sheet must be part of an element|",
+            "recovery": "User must ensure the selected Sheet is assigned to a valid Element (Wall, Floor, Roof). Free-standing sheets without elements will cause the instance to erase."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Mark Properties",
+            "how": "AutoCAD Properties Palette (OPM)",
+            "effect": "Changing 'Text', 'Text size', or 'Mark view side' immediately recalculates the graphic position, orientation, and text string on the sheet."
+          },
+          {
+            "action": "Move Sheet",
+            "how": "Standard hsbCAD / AutoCAD Move commands",
+            "effect": "The mark moves with the sheet as it is attached via `_Sheet0.addTool(mark)`."
+          },
+          {
+            "action": "Delete Mark",
+            "how": "Select the TSL instance and delete",
+            "effect": "The Mark and Text geometry are removed from the Sheet."
+          }
+        ]
+      },
+      "tokens_used": 5524,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_T-MarkSheets\n\n## Overview\nThis script adds a configurable text label and graphical outline to sheet materials. It is used to identify sheet orientation or location based on the Element's Zone coordinates, helpful for guiding assembly on site or in the factory.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in the 3D model environment and attaches marks to Sheet entities. |\n| Paper Space | No | This script does not function in Layouts/Viewports. |\n| Shop Drawing | No | This is a 3D model annotation tool, not a 2D drawing generator. |\n\n## Prerequisites\n- **Required Entities**: A valid `Sheet` entity (e.g., CLT panel, boarding).\n- **Minimum Beam Count**: 0 (This script targets Sheets, not beams).\n- **Required Settings**: The selected Sheet must be assigned to a valid Element (Wall, Floor, or Roof). Free-standing sheets without an element assignment will cause the script to fail.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or `TSL`) → Browse and select `HSB_T-MarkSheets.mcr`.\n\n### Step 2: Configure Properties (Dialog)\nIf no preset catalog is active, a dialog box appears.\n- **Action**: Enter the desired text (e.g., \"Front\", \"A1\"), set the text height, and choose the side.\n- **Action**: Click OK to confirm settings.\n\n### Step 3: Select Sheets\n```\nCommand Line: Select sheets\nAction: Click on the sheet(s) in the model you wish to mark.\n```\n- **Action**: Press Enter to confirm selection.\n\n### Step 4: Completion\n- The script instance attaches to the selected sheets and draws the mark and text.\n- The original \"commander\" instance removes itself, leaving the annotation on the sheets.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Text | text | \"\" | The inscription content to be displayed on the sheet surface. If left empty, a default leader line may be shown. |\n| Text size | number | U(15) | The height of the text characters and the scale of the graphical box/outline drawn around the text (in mm). |\n| Mark view side | dropdown | Yes | Determines which face of the sheet receives the mark. \"Yes\" places it on the view side; \"No\" places it on the opposite side. |\n\n## Right-Click Menu Options\n| Menu Item | Description |\n|-----------|-------------|\n| *None* | This script does not add specific custom commands to the right-click context menu. Use the Properties Palette to modify settings. |\n\n## Settings Files\n- **Filename**: *None specific*\n- **Location**: N/A\n- **Purpose**: The script uses the internal `_LastInserted` catalog to remember the last used settings (Text, Size, etc.) for the current session.\n\n## Tips\n- **Assembly Marking**: Use this script to mark installation sides (e.g., \"Insulation Side\") or specific zones (e.g., \"Window Zone\") directly on large panels.\n- **Dynamic Adjustment**: Because the script uses the `U()` function for sizing, the text and box will scale correctly regardless of your drawing unit settings (mm vs inches).\n- **Text Visibility**: If you enter text into the \"Text\" property, the standard leader line for the mark is suppressed, showing only your custom text and box.\n- **Moving Sheets**: The mark is attached to the sheet. If you use the standard AutoCAD `MOVE` command on the sheet, the mark moves with it automatically.\n\n## FAQ\n- **Q: Why did the mark disappear immediately after selecting the sheet?**\n  **A:** The selected sheet might not be assigned to a valid Element (Wall, Floor, or Roof). The script requires the sheet to be part of an element to calculate the correct orientation vector (Zone Z).\n- **Q: How do I flip the text to the other side of the sheet?**\n  **A:** Select the marked sheet, open the Properties Palette, find the \"Mark view side\" parameter, and change it from \"Yes\" to \"No\".\n- **Q: Can I change the text size after insertion?**\n  **A:** Yes. Select the sheet with the script, locate \"Text size\" in the Properties Palette, and modify the value. The graphics will update immediately."
+      },
+      "tokens_used": 5147,
+      "error": null
+    }
+  }
+}

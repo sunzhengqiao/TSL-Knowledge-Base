@@ -1,0 +1,147 @@
+{
+  "filename": "HSB_T-JoinBeams.mcr",
+  "status": "completed",
+  "total_tokens": 31325,
+  "processing_time": 252.8256220817566,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6535,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script operates directly on Beam entities using database modification methods (dbJoin, dbErase, addToolStatic) and geometric vector analysis (vecX, vecY, vecZ, solidLength). No ShopDrawing (sd_ prefix), #Type E, or Viewport specific logic is present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3874,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select beams to join|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "StretchToExtremes",
+            "handler": "StretchToExtremes",
+            "action": "Stretches the main beam to the extreme points of the aligned beams and erases the others.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 3435,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Merges multiple collinear timber beams into a single structural entity, ensuring continuous geometry for manufacturing or resolving fragmented modeling.",
+          "category": "Model Modification / Framing",
+          "typicalUseCase": "Used when a long wall plate or beam is modeled in segments (e.g., for transport or design phases) but must be treated as a single continuous piece for CNC manufacturing or structural analysis."
+        },
+        "parameters": [
+          {
+            "name": "beamsSelection",
+            "technicalDefault": "Empty",
+            "businessMeaning": "The group of beam entities selected by the user to be combined into a single unit.",
+            "validRange": "2 or more Beam entities",
+            "unit": "Count",
+            "affectsOutput": "Determines the overall length and position of the resulting beam. Beams not aligned within the tolerance will trigger a warning and remain unjoined."
+          },
+          {
+            "name": "StretchToExtremes",
+            "technicalDefault": "Null (Not triggered)",
+            "businessMeaning": "A right-click command mode that forces the primary beam to physically stretch to the farthest extents of the group, deleting the other beams, rather than merging them logically.",
+            "validRange": "True/False (Triggered via Context Menu)",
+            "unit": "Boolean",
+            "affectsOutput": "When active, it modifies the geometry of the first beam (adding cuts) and erases the secondary beams. When inactive, it uses database joining (dbJoin) to absorb the secondary beams into the first one."
+          },
+          {
+            "name": "tolerance",
+            "technicalDefault": "U(1, 'mm')",
+            "businessMeaning": "The maximum permissible lateral distance between the centerlines of beams for them to be considered 'in line' and eligible for joining.",
+            "validRange": "0.1mm to 10mm",
+            "unit": "mm",
+            "affectsOutput": "If beams are offset by more than this value, the join will fail, and a warning will be reported. Higher values allow merging of slightly misaligned beams."
+          },
+          {
+            "name": "vectorTolerance",
+            "technicalDefault": "U(0.01, 'mm')",
+            "businessMeaning": "The allowable angular deviation for beams to be considered parallel or collinear, accounting for floating-point calculation errors.",
+            "validRange": "0.001 to 0.1",
+            "unit": "ratio (dot product deviation)",
+            "affectsOutput": "Ensures that beams which are visually straight but mathematically slightly skewed can still be joined. Prevents joining beams that are actually angled differently."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "StretchToExtremes",
+            "effect": "Changes the processing method for 'beamsSelection' from a database merge (dbJoin) to a geometric modification (addToolStatic + dbErase).",
+            "cascade": [
+              "beamsSelection"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam",
+            "description": "The resulting continuous timber beam.",
+            "appliedTo": "The first beam in the calculated sorted list of aligned beams (beamsToJoin[0])."
+          },
+          {
+            "type": "Cut (Stretch)",
+            "description": "Static cuts applied to the ends of the main beam to force it to the new extreme length.",
+            "appliedTo": "Main beam (only when StretchToExtremes is active)."
+          }
+        ]
+      },
+      "tokens_used": 6327,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7693,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_T-JoinBeams.mcr\n\n## Overview\nThis script merges multiple collinear timber beams into a single continuous structural entity. It is designed to resolve fragmented modeling or combine segmented beams into one piece for manufacturing and structural analysis.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates directly on Beam entities in the 3D model. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | This script modifies the model geometry, not the drawing views. |\n\n## Prerequisites\n- **Required Entities:** At least 2 Beam entities.\n- **Minimum Beam Count:** 2.\n- **Required Settings:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the command line.\n2.  Navigate to the folder containing `HSB_T-JoinBeams.mcr` and select it.\n\n### Step 2: Select Beams\n```\nCommand Line: Select beams to join\nAction: Click on the beams you wish to merge. They should be aligned in a straight line.\n```\n*Note: Press Enter to confirm your selection after picking the beams.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not expose any user-editable properties in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| StretchToExtremes | Select this option after insertion to stretch the main beam to the furthest ends of the selected group. This action physically modifies the main beam and deletes the other beams in the selection. |\n\n## Settings Files\n- **Filename:** None.\n- **Location:** N/A.\n- **Purpose:** This script does not rely on external XML settings files.\n\n## Tips\n- **Alignment:** Ensure the beams you select are reasonably aligned on the same centerline. If the offset between beams exceeds the internal tolerance (approx. 1mm), the script will not join them.\n- **Orientation:** The script checks vector directions. Ensure the beams are intended to be collinear (in a straight line) rather than just parallel.\n- **Order of Selection:** The script typically processes beams based on their position in space. Using the \"StretchToExtremes\" right-click option forces the geometry of the primary beam to update to the total length of the group.\n\n## FAQ\n- **Q: Why did my beams fail to join?**\n  **A:** The beams may be offset laterally by more than 1mm, or they might not be perfectly collinear (straight). Check their alignment in the 3D view.\n- **Q: What is the difference between the default action and \"StretchToExtremes\"?**\n  **A:** The default action logically merges the database entries of the beams. \"StretchToExtremes\" physically cuts the main beam to the new total length and erases the other beams from the model.\n- **Q: Can I join beams with different cross-sections?**\n  **A:** This script is designed for collinear beams. While it may handle geometric joins, manufacturing requirements usually require identical cross-sections for a continuous member. Verify the resulting beam properties after joining."
+      },
+      "tokens_used": 3461,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,426 @@
+{
+  "filename": "HSB_T-OptimizeBeams.mcr",
+  "status": "completed",
+  "total_tokens": 41543,
+  "processing_time": 281.0942368507385,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 6,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "10.07.2015",
+            "author": "AS",
+            "changes": "Pilot version"
+          },
+          {
+            "version": "1.01",
+            "date": "13.07.2015",
+            "author": "AS",
+            "changes": "Split the new beam if beam has to split multiple times."
+          },
+          {
+            "version": "1.02",
+            "date": "21.08.2015",
+            "author": "AS",
+            "changes": "Show properties when tsl is inserted. Add start of implementation of angled cuts."
+          },
+          {
+            "version": "1.03",
+            "date": "26.08.2015",
+            "author": "AS",
+            "changes": "Angled cuts are now supported."
+          },
+          {
+            "version": "1.04",
+            "date": "28.08.2015",
+            "author": "AS",
+            "changes": "Move single mark off-center for _X0 of marking tsl."
+          },
+          {
+            "version": "1.05",
+            "date": "18.09.2015",
+            "author": "AS",
+            "changes": "Add new beams to wall plate tsl."
+          },
+          {
+            "version": "1.06",
+            "date": "11.11.2019",
+            "author": "RP",
+            "changes": "Do not set the format for the angle"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6469,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly collects entities using '_kModelSpace' (Line 89: 'Entity allTsls[] = Group().collectEntities(true, TslInst(), _kModelSpace);'). It interacts directly with Beam entities via 'dbSplit' and 'addToolStatic', typical of 3D model manipulation. There are no 'sd_' prefixes or ShopDrawing specific entities used."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space with Beams present to split.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4161,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "showDialog",
+              "promptOriginal": "Properties Dialog",
+              "condition": "_bOnInsert && (ExecuteKey == \"\" || not in catalog)",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select beams in spit sequence|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "On Insert",
+            "title": "HSB_T-OptimizeBeams",
+            "dataSource": "Script Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "firstSplitLength",
+            "type": "PropDouble",
+            "displayName": "|First split at|",
+            "defaultValue": "U(2700)",
+            "inputType": "number",
+            "options": [],
+            "category": "|Beam lengths|",
+            "description": "|Sets the location for the first split.|"
+          },
+          {
+            "index": 1,
+            "variable": "defaultSplitLength",
+            "type": "PropDouble",
+            "displayName": "|Default split length|",
+            "defaultValue": "U(5400)",
+            "inputType": "number",
+            "options": [],
+            "category": "|Beam lengths|",
+            "description": "|Sets the default split length.|"
+          },
+          {
+            "index": 2,
+            "variable": "minimumSplitLength",
+            "type": "PropDouble",
+            "displayName": "|Minimum split length|",
+            "defaultValue": "U(600)",
+            "inputType": "number",
+            "options": [],
+            "category": "|Beam lengths|",
+            "description": "|Sets the minimum allowed split length.|"
+          },
+          {
+            "index": 3,
+            "variable": "splitGap",
+            "type": "PropDouble",
+            "displayName": "|Gap|",
+            "defaultValue": "U(0)",
+            "inputType": "number",
+            "options": [],
+            "category": "|Split parameters|",
+            "description": "|Sets the gap to use at the split locations.|"
+          },
+          {
+            "index": 4,
+            "variable": "splitAngle",
+            "type": "PropDouble",
+            "displayName": "|Angle|",
+            "defaultValue": "0",
+            "inputType": "number",
+            "options": [],
+            "category": "|Split parameters|",
+            "description": "|Sets the angle of the splits.|"
+          },
+          {
+            "index": 0,
+            "variable": "propApplySingleMark",
+            "type": "PropString",
+            "displayName": "|Apply single mark|",
+            "defaultValue": null,
+            "inputType": "dropdown",
+            "options": [
+              "|Yes|",
+              "|No|"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5835,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically splits selected timber beams into optimized production lengths, handling staggered joints, expansion gaps, and angled cuts.",
+          "category": "Model Manipulation / Framing",
+          "typicalUseCase": "Breaking down long continuous wall plates or joists (e.g., imported from CAD lines) into standard transportable/manufacturable lengths (like 5.4m) with staggered joints for structural integrity."
+        },
+        "parameters": [
+          {
+            "name": "firstSplitLength",
+            "technicalDefault": "U(2700)",
+            "businessMeaning": "The length of the first segment measured from the start of the beam. Used to stagger the first joint so it doesn't align with adjacent rows.",
+            "validRange": "600mm to 18000mm (dependent on Default and Minimum lengths)",
+            "unit": "mm",
+            "affectsOutput": "Determines the position of the first cut on the beam."
+          },
+          {
+            "name": "defaultSplitLength",
+            "technicalDefault": "U(5400)",
+            "businessMeaning": "The target length for all subsequent segments after the first. Usually set to the standard raw timber length (e.g., 5400mm or 6000mm) to minimize waste.",
+            "validRange": "600mm to 18000mm",
+            "unit": "mm",
+            "affectsOutput": "Determines the position of the 2nd, 3rd, etc., cuts. Defines the standard module length for the structure."
+          },
+          {
+            "name": "minimumSplitLength",
+            "technicalDefault": "U(600)",
+            "businessMeaning": "The shortest allowed length for a beam segment. Prevents the creation of tiny, unusable offcuts.",
+            "validRange": "100mm to 2000mm",
+            "unit": "mm",
+            "affectsOutput": "If the remaining beam length is shorter than this value (plus gap/angle corrections), the script stops splitting, leaving the remainder longer than the default."
+          },
+          {
+            "name": "splitGap",
+            "technicalDefault": "U(0)",
+            "businessMeaning": "The physical distance left between the resulting beam segments. Used for expansion joints or to account for saw kerf.",
+            "validRange": "0mm to 50mm",
+            "unit": "mm",
+            "affectsOutput": "Visually and physically separates the split beams. The total length consumed by the splits increases as this value increases."
+          },
+          {
+            "name": "splitAngle",
+            "technicalDefault": "0",
+            "businessMeaning": "The angle of the cut relative to the beam's perpendicular axis (0° is a square cut). Used for scarph joints or specific architectural detailing.",
+            "validRange": "-45° to +45°",
+            "unit": "degrees",
+            "affectsOutput": "Modifies the end geometry of the split beams. Creates a non-perpendicular face, effectively shortening the X-axis projection of the beam segment."
+          },
+          {
+            "name": "propApplySingleMark",
+            "technicalDefault": "Yes",
+            "businessMeaning": "Toggles whether to automatically apply a 'Single Mark' (position label) to the newly split beam segments.",
+            "validRange": "Yes, No",
+            "unit": "Boolean",
+            "affectsOutput": "If 'Yes', inserts the 'HSB_T-SingleMark' TSL instance on each new beam segment."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "splitAngle is non-zero",
+            "effect": "Reduces the effective projected length of the beam segments to ensure the physical cut length meets the defined parameters.",
+            "cascade": [
+              "firstSplitLength",
+              "defaultSplitLength",
+              "minimumSplitLength"
+            ]
+          },
+          {
+            "trigger": "splitGap is non-zero",
+            "effect": "Increases the total linear distance consumed by the splits. The script adds this distance to the cut location calculations.",
+            "cascade": [
+              "firstSplitLength",
+              "defaultSplitLength"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "GenBeam",
+            "description": "New beam segments created by splitting the original beam.",
+            "appliedTo": "Newly created geometry replacing the original selected beams."
+          },
+          {
+            "type": "Cut",
+            "description": "Angled cuts applied to the ends of the split beams.",
+            "appliedTo": "End faces of the split beams (only if Split Angle is not 0)."
+          },
+          {
+            "type": "TslInst",
+            "description": "Instances of 'HSB_T-SingleMark' for labeling.",
+            "appliedTo": "New beam segments (if Apply Single Mark is Yes)."
+          },
+          {
+            "type": "Map",
+            "description": "Updates to dimensioning and wallplate scripts to include the new beam segments in their calculations.",
+            "appliedTo": "Existing 'HSB_D-Aligned' and 'BK_G-Wallplates' instances linked to the original beams."
+          }
+        ]
+      },
+      "tokens_used": 7712,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Insertion/Execution triggered",
+          "2. Check for valid Execute Key (Catalog entry)",
+          "3. [Conditional] Show Properties Dialog if no valid Execute Key found",
+          "4. Save properties to '_LastInserted' catalog",
+          "5. Command Line Prompt: Select beams in split sequence",
+          "6. Validate: If no beams selected, display warning and erase instance",
+          "7. Collect all TSL Instances in ModelSpace (Scan for Dimensioning and Wallplate scripts)",
+          "8. Iterate through selected Beams",
+          "9. For each beam: Identify linked Dimensioning ('HSB_D-Aligned') and Wallplate ('BK_G-Wallplates') TSLs",
+          "10. Calculate beam geometry (Start/End points, vectors, angled cut correction factors)",
+          "11. [Conditional] Evaluate Beam Length against Split Parameters (First/Default/Min lengths)",
+          "12. Perform Split operations (dbSplit) and apply Cuts if necessary",
+          "13. Update linked TSLs: Add new beams to their Map/DimensionObjects",
+          "14. Recalculate linked TSLs",
+          "15. [Conditional] Insert 'HSB_T-SingleMark' TSLs on resulting beams if property is 'Yes'",
+          "16. Erase Script Instance (Self-destruct after processing)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Beam Length relative to Split Parameters",
+            "path1": {
+              "name": "Long Beam (Multi-split)",
+              "steps": [
+                "Check if Length > (FirstSplit + Minimum - Correction)",
+                "Perform First Split at 'First split at' distance",
+                "Enter Loop: While Length > DefaultSplit",
+                "Check if Length > (Default + Minimum + Gap - Correction)",
+                "If True: Split at 'Default split length' distance",
+                "If False: Split to leave 'Minimum split length' at end",
+                "Update stagger calculation for next beam"
+              ]
+            },
+            "path2": {
+              "name": "Medium Beam (Single split)",
+              "steps": [
+                "Check if Length > (2 * Minimum + Gap - Correction)",
+                "Split to leave 'Minimum split length' at the end",
+                "Update stagger calculation for next beam"
+              ]
+            },
+            "path3": {
+              "name": "Short Beam (No split)",
+              "steps": [
+                "Beam is too short to split safely",
+                "Skip split operations",
+                "Update stagger calculation for next beam"
+              ]
+            }
+          },
+          {
+            "condition": "Split Angle Property",
+            "path1": {
+              "name": "Angled Cuts (Angle != 0)",
+              "steps": [
+                "Calculate correction for angled cut (tan(angle) * 0.5 * width)",
+                "Adjust split points to account for projection difference",
+                "Add 'Cut' tool entity to beam ends using calculated normals"
+              ]
+            },
+            "path2": {
+              "name": "Square Cuts (Angle == 0)",
+              "steps": [
+                "No correction needed",
+                "Split at exact coordinate points",
+                "No Cut tools added"
+              ]
+            }
+          },
+          {
+            "condition": "Apply Single Mark Property",
+            "path1": {
+              "name": "Yes",
+              "steps": [
+                "Insert 'HSB_T-SingleMark' TSL at center (minus 10mm X offset) of every resulting beam segment"
+              ]
+            },
+            "path2": {
+              "name": "No",
+              "steps": [
+                "Skip creation of marking TSLs"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam Selection",
+            "errorMessage": "|No beams selected|",
+            "recovery": "User must re-run the script and select at least one beam entity."
+          },
+          {
+            "check": "Infinite Loop Protection",
+            "errorMessage": "None (Internal check)",
+            "recovery": "Script breaks processing loop if iterations exceed 100 to prevent crashing."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Script Deletion",
+            "how": "Automatic (Internal Logic)",
+            "effect": "The script instance calls 'eraseInstance()' immediately after processing, removing itself from the model. It cannot be edited via OPM or context menu after insertion."
+          }
+        ]
+      },
+      "tokens_used": 9393,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "```json\n{\n  \"documentation\": \"# HSB_T-OptimizeBeams.mcr\\n\\n## Overview\\nThis script automatically splits selected long timber beams into optimized production lengths. It supports staggered joints for structural integrity, expansion gaps, and angled cuts, while automatically updating linked dimensioning and wall plate scripts.\\n\\n## Usage Environment\\n| Space | Supported | Notes |\\n|-------|-----------|-------|\\n| Model Space | Yes | Primary usage environment. Requires existing beams. |\\n| Paper Space | No | Not supported. |\\n| Shop Drawing | No | Not supported. |\\n\\n## Prerequisites\\n- **Required entities:** `GenBeam` (General Beam) entities must exist in the model.\\n- **Minimum beam count:** 1\\n- **Required settings files:** None\\n\\n## Usage Steps\\n\\n### Step 1: Launch Script\\nCommand: `TSLINSERT` \\nAction: In the dialog that appears, select `HSB_T-OptimizeBeams.mcr` and click Open or Insert.\\n\\n### Step 2: Configure Parameters\\n```\\nDialog: HSB_T-OptimizeBeams\\nAction: Adjust the split lengths, gaps, and angles as needed. Click OK to confirm.\\n```\\n*Note: Settings are saved to the catalog for future use.*\\n\\n### Step 3: Select Beams\\n```\\nCommand Line: Select beams in spit sequence\\nAction: Click on the beams you wish to split. The order of selection defines the split sequence (staggering). Press Enter or Space to finish selection.\\n```\\n*Note: The script instance will automatically delete itself after processing.*\\n\\n## Properties Panel Parameters\\n\\n| Parameter | Type | Default | Description |\\n|-----------|------|---------|-------------|\\n| **First split at** | Number | 2700 mm | Sets the length of the very first segment from the start of the beam. Used to stagger joints between adjacent rows. |\\n| **Default split length** | Number | 5400 mm | The target length for all subsequent segments. Typically set to your standard raw timber length (e.g., 5400mm or 6000mm). |\\n| **Minimum split length** | Number | 600 mm | The shortest allowed length for a segment. Prevents the creation of tiny, unusable offcuts. |\\n| **Gap** | Number | 0 mm | The physical distance left between split beam segments (e.g., for expansion joints or saw kerf). |\\n| **Angle** | Number | 0° | The angle of the cut relative to the perpendicular face. Use 0 for square cuts, or enter a value for angled/scarph joints. |\\n| **Apply single mark** | Dropdown | Yes | If 'Yes', automatically inserts the 'HSB_T-SingleMark' script on the new beam segments for labeling. |\\n\\n## Right-Click Menu Options\\n\\n| Menu Item | Description |\\n|-----------|-------------|\\n| *None* | This script self-destructs immediately after running. It cannot be edited or re-run via the context menu once inserted. |\\n\\n## Settings Files\\n- **Filename:** None\\n- **Location:** N/A\\n- **Purpose:** N/A\\n\\n## Tips\\n- **Staggering:** To ensure joints in a wall do not line up vertically, vary the **First split at** value for different rows, or rely on the script's behavior if selecting beams in a specific sequence.\\n- **Standard Lengths:** Set the **Default split length** to match your supplier's standard timber lengths to minimize waste.\\n- **Linked Scripts:** The script automatically finds and updates linked `HSB_D-Aligned` and `BK_G-Wallplates` instances to include the new split beams.\\n- **Undo:** If the result is not as expected, use the standard AutoCAD `UNDO` command to revert the changes.\\n\\n## FAQ\\n\\n**Q: Why did the script disappear after I ran it?**\\nA: This script is designed as a \\\"command\\\" script. It performs the split operation and then erases its own instance (`eraseInstance`) from the model to keep the drawing clean.\\n\\n**Q: Why didn't my beam split?**\\nA: Check if the beam length is shorter than the **Minimum split length** or the **First split at** distance. The script prevents splitting if it would result in segments that are too short.\\n\\n**Q: What happens to the original beam?**\\nA: The original beam entity is deleted and replaced by the new split segments. Any properties or material assignments from the original beam are typically inherited by the new segments.\"\n}\n```"
+      },
+      "tokens_used": 7973,
+      "error": null
+    }
+  }
+}

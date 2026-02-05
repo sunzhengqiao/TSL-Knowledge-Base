@@ -1,0 +1,390 @@
+{
+  "filename": "IdeFix.mcr",
+  "status": "completed",
+  "total_tokens": 45697,
+  "processing_time": 320.2878074645996,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.4",
+            "date": "20mai14",
+            "author": "th@hsbCAD.de",
+            "changes": "bugfix drill rotation lock"
+          },
+          {
+            "version": "1.3",
+            "date": "18.10.2011",
+            "author": "th@hsbCAD.de",
+            "changes": "-Ausrichtung immer parallel zum aufstoenden Bauteil"
+          },
+          {
+            "version": "1.1",
+            "date": "07.03.2008",
+            "author": "th@hsbCAD.de",
+            "changes": "- Namensnderung, Bohrtiefe Haupttrger ergnzt"
+          },
+          {
+            "version": "1.0",
+            "date": "06mar08",
+            "author": "th@hsbCAD.de",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7383,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses getBeam() to select entities and _Beam[0/1] arrays to reference them. It modifies physical geometry by adding tools (Cut, Drill) via addTool(). It creates 3D bodies and uses tsl.dbCreate() to generate instances attached to beams. It does not contain sd_ prefixes, #Type E definitions, or viewport/paper space logic."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6113,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"Select male beam(s)\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      },\n      {\n        \"step\": 2,\n        \"function\": \"getBeam\",\n        \"promptOriginal\": \"Select female beam\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [],\n  \"opmProperties\": [\n    {\n      \"index\": 0,\n      \"variable\": \"sType\",\n      \"type\": \"PropString\",\n      \"displayName\": \"Type\",\n      \"defaultValue\": \"Post connector\",\n      \"inputType\": \"dropdown\",\n      \"options\": [\n        \"Post connector\",\n        \"Floor Connector\",\n        \"Rotation Lock\"\n      ],\n      \"category\": null,\n      \"description\": null\n    },\n    {\n      \"index\": "
+      },
+      "tokens_used": 8660,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the insertion, configuration, and CNC machining for EuroTec Ideefix self-tapping timber connectors between a set of male beams and a female beam.",
+          "category": "Hardware / Connection",
+          "typicalUseCase": "Connecting a post or floor joist(s) to a main beam or column where high-capacity concealed connections are required."
+        },
+        "parameters": [
+          {
+            "name": "sType",
+            "technicalDefault": "Post connector",
+            "businessMeaning": "Defines the specific application mode of the connector, determining drilling depths and whether secondary screws are required.",
+            "validRange": "Post connector, Floor Connector, Rotation Lock",
+            "unit": "Enum",
+            "affectsOutput": "Selects the drill depth array for the male beam and controls whether the connector body recess is machined into the female beam."
+          },
+          {
+            "name": "dDiam",
+            "technicalDefault": "30",
+            "businessMeaning": "The nominal diameter of the Ideefix connector hardware.",
+            "validRange": "30, 40, 50",
+            "unit": "mm",
+            "affectsOutput": "Updates all associated dimensions including drill depths, screw lengths, screw diameters, and grid spacing between multiple connectors."
+          },
+          {
+            "name": "nRow",
+            "technicalDefault": "1",
+            "businessMeaning": "The number of connectors stacked vertically.",
+            "validRange": "1 to 2 (constrained by Rotation Lock type)",
+            "unit": "Count",
+            "affectsOutput": "Calculates the vertical distribution (Z-axis) of the machining grid."
+          },
+          {
+            "name": "nCol",
+            "technicalDefault": "1",
+            "businessMeaning": "The number of connectors arranged horizontally.",
+            "validRange": "1+ (constrained by Rotation Lock type)",
+            "unit": "Count",
+            "affectsOutput": "Calculates the horizontal distribution (Y-axis) of the machining grid."
+          },
+          {
+            "name": "dOffY",
+            "technicalDefault": "0",
+            "businessMeaning": "The lateral offset of the connection group from the insertion point.",
+            "validRange": "-200 to 200",
+            "unit": "mm",
+            "affectsOutput": "Moves the center point of the connector grid along the local Y-axis."
+          },
+          {
+            "name": "dOffZ",
+            "technicalDefault": "0",
+            "businessMeaning": "The vertical offset of the connection group from the insertion point.",
+            "validRange": "-200 to 200",
+            "unit": "mm",
+            "affectsOutput": "Moves the center point of the connector grid along the local Z-axis."
+          },
+          {
+            "name": "sShowPlan",
+            "technicalDefault": "No",
+            "businessMeaning": "Toggles the visibility of the connection label in plan view.",
+            "validRange": "Yes, No",
+            "unit": "Boolean",
+            "affectsOutput": "Enables or disables the drawing of the text label and leader line."
+          },
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "_DimStyles (User Default)",
+            "businessMeaning": "The drafting style used for the connection label.",
+            "validRange": "Any valid DimStyle in the drawing",
+            "unit": "String",
+            "affectsOutput": "Changes the font, size, and arrow style of the plan view annotation."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "94",
+            "businessMeaning": "The display color for the connector geometry and label.",
+            "validRange": "0-255 (AutoCAD Color Index)",
+            "unit": "Index",
+            "affectsOutput": "Visually changes the color of the drawn 3D model and annotation."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User changes dDiam",
+            "effect": "Updates screw dimensions and grid spacing based on hardware size.",
+            "cascade": [
+              "dScrewL",
+              "dScrewD",
+              "dScrewMainD",
+              "dArDepthMale",
+              "dArDepthFemale",
+              "dArAxis"
+            ]
+          },
+          {
+            "trigger": "User selects 'Rotation Lock' with nRow>2 and nCol>1",
+            "effect": "Script detects invalid geometry and auto-switches Type to 'Floor Connector'.",
+            "cascade": [
+              "sType"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Drill",
+            "description": "Cylindrical recess in the male beam to accept the connector head.",
+            "appliedTo": "Male Beam(s) (Beam[0])"
+          },
+          {
+            "type": "Drill",
+            "description": "Through hole for the main self-tapping screw.",
+            "appliedTo": "Female Beam (Beam[1])"
+          },
+          {
+            "type": "Drill",
+            "description": "Recess/sinkhole in the female beam to allow the connector to sit flush or engage (depth depends on Type).",
+            "appliedTo": "Female Beam (Beam[1])"
+          },
+          {
+            "type": "Drill",
+            "description": "Custom intersection sinkhole for non-perpendicular beam connections.",
+            "appliedTo": "Female Beam (Beam[1])"
+          },
+          {
+            "type": "Body (Visual)",
+            "description": "3D representation of the main connector screw (cylinder with hex head).",
+            "appliedTo": "Model Space (Visual only)"
+          },
+          {
+            "type": "PLine (Visual)",
+            "description": "Schematic representation of auxiliary 'stitch' screws (angled around the main connector).",
+            "appliedTo": "Model Space (Visual only)"
+          },
+          {
+            "type": "Annotation",
+            "description": "Plan view label with connector count and type (e.g., '2x IF50').",
+            "appliedTo": "Plan View (if sShowPlan is Yes)"
+          }
+        ]
+      },
+      "tokens_used": 8276,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch Script via Insert Command",
+          "2. Check Insertion Cycle (Stop if >1 to prevent recursion)",
+          "3. Prompt User to Select Male Beam(s) (PrEntity allows multiple selection)",
+          "4. Prompt User to Select Female Beam (getBeam allows single selection)",
+          "5. Show Configuration Dialog (User sets Type, Diameter, Rows, Cols, etc.)",
+          "6. Iterate through selected Male Beams",
+          "7. Create TSL Instance for each Male/Female Pair",
+          "8. Erase Temporary Host Instance",
+          "9. [Execute Instance] Parse Properties (Type, Diameter, Dimensions)",
+          "10. [Execute Instance] Validate Geometry Constraints (e.g., Row/Col vs Type)",
+          "11. [Execute Instance] Calculate Coordinate System (CS)",
+          "12. [Execute Instance] Loop through Grid (Rows x Columns)",
+          "13. [Execute Instance] Generate Drills and Bodies for Male Beam",
+          "14. [Execute Instance] Generate Drills and Bodies for Female Beam",
+          "15. [Execute Instance] Generate Visual Representation (Screws, Connectors)",
+          "16. [Execute Instance] Draw Plan View Annotation (if enabled)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Connection Geometry Configuration (Row > 2 AND Col > 1 AND Type = Rotation Lock)",
+            "path1": {
+              "name": "Invalid Config Recovery",
+              "steps": [
+                "Script detects incompatibility",
+                "Display Alert/Notice in Report",
+                "Force change Property 'sType' to 'Floor Connector'",
+                "Proceed with Floor Connector logic"
+              ]
+            },
+            "path2": {
+              "name": "Valid Config",
+              "steps": [
+                "Keep selected 'sType'",
+                "Proceed with standard logic for selected Type"
+              ]
+            }
+          },
+          {
+            "condition": "Connector Type (sType)",
+            "path1": {
+              "name": "Type: Post Connector",
+              "steps": [
+                "Set Drill Depth Male to Array 0 (deepest)",
+                "Skip Female Beam Recess (nType==0 check fails)",
+                "Draw Auxiliary Stitch Screws visual"
+              ]
+            },
+            "path2": {
+              "name": "Type: Floor Connector",
+              "steps": [
+                "Set Drill Depth Male to Array 1 (medium)",
+                "Add Recess Drill to Female Beam",
+                "Draw Auxiliary Stitch Screws visual"
+              ]
+            },
+            "path3": {
+              "name": "Type: Rotation Lock",
+              "steps": [
+                "Set Drill Depth Male to Array 2 (medium/shallow)",
+                "Add Recess Drill to Female Beam",
+                "Skip Auxiliary Stitch Screws visual (nType==2 check)"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Orientation (Perpendicular vs Non-Perpendicular)",
+            "path1": {
+              "name": "Perpendicular Connection",
+              "steps": [
+                "Standard cylindrical drill through Female Beam",
+                "Screw end point is simple linear projection"
+              ]
+            },
+            "path2": {
+              "name": "Non-Perpendicular (Skewed) Connection",
+              "steps": [
+                "Calculate intersection of Drill Cylinder with Female Beam Envelope",
+                "Find extreme vertex of intersection",
+                "Adjust Screw end point to this vertex",
+                "Add custom sinkhole at adjusted location for flush fit"
+              ]
+            }
+          },
+          {
+            "condition": "Plan View Display (sShowPlan)",
+            "path1": {
+              "name": "Show Plan Info = Yes",
+              "steps": [
+                "Generate Text String (e.g., '2x IF50')",
+                "Create Grip Point if missing",
+                "Draw Text Label",
+                "Draw Border Box around Text",
+                "Draw Leader Line from Beam to Label"
+              ]
+            },
+            "path2": {
+              "name": "Show Plan Info = No",
+              "steps": [
+                "Skip Annotation Drawing Routine"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Rotation Lock Geometry Limits",
+            "errorMessage": "Incorrect user input. You must change the type or the qunatity of rows and/or columns. Type is now set to Floor Connector",
+            "recovery": "Script automatically resets 'sType' to 'Floor Connector' to resolve the conflict."
+          },
+          {
+            "check": "Minimum Row/Column Count",
+            "errorMessage": "(No direct error message, internal logic)",
+            "recovery": "If nRow < 1, script forces nRow to 1. If nCol < 1, script forces nCol to 1."
+          },
+          {
+            "check": "Insertion Cycle Count",
+            "errorMessage": "(Silent failure)",
+            "recovery": "If insertCycleCount > 1, the script erases the current instance and returns immediately to prevent infinite loops."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Connector Dimensions",
+            "how": "Object Properties (OPM) Palette",
+            "effect": "Changing dDiam updates screw sizes, drill depths, and grid spacing. Changing nRow/nCol redistributes the connector grid."
+          },
+          {
+            "action": "Change Connector Type",
+            "how": "Object Properties (OPM) Palette - Dropdown",
+            "effect": "Switches between Post, Floor, and Rotation Lock modes, altering drill depths and visual representation of screws."
+          },
+          {
+            "action": "Adjust Position",
+            "how": "Object Properties (OPM) Palette - Offsets Y/Z or Grip Point",
+            "effect": "Moves the connector grid along the female beam's surface (dOffY/dOffZ) or moves the plan label text position (_PtG)."
+          },
+          {
+            "action": "Toggle Plan Annotation",
+            "how": "Object Properties (OPM) Palette - sShowPlan",
+            "effect": "Hides or shows the label, box, and leader line in plan view."
+          },
+          {
+            "action": "Move Annotation Text",
+            "how": "Grip Edit (_PtG)",
+            "effect": "Draging the grip moves the text box and updates the leader line connection point."
+          }
+        ]
+      },
+      "tokens_used": 8437,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# IdeFix.mcr\n\n## Overview\nAutomates the insertion, configuration, and CNC machining for EuroTec Ideefix self-tapping timber connectors. This script connects multiple male beams (e.g., floor joists or posts) to a single female beam (e.g., main girder or column) with parametric control over layout and hardware size.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script is designed for 3D model context. |\n| Paper Space | No | |\n| Shop Drawing | No | Generates 3D machining and visual data only. |\n\n## Prerequisites\n- **Required entities:** `GenBeam` (or equivalent structural timber elements).\n- **Minimum beam count:** 2 (One or more \"male\" beams and one \"female\" beam).\n- **Required settings files:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `IdeFix.mcr` from the file list.\n\n### Step 2: Select Male Beams\n```\nCommand Line: Select male beam(s)\nAction: Click on the beam(s) that will be receiving the connector head (e.g., the joists or posts). You can select multiple beams.\n```\n\n### Step 3: Select Female Beam\n```\nCommand Line: Select female beam\nAction: Click on the main beam or column that the male beams connect into. This beam will receive the through-screw machining.\n```\n\n### Step 4: Configure Properties\nAfter selection, the script attaches to the beams. Use the **Properties Palette** (Ctrl+1) to configure:\n1.  Select the Connector **Type** (Post, Floor, or Rotation Lock).\n2.  Adjust the **Diameter** (30, 40, or 50 mm).\n3.  Set the grid layout using **Rows** (nRow) and **Columns** (nCol).\n4.  Adjust **Offsets** (dOffY, dOffZ) to position the group correctly on the beam face.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Type | Dropdown | Post connector | Selects the application mode: Post connector, Floor Connector, or Rotation Lock. Determines drill depth and screw configuration. |\n| Diam | Number | 30 | Nominal diameter of the Ideefix connector (30, 40, or 50 mm). Adjusts screw sizes and spacing automatically. |\n| nRow | Number | 1 | Number of connectors stacked vertically. |\n| nCol | Number | 1 | Number of connectors arranged horizontally. |\n| OffY | Number | 0 | Lateral offset of the connection group from the insertion point (along the beam width). |\n| OffZ | Number | 0 | Vertical offset of the connection group from the insertion point (along the beam height). |\n| ShowPlan | Dropdown | No | Toggles visibility of the label and leader line in plan view. |\n| DimStyle | String | _DimStyles | Sets the dimension style for the plan view label (controls text size and font). |\n| Color | Integer | 94 | Sets the color index for the 3D representation and labels. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Updates the machining and visuals after changing properties in the palette. |\n| Erase | Removes the script instance and associated machining. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script relies entirely on hardcoded logic and user properties; no external XML settings are required.\n\n## Tips\n- **Rotation Lock Constraints:** If you select **Rotation Lock** as the type, you cannot use more than 2 Rows and 1 Column simultaneously. If you try, the script will automatically switch the Type to \"Floor Connector\" and display a warning in the command line.\n- **Skewed Connections:** The script automatically calculates the correct intersection geometry if the male beam meets the female beam at an angle (non-perpendicular), ensuring the sinkhole fits flush.\n- **Plan View Labels:** Use the **ShowPlan** property to create clean 2D drawings. The label includes a count and size (e.g., \"2x IF40\"). You can move the text by dragging the grip point.\n\n## FAQ\n- **Q: Why did my connector type change to \"Floor Connector\" automatically?**\n  **A:** You likely selected \"Rotation Lock\" but configured a grid with Rows > 2 AND Columns > 1. This geometry is incompatible with the Rotation Lock function, so the script corrected it to \"Floor Connector\" to prevent errors.\n- **Q: Can I connect a joist that is not perpendicular to the main beam?**\n  **A:** Yes. The script calculates the intersection volume for non-90-degree connections and adjusts the sinkhole machining accordingly.\n- **Q: How do I change the size of the screws?**\n  **A:** Change the **Diam** property. The script automatically updates the screw lengths and drill depths based on the selected hardware size (30/40/50)."
+      },
+      "tokens_used": 6828,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,275 @@
+{
+  "filename": "HSB_T-SetGrainDirection.mcr",
+  "status": "completed",
+  "total_tokens": 33251,
+  "processing_time": 209.00893902778625,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"header\": {\n    \"type\": null,\n    \"numBeamsReq\": null,\n    \"keywords\": null,\n    \"majorVersion\": null,\n    \"minorVersion\": null,\n    \"dxaOut\": null,\n    \"implInsert\": null\n  },\n  \"description\": null,\n  \"versionHistory\": [\n    {\n      \"version\": \"1.3\",\n      \"date\": \"12/02/2025\",\n      \"author\": \"Robert Pol\",\n      \"changes\": \"Add exporter convention\"\n    },\n    {\n      \"version\": \"1.00\",\n      \"date\": \"06.01.2017\",\n      \"author\": \"AS\",\n      \"changes\": \"Pilot version\"\n    },\n    {\n      \"version\": \"1.01\",\n      \"date\": \"04.08.2017\",\n      \"author\": \"RP\",\n      \"changes\": \"Add option to flip z axis\"\n    },\n    {\n      \"version\": \"1.02\",\n      \"date\": \"18.09.2017\",\n      \"author\": \"RP\",\n      \"changes\": \"Set isotrpic propertie to new sheet\"\n    }\n  ],\n  \"settings"
+      },
+      "tokens_used": 6377,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses PrEntity to select Sheets and calls TslInst().getListOfCatalogNames, which are Model Space operations. It does not contain ShopDrawing specific markers (sd_ prefix, #Type E) or Paper Space logic (_Viewport)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sheet",
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "Property set 'hsbGeometryData'",
+            "TSL 'HSB_G-FilterGenBeams'"
+          ]
+        }
+      },
+      "tokens_used": 3012,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select sheets|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "filterDefinition",
+            "type": "PropString",
+            "displayName": "|Filter definition sheets|",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": [
+              "<dynamic>",
+              ""
+            ],
+            "category": "|Filter|",
+            "description": "|Filter definition for sheets.||Use| HSB_G-FilterGenBeams |to define the filters|."
+          },
+          {
+            "index": 1,
+            "variable": "alignGrainDirectionWith",
+            "type": "PropString",
+            "displayName": "|Align grain direction|",
+            "defaultValue": "|None|",
+            "inputType": "dropdown",
+            "options": [
+              "|None|",
+              "|Element| X",
+              "|Element| Y",
+              "|Sheet| X",
+              "|Sheet| Y"
+            ],
+            "category": "|Grain direction|",
+            "description": "|The grain direction will be aligned with the selected vector|"
+          },
+          {
+            "index": 2,
+            "variable": "setZaxis",
+            "type": "PropString",
+            "displayName": "|Set Z axis from Element|",
+            "defaultValue": "|No|",
+            "inputType": "dropdown",
+            "options": [
+              "|No|",
+              "|Yes|"
+            ],
+            "category": "|Grain direction|",
+            "description": "|Set Z axis from Element, z will be iligned with viewside|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5926,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically calculates and assigns the wood grain direction for sheet goods (panels) based on their alignment with structural elements or their own geometry to ensure correct manufacturing and structural performance.",
+          "category": "Data Management / Manufacturing Prep",
+          "typicalUseCase": "Used before exporting to CNC machines or structural analysis software to define the orientation of panel fibers relative to the supporting structure."
+        },
+        "parameters": [
+          {
+            "name": "filterDefinition",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "A predefined filter to select specific groups of sheets (e.g., floor panels, roof sheathing) without manually picking them.",
+            "validRange": "Any filter name defined in 'HSB_G-FilterGenBeams' catalog, or empty string.",
+            "unit": "text (selection)",
+            "affectsOutput": "Limits the scope of the script to only the sheets matching the filter criteria. If empty, relies on user selection."
+          },
+          {
+            "name": "alignGrainDirectionWith",
+            "technicalDefault": "\"|None|\"",
+            "businessMeaning": "Specifies the axis used to define the 'strong' grain direction of the sheet.",
+            "validRange": "None, Element X (parallel to beam), Element Y (perpendicular to beam), Sheet X, Sheet Y.",
+            "unit": "axis reference",
+            "affectsOutput": "Updates the 'hsbGeometryData' property set and the 'GrainDirection' map on the sheet, indicating whether the grain runs along the sheet's local X or Y axis."
+          },
+          {
+            "name": "setZaxis",
+            "technicalDefault": "\"|No|\"",
+            "businessMeaning": "Determines if the sheet geometry should be physically flipped (mirrored) when its 'good side' (view side) is opposite to the element's defined orientation.",
+            "validRange": "Yes, No.",
+            "unit": "boolean",
+            "affectsOutput": "If Yes, the script replaces the original sheet with a geometrically mirrored version. If No, it retains geometry but updates property data to flag the orientation difference."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "alignGrainDirectionWith is set to |Element| X or |Element| Y",
+            "effect": "The script requires valid Element assignments. If a sheet is not linked to an element, it is skipped and a notice is generated.",
+            "cascade": []
+          },
+          {
+            "trigger": "setZaxis is set to |Yes|",
+            "effect": "Triggers a geometric check. If the Element's Z-vector opposes the Sheet's Z-vector, the script executes a dbCreate to generate a new, mirrored Sheet and dbErase the old one.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Property Set (hsbGeometryData)",
+            "description": "Updates the 'GrainDirection' integer (1 for local X, 2 for local Y) on the sheet.",
+            "appliedTo": "Selected Sheets."
+          },
+          {
+            "type": "SubMap (GrainDirection)",
+            "description": "Stores a 3D vector representing the precise grain direction vector for exporters.",
+            "appliedTo": "Selected Sheets."
+          },
+          {
+            "type": "Sheet Geometry",
+            "description": "Potentially replaces the original sheet with a mirrored version if orientation correction is required and enabled.",
+            "appliedTo": "Selected Sheets with Z-axis conflicts."
+          }
+        ]
+      },
+      "tokens_used": 4914,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script launched via command or catalog execution.",
+          "2. Check for valid '_kExecuteKey'. If valid, load properties from catalog; otherwise, display Properties Dialog.",
+          "3. Prompt user to select Sheets (PrEntity).",
+          "4. Script instance erases itself to trigger calculation processing.",
+          "5. Apply 'Filter definition sheets' using the 'HSB_G-FilterGenBeams' TSL to the selected set.",
+          "6. Iterate through the filtered list of Sheets.",
+          "7. For each Sheet, check geometric relationship between Sheet Z-axis and Element Zone Z-axis.",
+          "8. If Z-axes are opposed (inverted), perform action based on 'Set Z axis from Element' property (Create mirrored geometry OR Set Property Flag).",
+          "9. Iterate through processed Sheets to calculate grain direction.",
+          "10. Determine the reference vector based on 'Align grain direction' property (Element X/Y or Sheet X/Y).",
+          "11. Calculate alignment to determine if Grain runs along Sheet Local X (1) or Y (2).",
+          "12. Update Sheet Property Sets ('hsbGeometryData' and 'GrainDirection').",
+          "13. Processing complete."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Z-Axis Conflict Check (Is Sheet viewside opposite Element viewside?)",
+            "path1": {
+              "name": "Physical Flip (Set Z axis from Element = Yes)",
+              "steps": [
+                "Calculate new geometry with Z-vector inverted (vecZ * -1)",
+                "dbCreate a new Sheet with the flipped Body",
+                "Copy all attributes (Material, Label, Code, etc.) to new Sheet",
+                "dbErase the original Sheet",
+                "Add new Sheet to processing list"
+              ]
+            },
+            "path2": {
+              "name": "Property Flag (Set Z axis from Element = No)",
+              "steps": [
+                "Create/Update SubMap 'hsbGeometryData'",
+                "Set Int 'ZDirectionSwitch' to true",
+                "Keep original geometry",
+                "Add original Sheet to processing list"
+              ]
+            },
+            "path3": {
+              "name": "No Conflict (Z-axes aligned)",
+              "steps": [
+                "Keep original geometry",
+                "Add original Sheet to processing list"
+              ]
+            }
+          },
+          {
+            "condition": "Alignment Source Selection (PropString: alignGrainDirectionWith)",
+            "path1": {
+              "name": "Element Based (Element X or Y)",
+              "steps": [
+                "Retrieve Element assigned to Sheet",
+                "Check if Element is valid (bIsValid)",
+                "If valid, use Element.vecX() or Element.vecY() as target vector",
+                "If invalid, log notice and skip this Sheet"
+              ]
+            },
+            "path2": {
+              "name": "Sheet Based (Sheet X or Y)",
+              "steps": [
+                "Use Sheet.vecX() or Sheet.vecY() as target vector"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Filter TSL Availability",
+            "errorMessage": "|Sheets could not be filtered! Make sure that the tsl HSB_G-FilterGenBeams is loaded in the drawing.|",
+            "recovery": "Load the 'HSB_G-FilterGenBeams' TSL into the drawing or clear the 'Filter definition sheets' property."
+          },
+          {
+            "check": "Element Assignment Validity (When aligning with Element)",
+            "errorMessage": "|Grain direction could not be set for sheet [PosNum]. The element is not valid.|",
+            "recovery": "Assign the sheet to a valid structural element or change the 'Align grain direction' setting to 'Sheet X/Y'."
+          },
+          {
+            "check": "Geometric Alignment Ambiguity",
+            "errorMessage": "|Grain direction could not be set for sheet [PosNum].|",
+            "recovery": "Verify the sheet geometry is not degenerate and is reasonably orthogonal to the reference vector."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 7697,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_T-SetGrainDirection.mcr\n\n## Overview\nThis script automatically calculates and assigns the wood grain direction for sheet goods (panels) based on their alignment with structural elements or their own geometry. It ensures correct data for manufacturing exports (CNC) and can optionally physically flip sheets to match the element's view side.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on sheets in the model. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Entities**: Sheets (Panels). If aligning to elements, valid Element entities must be assigned to the sheets.\n- **Required Settings**:\n  - Property Set `hsbGeometryData` must be present in the drawing.\n  - TSL script `HSB_G-FilterGenBeams` must be loaded if using the filter definition option.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `HSB_T-SetGrainDirection.mcr`\n\n### Step 2: Configure Properties (Optional)\nBefore or after insertion, open the **Properties Palette (Ctrl+1)** to configure settings:\n- Set **Filter definition sheets** to limit processing to specific groups (optional).\n- Set **Align grain direction** to define how the grain is calculated (e.g., along the Element X-axis).\n- Set **Set Z axis from Element** to `Yes` if you want the script to physically flip the sheet geometry to match the element's view side.\n\n### Step 3: Select Sheets\n```\nCommand Line: Select sheets\nAction: Click on the sheets you wish to process and press Enter.\n```\n*Note: The script will automatically filter this selection based on the \"Filter definition sheets\" property if one is set.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Filter definition sheets | dropdown | \"\" | Select a predefined filter group. Use `HSB_G-FilterGenBeams` to create these filters. Leave empty to process manually selected sheets. |\n| Align grain direction | dropdown | \\|None\\| | Defines the reference axis for the grain direction.<br>Options: \\|None\\|, \\|Element\\| X, \\|Element\\| Y, \\|Sheet\\| X, \\|Sheet\\| Y. |\n| Set Z axis from Element | dropdown | \\|No\\| | If set to \\|Yes\\|, the script replaces the original sheet with a mirrored version if the sheet's view side opposes the element's view side. If \\|No\\|, it only sets a property flag. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | This script does not add specific items to the entity right-click menu. |\n\n## Settings Files\n- **Dependency**: `HSB_G-FilterGenBeams`\n- **Location**: TSL Catalog / drawing references.\n- **Purpose**: This script provides the filter definitions used in the \"Filter definition sheets\" dropdown parameter.\n\n## Tips\n- **Element Assignment**: Ensure your sheets are correctly assigned to structural elements (beams/walls) if you choose to align grain direction based on \"Element\" axes. Unassigned sheets will be skipped.\n- **Geometry Replacement**: When using \"Set Z axis from Element\" = Yes, the script physically creates a new sheet and erases the old one. This updates the GUID, which may affect references in external lists if they are not updated.\n- **Exporters**: This script updates the `hsbGeometryData` property set and the `GrainDirection` map, which are commonly read by CNC exporters to orient panel textures or cuts correctly.\n\n## FAQ\n- **Q: I get an error \"Sheets could not be filtered!\"**\n  A: Ensure the TSL script `HSB_G-FilterGenBeams` is loaded in your drawing. Alternatively, clear the \"Filter definition sheets\" property to process your manual selection.\n- **Q: Why were some of my sheets skipped?**\n  A: If \"Align grain direction\" is set to Element X or Y, sheets that are not assigned to a valid Element will be skipped.\n- **Q: What happens if the grain direction is set to \"None\"?**\n  A: The script will run geometric checks (like Z-axis flipping) but will not calculate or update the grain direction properties."
+      },
+      "tokens_used": 5325,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,202 @@
+{
+  "filename": "HSB_G-SetMaterial.mcr",
+  "status": "completed",
+  "total_tokens": 40756,
+  "processing_time": 256.20459961891174,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 4,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "20.03.2012",
+            "author": "AS",
+            "changes": "Pilot version"
+          },
+          {
+            "version": "1.01",
+            "date": "22.05.2012",
+            "author": "AS",
+            "changes": "Add option to set grade io material"
+          },
+          {
+            "version": "1.02",
+            "date": "10.07.2012",
+            "author": "AS",
+            "changes": "Add material"
+          },
+          {
+            "version": "1.03",
+            "date": "28.03.2014",
+            "author": "AS",
+            "changes": "Give beamcode preference"
+          },
+          {
+            "version": "1.04",
+            "date": "19.09.2015",
+            "author": "AS",
+            "changes": "Extend to 15 sets of materials"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6774,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses _kModelSpace for tsl.dbCreate(). No sd_ prefixes, #Type E declarations, or _Viewport references found. It operates on Element and GenBeam/Sheet objects to update materials in the 3D model."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4644,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"|Select one or more elements|\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [\n    {\n      \"type\": \"showDialog\",\n      \"trigger\": \"_bOnInsert (if no execute key)\",\n      \"title\": \"Properties Dialog\",\n      \"dataSource\": \"OPM Properties\",\n      \"features\": {\n        \"searchable\": false,\n        \"multiSelect\": false\n      }\n    }\n  ],\n  \"opmProperties\": [\n    {\n      \"index\": 30,\n      \"variable\": \"sSetMaterialTo\",\n      \"type\": \"PropString\",\n      \"displayName\": \"|Set material to|\",\n      \"defaultValue\": \"|Material|\",\n      \"inputType\": \""
+      },
+      "tokens_used": 9048,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"A batch processing tool that updates the material or grade of beams and sheets within a selected element based on 15 configurable mapping rules.\",\n    \"category\": \"DataManagement\",\n    \"typicalUseCase\": \"Used to change specifications for sheeting materials (e.g., swapping OSB for Fermacell) or timber grades across an entire wall or floor assembly, with options to filter changes by beam code.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"sSetMaterialTo\",\n      \"technicalDefault\": \"|Material|\",\n      \"businessMeaning\": \"Selects the target attribute to update on the structural members.\",\n      \"validRange\": \"|Material|, |Grade|\",\n      \"unit\": \"Enumeration\",\n      \"affectsOutput\": \"Determines if the script writes to the 'Material' property or the 'Grade' property of the beams and sheets.\"\n    },\n    {\n      \"name\": \"sMat1\" ... \"sMat15\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"The new value to assign to the selected attribute. These are grouped into 15 sets, allowing for complex logic (e.g., Set 1: Studs -> C24, Set 2: Plates -> C24).\",\n      \"validRange\": \"Standard catalog material names (e.g., Fermacell, OSB, Spano, Multiplex, V313, etc.)\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Directly sets the data field on the beam/sheet entity.\"\n    },\n    {\n      \"name\": \"sBmCode1\" ... \"sBmCode15\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"An optional filter list of beamcodes. If provided, the script only updates entities whose beamcode appears in this list. If left blank, the script uses the entity's *current* material name to decide which 'Mat' rule to apply.\",\n      \"validRange\": \"Semicolon-separated list of beamcodes (e.g., 'WAL;FLR;RIM')\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Filters which entities are updated. It adds a preference for beamcode matching over material name matching.\"\n    }\n  ],\n  \"parameterDependencies\": [\n    {\n      \"trigger\": \"sBmCodeX (where X is 1-15) contains text\",\n      \"effect\": \"The script prioritizes updating only beams that match these codes, ignoring the 'current material' check for those specific beams.\",\n      \"cascade\": []\n    },\n    {\n      \"trigger\": \"sBmCodeX is empty\",\n      \"effect\": \"The script attempts to match the beam's *current* material to a predefined list (Fermacell, OSB, etc.) to determine if it should be updated.\",\n      \"cascade\": []\n    }\n  ],\n  \"outputEntities\": [\n    {\n      \"type\": \"GenBeam/Sheet Attribute\",\n      \"description\": \"Updates the Material or Grade field of existing geometric entities.\",\n      \"appliedTo\": \"Beams and Sheets belonging to the selected Element(s).\"\n    }\n  ]\n}\n```"
+      },
+      "tokens_used": 6225,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution begins",
+          "System checks for recursion (insertCycleCount > 1)",
+          "System checks if an Execute Key (Catalog Preset) was used",
+          "[Conditional] If no Execute Key, Properties Dialog is displayed for user configuration",
+          "User is prompted to select one or more Elements",
+          "Script removes any existing instances of itself attached to the selected Elements",
+          "Script creates a new 'Satellite' instance of itself attached to each selected Element",
+          "Script transfers current property settings to the Satellite instances",
+          "Master instance erases itself",
+          "Satellite instance initializes and inherits properties from Master",
+          "Satellite validates attachment to an Element",
+          "Satellite retrieves all GenBeams (Beams and Sheets) from the host Element",
+          "Loop: For each entity, determine type (Sheet vs Beam)",
+          "Loop: Apply Material or Grade based on matching logic",
+          "Satellite reports the total number of entities changed",
+          "Satellite instance erases itself"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Configuration Source",
+            "path1": {
+              "name": "Execute Key Used",
+              "steps": [
+                "Properties are loaded from the specified catalog entry immediately",
+                "Properties Dialog is skipped"
+              ]
+            },
+            "path2": {
+              "name": "Manual Insert",
+              "steps": [
+                "Properties Dialog appears",
+                "User manually selects 'Material' or 'Grade' and defines the 15 mapping sets"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Processing Logic",
+            "path1": {
+              "name": "Entity is a Sheet",
+              "steps": [
+                "Check if Sheet's current material name exists in the predefined Material list",
+                "If match found, set the new Material (or Grade)"
+              ]
+            },
+            "path2": {
+              "name": "Entity is a Beam",
+              "steps": [
+                "Priority 1: Check if Beam's BeamCode exists in the user-defined 'Beamcode' list (Sets 1-15)",
+                "If BeamCode match found: Update attribute and stop processing this beam",
+                "Priority 2 (If no BeamCode match): Check if Beam's current material exists in the predefined Material list",
+                "If Material match found: Update attribute"
+              ]
+            }
+          },
+          {
+            "condition": "Target Attribute",
+            "path1": {
+              "name": "Set to Material",
+              "steps": [
+                "Script updates the 'Material' field of the matching entities"
+              ]
+            },
+            "path2": {
+              "name": "Set to Grade",
+              "steps": [
+                "Script updates the 'Grade' field of the matching entities"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insertion Recursion",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script automatically erases itself if `insertCycleCount() > 1` to prevent infinite loops during regeneration."
+          },
+          {
+            "check": "Element Validity",
+            "errorMessage": "None (Silent)",
+            "recovery": "If `_Element.length() == 0` or the element is invalid, the Satellite instance erases itself immediately."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Script Self-Destruction",
+            "how": "Automatic upon completion",
+            "effect": "Both the Master and Satellite instances erase themselves from the drawing immediately after updating the beam/sheet data. The script does not remain in the model."
+          }
+        ]
+      },
+      "tokens_used": 8515,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_G-SetMaterial.mcr\n\n## Overview\nThis script is a batch processing tool that updates the **Material** or **Grade** properties of beams and sheets within selected Elements. It allows for up to 15 specific mapping rules, enabling you to swap materials (e.g., changing all OSB sheets to Fermacell) or update grades based on beam codes or existing material names.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D model elements. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | Not applicable for 2D drawings. |\n\n## Prerequisites\n- **Required Entities**: You must have at least one **Element** (Wall, Floor, Roof, etc.) in the drawing containing beams or sheets.\n- **Minimum Beams**: 0 (The script handles empty elements gracefully).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nRun the following command in the AutoCAD command line:\n```\nCommand: TSLINSERT\n```\nIn the file dialog, select `HSB_G-SetMaterial.mcr` and click **Open**.\n\n### Step 2: Configure Properties\nThe **Properties Palette** will appear automatically. Configure the mapping rules before selecting elements:\n1.  **Set material to**: Choose whether to update the `Material` property or the `Grade` property of the beams/sheets.\n2.  **Material Sets (Mat 1 - Mat 15)**: Enter the new material/grade name you want to assign (e.g., \"C24\", \"Fermacell\", \"Kerto\").\n3.  **BeamCode Sets (BmCode 1 - BmCode 15)**: (Optional) Enter specific beam codes to target.\n    *   *Example*: If `Mat 1` is \"C24\" and `BmCode 1` is \"Stud\", all beams with code \"Stud\" will be set to grade \"C24\".\n    *   If left blank, the script uses the *current* material of the beam to decide if it should be updated.\n\n### Step 3: Select Elements\nOnce properties are set, the command line will prompt:\n```\nCommand Line: |Select one or more elements|\nAction: Click on the desired Wall, Floor, or Roof elements in the model view. Press Enter to confirm selection.\n```\n\n### Step 4: Processing\nThe script will automatically attach to the selected elements, update the beam/sheet data according to your rules, and then **erase itself** from the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Set material to** | Dropdown | Material | Determines if the script updates the **Material** or the **Grade** property of the entities. |\n| **Mat 1** to **Mat 15** | String | *Empty* | The target value (name of material or grade) to apply. This works in conjunction with the BeamCode filter or the current material name. |\n| **BmCode 1** to **BmCode 15** | String | *Empty* | A filter list of beam codes (e.g., `STUD;PLATE`). If filled, the script only updates entities matching these codes. Separate multiple codes with a semicolon. |\n\n## Right-Click Menu Options\nThis script does not create a persistent menu entry, as it automatically erases itself immediately after execution.\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A.\n- **Purpose**: The script relies entirely on user input via the Properties Palette.\n\n## Tips\n- **BeamCode Priority**: If you enter text in a `BmCode` field, the script prioritizes matching the BeamCode over the existing material name. Use this to force specific structural members (like top plates) to a certain grade, regardless of what they were previously.\n- **Multiple BeamCodes**: You can target multiple beam types in one rule by separating them with semicolons (e.g., `WAL;FLR;RIM`).\n- **Batch Swapping**: To swap all sheets of one type to another (e.g., OSB to Fermacell), leave the `BmCode` fields empty. The script will automatically match the entity's *current* material to determine if it needs updating (based on internal logic for common sheeting types).\n- **Verification**: Since the script deletes itself after running, check the **Properties Palette** of a few beams/sheets in the element to verify the changes were applied successfully.\n\n## FAQ\n- **Q: I ran the script, selected elements, but nothing seemed to happen. Did it work?**\n  - A: The script is designed to erase itself after completion. Check the command line history or select a beam/sheet and look at its Properties to see if the Material or Grade has changed.\n- **Q: How do I change the material of only the \"Studs\" and not the \"Plates\"?**\n  - A: In the Properties Palette, enter `STUD` (or your specific stud code) into `BmCode 1` and your desired material into `Mat 1`. Leave the other sets empty.\n- **Q: Can I use this script to rename materials?**\n  - A: Yes, simply set `sSetMaterialTo` to \"Material\" and define the mappings. Note that the mapping logic relies on recognizing the current material name or beam code."
+      },
+      "tokens_used": 5550,
+      "error": null
+    }
+  }
+}

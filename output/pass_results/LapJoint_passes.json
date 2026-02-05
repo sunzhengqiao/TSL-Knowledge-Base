@@ -1,0 +1,393 @@
+{
+  "filename": "LapJoint.mcr",
+  "status": "completed",
+  "total_tokens": 40256,
+  "processing_time": 188.33017420768738,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 4,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl creates a lap joint between two beams",
+        "versionHistory": [
+          {
+            "version": "1.4",
+            "date": "28.01.2022",
+            "author": "Thorsten Huck",
+            "changes": "HSB-14531 automatic element assignment if main beam belongs to element"
+          },
+          {
+            "version": "1.3",
+            "date": "16.12.2021",
+            "author": "Thorsten Huck",
+            "changes": "HSB-14184 new property 'max female depth' which might adjust axis offset to ensure a max tooling depth"
+          },
+          {
+            "version": "1.2",
+            "date": "25.11.2021",
+            "author": "Thorsten Huck",
+            "changes": "HSB-13609 group assignment added"
+          },
+          {
+            "version": "1.1",
+            "date": "16.11.2021",
+            "author": "Thorsten Huck",
+            "changes": "HSB-13609 default orientation swapped"
+          },
+          {
+            "version": "1.0",
+            "date": "22.10.2021",
+            "author": "Thorsten Huck",
+            "changes": "HSB-13609 initial version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6555,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses getBeam() to select GenBeam entities, performs 3D geometric calculations using Body and PlaneProfile, and applies physical tooling (BeamCut) via bm.addTool(). No ShopDrawing (sd_) functions, Viewport logic, or #Type E directives found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5114,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getBeam",
+              "promptOriginal": "Select male beam",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getBeam",
+              "promptOriginal": "Select female beam",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "Insertion (if no execution key provided)",
+            "title": null,
+            "dataSource": "Script Properties (OPM)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dAxisOffset",
+            "type": "PropDouble",
+            "displayName": "Axis Offset",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": "General",
+            "description": "Defines the Axis Offset"
+          },
+          {
+            "index": 3,
+            "variable": "dMaxFemaleDepth",
+            "type": "PropDouble",
+            "displayName": "Max. Female Depth",
+            "defaultValue": 110,
+            "inputType": "number",
+            "options": [],
+            "category": "General",
+            "description": "Defines a maximal depth of the female beamcut which will auto adjust the axis offset. |0 = disabled|"
+          },
+          {
+            "index": 1,
+            "variable": "dGapMale",
+            "type": "PropDouble",
+            "displayName": "Male",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": "Gaps",
+            "description": "Defines the side gap of the male beam"
+          },
+          {
+            "index": 2,
+            "variable": "dGapFemale",
+            "type": "PropDouble",
+            "displayName": "Female",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": "Gaps",
+            "description": "Defines the side gap of the female beam"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "Swap Sides",
+            "handler": "Swap Sides",
+            "action": "Swaps beam array indices (0 and 1) and recalculates",
+            "alsoTriggeredBy": "Double-click"
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 5666,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the creation of a lap joint (cross joint) between two timber beams, generating the necessary pocket and trimming cuts.",
+          "category": "Joinery/Machining",
+          "typicalUseCase": "Connecting cross beams in roof structures, frames, or bracing where beams intersect and need to be interlocked for stability."
+        },
+        "parameters": [
+          {
+            "name": "dAxisOffset",
+            "technicalDefault": 0,
+            "businessMeaning": "Moves the entire joint assembly vertically (relative to the main beam axis) to control the alignment of the intersection. It allows shifting the joint to be centered, flush top, or flush bottom based on design requirements.",
+            "validRange": "-50% to +50% of the main beam height",
+            "unit": "mm",
+            "affectsOutput": "Shifts the Z-height of both the pocket in the female beam and the notch/trim on the male beam."
+          },
+          {
+            "name": "dMaxFemaleDepth",
+            "technicalDefault": 110,
+            "businessMeaning": "A safety limit for the maximum depth of the pocket cut into the female beam. If the calculated joint exceeds this depth, the script automatically adjusts the Axis Offset to bring the cut within this limit, preventing structural weakening or machining errors.",
+            "validRange": "0 (disabled) to maximum beam depth",
+            "unit": "mm",
+            "affectsOutput": "Constrains the depth of the pocket; indirectly forces the Axis Offset to change if the default intersection is too deep."
+          },
+          {
+            "name": "dGapMale",
+            "technicalDefault": 0,
+            "businessMeaning": "The clearance (play) added to the width of the pocket cut in the female beam to accommodate the male beam. This ensures the male beam fits easily into the pocket.",
+            "validRange": "0 to 5 mm (typical construction tolerances)",
+            "unit": "mm",
+            "affectsOutput": "Widens the slot cut in the female beam (perpendicular to the male beam's length)."
+          },
+          {
+            "name": "dGapFemale",
+            "technicalDefault": 0,
+            "businessMeaning": "The clearance (play) added to the width of the notch/trim cut on the male beam to accommodate the thickness of the female beam.",
+            "validRange": "0 to 5 mm",
+            "unit": "mm",
+            "affectsOutput": "Widens the cut on the male beam (perpendicular to the female beam's length)."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User moves the Script Grip Point (_Pt0) or changes dMaxFemaleDepth",
+            "effect": "The Axis Offset (dAxisOffset) is recalculated. If dMaxFemaleDepth is active and the cut is too deep, the Offset is automatically adjusted to reduce the cut depth to the limit.",
+            "cascade": [
+              "dAxisOffset"
+            ]
+          },
+          {
+            "trigger": "User selects 'Swap Sides'",
+            "effect": "The internal indices of the selected beams are swapped. The Male beam becomes Female and vice versa.",
+            "cascade": [
+              "_Beam[0]",
+              "_Beam[1]"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "BeamCut",
+            "description": "A rectangular pocket or slot cut into the female beam to receive the male beam.",
+            "appliedTo": "The second selected beam (Beam 1 / Female), unless 'Swap Sides' is used."
+          },
+          {
+            "type": "BeamCut",
+            "description": "An end trim and side reduction (notch) on the male beam to fit into the female beam's pocket.",
+            "appliedTo": "The first selected beam (Beam 0 / Male), unless 'Swap Sides' is used."
+          },
+          {
+            "type": "Display",
+            "description": "Visual representation of the connection face and tooling extents in the CAD model.",
+            "appliedTo": "Model Space (visual only)"
+          }
+        ]
+      },
+      "tokens_used": 8169,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script execution starts",
+          "2. [Conditional] Check Execution Key: If valid catalog key exists, load properties; otherwise, show standard Properties Dialog (showDialog)",
+          "3. Prompt user: Select Male Beam (getBeam)",
+          "4. Prompt user: Select Female Beam (getBeam)",
+          "5. Validate Selections: Check if beam count is sufficient and vectors are not parallel",
+          "6. Calculate Intersection: Determine reference point (ptRef) and align coordinate system (vecX, vecY, vecZ)",
+          "7. Check Input Changes: If Script Grip Point (_Pt0) was moved, update dAxisOffset based on new Z-location",
+          "8. Check Offset Limits: Ensure dAxisOffset is not >= 50% of beam height (reset to 0 if invalid)",
+          "9. Calculate Common Range: Generate shadow profiles to determine intersection area",
+          "10. [Conditional] Auto-Adjust Axis Offset: If female cut depth exceeds dMaxFemaleDepth, calculate required offset adjustment and update dAxisOffset",
+          "11. Generate Tooling: Create BeamCut for Female beam (pocket) and Male beam (notch) including defined gaps",
+          "12. Update Visuals: Draw intersection face and tooling extents"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion method (Catalog vs Manual)",
+            "path1": {
+              "name": "Catalog Insert",
+              "steps": [
+                "Script detects _kExecuteKey",
+                "Properties loaded from catalog entry",
+                "User skips dialog, proceeds directly to beam selection"
+              ]
+            },
+            "path2": {
+              "name": "Manual Insert",
+              "steps": [
+                "No catalog key detected",
+                "showDialog() displays Properties Palette",
+                "User reviews/changes settings, clicks OK",
+                "Proceeds to beam selection"
+              ]
+            }
+          },
+          {
+            "condition": "Post-Insertion Modification Trigger",
+            "path1": {
+              "name": "Swap Sides",
+              "steps": [
+                "User selects 'Swap Sides' from context menu or Double-Clicks",
+                "Script executes addRecalcTrigger",
+                "_Beam array indices are swapped (Male becomes Female and vice versa)",
+                "setExecutionLoops(2) forces immediate recalculation"
+              ]
+            },
+            "path2": {
+              "name": "Property/Grip Edit",
+              "steps": [
+                "User modifies Property (e.g., Gaps, Max Depth) or drags Grip Point",
+                "Script detects change via _kNameLastChangedProp or _Pt0 location",
+                "Calculations updated without swapping beam roles"
+              ]
+            }
+          },
+          {
+            "condition": "Max Female Depth Constraint",
+            "path1": {
+              "name": "Depth Exceeds Limit",
+              "steps": [
+                "Calculated female cut depth > dMaxFemaleDepth",
+                "Script calculates difference (dDiff)",
+                "dAxisOffset is adjusted by dDiff to reduce cut depth",
+                "Message reported to user (if not initial DB creation)"
+              ]
+            },
+            "path2": {
+              "name": "Depth Within Limit",
+              "steps": [
+                "Calculated female cut depth <= dMaxFemaleDepth (or setting is 0)",
+                "dAxisOffset remains unchanged (user-defined value used)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script erases itself if insertCycleCount() > 1 to prevent duplicate instances."
+          },
+          {
+            "check": "Beam Parallelism",
+            "errorMessage": "Parallel connections are not supported yet, Tool will be deleted.",
+            "recovery": "User must select two non-parallel beams and re-insert the script."
+          },
+          {
+            "check": "Geometric Intersection (Line/Plane)",
+            "errorMessage": "Invalid selection set or orientation, Tool will be deleted.",
+            "recovery": "Ensure the two beams physically cross each other in 3D space."
+          },
+          {
+            "check": "Profile Intersection Area",
+            "errorMessage": "Beams do not intersect Tool will be deleted.",
+            "recovery": "Verify beams overlap in length and width dimensions."
+          },
+          {
+            "check": "Axis Offset Limits",
+            "errorMessage": "Axis Offset may not be >= 50% of the male beam height.",
+            "recovery": "Script automatically resets dAxisOffset to 0."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Adjust Joint Vertical Position",
+            "how": "Drag Script Grip Point (_Pt0) or edit 'Axis Offset' property in OPM",
+            "effect": "Moves the lap joint up or down relative to the male beam axis, within +/- 50% beam height."
+          },
+          {
+            "action": "Swap Male/Female Roles",
+            "how": "Context Menu 'Swap Sides' or Double-Click the script instance",
+            "effect": "The pocket and notch switch beams; Beam 0 becomes Female (pocket) and Beam 1 becomes Male (notch)."
+          },
+          {
+            "action": "Modify Clearances",
+            "how": "Edit 'Male' and 'Female' gap properties in OPM",
+            "effect": "Increases the width of the cuts to allow for tolerance/play."
+          },
+          {
+            "action": "Restrict Cut Depth",
+            "how": "Edit 'Max. Female Depth' property in OPM",
+            "effect": "If enabled (>0), forces the Axis Offset to change automatically to ensure the pocket depth does not exceed this value."
+          }
+        ]
+      },
+      "tokens_used": 8715,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# LapJoint.mcr\n\n## Overview\nAutomates the creation of a lap joint (cross joint) between two intersecting timber beams. It generates a pocket cut in the female beam and a corresponding notch on the male beam.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates in 3D model space. |\n| Paper Space | No | Not supported for 2D layouts. |\n| Shop Drawing | No | Does not generate 2D views directly. |\n\n## Prerequisites\n- **Required entities**: 2 GenBeams (structural timber beams).\n- **Minimum beam count**: 2 (must intersect physically and cannot be parallel).\n- **Required settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `LapJoint.mcr` from the file browser.\n\n### Step 2: Select Male Beam\n```\nCommand Line: Select male beam\nAction: Click the beam that you want to notch (the end will be cut to fit into the other beam).\n```\n\n### Step 3: Select Female Beam\n```\nCommand Line: Select female beam\nAction: Click the intersecting beam that you want to create the pocket (slot) in.\n```\n\n### Step 4: Configure Properties (If applicable)\n```\nAction: If you are not inserting from a predefined catalog entry, the Properties Palette will appear.\nAdjust settings such as Axis Offset or Gaps if necessary, then press OK.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Axis Offset | Number | 0 | Moves the entire joint assembly vertically relative to the male beam's axis. Use to center the joint or align it to the top/bottom. |\n| Max. Female Depth | Number | 110 | Limits the maximum depth of the pocket cut in the female beam. If the joint is deeper than this, the script automatically adjusts the Axis Offset. Set to 0 to disable. |\n| Male (Gap) | Number | 0 | Adds clearance (gap) to the width of the male beam notch to ensure it fits easily into the pocket. |\n| Female (Gap) | Number | 0 | Adds clearance (gap) to the width of the female beam pocket. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Swap Sides | Swaps the roles of the two beams. The Male beam becomes the Female beam (receives the pocket) and the Female beam becomes the Male beam (receives the notch). This can also be triggered by double-clicking the script instance. |\n\n## Settings Files\n- No specific settings files are required for this script.\n\n## Tips\n- **Visual Adjustment**: After insertion, select the script and drag the **Grip Point** (square handle at the intersection) to visually adjust the vertical position of the joint.\n- **Prevent Deep Cuts**: Use the **Max. Female Depth** property if you are worried about structural integrity. The script will automatically shift the joint up or down to keep the cut within the safe limit.\n- **Parallel Beams**: The script does not support parallel beams. If selected by mistake, the script will delete itself.\n- **Gap Tolerance**: Add a small value (e.g., 1-2mm) to the Gap properties if you need to account for painting thickness or easier assembly.\n\n## FAQ\n- **Q: I selected the wrong beam as the \"Male\" beam. Do I need to delete and start over?**\n  - A: No. Simply double-click the script instance or right-click and select \"Swap Sides\" to invert the roles of the beams.\n- **Q: Why did the joint move automatically after I changed the beam size?**\n  - A: If you have a value set for \"Max. Female Depth,\" the script automatically adjusts the \"Axis Offset\" to ensure the pocket does not cut too deep into the beam.\n- **Q: The script disappeared after I selected the beams.**\n  - A: This usually happens if the beams are parallel or do not physically intersect in 3D space. Check your geometry and try again."
+      },
+      "tokens_used": 6037,
+      "error": null
+    }
+  }
+}

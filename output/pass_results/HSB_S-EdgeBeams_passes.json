@@ -1,0 +1,458 @@
+{
+  "filename": "HSB_S-EdgeBeams.mcr",
+  "status": "completed",
+  "total_tokens": 52186,
+  "processing_time": 279.9581241607666,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 7,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "16.01.2015",
+            "author": "AS",
+            "changes": "Pilot version"
+          },
+          {
+            "version": "1.01",
+            "date": "18.03.2015",
+            "author": "AS",
+            "changes": "Extend beam properties. Add option to join the edges. (FogBugzId 940)."
+          },
+          {
+            "version": "1.02",
+            "date": "19.06.2015",
+            "author": "AS",
+            "changes": "Support 4 beams. Add options to extend beams in length. Add panelstop options. (FogBugzId 940)."
+          },
+          {
+            "version": "1.03",
+            "date": "19.06.2015",
+            "author": "AS",
+            "changes": "Add option to erase existing beams at the specified edge."
+          },
+          {
+            "version": "1.04",
+            "date": "19.06.2015",
+            "author": "AS",
+            "changes": "Only remove duplicate if tsl is applied with the same edge code."
+          },
+          {
+            "version": "1.05",
+            "date": "29.06.2015",
+            "author": "RP",
+            "changes": "Only remove beams when beam belongs to edge code."
+          },
+          {
+            "version": "1.06",
+            "date": "03.07.2017",
+            "author": "RP",
+            "changes": "Make Panelstops Static and remove tsl after execution."
+          },
+          {
+            "version": "1.07",
+            "date": "01.03.2018",
+            "author": "RP",
+            "changes": "Add option to stop beams in opening"
+          },
+          {
+            "version": "1.8",
+            "date": "21/06/2021",
+            "author": "Robert Pol",
+            "changes": "Fix bug where incorrect opening was used to create the beams and sheets"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8630,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script directly generates 3D Beam and Sheet entities via dbCreate and performs geometric calculations using Point3d and Vector3d classes. It operates on Element and SipEdge objects in the 3D model. No ShopDrawing specific patterns (#Type E), sd_ prefixes, or Viewport manipulations are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "SipEdge"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing Elements with valid Edge details.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5989,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10354,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates structural timber beams or sheets along specific edges of wall panels (SIPs or Timber Frame) to create connections for floors or roofs, with optional panel recesses.",
+          "category": "Framing",
+          "typicalUseCase": "Applying rim beams, ribbon joists, or ledger boards to the perimeter of structural insulated panels (SIPs) to facilitate floor or roof connections."
+        },
+        "parameters": [
+          {
+            "name": "sApplyToSipEdge",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Filters which panel edges receive beams. Only edges assigned this specific detail code are processed.",
+            "validRange": "Any valid Edge Code string defined in the project catalog (e.g., 'R', 'L', 'F').",
+            "unit": "String",
+            "affectsOutput": "Determines the location for beam generation. No matching code means no beams are created."
+          },
+          {
+            "name": "sJoinEdges",
+            "technicalDefault": "\"|No|\"",
+            "businessMeaning": "Controls whether collinear edges of adjacent panels are treated as a single continuous edge for beam placement.",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "If 'Yes', a single beam spans across multiple joined panels. If 'No', individual beams are created per panel."
+          },
+          {
+            "name": "sUseOpeningInLengthCalculation",
+            "technicalDefault": "\"|No|\"",
+            "businessMeaning": "If enabled, trims the beam length to fit around the nearest window or door opening in the panel instead of running the full edge length.",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "Shortens the beam geometry to start/stop at the opening edges."
+          },
+          {
+            "name": "sDeleteExistingBeams",
+            "technicalDefault": "\"|Yes|\"",
+            "businessMeaning": "Automatically removes beams previously generated by this script for the same edge code before creating new ones.",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "Deletes existing Beam entities from the model to prevent duplication during updates."
+          },
+          {
+            "name": "dOffsetFromPanelFace[1-4]",
+            "technicalDefault": "U(0)",
+            "businessMeaning": "Shifts the beam laterally along the plane of the panel. Useful for aligning with internal studs or specific offsets.",
+            "validRange": "-500mm to 500mm",
+            "unit": "mm",
+            "affectsOutput": "Moves the beam position left/right relative to the panel edge."
+          },
+          {
+            "name": "dOffsetFromEdge[1-4]",
+            "technicalDefault": "U(0)",
+            "businessMeaning": "Shifts the beam in or out relative to the panel surface. E.g., setting a ledger board off the face of the sheathing.",
+            "validRange": "-500mm to 500mm",
+            "unit": "mm",
+            "affectsOutput": "Moves the beam position perpendicular to the panel face."
+          },
+          {
+            "name": "dOffsetStartOfEdge[1-4]",
+            "technicalDefault": "U(0)",
+            "businessMeaning": "Trims (positive) or extends (negative) the beam at the start end of the edge.",
+            "validRange": "-2000mm to 2000mm",
+            "unit": "mm",
+            "affectsOutput": "Modifies the start point of the beam geometry."
+          },
+          {
+            "name": "dOffsetEndOfEdge[1-4]",
+            "technicalDefault": "U(0)",
+            "businessMeaning": "Trims (positive) or extends (negative) the beam at the end end of the edge.",
+            "validRange": "-2000mm to 2000mm",
+            "unit": "mm",
+            "affectsOutput": "Modifies the end point of the beam geometry."
+          },
+          {
+            "name": "dBeamOnPanel[1-4]",
+            "technicalDefault": "U(44)",
+            "businessMeaning": "The dimension of the beam measured perpendicular to the panel face (thickness of the rim joist)",
+            "validRange": "30mm to 300mm",
+            "unit": "mm",
+            "affectsOutput": "Defines the cross-sectional width of the beam."
+          },
+          {
+            "name": "dBeamFromPanel[1-4]",
+            "technicalDefault": "U(44)",
+            "businessMeaning": "The dimension of the beam measured parallel to the panel face (height of the rim joist)",
+            "validRange": "45mm to 600mm",
+            "unit": "mm",
+            "affectsOutput": "Defines the cross-sectional height of the beam."
+          },
+          {
+            "name": "sApplyPanelStop[1-4]",
+            "technicalDefault": "\"|No|\"",
+            "businessMeaning": "Creates a recess in the panel material so the beam sits flush against the structural framing (e.g., removing SIP foam for a nailer).",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "Adds a static Pocket/Slot machining operation to the host panel."
+          },
+          {
+            "name": "sBeamType[1-4]",
+            "technicalDefault": "(BeamTypes list)",
+            "businessMeaning": "Classifies the beam for reporting and material lists (e.g., Rim Joist, Ledger, Blocking)",
+            "validRange": "Project-defined Beam Types",
+            "unit": "Enum",
+            "affectsOutput": "Sets the entity type property used in listings and BIM data."
+          },
+          {
+            "name": "nDetailCodeColor",
+            "technicalDefault": "7",
+            "businessMeaning": "Display color for the edge detail markers.",
+            "validRange": "0-255",
+            "unit": "Index",
+            "affectsOutput": "Visual representation in CAD."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dBeamOnPanel > dBeamFromPanel",
+            "effect": "Script automatically swaps values to ensure 'OnPanel' corresponds to cross-sectional width.",
+            "cascade": [
+              "dBeamOnPanel",
+              "dBeamFromPanel"
+            ]
+          },
+          {
+            "trigger": "sJoinEdges is Yes",
+            "effect": "Merges collinear panel edges, calculating beam length across multiple panels.",
+            "cascade": [
+              "dOffsetStartOfEdge",
+              "dOffsetEndOfEdge",
+              "Beam Geometry"
+            ]
+          },
+          {
+            "trigger": "sUseOpeningInLengthCalculation is Yes",
+            "effect": "Overrides full edge length with distance between opening edges.",
+            "cascade": [
+              "Beam Length",
+              "Beam Position"
+            ]
+          },
+          {
+            "trigger": "sApplyPanelStop is Yes",
+            "effect": "Calculates intersection of beam envelope with panel body and subtracts volume.",
+            "cascade": [
+              "Panel Tooling/Machining"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam",
+            "description": "Solid timber element placed along the selected edge.",
+            "appliedTo": "Element Group (Model Space)."
+          },
+          {
+            "type": "Sheet",
+            "description": "Sheet material element placed along the selected edge (if type is Sheeting).",
+            "appliedTo": "Element Group (Model Space)."
+          },
+          {
+            "type": "PanelStop",
+            "description": "Static machining (Pocket) on the panel to accommodate the beam.",
+            "appliedTo": "Host Element/Sip panels."
+          }
+        ]
+      },
+      "tokens_used": 9360,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Launch Script from Catalog or Palette",
+          "Selection Phase: User selects Elements (SIP panels)",
+          "Script reads Properties (sApplyToSipEdge, sDeleteExistingBeams, Beam Configs 1-4)",
+          "Loop through selected Elements",
+          "Filter Edges: Identify SipEdges matching 'sApplyToSipEdge' code",
+          "Conditional: Delete Existing Beams (if sDeleteExistingBeams is Yes)",
+          "Edge Joining Logic: Group collinear edges into continuous segments (if sJoinEdges is Yes)",
+          "Loop through each Edge Segment",
+          "Calculate Geometry: Determine Start/End points, Length, and Orientation",
+          "Conditional: Opening Override (if sUseOpeningInLengthCalculation is Yes)",
+          "Loop through 4 Beam Configurations",
+          "Check validity of Beam dimensions (Width/Height/Length > 0)",
+          "Calculate Position based on offsets (Panel face, Edge, Start/End)",
+          "Cross-section Swap: Ensure Width <= Height",
+          "Entity Creation: Generate Sheet or Beam based on sBeamType",
+          "Assign Properties: Material, Color, Codes, Labels, etc.",
+          "Assign to Element Group",
+          "Conditional: Create Panel Stop (if sApplyPanelStop is Yes)",
+          "Completion: Erase Script Instance (eraseInstance)",
+          "Exit"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "sDeleteExistingBeams is 'Yes'",
+            "path1": {
+              "name": "Delete Beams",
+              "steps": [
+                "Find beams assigned to the Element",
+                "Check if beam name matches or if it belongs to the specific edge code",
+                "Erase matched beams"
+              ]
+            },
+            "path2": {
+              "name": "Keep Beams",
+              "steps": [
+                "Skip deletion logic"
+              ]
+            }
+          },
+          {
+            "condition": "sJoinEdges is 'Yes'",
+            "path1": {
+              "name": "Join Edges",
+              "steps": [
+                "Identify collinear edges with matching detail codes",
+                "Sort endpoints to create a single continuous segment",
+                "Calculate total length from furthest points"
+              ]
+            },
+            "path2": {
+              "name": "Individual Edges",
+              "steps": [
+                "Process each edge independently",
+                "Create separate beam for each panel edge"
+              ]
+            }
+          },
+          {
+            "condition": "sUseOpeningInLengthCalculation is 'Yes'",
+            "path1": {
+              "name": "Opening Override",
+              "steps": [
+                "Find nearest opening on the panel",
+                "Set Beam Start Point to Opening Edge 1",
+                "Set Beam End Point to Opening Edge 2"
+              ]
+            },
+            "path2": {
+              "name": "Full Edge",
+              "steps": [
+                "Use the full geometric length of the edge segment"
+              ]
+            }
+          },
+          {
+            "condition": "dBeamOnPanel > dBeamFromPanel (Width vs Height)",
+            "path1": {
+              "name": "Swap Dimensions",
+              "steps": [
+                "Script automatically swaps Width and Height values",
+                "Rotates coordinate system vectors accordingly"
+              ]
+            },
+            "path2": {
+              "name": "Standard Orientation",
+              "steps": [
+                "Uses dimensions as defined"
+              ]
+            }
+          },
+          {
+            "condition": "nBeamType == _kSheeting",
+            "path1": {
+              "name": "Create Sheet",
+              "steps": [
+                "Instantiate Sheet entity",
+                "Set Sheet properties",
+                "Do not apply Panel Stop (Sheet logic typically bypasses solid machining)"
+              ]
+            },
+            "path2": {
+              "name": "Create Beam",
+              "steps": [
+                "Instantiate Beam entity",
+                "Set Beam properties",
+                "Check Panel Stop condition"
+              ]
+            }
+          },
+          {
+            "condition": "sApplyPanelStop is 'Yes' (and type is Beam)",
+            "path1": {
+              "name": "Apply Panel Stop",
+              "steps": [
+                "Create envelope body of the new beam",
+                "Intersect body with host panel",
+                "Add static PanelStop tool to panel"
+              ]
+            },
+            "path2": {
+              "name": "No Panel Stop",
+              "steps": [
+                "Skip panel machining"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "Script requires selection of Elements.",
+            "recovery": "User must select at least one Element (SIP panel) at the command line."
+          },
+          {
+            "check": "Edge Detail Code Existence",
+            "errorMessage": "Implicitly no action if 'sApplyToSipEdge' is empty or not found on elements.",
+            "recovery": "User sets 'sApplyToSipEdge' to a valid code present in the model."
+          },
+          {
+            "check": "Beam Dimensions (dlBm * dwBm * dhBm <= 0)",
+            "errorMessage": "None (Script skips creation silently).",
+            "recovery": "User must ensure dBeamOnPanel and dBeamFromPanel are non-zero values."
+          },
+          {
+            "check": "Collinearity Check",
+            "errorMessage": "None",
+            "recovery": "Script logic filters non-collinear edges if sJoinEdges is active."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Parameter Update",
+            "how": "Properties Palette (OPM)",
+            "effect": "Script recalculates geometry. Note: The script calls eraseInstance() at the end, effectively making it a 'run-once' generator unless the TSL logic is modified to persist for updates (in this specific script flow, it erases itself, so updates require re-running or re-inserting the TSL)."
+          },
+          {
+            "action": "Edit Entity",
+            "how": "Grip Edit / Direct CAD Modify on generated Beams",
+            "effect": "Modifies the individual Beam or Sheet entity. The TSL link is broken after instance erasure."
+          }
+        ]
+      },
+      "tokens_used": 10169,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_S-EdgeBeams\n\n## Overview\nThis script automatically generates structural timber beams or sheets along specific edges of wall panels (SIPs or Timber Frame). It is designed to create rim joists, ribbon joists, or ledger boards, with options to join edges, trim for openings, and create panel recesses.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script generates 3D Beam and Sheet entities. |\n| Paper Space | No | Not applicable for 3D generation. |\n| Shop Drawing | No | Generates model elements only. |\n\n## Prerequisites\n- **Required Entities**: Elements (Wall Panels) with valid SipEdge details assigned.\n- **Minimum Beam Count**: 0.\n- **Required Settings Files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Select `HSB_S-EdgeBeams.mcr` from the catalog browser.\n\n### Step 2: Select Panels\n```\nCommand Line: Select elements:\nAction: Click on the wall panels (Elements) you wish to process and press Enter.\n```\n\n### Step 3: Configure Properties\nAction: With the script instance selected (or immediately after insertion), open the **Properties Palette** (Ctrl+1). Set the `sApplyToSipEdge` to match the edge code on your panels (e.g., \"F\", \"L\", \"R\") and adjust beam dimensions.\n\n### Step 4: Execution\nAction: The script will automatically calculate geometry, generate the beams/sheets, apply any machining (Panel Stops), and then **erase itself** from the drawing, leaving only the new beams.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sApplyToSipEdge | String | \"\" | The edge detail code to process (e.g., \"R\"). Beams are only created on edges with this code. |\n| sJoinEdges | Enum | No | If \"Yes\", connects collinear edges of adjacent panels to create one continuous beam. |\n| sUseOpeningInLengthCalculation | Enum | No | If \"Yes\", trims the beam length to fit between the nearest window or door opening. |\n| sDeleteExistingBeams | Enum | Yes | If \"Yes\", removes beams previously created by this script for the same edge code before generating new ones. |\n| nDetailCodeColor | Integer | 7 | The display color for the edge detail markers. |\n\n### Beam Configuration (Sets 1-4)\nThe script contains 4 independent configuration sets (1-4) allowing multiple beams per edge.\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sBeamType[1-4] | Enum | (List) | The classification of the beam (e.g., Rim Joist, Ledger). |\n| dBeamOnPanel[1-4] | Double | 44 mm | The width of the beam (perpendicular to the panel face). |\n| dBeamFromPanel[1-4] | Double | 44 mm | The height of the beam (parallel to the panel face). |\n| dOffsetFromPanelFace[1-4] | Double | 0 mm | Shifts the beam left/right along the panel plane. |\n| dOffsetFromEdge[1-4] | Double | 0 mm | Shifts the beam in or out from the panel surface. |\n| dOffsetStartOfEdge[1-4] | Double | 0 mm | Extends (+) or trims (-) the beam at the start of the edge. |\n| dOffsetEndOfEdge[1-4] | Double | 0 mm | Extends (+) or trims (-) the beam at the end of the edge. |\n| sApplyPanelStop[1-4] | Enum | No | If \"Yes\", creates a recess (pocket) in the panel to accommodate the beam. |\n\n## Right-Click Menu Options\n*Note: This script acts as a \"generator\" and erases itself after execution. Therefore, there are no persistent script-specific context menu options for the generated elements. You can edit the resulting beams using standard hsbCAD beam editing tools.*\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Continuous Beams**: Enable `sJoinEdges` = \"Yes\" to ensure your rim beams stretch seamlessly across multiple wall panels without breaks.\n- **Automatic Swapping**: If you define a Width (`dBeamOnPanel`) that is larger than the Height (`dBeamFromPanel`), the script will automatically swap them to ensure correct cross-sectional orientation.\n- **Recesses for Insulation**: Use `sApplyPanelStop` = \"Yes\" if you need to rout out the SIP foam/core so the timber beam sits flush against the outer skins.\n- **Re-running**: To update the beams, simply re-run the script and select the panels. Ensure `sDeleteExistingBeams` is \"Yes\" to prevent duplicates.\n\n## FAQ\n- **Q: Why did the script disappear after I ran it?**\n  A: This is intentional. The script is a \"fire and forget\" generator. It creates the physical beams and sheets in the model and then removes its logical instance to keep your drawing clean.\n- **Q: Can I modify the beams after they are created?**\n  A: Yes. The beams are standard hsbCAD entities. You can grip-edit them, stretch them, or modify their properties manually in the Properties Palette.\n- **Q: My beams aren't appearing. What is wrong?**\n  A: Check the `sApplyToSipEdge` property. It must exactly match the edge code assigned to your wall panels. Also, verify that `dBeamOnPanel` and `dBeamFromPanel` are not set to 0."
+      },
+      "tokens_used": 7684,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,189 @@
+{
+  "filename": "HundeggerPbaModifier.mcr",
+  "status": "completed",
+  "total_tokens": 17358,
+  "processing_time": 228.63625073432922,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2083,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script is wrapped in an `if (_bOnMapIO)` block, indicating it is a MapIO plugin intended for batch processing or export phases, rather than direct execution in Model or Paper space. It accesses 'MasterPanel' entities through the `_Map` interface."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "MasterPanel"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "MapIO context (Background processing during export/production)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1381,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 1774,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A background processing script that automatically assigns a specific CNC machining strategy ('QualityHsbTest') to MasterPanels named 'special' during the Hundegger export process.",
+          "category": "CNC Export / Data Processing",
+          "typicalUseCase": "Used during the generation of PBA files for Hundegger machines to ensure specific panels use a higher quality or alternative machining algorithm without manual property editing."
+        },
+        "parameters": [
+          {
+            "name": "strNameTrigger",
+            "technicalDefault": "\"special\"",
+            "businessMeaning": "The filter name used to identify which MasterPanels require the modified export strategy. Users must name their panels this string in the model to trigger the change.",
+            "validRange": "Any text string valid for entity names in hsbCAD",
+            "unit": "string",
+            "affectsOutput": "Acts as a binary switch; if a MasterPanel matches this name, its export strategy is changed. If it doesn't match, the panel is exported normally."
+          },
+          {
+            "name": "BvxStrategyKey",
+            "technicalDefault": "\"QualityHsbTest\"",
+            "businessMeaning": "The specific identifier for the CNC machining strategy to be sent to the Hundegger machine. This likely dictates cutting speed, precision, or tool selection logic.",
+            "validRange": "Strings defined in the Hundegger machine configuration/HSB CAD export mappings (e.g., 'Standard', 'QualityHsbTest')",
+            "unit": "string",
+            "affectsOutput": "Directly modifies the PBA file data for the targeted panel, changing how the physical CNC machine processes that specific timber wall or panel."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "MasterPanel Name property matches strNameTrigger",
+            "effect": "The script overwrites the BvxStrategyKey in the export map.",
+            "cascade": [
+              "BvxStrategyKey"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Map Data (MasterPanel)",
+            "description": "Modifies the internal export map data for the MasterPanel, specifically updating the strategy attribute before PBA file generation.",
+            "appliedTo": "MasterPanel entities where the 'Name' property matches the trigger value."
+          }
+        ]
+      },
+      "tokens_used": 3443,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script is triggered automatically by the MapIO export process (e.g., Hundegger PBA generation)",
+          "Check if execution context is MapIO (_bOnMapIO)",
+          "Read current MasterPanel and ChildPanel data from the export Map",
+          "Iterate through the array of MasterPanels",
+          "Validate that the Map entry is a MasterPanel and the entity handle is valid",
+          "[Conditional] Compare the MasterPanel 'Name' property against the trigger string 'special'",
+          "If match found, overwrite the 'BvxStrategyKey' attribute in the Map data to 'QualityHsbTest'",
+          "Reassemble the Map data with modified MasterPanels and original ChildPanels",
+          "Write the modified Map data back to the export context",
+          "Write debug .dxx files (optional/development mode) and report completion"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "MasterPanel Name matches trigger string ('special')",
+            "path1": {
+              "name": "Modify Strategy",
+              "steps": [
+                "Identify MasterPanel with specific name",
+                "Update 'BvxStrategyKey' in the local Map instance to 'QualityHsbTest'",
+                "Append modified Map to the new MasterPanel array"
+              ]
+            },
+            "path2": {
+              "name": "Standard Export",
+              "steps": [
+                "Identify MasterPanel with different name",
+                "Leave 'BvxStrategyKey' unchanged in the local Map instance",
+                "Append unmodified Map to the new MasterPanel array"
+              ]
+            }
+          },
+          {
+            "condition": "MasterPanel Entity validity check",
+            "path1": {
+              "name": "Valid Entity",
+              "steps": [
+                "Cast Map entry to MasterPanel object",
+                "Proceed to Name comparison logic"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Entity",
+              "steps": [
+                "Log error message ('Could not read masterpanel...')",
+                "Skip current index in loop (continue)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Map Key equals 'MasterPanel'",
+            "errorMessage": "Key not recognized in MasterPanel[] at index: [i]",
+            "recovery": "Script logs the error and skips the current entry, continuing the loop."
+          },
+          {
+            "check": "Entity Handle points to a valid MasterPanel (bIsValid)",
+            "errorMessage": "Could not read masterpanel in MasterPanel[] at index: [i]",
+            "recovery": "Script logs the error and skips the current entry, continuing the loop."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 4053,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HundeggerPbaModifier.mcr\n\n## Overview\nThis is an automated background script (MapIO plugin) that modifies CNC export data during the Hundegger PBA generation process. It detects MasterPanels named \"special\" and assigns them a specific, high-quality machining strategy (\"QualityHsbTest\") automatically.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script runs in the background during the export phase. |\n| Paper Space | No | Not applicable for this export plugin. |\n| Shop Drawing | No | This script functions at the MapIO data level, not the drawing layout level. |\n\n## Prerequisites\n- **Required Entities**: `MasterPanel` entities (e.g., Wall Panels or Roof Panels).\n- **Minimum Beam Count**: N/A (Script processes panels).\n- **Required Settings**: Must be executed within a Hundegger PBA export configuration that calls this MapIO script.\n\n## Usage Steps\n\n### Step 1: Prepare Model\n- Open your project in hsbCAD.\n- Select the `MasterPanel` you wish to export with the special strategy.\n- Open the **Properties Palette** (Ctrl+1).\n- Change the **Name** property of the panel to exactly: `special`\n  - *Note: The script checks for this specific name to trigger the logic.*\n\n### Step 2: Execute Export\n- Run the Hundegger Export (PBA generation) as usual.\n- The script will automatically activate in the background.\n- It scans all panels; any named \"special\" will have their internal CNC strategy switched to \"QualityHsbTest\" before the file is written.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| *None* | *N/A* | *N/A* | This script has no user-editable parameters in the Properties Palette. Configuration is handled by naming the entities. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| *None* | This script does not add custom options to the right-click context menu. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: The script relies on hardcoded logic (`strNameTrigger` and `BvxStrategyKey`) defined within the `.mcr` file itself.\n\n## Tips\n- **Exact Naming**: Ensure the MasterPanel name is exactly \"special\" (case-sensitive) without extra spaces, or the script will not recognize it.\n- **No Manual Insertion**: You do not need to run `TSLINSERT` on this script in the drawing for it to work. It is triggered automatically by the export manager.\n- **Batch Processing**: This script works efficiently in batch exports, allowing you to mark multiple panels as \"special\" to have them all updated simultaneously during the export run.\n\n## FAQ\n- **Q: I changed the name to \"special\", but the PBA file doesn't look different. Why?**\n  - A: Ensure the Hundegger export configuration (in your Company or Project settings) actually includes this script in the MapIO chain. If the script isn't linked to the export process, it won't run.\n- **Q: Can I change the trigger name from \"special\" to something else?**\n  - A: Not via the interface. The name \"special\" is currently hardcoded inside the script. To change it, the script code would need to be edited by a developer.\n- **Q: Does this script modify the drawing geometry?**\n  - A: No. It only modifies the *data* sent to the CNC machine (the export map), leaving your CAD model geometry unchanged."
+      },
+      "tokens_used": 4624,
+      "error": null
+    }
+  }
+}

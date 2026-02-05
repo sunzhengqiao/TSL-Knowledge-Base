@@ -1,8 +1,8 @@
 {
   "filename": "GE_HDWR_ANCHOR_MAS.mcr",
-  "status": "partial",
-  "total_tokens": 33357,
-  "processing_time": 1023.0133588314056,
+  "status": "completed",
+  "total_tokens": 39295,
+  "processing_time": 377.8642177581787,
   "passes": {
     "1": {
       "success": true,
@@ -10,19 +10,19 @@
         "header": {
           "type": null,
           "numBeamsReq": null,
-          "keywords": null,
+          "keywords": [],
           "majorVersion": null,
           "minorVersion": null,
           "dxaOut": null,
           "implInsert": null
         },
-        "description": null,
+        "description": "",
         "versionHistory": [
           {
             "version": "1.1",
             "date": "04.jul.2014",
             "author": "David Rueda (dr@hsb-cad.com)",
-            "changes": "Bug fix: Entity (ies) not associated properly, causing unexpected behavior when framing. Edited GE_HDWR_ANCHOR_MAS and GE_HDWR_WALL_ANCHOR_MULTIPLE. Problem Solved. Added feature: when wall is unframed MAS TSL's are still present, but display only a cross at bottom of wall so user will know this element has already anchors. When wall is framed, the display of metal part is completely done, wrapping bottom plate(s) and embedded also. Added feature: MAS TSL will erase itself if is closer than 2in to other MAS"
+            "changes": "Bug fix: Entity (ies) not associated properly, causing unexpected behavior when framing. Edited GE_HDWR_ANCHOR_MAS and GE_HDWR_WALL_ANCHOR_MULTIPLE. Problem Solved. \n- Added feature: when wall is unframed MAS TSL's are still present, but display only a cross at bottom of wall so user will know this element has already anchors. \n  When wall is framed, the display of metal part is completely done, wrapping bottom plate(s) and embedded also.\n- Added feature: MAS TSL will erase itself if is closer than 2in to other MAS"
           },
           {
             "version": "1.0",
@@ -34,7 +34,7 @@
         "settingsFiles": [],
         "dependencies": []
       },
-      "tokens_used": 6087,
+      "tokens_used": 6382,
       "error": null
     },
     "2": {
@@ -45,18 +45,18 @@
           "supportsPaperSpace": false,
           "isShopDrawingScript": false,
           "isMultipageScript": false,
-          "detectionEvidence": "The script prompts for an Element using getElement() and checks bIsKindOf(Wall()). It attaches to the element using assignToElementGroup() and creates 3D geometry (Body objects: bdEmbedded, bdBottomWrap) drawn with Display dp(-1). No usage of _Viewport, sd_ prefixes, or 2D drawing layout logic found."
+          "detectionEvidence": "Script generates 3D geometry using Body and PLine classes and draws them using Display dp(-1). It interacts with ElementWall and Beam objects in the model. No shop drawing patterns (sd_, _Viewport, #Type E) or paper space logic detected."
         },
         "prerequisites": {
           "requiredEntities": [
             "ElementWall"
           ],
           "minimumBeams": 0,
-          "requiredSpace": "Model Space attached to a Wall element.",
+          "requiredSpace": "Model Space (3D)",
           "requiredSettings": []
         }
       },
-      "tokens_used": 5403,
+      "tokens_used": 5356,
       "error": null
     },
     "3": {
@@ -76,7 +76,7 @@
               "function": "PrPoint",
               "promptOriginal": "\nSelect a set of points along wall (points will get proper high automatically. Wall side will be the closer to selected points)",
               "condition": "_bOnInsert",
-              "required": true
+              "required": false
             }
           ],
           "keywordOptions": []
@@ -86,138 +86,202 @@
         "contextMenu": [],
         "settingsFiles": []
       },
-      "tokens_used": 5801,
+      "tokens_used": 6244,
       "error": null
     },
     "4": {
       "success": true,
       "data": {
         "scriptPurpose": {
-          "summary": "Generates 3D models for 'MAS' (Masonry Anchor Strap) hardware, embedding anchors into the foundation and wrapping them around the bottom plate of a wall.",
+          "summary": "Inserts and manages Masonry Anchor Straps (MAS) that wrap the bottom plate of a wall and embed into the foundation, including automatic spacing validation and unframed placeholder markers.",
           "category": "Hardware",
-          "typicalUseCase": "Used to place anchors along a wall bottom plate that require structural hold-downs wrapping the plate and embedding into the concrete below."
+          "typicalUseCase": "Anchoring timber frame walls to concrete foundations to resist uplift forces, typically placed at ends of walls or at specific intervals defined by engineering."
         },
         "parameters": [
           {
-            "name": "dMinDist",
-            "technicalDefault": "U(2)",
-            "businessMeaning": "The minimum spacing required between anchor points. If a new anchor is placed closer than this to an existing one, the script deletes the new instance to prevent overcrowding.",
-            "validRange": "2.0 to 24.0 inches",
-            "unit": "inch",
-            "affectsOutput": "Controls the existence of the script instance (self-erasure) based on proximity."
+            "name": "getElement (Target Wall)",
+            "technicalDefault": "User Selection (ElementWall)",
+            "businessMeaning": "The specific wall element that requires anchorage. The script calculates the bottom plate geometry and wrap dimensions based on this element's properties.",
+            "validRange": "Any valid Wall Element in Model Space",
+            "unit": "Entity",
+            "affectsOutput": "Defines the reference coordinate system, the width and height of the bottom plate wrap, and the side of the wall where the anchor is applied."
           },
           {
-            "name": "ptSelected",
-            "technicalDefault": "User Input (Array)",
-            "businessMeaning": "Points selected by the user along the wall to define anchor locations. The Z-coordinate (height) is calculated automatically based on the wall geometry.",
-            "validRange": "Any point along the wall length in 3D space",
-            "unit": "inch",
-            "affectsOutput": "Determines the insertion point (_Pt0) for each cloned anchor instance."
-          },
-          {
-            "name": "dBottomPlateBracesLength",
-            "technicalDefault": "U(10)",
-            "businessMeaning": "The total available length of the metal strap to wrap around the bottom plate.",
-            "validRange": "4.0 to 20.0 inches",
-            "unit": "inch",
-            "affectsOutput": "Limits how far the strap extends along the length of the bottom plate before stopping."
-          },
-          {
-            "name": "dBottomPlateSingleBraceWidth",
-            "technicalDefault": "U(1)",
-            "businessMeaning": "The width of one leg of the metal strap wrapping around the plate.",
-            "validRange": "0.75 to 2.0 inches",
-            "unit": "inch",
-            "affectsOutput": "Determines the width of the wrap geometry on the bottom and vertical faces of the plate."
-          },
-          {
-            "name": "dSeparationBetweenBottomPlateBraces",
-            "technicalDefault": "U(.25)",
-            "businessMeaning": "The gap between the two legs of the strap around the plate.",
-            "validRange": "0.125 to 1.0 inches",
-            "unit": "inch",
-            "affectsOutput": "Controls the distance between the two distinct Body objects created for the wrap."
-          },
-          {
-            "name": "dThickness",
-            "technicalDefault": "U(0.125)",
-            "businessMeaning": "The thickness (gauge) of the steel strap material.",
-            "validRange": "0.048 to 0.25 inches",
-            "unit": "inch",
-            "affectsOutput": "Sets the extrusion depth of the 3D body geometry."
-          },
-          {
-            "name": "dEmbeddedLength",
-            "technicalDefault": "U(6)",
-            "businessMeaning": "The length of the anchor tail extending into the foundation/concrete.",
-            "validRange": "4.0 to 12.0 inches",
-            "unit": "inch",
-            "affectsOutput": "Determines the length of the 'embedded' body geometry."
-          },
-          {
-            "name": "dAngle",
-            "technicalDefault": "45",
-            "businessMeaning": "The angle at which the anchor tail enters the wall relative to the wall surface.",
-            "validRange": "30 to 60 degrees",
-            "unit": "degrees",
-            "affectsOutput": "Rotates the embedded tail geometry away from the perpendicular."
+            "name": "PrPoint (Anchor Locations)",
+            "technicalDefault": "User Selection (Point3d)",
+            "businessMeaning": "The specific points along the wall where the anchor straps should be installed. These points define the spacing layout of the hardware.",
+            "validRange": "Points projected along the wall length (Z-axis is calculated automatically to sit on the bottom plate)",
+            "unit": "Length",
+            "affectsOutput": "Determines the exact insertion position of each MAS strap. If a point is placed within 2 inches of an existing MAS, the new instance self-deletes to prevent overlapping hardware."
           }
         ],
         "parameterDependencies": [
           {
-            "trigger": "dBottomPlateSingleBraceWidth OR dSeparationBetweenBottomPlateBraces changes",
-            "effect": "Updates the total width of the embedded anchor section.",
+            "trigger": "User selects PrPoint locations",
+            "effect": "The parent script spawns child TSL instances at those coordinates, associated with the selected Wall, and then the parent script deletes itself.",
             "cascade": [
-              "dEmbeddedWidth"
-            ]
-          },
-          {
-            "trigger": "Wall Element has no Beams (Unframed)",
-            "effect": "Suppresses the 3D metal body generation and draws a 2D cross marker instead.",
-            "cascade": [
-              "bdEmbedded",
-              "bdBottomWrap",
-              "bdVerticalWrap",
-              "bdTopWrap"
-            ]
-          },
-          {
-            "trigger": "Insertion Point < dMinDist from Existing Anchor",
-            "effect": "Triggers self-deletion of the current script instance.",
-            "cascade": [
-              "Script Existence"
+              "ElementWall",
+              "Child TSL Instances"
             ]
           }
         ],
         "outputEntities": [
           {
-            "type": "Body (Metal Part)",
-            "description": "Generates 3D bodies representing the anchor strap: an angled embedded section and a wrap section covering the bottom, vertical, and top faces of the bottom plate.",
-            "appliedTo": "ElementWall (Parent)"
+            "type": "3D Body (Metal Part)",
+            "description": "A Masonry Anchor Strap (MAS) consisting of a 6\" embedded portion angled at 45 degrees (into foundation) and a wrapping section that folds around the bottom plate (10\" along wall, vertical face, top face). Dimensions are hardcoded (e.g., 1/8\" thickness).",
+            "appliedTo": "The selected Wall Element (wrapping the lowest bottom plate beam)."
           },
           {
-            "type": "PLine (Visual Marker)",
-            "description": "A temporary 'X' marker drawn when the wall is unframed to indicate anchor placement location.",
-            "appliedTo": "ModelSpace (Visual Only)"
+            "type": "PLine (Marker)",
+            "description": "A temporary 'X' marker displayed if the wall is unframed (no beams detected), indicating future anchor placement.",
+            "appliedTo": "Model Space (at insertion point on wall outline)."
           }
         ]
       },
-      "tokens_used": 6704,
+      "tokens_used": 7933,
       "error": null
     },
     "5": {
       "success": true,
       "data": {
-        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"Script launched via command or catalog insertion.\",\n    \"Check insert cycle: If not the first cycle (insertCycleCount > 1), erase instance and stop.\",\n    \"Prompt user to select an Element.\",\n    \"Validate selection: If entity is not a Wall (el.bIsKindOf(Wall) == false), erase instance and stop.\",\n    \"Prompt user to select a set of points along the wall (loop for multiple inputs).\",\n    \"For each selected point, create a new cloned instance of the script at that location.\",\n    \"Erase the original 'master' script instance and exit the insertion routine.\",\n    \"Initialize cloned instance: Retrieve ElementWall and check validity.\",\n    \"Attach script to Wall element and set dependencies.\",\n    \"Update internal references: Retrieve wall beams if ExecutionMode is 0 or if wall is constructed/recalced.\",\n    \"Calculate wall coordinate system and filter beams to find Bottom Plates.\",\n    \"Realign insertion point (_Pt0) to snap to the wall surface.\",\n    \"Check Wall Framing Status: Determine if beams exist in the wall.\",\n    \"[Decision] Is Wall Unframed? (bmAll.length == 0)\",\n    \"If YES (Unframed): Draw 2D 'X' cross marker at insertion point and stop execution.\",\n    \"If NO (Framed): Calculate geometry based on bottom plate stack (highest and lowest plates).\",\n    \"Run Proximity Check: Compare distance to other identical script instances along the wall.\",\n    \"[Decision] Is another anchor closer than minimum distance (2in)?\",\n    \"If YES (Too Close): Erase current instance and stop.\",\n    \"If NO (Safe): Calculate vectors for the embedded anchor tail.\",\n    \"Generate and draw Embedded Body (angled into foundation).\",\n    \"Calculate and draw Bottom Wrap Body (wrapping under bottom plate).\",\n    \"[Decision] Is remaining strap length sufficient for vertical wrap?\",\n    \"If YES: Generate and draw Vertical Wrap Body (wrapping front face of plate).\",\n    \"If NO: Stop drawing.\",\n    \"[Decision] Is remaining strap length sufficient for top wrap?\",\n    \"If YES: Generate and draw Top Wrap Body (wr"
+        "workflowDiagram": [
+          "1. Launch Script: User starts insertion command.",
+          "2. Select Wall: Prompt to select a target ElementWall.",
+          "3. Validate Selection: Script checks if entity is a valid Wall.",
+          "4. Select Points: Loop prompting user to select points along the wall for anchor placement.",
+          "5. Create Children: Script iterates through selected points and spawns a child TSL instance for each point attached to the wall.",
+          "6. Terminate Parent: The original script instance deletes itself.",
+          "7. Initialize Child: Child instance initializes, retrieving the ElementWall and establishing dependencies.",
+          "8. Check Framing: Child instance checks if the wall has generated beams (framed) or is empty (unframed).",
+          "9. Branch Execution: (A) If unframed, draw 2D marker cross and exit. (B) If framed, proceed to 3D generation.",
+          "10. Collision Check: Script measures distance along the wall to other MAS instances.",
+          "11. Branch Collision: (A) If distance < 2 inches, self-delete. (B) If distance > 2 inches, continue.",
+          "12. Generate Geometry: Calculate and draw embedded part, bottom wrap, vertical wrap, and top wrap based on remaining strap length."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Entity Selection Type (Insertion)",
+            "path1": {
+              "name": "Valid Wall",
+              "steps": [
+                "Proceed to point selection phase.",
+                "User clicks points.",
+                "Parent spawns children and erases."
+              ]
+            },
+            "path2": {
+              "name": "Invalid/Null Entity",
+              "steps": [
+                "Display error or fail silently.",
+                "eraseInstance() is called.",
+                "Script terminates."
+              ]
+            }
+          },
+          {
+            "condition": "Wall Framing Status (Calculation)",
+            "path1": {
+              "name": "Unframed (No Beams)",
+              "steps": [
+                "Check if bmAll.length() == 0.",
+                "Create a PLine 'X' marker at insertion point.",
+                "Return (Skip 3D hardware generation)."
+              ]
+            },
+            "path2": {
+              "name": "Framed (Beams Present)",
+              "steps": [
+                "Identify bottom plates.",
+                "Calculate 3D coordinates for strap.",
+                "Execute collision detection.",
+                "Draw 3D Bodies (Embedded, Bottom, Vertical, Top faces)."
+              ]
+            }
+          },
+          {
+            "condition": "Hardware Proximity (Collision Detection)",
+            "path1": {
+              "name": "Too Close (< 2 inches)",
+              "steps": [
+                "Search attached TSLs on the wall.",
+                "If distance to another instance <= dMinDist (2in).",
+                "eraseInstance() called.",
+                "Script terminates (removes the overlapping anchor)."
+              ]
+            },
+            "path2": {
+              "name": "Safe Distance (> 2 inches)",
+              "steps": [
+                "Continue to geometry generation.",
+                "Draw the metal strap bodies."
+              ]
+            }
+          },
+          {
+            "condition": "Strap Length Continuity",
+            "path1": {
+              "name": "Insufficient Length Remaining",
+              "steps": [
+                "Calculate length used by bottom face.",
+                "If dLengthLeft <= 0, return immediately.",
+                "Vertical and Top faces are not drawn."
+              ]
+            },
+            "path2": {
+              "name": "Sufficient Length",
+              "steps": [
+                "Calculate vertical face.",
+                "If dLengthLeft > 0, calculate top face.",
+                "Draw all applicable faces."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Selected Entity Kind",
+            "errorMessage": "None (Silent fail)",
+            "recovery": "User must select a valid ElementWall instance during insertion."
+          },
+          {
+            "check": "Minimum Spacing",
+            "errorMessage": "None (Automatic deletion)",
+            "recovery": "Script automatically deletes the new instance if placed within 2 inches of an existing MAS. User must place new points further apart."
+          },
+          {
+            "check": "Element Validity",
+            "errorMessage": "None",
+            "recovery": "If the associated wall is deleted or invalid, the TSL erases itself."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Wall Modification (Move/Resize)",
+            "how": "Standard CAD Modify / Wall Properties",
+            "effect": "The anchor instances update their position and wrap geometry to match the new wall coordinates and bottom plate size."
+          },
+          {
+            "action": "Framing Toggle",
+            "how": "Generate/Remove Wall Framing",
+            "effect": "Toggles display between a 2D 'X' cross (unframed) and full 3D metal hardware geometry (framed)."
+          },
+          {
+            "action": "Relocate Anchor Point",
+            "how": "Grip Edit _Pt0",
+            "effect": "Moves the anchor along the wall. Moving it too close to another anchor triggers the collision auto-delete rule."
+          }
+        ]
       },
-      "tokens_used": 9362,
+      "tokens_used": 7950,
       "error": null
     },
     "6": {
-      "success": false,
-      "data": {},
-      "tokens_used": 0,
-      "error": "Request timeout after retries"
+      "success": true,
+      "data": {
+        "markdown": "# GE_HDWR_ANCHOR_MAS.mcr\n\n## Overview\nThis script inserts Masonry Anchor Straps (MAS) designed to wrap the bottom plate of timber walls and embed into the foundation. It automatically manages the geometry based on the wall's framing status and ensures minimum spacing between anchors.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script generates 3D bodies and markers in the model. |\n| Paper Space | No | Not designed for layout views or paper space. |\n| Shop Drawing | No | Does not generate shop drawing details. |\n\n## Prerequisites\n- **Required entities**: An `ElementWall` must exist in the model.\n- **Minimum beam count**: 0 (The script works on both unframed outlines and framed walls).\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `GE_HDWR_ANCHOR_MAS.mcr`\n\n### Step 2: Select Wall\n```\nCommand Line: Select element\nAction: Click on the wall element where you want to install the anchors.\n```\n\n### Step 3: Define Anchor Locations\n```\nCommand Line: Select a set of points along wall (points will get proper high automatically. Wall side will be the closer to selected points)\nAction: Click along the length of the wall to place anchors. You can click multiple points to insert multiple anchors at once. Press Enter or right-click to finish.\n```\n*Note: The script will calculate the height and wall side automatically based on your clicks.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not expose user-editable properties in the Properties Palette. Geometry is controlled by the wall and insertion point. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | No specific context menu options are added by this script. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Unframed Walls**: If you place the anchor on a wall that has not been framed yet (no beams generated), the script will display a small 'X' marker. Once the wall is framed, the 'X' will automatically update to the full 3D metal strap geometry.\n- **Automatic Spacing**: The script enforces a minimum distance of 2 inches between anchors. If you place a new anchor too close to an existing one, the new anchor will automatically delete itself.\n- **Grip Editing**: You can move an anchor after insertion by selecting it and using the grip point (`_Pt0`) to slide it along the wall. The height and orientation update automatically.\n- **Wall Side Selection**: The anchor is applied to the side of the wall closest to where you clicked during the point selection phase.\n\n## FAQ\n- **Q: Why do I see a cross 'X' instead of the metal strap?**\n  **A:** This indicates the wall is currently \"unframed\" (no beams detected). Generate the wall framing, and the symbol will change to the correct 3D hardware shape.\n- **Q: I clicked to place an anchor, but it disappeared immediately. Why?**\n  **A:** You likely tried to place the anchor within 2 inches of an existing anchor. The script automatically deletes instances that violate the minimum spacing rule. Try placing it further away.\n- **Q: Can I use this on walls that are already framed?**\n  **A:** Yes. If the wall is already framed, the script will immediately generate the 3D wrapping strap geometry instead of the placeholder marker.\n- **Q: How do I change the size of the strap?**\n  **A:** The dimensions (e.g., embedded length, wrap height) are currently hardcoded into the script logic. You must contact your system administrator to modify the script if different dimensions are required.\n\n---"
+      },
+      "tokens_used": 5430,
+      "error": null
     }
   }
 }

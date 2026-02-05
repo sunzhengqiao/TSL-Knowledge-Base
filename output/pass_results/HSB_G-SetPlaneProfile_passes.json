@@ -1,0 +1,324 @@
+{
+  "filename": "HSB_G-SetPlaneProfile.mcr",
+  "status": "completed",
+  "total_tokens": 28480,
+  "processing_time": 289.0519824028015,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.00",
+            "date": "12.07.2012",
+            "author": "AS",
+            "changes": "Pilot version"
+          },
+          {
+            "version": "1.01",
+            "date": "03.05.2017",
+            "author": "AS",
+            "changes": "Add all zones"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5042,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly uses `_kModelSpace` in the `tsl.dbCreate` call. It manipulates `Element` objects using methods like `setProfNetto` and iterates through `GenBeam` collections (`el.genBeam()`), which are 3D model operations. There are no references to `getSheet`, `_Viewport`, or `sd_` prefixes typical of Paper Space or Shop Drawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3280,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "showDialog",
+              "promptOriginal": null,
+              "condition": "_bOnInsert && (_kExecuteKey == \"\" || arSCatalogNames.find(_kExecuteKey) == -1)",
+              "required": false
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select one or more elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "PropertyDialog",
+            "trigger": "Insertion (if no execute key provided)",
+            "title": "HSB_G-SetPlaneProfile",
+            "dataSource": "Internal Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sSeperator01",
+            "type": "PropString",
+            "displayName": "|Zone to process|",
+            "defaultValue": "",
+            "inputType": "readonly",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "nZnIndex",
+            "type": "PropInt",
+            "displayName": "     |Zone|",
+            "defaultValue": 0,
+            "inputType": "dropdown",
+            "options": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5318,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Calculates and applies the exact outline (Net Profile) of a specific wall layer (zone) based on the structural beams and subtracts window/door openings.",
+          "category": "Geometry/Framing",
+          "typicalUseCase": "Used to update the manufacturing Netto profile of a wall element after structural changes to ensure the profile matches the beam layout and openings for CNC or detailing."
+        },
+        "parameters": [
+          {
+            "name": "sSeperator01",
+            "technicalDefault": "\"|Zone to process|\"",
+            "businessMeaning": "A visual label in the properties palette grouping the following setting. It indicates that the user must select which part of the wall to process.",
+            "validRange": "N/A (Read-only)",
+            "unit": "String",
+            "affectsOutput": "None. It is purely a UI label."
+          },
+          {
+            "name": "nZnIndex",
+            "technicalDefault": "0",
+            "businessMeaning": "Selects the specific construction layer (Zone) of the wall element to update. Zones represent distinct planes of the wall (e.g., outer leaf, inner leaf, studs, etc.). Values 6-10 map to negative zones (-1 to -5) for extended selection.",
+            "validRange": "0 to 10 (Where 0-5 are standard zones, 6-10 map to -1 to -5)",
+            "unit": "Index",
+            "affectsOutput": "Determines which GenBeams are included in the calculation and which Zone's Net Profile (`ProfNetto`) is overwritten on the Element."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Script Execution",
+            "effect": "The script reads the `nZnIndex` to filter beams in the selected element.",
+            "cascade": [
+              "Element.genBeam()",
+              "Element.setProfNetto()"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "PlaneProfile (Modification)",
+            "description": "Updates the 'Netto' (Net) profile of the Element for the specified zone. This is done by unioning the contact faces of structural beams, merging small gaps (shrink logic), and subtracting opening shapes.",
+            "appliedTo": "Selected Element(s)"
+          }
+        ]
+      },
+      "tokens_used": 5081,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Launch Script",
+          "Check Insertion Flag (_bOnInsert)",
+          "Validate Insertion Cycle (terminate if > 1)",
+          "Check Execute Key (Catalog Name)",
+          "[If No Valid Key] Show Properties Dialog",
+          "Prompt User to Select Elements",
+          "[If Selection Made] Iterate Through Selected Elements",
+          "Clean Up Existing TSL Instances on Element",
+          "Create Satellite TSL on Element (Propagate Properties)",
+          "Report Insertion Count",
+          "Erase Master Instance",
+          "Satellite Instance: Read Properties from Map",
+          "Resolve Zone Index (Map 6-10 to -1 to -5)",
+          "Verify Element Validity (Terminate if Invalid)",
+          "Extract Coordinate System of Target Zone",
+          "Iterate Element GenBeams",
+          "[If Beam Zone Matches Target] Extract Envelope Face and Union to PlaneProfile",
+          "Clean Profile Geometry (Shrink -10mm then +10mm)",
+          "Extract Profile Rings (Outer Contours)",
+          "Rebuild Profile excluding Opening Rings",
+          "Iterate Element Openings",
+          "Subtract Opening Shapes from Profile",
+          "Apply New Net Profile (setProfNetto) to Element",
+          "Report Success / Erase Instance"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script Execution Mode",
+            "path1": {
+              "name": "Master Insertion",
+              "steps": [
+                "Verify _bOnInsert is true",
+                "Check insertCycleCount <= 1",
+                "If _kExecuteKey is empty/invalid, show Dialog",
+                "Prompt Element Selection",
+                "Create Satellite TSLs on Elements",
+                "Erase Master Script"
+              ]
+            },
+            "path2": {
+              "name": "Satellite Execution",
+              "steps": [
+                "Verify _bOnInsert is false",
+                "Retrieve properties from Master Map",
+                "Calculate Profile Geometry",
+                "Update Element Netto Profile",
+                "Erase Satellite Script"
+              ]
+            }
+          },
+          {
+            "condition": "Zone Index Selection (nZnIndex)",
+            "path1": {
+              "name": "Standard Zones (0-5)",
+              "steps": [
+                "Use nZnIndex directly",
+                "Retrieve GenBeams in positive Zone Index",
+                "Update ProfNetto for positive Zone Index"
+              ]
+            },
+            "path2": {
+              "name": "Extended Zones (6-10)",
+              "steps": [
+                "Transform nZnIndex: 6->-1, 7->-2, etc.",
+                "Retrieve GenBeams in negative Zone Index",
+                "Update ProfNetto for negative Zone Index"
+              ]
+            }
+          },
+          {
+            "condition": "Element Processing",
+            "path1": {
+              "name": "Valid Element",
+              "steps": [
+                "Process Element",
+                "Insert Satellite TSL",
+                "Increment Counter"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Element",
+              "steps": [
+                "Skip Processing (continue loop)",
+                "Do not increment counter"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None",
+            "recovery": "Script self-terminates silently if cycle > 1 to prevent recursion"
+          },
+          {
+            "check": "Element Validity (bIsValid)",
+            "errorMessage": "None",
+            "recovery": "Invalid elements are skipped during the selection loop"
+          },
+          {
+            "check": "Existing Script Instance",
+            "errorMessage": "None",
+            "recovery": "Existing instances of the script on the element are erased (dbErase) before creating the new one"
+          },
+          {
+            "check": "Zone Index Range",
+            "errorMessage": "None",
+            "recovery": "Indices 6-10 are automatically remapped to negative indices (-1 to -5)"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Update Zone Profile",
+            "how": "Change 'Zone' property (nZnIndex) in OPM and Recalculate Element",
+            "effect": "Script re-runs for the newly selected zone and overwrites the previous ProfNetto"
+          },
+          {
+            "action": "Re-apply Profile",
+            "how": "Trigger Element Recalculation (e.g., Modify Element or use Update command)",
+            "effect": "The script re-evaluates beams and openings based on current geometry and resets the Netto profile"
+          }
+        ]
+      },
+      "tokens_used": 4992,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# HSB_G-SetPlaneProfile.mcr\n\n## Overview\nThis script automatically calculates and applies the exact outline (Netto profile) for a specific construction layer (zone) of a wall element. It derives the shape from the structural beams within that zone and subtracts any window or door openings.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D Element entities. |\n| Paper Space | No | Not designed for layouts or views. |\n| Shop Drawing | No | Not designed for 2D drawing generation. |\n\n## Prerequisites\n- **Required Entities**: An Element (e.g., a timber wall).\n- **Minimum Beam Count**: 0 (The script processes existing beams, but can run on an empty element).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the command line.\n2. Navigate to the folder containing `HSB_G-SetPlaneProfile.mcr`.\n3. Select the file and click **Open**.\n\n### Step 2: Select Zone\n1. The **Properties Palette** will appear automatically.\n2. Locate the **Zone** parameter.\n3. Select the desired layer index:\n   - **0-5**: Standard zones (outer layer to inner layer).\n   - **6-10**: Extended/Negative zones (maps to -1 through -5).\n\n### Step 3: Select Element\n1. The command line will prompt: `Select one or more elements`\n2. Click on the wall element(s) you wish to update.\n3. Press **Enter** to confirm selection.\n\n### Step 4: Processing\nThe script will calculate the profile, apply it to the element, and then automatically remove itself from the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Zone to process** | Label | N/A | A visual header indicating the section below controls the layer settings. |\n| **Zone** | Dropdown | 0 | Selects the construction layer to calculate. Options 0-5 correspond to standard zones. Options 6-10 correspond to negative zones (-1 to -5) for extended layer selection. |\n\n## Right-Click Menu Options\nThis script does not add specific items to the element's right-click context menu.\n\n## Settings Files\nNo external settings files are required for this script.\n\n## Tips\n- **Updating the Profile**: If you modify the beams or openings inside the wall, simply select the wall and run the **Update** (or Recalculate) command. The script will re-run and correct the profile shape based on the new geometry.\n- **Negative Zones**: If you need to edit a layer on the \"negative\" side of the wall's coordinate system (often used for specific detailing layers), select index **6** (for -1), **7** (for -2), etc., from the Zone dropdown.\n- **Gap Closing**: The script automatically \"shrinks\" and \"expands\" the calculated profile by 10mm to close tiny gaps between beams, ensuring a clean manufacturing contour.\n\n## FAQ\n- **Q: The script ran, but nothing happened.**\n  - A: Ensure you selected a valid Element entity. If the selected zone contains no beams, the resulting profile may be empty or invisible.\n- **Q: Can I undo the changes?**\n  - A: Yes, use the standard AutoCAD **Undo** command immediately after running the script.\n- **Q: Does the script stay attached to the wall?**\n  - A: No. This is a \"run-once\" script. It calculates the data, applies it to the element's properties, and deletes itself to prevent drawing clutter."
+      },
+      "tokens_used": 4767,
+      "error": null
+    }
+  }
+}
