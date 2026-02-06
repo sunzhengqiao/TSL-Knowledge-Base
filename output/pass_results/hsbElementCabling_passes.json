@@ -1,0 +1,195 @@
+{
+  "filename": "hsbElementCabling.mcr",
+  "status": "completed",
+  "total_tokens": 49982,
+  "processing_time": 408.7777624130249,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9259,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script performs physical 3D modifications: Drills (dr.addMeToGenBeamsIntersect), BeamCuts (bc.addMeToGenBeamsIntersect), and ElemNoNail zones are applied to GenBeams. While there is commented-out code for Viewport handling (switchToModelSpace), the active logic operates directly on Element and GenBeam objects in the current context. It uses standard Display objects (dpModel, dpPlan) but does not generate shop drawings."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam",
+            "TslInst"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7212,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6921,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Automates the creation of electrical and data cabling channels (drills or chases) within timber elements, managing machining, no-nail zones, and BOM data.\",\n    \"category\": \"ConstructionPrep\",\n    \"typicalUseCase\": \"Preparing timber wall or floor panels for electrical wiring runs by milling slots or drilling holes between predefined installation points or along a user-defined path.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"sStrategy\",\n      \"technicalDefault\": \"Cut intersections\",\n      \"businessMeaning\": \"Defines the calculation mode for the cabling path. 'Cut intersections' restricts the cut to intersecting beam volumes, while 'Full Path' creates the channel profile continuously along the element.\",\n      \"validRange\": \"Cut intersections, Full Path\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Determines if the cabling volume is calculated strictly by beam intersections or projected as a continuous slot through the element zone.\"\n    },\n    {\n      \"name\": \"dDiameter\",\n      \"technicalDefault\": \"20mm\",\n      \"businessMeaning\": \"The width of the cabling channel. If Depth is 0, this is the diameter of a round drill. If Depth > 0, this is the width of a rectangular chase.\",\n      \"validRange\": \"10mm - 100mm\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Controls the width of the Drill or BeamCut geometry.\"\n    },\n    {\n      \"name\": \"dDepth\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"The depth of the channel. A value of 0 triggers a round drill operation. Any value greater than 0 triggers a rectangular milling/routing operation.\",\n      \"validRange\": \"0 (Round) or >0 (Rectangular)\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Switches generation logic between creating Drills (round holes) and BeamCuts (rectangular slots).\"\n    },\n    {\n      \"name\": \"sDirection\",\n      \"technicalDefault\": \"Bottom\",\n      \"businessMeaning\": \"Determines the vertical placement reference and the input mode. 'Multisegment' allows drawing a custom polyline path; other modes connect to existing Installation Points (TSLs) aligned Top, Bottom, or Both.\",\n      \"validRange\": \"Bottom, Top, Both, Multisegment\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Defines the Z-height of the cabling and controls whether the user picks points on screen or selects existing entities.\"\n    },\n    {\n      \"name\": \"nZone\",\n      \"technicalDefault\": \"5\",\n      \"businessMeaning\": \"Selects the specific structural layer (zone) within the element where the cabling is applied. The list is dynamically filtered based on the element's construction.\",\n      \"validRange\": \"Integer based on Element Zones (e.g., -5 to 5)\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Constrains the machining and NoNail zones to the specified layer depth.\"\n    },\n    {\n      \"name\": \"sZAlignment\",\n      \"technicalDefault\": \"Icon Side\",\n      \"businessMeaning\": \"Defines the vertical alignment of the channel relative to the selected Zone (e.g., flush with the surface, centered on the axis, or following an installation point).\",\n      \"validRange\": \"Icon Side, Axis, Opposite Side, byInstallation\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Offsets the start and end points of the cabling vertically within the zone.\"\n    },\n    {\n      \"name\": \"dOffsetX\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"Shifts the cabling path horizontally along the length of the beam/element relative to the reference location.\",\n      \"validRange\": \"-500mm to 500mm\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Moves the generated Drill/BeamCut laterally.\"\n    },\n    {\n      \"name\": \"dOffsetZ\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"Shifts the cabling path vertically relative to the defined alignment reference.\",\n      \"validRange\": \"-500mm to 500mm\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Moves the generated Drill/BeamCut vertically within the zone limits.\"\n    },\n    {\n      \"name\": \"dGap\",\n      \"technicalDefault\": \"5mm\",\n      \"businessMeaning\": \"Clearance added around the physical channel dimensions. Increases the cut size to ensure wires fit and defines a safety buffer for 'No Nail' zones.\",\n      \"validRange\": \"0mm - 20mm\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Expands the diameter/width of the machining and the size of the protective NoNail zones.\"\n    }\n  ],\n  \"parameterDependencies\": [\n    {\n      \"trigger\": \"dDepth changes from 0 to >0\",\n      \"effect\": \"Switches machining type from Round Drill to Rectangular Chase and interprets dDiameter as Width instead of Radius.\",\n      \"cascade\": [\n        \"dDiameter\"\n      ]\n    },\n    {\n      \"trigger\": \"sDirection is set to Multisegment\",\n      \"effect\": \"Enables interactive point picking (Jig) to define the path, rather than relying on existing Installation Points.\",\n      \"cascade\": []\n    }\n  ],\n  \"outputEntities\": [\n    {\n      \"type\": \"Drill\",\n      \"description\": \"Round holes created when Depth is 0.\",\n      \"appliedTo\": \"GenBeams intersecting the cabling path.\"\n    },\n    {\n      \"type\": \"BeamCut\",\n      \"description\": \"Rectangular slots/millings created when Depth > 0.\",\n      \"appliedTo\": \"GenBeams intersecting the cabling path.\"\n    },\n    {\n      \"type\": \"ElemNoNail\",\n      \"description\": \"Protective zones applied to the element to prevent fasteners (nails/screws) from hitting the cables.\",\n      \"appliedTo\": \"Element Zones surrounding the cabling path.\"\n    },\n    {\n      \"type\": \"HardWrComp\",\n      \"description\": \"BOM entries representing"
+      },
+      "tokens_used": 9571,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script launched via command or catalog insertion.",
+          "2. Check insertCycleCount: if > 1, erase instance and exit (prevents duplicate inserts).",
+          "3. Load Properties: Check for execution key (Catalog); if present, load catalog, else show Dialog.",
+          "4. Prompt User to select Parent Entities (Element or GenBeam or Installation TSL).",
+          "5. Analyze Selection: Separate selected entities into TSLs (Installation points) and Elements.",
+          "6. [Conditional Branch] Determine Input Method based on 'Direction' property and selection count.",
+          "7. [If Jig Mode] User defines path points on screen interactively; Script draws dynamic preview.",
+          "8. [If Auto Mode] Script calculates path between existing Installation TSLs.",
+          "9. Define Base Profile: Create PLine based on Diameter/Width and Offsets.",
+          "10. Apply Strategy: 'Cut Intersections' subtracts parent profiles; 'Full Path' keeps full volume.",
+          "11. Generate Machining:",
+          "    a. Loop through path segments.",
+          "    b. Calculate 3D Body (Drill if Depth=0, BeamCut if Depth>0).",
+          "    c. Validate Body intersection with Element (Shadow Profile).",
+          "    d. [If Valid] Add Drill/BeamCut to GenBeams and create Hardware BOM entry.",
+          "    e. [If Invalid] Draw Warning visualization (Red).",
+          "12. Generate No-Nail Zones:",
+          "    a. Calculate protective boxes around the cabling path.",
+          "    b. Apply to Element Zones based on Alignment logic (Icon side vs Opposite side).",
+          "13. Update Model: Commit Drill, BeamCut, ElemNoNail, and HardWrComp entities."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Input Method Determination (Direction + Selection)",
+            "path1": {
+              "name": "Interactive Multisegment Mode",
+              "steps": [
+                "Triggered if Direction is 'Multisegment' OR Single Element is selected.",
+                "bPickPoint set to True.",
+                "Enters Jig Loop.",
+                "User picks points via mouse.",
+                "Script accepts points, draws PLine preview.",
+                "User presses Enter to finish or Undo/Cancel to abort."
+              ]
+            },
+            "path2": {
+              "name": "Installation Point Connection Mode",
+              "steps": [
+                "Triggered if Direction is NOT 'Multisegment' AND multiple Installation TSLs are selected.",
+                "bPickPoint set to False.",
+                "Script sorts TSLs by Element handle.",
+                "Path is automatically calculated connecting the center points of selected TSLs."
+              ]
+            }
+          },
+          {
+            "condition": "Machining Strategy",
+            "path1": {
+              "name": "Cut Intersections (Strategy 0)",
+              "steps": [
+                "Defined cabling profile (ppShape) is subtracted by Zone profiles and Parent shapes.",
+                "Resulting shape is 'shrunk' by GapSegment.",
+                "Ensures machining only occurs where beams actually exist relative to the path."
+              ]
+            },
+            "path2": {
+              "name": "Full Path (Strategy 1)",
+              "steps": [
+                "No subtraction of Zone/Parent profiles performed on the shape.",
+                "Machining volume is projected continuously through the element volume."
+              ]
+            }
+          },
+          {
+            "condition": "Channel Depth",
+            "path1": {
+              "name": "Round Drill",
+              "steps": [
+                "Triggered if Depth <= 0.",
+                "Creates cylindrical Body along path vector.",
+                "Applies 'Drill' machining operation."
+              ]
+            },
+            "path2": {
+              "name": "Rectangular Chase",
+              "steps": [
+                "Triggered if Depth > 0.",
+                "Creates Box/Prism Body using Width (Diameter prop) and Depth.",
+                "Applies 'BeamCut' machining operation."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element/Parent Selection",
+            "errorMessage": "Implicit (Script fails or erases if no valid Element found)",
+            "recovery": "User must select a valid Element, GenBeam belonging to an Element, or compatible Installation TSL."
+          },
+          {
+            "check": "Zone Availability",
+            "errorMessage": "None (Auto-correction applied)",
+            "recovery": "If the selected Zone index does not exist in the element, script automatically selects the nearest valid Zone (First or Last in array)."
+          },
+          {
+            "check": "Minimum Points for Multisegment",
+            "errorMessage": "Implicit (Jig loop continues until Enter pressed)",
+            "recovery": "User must provide at least 2 points to define a segment; otherwise, the geometry cannot be generated."
+          },
+          {
+            "check": "Machining Intersection (Shadow Profile)",
+            "errorMessage": "None (Visual feedback only)",
+            "recovery": "If calculated machining body (Drill/Cut) does not intersect valid Element material, it is drawn in Warning Color (Red) and not applied to the BOM."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Geometry Parameters",
+            "how": "OPM (Object Properties Palette)",
+            "effect": "Changing Diameter, Depth, Offsets, or Gap recalculates the size and position of Drills/Cuts immediately."
+          },
+          {
+            "action": "Modify Path (Multisegment Mode)",
+            "how": "Grip Edit / Drag",
+            "effect": "If defined via Jig, Grips appear at path vertices. Dragging them updates the cabling path geometry dynamically."
+          },
+          {
+            "action": "Change Strategy",
+            "how": "OPM - 'Strategy' Property",
+            "effect": "Switches between 'Cut Intersections' (trimming to beam volume) and 'Full Path' (continuous slot)."
+          },
+          {
+            "action": "Re-link Parents",
+            "how": "Context Menu (implied by catalog commands)",
+            "effect": "Can re-run selection logic to connect to different Installation TSLs or change Elements."
+          }
+        ]
+      },
+      "tokens_used": 10429,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbElementCabling.mcr\n\n## Overview\nThis script automates the creation of electrical and data cabling channels within timber elements. It generates round drills or rectangular chases (millings), defines protective \"No-Nail\" zones to prevent fastener conflicts, and adds relevant entries to the Bill of Materials (BOM).\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be run in Model Space where the timber elements exist. |\n| Paper Space | No | Script operates on physical 3D geometry, not views. |\n| Shop Drawing | No | Script modifies the 3D model, not 2D layouts. |\n\n## Prerequisites\n- **Required Entities**: An existing timber **Element**, **GenBeams**, or existing **Installation TSLs** (e.g., electrical box scripts).\n- **Minimum Beam Count**: 1 (The element must contain structural material to cut into).\n- **Required Settings**: None (Uses script properties or default catalog values).\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the command line.\n2.  Browse to and select `hsbElementCabling.mcr`.\n\n### Step 2: Configure Properties (Optional)\nIf not using a pre-configured catalog entry, the properties palette may appear, or you can adjust settings after insertion. Ensure the **Direction** strategy matches your intent:\n-   **Multisegment**: If you want to draw a custom path.\n-   **Bottom/Top/Both**: If you want to connect existing installation points.\n\n### Step 3: Select Parent Entities\n```\nCommand Line: Select Element/GenBeam/TslInst\nAction: Click on the timber Element, specific beams, or existing Installation Point TSLs you wish to connect.\n```\n*Note: If connecting installation points, select multiple points in the desired sequence of the cabling run.*\n\n### Step 4: Define Path (Multisegment Mode Only)\nIf **Direction** is set to \"Multisegment\", you will enter a drawing mode:\n```\nCommand Line: Pick point / [Undo]:\nAction: Click points in the model to define the polyline path of the cable.\n```\n-   Click to place vertices.\n-   Press **Enter** to finish the path and generate the geometry.\n-   Type **U** or **Undo** to remove the last point if you make a mistake.\n\n### Step 5: Inspection\n-   If the generated geometry appears **Red**, the cabling channel does not intersect valid material (check your Zone/Offset settings).\n-   If **Green/Standard Color**, the machining and No-Nail zones have been successfully applied.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Strategy** | Enum | Cut intersections | Determines how the path is calculated. \"Cut intersections\" limits the cut to actual beam volumes; \"Full Path\" creates a continuous slot through the entire element space. |\n| **Diameter** | Double | 20 mm | The width of the cabling channel. If Depth is 0, this is the drill diameter. If Depth > 0, this is the width of the rectangular chase. |\n| **Depth** | Double | 0 mm | Defines the channel type. **0** creates a Round Drill. **Any value > 0** creates a Rectangular Chase (milling). |\n| **Direction** | Enum | Bottom | Sets the vertical reference and input mode. Select \"Multisegment\" to draw a path manually. Select \"Top\", \"Bottom\", or \"Both\" to auto-connect existing Installation Points. |\n| **Zone** | Integer | 5 | Selects the structural layer (Zone index) within the element where the cabling is applied. |\n| **Z Alignment** | Enum | Icon Side | Defines vertical alignment relative to the Zone (e.g., flush with surface, centered on axis, or aligned to installation points). |\n| **Offset X** | Double | 0 mm | Shifts the cabling path horizontally along the beam/element length. |\n| **Offset Z** | Double | 0 mm | Shifts the cabling path vertically relative to the alignment reference. |\n| **Gap** | Double | 5 mm | Clearance added around the physical channel dimensions. This increases the cut size slightly and defines the safety buffer for \"No Nail\" zones. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Refresh** | Re-calculates the machining based on current properties and element geometry. Use this after moving beams or changing dimensions. |\n| **Erase** | Removes the script instance and all associated machining (Drills/Cuts) and No-Nail zones. |\n| **Select Parent** | Highlights the Element or beams associated with this cabling run. |\n\n## Settings Files\n- **Filename**: None (Standard configuration uses internal script properties).\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n-   **Switching Shapes**: To switch from a round hole to a rectangular slot, simply change the **Depth** property from `0` to any positive value (e.g., `30`).\n-   **Grip Editing**: If you created the path using \"Multisegment\" mode, you can select the cabling instance and drag the blue **Grips** in the model to adjust the path points dynamically.\n-   **Material Savings**: Use the **Gap** parameter carefully. While a larger gap ensures easier wire pulling, it removes more structural wood material.\n-   **Validation**: If your cabling disappears or turns red, check the **Zone** property. You may be trying to cut in a layer that does not exist in the current element construction.\n\n## FAQ\n-   **Q: How do I connect two electrical boxes automatically?**\n    -   A: Set the **Direction** property to \"Top\", \"Bottom\", or \"Both\" (depending on where the boxes are located), then run the script and select the box (Installation TSL) instances.\n-   **Q: What does the red preview color mean?**\n    -   A: Red indicates that the calculated cabling body does not physically intersect the timber material of the element. Check your **Z Alignment** and **Offset Z** settings to ensure the channel is placed inside the beam volume.\n-   **Q: Can I use this for round conduits?**\n    -   A: Yes. Set **Depth** to `0` and set **Diameter** to the size of your conduit. The script will generate a cylindrical drill."
+      },
+      "tokens_used": 6590,
+      "error": null
+    }
+  }
+}

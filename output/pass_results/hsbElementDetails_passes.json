@@ -1,0 +1,307 @@
+{
+  "filename": "hsbElementDetails.mcr",
+  "status": "completed",
+  "total_tokens": 42307,
+  "processing_time": 661.4759135246277,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "2.0",
+            "date": "12jun12",
+            "author": "th@hsbCAD.de",
+            "changes": "completely revised, additional script not required as this script executes in two different OPM modes"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5937,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "Both",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly implements two execution modes controlled by `_Map.getInt(\"mode\")`. Mode 0 runs in Model Space (constructs geometry, assigns entities to ElementGroups, uses `_kModelSpace`). Mode 1 runs in Paper Space (interacts with `_Viewport`, sets `OPMKey(\"Layout\")`, calculates `CoordSys` transformation for Viewport display)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element (ElementWall or ElementRoof)",
+            "Viewport (for Paper Space mode)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Mode 0 requires Model Space Elements; Mode 1 requires a Viewport in Paper Space linked to an Element with hsbData.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4197,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"|Select elements (Enter to select a viewport)|\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      },\n      {\n        \"step\": 2,\n        \"function\": \"getViewport\",\n        \"promptOriginal\": null,\n        \"condition\": \"_bOnInsert (if no elements selected)\",\n        \"required\": false\n      },\n      {\n        \"step\": 3,\n        \"function\": \"showDialog\",\n        \"promptOriginal\": null,\n        \"condition\": \"_bOnInsert\",\n        \"required\": false\n      },\n      {\n        \"step\": 4,\n        \"function\": \"getPoint\",\n        \"promptOriginal\": \"|Select lower left corner|\",\n        \"condition\": \"nMode == 0\",\n        \"required\": true\n      },\n      {\n        \"step\": 4,\n        \"function\": \"getPoint\",\n        \"promptOriginal\": \"|Pick point|\",\n        \"condition\": \"nMode == 1\",\n        \"required\": true\n      },\n      {\n        \"step\": 5,\n        \"function\": \"PrPoint\",\n        \"promptOriginal\": \"|Select upper right corner|\",\n        \"condition\": \"nMode == 0\",\n        \"required\": true\n      },\n      {\n        \"step\": 6,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"|Select a set of detail entities|\",\n        \"condition\": \"nMode == 0\",\n        \"required\": false\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [],\n  \"opmProperties\": [\n    {\n      \"index\": 0,\n      \"variable\": \"sDetailName\",\n      \"type\": \"PropString\",\n      \"displayName\": \"|Detail Name|\",\n      \"defaultValue\": \"|Detail|\",\n      \"inputType\": \"text\",\n      \"options\": [],\n      \"category\": null,\n      \"description\": null,\n      \"condition\": \"nMode == 0\"\n    },\n    {\n      \"index\": 0,\n      \"variable\": \"nIndex\",\n      \"type\": \"PropInt\",\n      \"displayName\": \"|Detail Index|\",\n      \"defaultValue\": 1,\n      \"inputType\": \"dropdown\",\n      \"options\": [\n        1,\n        2,\n        3,\n        4,\n        5,\n        6,\n        7,\n        8,\n        9,\n        10,\n        11,\n        12,\n        13,\n        14,\n        15,\n        16,\n        17,\n        18,\n        19,\n        20\n      ],\n      \"category\": null,\n      \"description\": null,\n      \"condition\": \"All Modes\"\n    },\n    {\n      \"index\": 1,\n      \"variable\": \"sDimStyle\",\n      \"type\": \"Prop"
+      },
+      "tokens_used": 8485,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Defines specific detail areas (zoom regions) on timber elements to be displayed and labeled in 2D production drawings (Paper Space), bridging 3D model content with 2D layout views.",
+          "category": "Documentation / Layout",
+          "typicalUseCase": "A drafter marks a complex wall connection in 3D with a named box (e.g., 'Detail A'), then places a viewport on a drawing sheet that automatically zooms into that specific connection."
+        },
+        "parameters": [
+          {
+            "name": "nMode",
+            "technicalDefault": "0",
+            "businessMeaning": "Determines the script's operating context: 0 for defining the detail in the 3D model, 1 for configuring the view on the 2D sheet.",
+            "validRange": "0, 1",
+            "unit": "State",
+            "affectsOutput": "Switches available properties and execution logic between 3D boundary creation and 2D viewport transformation."
+          },
+          {
+            "name": "sDetailName",
+            "technicalDefault": "\"|Detail|\"",
+            "businessMeaning": "The alphanumeric label used to identify the detail on drawings (e.g., 'Section A', 'Joint 1').",
+            "validRange": "String (Auto-ensures uniqueness)",
+            "unit": "Text",
+            "affectsOutput": "Displays the label text near the detail box. If a duplicate exists, a number is automatically appended (e.g., 'Detail 1')."
+          },
+          {
+            "name": "nIndex",
+            "technicalDefault": "1",
+            "businessMeaning": "A numeric ID used to link the 2D viewport marker to the specific 3D detail definition.",
+            "validRange": "1-20",
+            "unit": "Integer",
+            "affectsOutput": "Ensures the correct 3D geometry is retrieved and displayed when configuring the Paper Space viewport."
+          },
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "_DimStyles",
+            "businessMeaning": "The CAD dimension style applied to the detail label text (controls font, arrows, etc.).",
+            "validRange": "Any existing DimStyle in drawing",
+            "unit": "Style Name",
+            "affectsOutput": "Visual appearance (font, size relative to style) of the detail name text."
+          },
+          {
+            "name": "dTxtH",
+            "technicalDefault": "U(150) in Model, U(20) in Layout",
+            "businessMeaning": "The explicit height of the detail label text.",
+            "validRange": "0 to 1000+ mm (0 hides text)",
+            "unit": "mm",
+            "affectsOutput": "Directly scales the size of the label text. In Layout mode, setting to 0 suppresses the label display."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "170",
+            "businessMeaning": "The color index used for the detail boundary rectangle.",
+            "validRange": "0-255 (AutoCAD Color Index)",
+            "unit": "Color",
+            "affectsOutput": "Visual color of the detail outline box in Model Space."
+          },
+          {
+            "name": "dScaleFactor",
+            "technicalDefault": "1",
+            "businessMeaning": "Adjusts the zoom level of the detail within the viewport.",
+            "validRange": ">0 (0.5 to 5 typical)",
+            "unit": "Factor",
+            "affectsOutput": "Scales the ModelSpace-to-PaperSpace transformation. Values > 1 zoom in, values < 1 zoom out relative to the default fit."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "nMode is set to 0 (Model Space)",
+            "effect": "Activates geometry creation properties (Name, DimStyle, Color) and prompts for rectangle corner points.",
+            "cascade": [
+              "sDetailName",
+              "sDimStyle",
+              "dTxtH",
+              "nColor",
+              "_PtG"
+            ]
+          },
+          {
+            "trigger": "nMode is set to 1 (Paper Space)",
+            "effect": "Activates viewport display properties (Scale Factor) and prompts for Viewport selection.",
+            "cascade": [
+              "_Viewport",
+              "dScaleFactor",
+              "dTxtH"
+            ]
+          },
+          {
+            "trigger": "sDetailName changes",
+            "effect": "Script scans the drawing for existing instances of this script to ensure the name is unique.",
+            "cascade": [
+              "sDetailName (value)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "3D Polyline (Rectangle)",
+            "description": "A visual box drawn in Model Space to indicate the exact area covered by the detail.",
+            "appliedTo": "Model Space (defined by _Pt0 and _PtG)"
+          },
+          {
+            "type": "Text Entity",
+            "description": "The label of the detail (e.g., 'Detail A') placed near the box.",
+            "appliedTo": "Model Space and Paper Space"
+          },
+          {
+            "type": "Viewport Transformation",
+            "description": "Calculates and applies a coordinate system transformation to a viewport to center and zoom the defined detail.",
+            "appliedTo": "Paper Space Viewport"
+          }
+        ]
+      },
+      "tokens_used": 7502,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched via command or catalog",
+          "Prompt: Select elements (Enter to select a viewport)",
+          "User Selection Branch: Elements selected vs. Enter pressed",
+          "Display Properties Dialog (OPM)",
+          "[Mode 0] Prompt: Select lower left corner",
+          "[Mode 0] Prompt: Select upper right corner",
+          "[Mode 0] Prompt: Select a set of detail entities (Optional)",
+          "[Mode 0] Validate Detail Name uniqueness against drawing",
+          "[Mode 0] Assign script and selected entities to Element Groups",
+          "[Mode 0] Calculate Coordinate System and draw Model Space rectangle/label",
+          "[Mode 1] Prompt: Pick point (for label placement)",
+          "[Mode 1] Validate Viewport has attached hsbData",
+          "[Mode 1] Search attached TSL instances for matching Detail Index",
+          "[Mode 1] Retrieve Model Space vectors from matched instance",
+          "[Mode 1] Calculate and apply Viewport transformation (Zoom/Align)",
+          "[Mode 1] Draw Paper Space label"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Initial Entity Selection",
+            "path1": {
+              "name": "Model Space Mode (nMode = 0)",
+              "steps": [
+                "User selects ElementWall or ElementRoof entities",
+                "Script initializes as 3D definition tool",
+                "Prompts for boundary corners",
+                "Prompts for specific detail entities",
+                "Draws geometry in Model Space"
+              ]
+            },
+            "path2": {
+              "name": "Paper Space Mode (nMode = 1)",
+              "steps": [
+                "User presses Enter at Entity selection",
+                "Script prompts to select a Viewport",
+                "Script initializes as 2D layout tool",
+                "Links to existing Model Space definition via Index",
+                "Updates Viewport view"
+              ]
+            }
+          },
+          {
+            "condition": "Detail Name Uniqueness (Mode 0)",
+            "path1": {
+              "name": "Name Unique",
+              "steps": [
+                "Script scans drawing for existing names",
+                "If no match found, uses input name"
+              ]
+            },
+            "path2": {
+              "name": "Name Duplicate",
+              "steps": [
+                "Script scans drawing for existing names",
+                "If match found, appends incrementing number (e.g., ' 1', ' 2')",
+                "Reports message to user about change"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element availability (Mode 0)",
+            "errorMessage": null,
+            "recovery": "Script self-erases if _Element array is empty during execution."
+          },
+          {
+            "check": "Valid Geometry Rectangle (Mode 0)",
+            "errorMessage": null,
+            "recovery": "Script self-erases if upper right corner point is not selected (_PtG.length < 2)."
+          },
+          {
+            "check": "Viewport Data Integrity (Mode 1)",
+            "errorMessage": "The viewport needs to have hsbData attached!",
+            "recovery": "User must ensure the selected Viewport is linked to a valid hsbCAD Element."
+          },
+          {
+            "check": "Detail Index Link (Mode 1)",
+            "errorMessage": null,
+            "recovery": "If no TSL instance with matching nIndex is found on the Element, the Viewport transformation defaults to a generic location (Z=1000000) rather than the specific detail."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Resize Detail Box",
+            "how": "Drag Grip Points (Lower Left _Pt0 or Upper Right _PtG)",
+            "effect": "Updates the rectangle shape. Rotating the width vector (_PtG1) automatically recalculates the height corner (_PtG0) to maintain aspect ratio."
+          },
+          {
+            "action": "Rename Detail",
+            "how": "Edit 'Detail Name' property in OPM",
+            "effect": "Triggers uniqueness validation; automatically appends number if collision detected."
+          },
+          {
+            "action": "Change Linked Detail",
+            "how": "Edit 'Detail Index' property in OPM (Mode 1)",
+            "effect": "Searches for a different Model Space detail instance with the new Index and updates the Viewport to show that geometry."
+          },
+          {
+            "action": "Adjust Zoom/Scale",
+            "how": "Edit 'Scale Factor' property in OPM (Mode 1)",
+            "effect": "Recalculates the Model-to-Paper transformation matrix to zoom in or out relative to the detail."
+          },
+          {
+            "action": "Toggle Label Visibility",
+            "how": "Set 'Text Height' to 0 in OPM",
+            "effect": "Suppresses the drawing of the detail name text in both Model and Paper Space."
+          }
+        ]
+      },
+      "tokens_used": 9370,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbElementDetails.mcr\n\n## Overview\nThis script allows you to define specific detail areas (zoom regions) on timber elements in the 3D model and automatically link them to viewports in 2D drawings. It bridges the gap between the 3D model and production layouts by allowing you to label and zoom into complex connections.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Used to draw the detail boundary box and assign it to the element. |\n| Paper Space | Yes | Used to link a viewport to a defined detail box. |\n| Shop Drawing | No | Used for general drafting and layout views. |\n\n## Prerequisites\n- **Required Entities**: \n  - **Model Space Mode**: An Element (ElementWall or ElementRoof).\n  - **Paper Space Mode**: A Viewport that is already linked to an hsbCAD Element.\n- **Minimum beam count**: 0\n- **Required settings files**: None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbElementDetails.mcr` from the list.\n\n### Step 2: Choose Mode\nThe script supports two workflows based on your initial selection:\n\n**Option A: Define a Detail in Model Space (3D)**\n```\nCommand Line: Select elements (Enter to select a viewport)\nAction: Select a Wall or Roof element in the 3D model.\n```\n1.  Select the desired timber element.\n2.  The Properties Palette will open. Set the **Detail Name** (e.g., \"Detail A\") and **Detail Index**.\n3.  **Prompt:** `Select lower left corner`\n    *   Click the point in the model where the detail box should start.\n4.  **Prompt:** `Select upper right corner`\n    *   Click the point to define the opposite corner of the box.\n5.  **Prompt:** `Select a set of detail entities (Optional)`\n    *   Select specific beams or entities if you wish to group them with this detail, or press Enter to skip.\n\n**Option B: Link a Viewport in Paper Space (2D)**\n```\nCommand Line: Select elements (Enter to select a viewport)\nAction: Press Enter on your keyboard.\n```\n1.  Press **Enter** to switch to Viewport selection mode.\n2.  **Prompt:** Implicit selection\n    *   Click a Viewport on your layout sheet.\n    *   *Note: The Viewport must have hsbData attached (linked to an element).*\n3.  **Prompt:** `Pick point`\n    *   Click where you want the Detail Label (e.g., \"Detail A\") to appear on the sheet.\n4.  Ensure the **Detail Index** property matches the index of the detail you created in Model Space.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Detail Name | Text | \"Detail\" | The label text displayed on the drawing (e.g., \"Section A\"). If a duplicate name exists, a number is appended automatically. |\n| Detail Index | Integer (1-20) | 1 | The unique ID linking the 3D definition to the 2D viewport. Both must have the same index to work together. |\n| DimStyle | Text | Current DimStyle | The dimension style applied to the label text (controls font and appearance). |\n| Text Height | Number | Varies by space | The height of the label text. Set to `0` to hide the text. |\n| Color | Integer (0-255) | 170 | The color of the detail boundary rectangle drawn in Model Space. |\n| Scale Factor | Number | 1.0 | Adjusts the zoom level inside the viewport. Values > 1 zoom in; values < 1 zoom out. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| (Standard Entity Menus) | Modifications are primarily handled via the Properties Palette and Grip Points. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Unique Names**: The script automatically checks for duplicate names. If you name a detail \"Corner\" and it already exists, the script will rename the new one to \"Corner 1\".\n- **Resizing Details**: In Model Space, select the detail script and use the **Grip Points** to resize the rectangle. The script will automatically recalculate the geometry.\n- **Hiding Labels**: If you only want the viewport zoom effect but don't want text cluttering the view, set the **Text Height** to `0` in the properties.\n- **Updating Views**: If you change the **Detail Index** in Paper Space, the viewport will immediately search for the new detail definition and update the zoom target.\n\n## FAQ\n- **Q: Why does the viewport show the wrong location or nothing?**\n  - A: Ensure the selected Viewport is linked to the correct Element and that the **Detail Index** in the Paper Space script matches the index of the detail box in the Model Space script.\n- **Q: Can I use this on multiple elements?**\n  - A: Yes, but each detail instance is attached to a specific element. Ensure you select the correct element during the Model Space setup."
+      },
+      "tokens_used": 6816,
+      "error": null
+    }
+  }
+}

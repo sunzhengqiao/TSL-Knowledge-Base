@@ -1,0 +1,256 @@
+{
+  "filename": "hsb_HatchBeams.mcr",
+  "status": "completed",
+  "total_tokens": 49037,
+  "processing_time": 980.0066764354706,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 4,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "28.08.2008",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Add Spline Hatch"
+          },
+          {
+            "version": "1.2",
+            "date": "09.03.2011",
+            "author": "",
+            "changes": "Add Beam Code so only beams with that code will be hatch"
+          },
+          {
+            "version": "1.3",
+            "date": "09.05.2011",
+            "author": "CS",
+            "changes": "Added functionality to hatch in shop drawings"
+          },
+          {
+            "version": "1.4",
+            "date": "24.07.2012",
+            "author": "",
+            "changes": "Now have the option to filter by zone"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": [
+          "HSB_G-FilterGenBeams"
+        ]
+      },
+      "tokens_used": 6203,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "Both",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": true,
+          "isMultipageScript": true,
+          "detectionEvidence": "The script defines a property 'sSpace' with options 'paper space' and 'shopdraw multipage'. It contains explicit conditional logic for both: 'if (sSpace == sPaperSpace)' which calls getViewport() and uses _Viewport, and 'else if (sSpace == sShopdrawSpace)' which calls getShopDrawView(), uses _Entity, and references '_kOnGenerateShopDrawing' and ViewData."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport (if used in Paper Space)",
+            "ShopDrawView (if used in Shop Drawings)",
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Paper Space layout or Shop Drawing generation view",
+          "requiredSettings": [
+            "HSB_G-FilterGenBeams"
+          ]
+        }
+      },
+      "tokens_used": 6903,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8769,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"This script applies hatching (shading patterns) to timber beams in 2D drawings (layouts or shop drawings) to visually distinguish different material types, zones, or beam classifications.\",\n    \"category\": \"ShopDrawing\",\n    \"typicalUseCase\": \"A detailer uses this to hatching specific wall layers or beam types (like Top Plates or Splines) in a generated layout view to improve drawing readability or indicate specific insulation/material zones.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"nZones\",\n      \"technicalDefault\": \"2\",\n      \"businessMeaning\": \"Selects the specific construction layer or zone index of the element to process. Positive values typically indicate increasing layers in one direction, negative values in the other.\",\n      \"validRange\": \"-5 to 10\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Determines which subset of beams within the element are selected for hatching. If the zone contains no beams or is invalid, no hatch is generated.\"\n    },\n    {\n      \"name\": \"sLocationInZone\",\n      \"technicalDefault\": \"All\",\n      \"businessMeaning\": \"Defines the projection method for the beams. 'All' creates a full orthographic projection. 'Front' or 'Back' extracts only the outer face of the zone assembly (useful for cladding or sheathing representation).\",\n      \"validRange\": \"All, Front, Back\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Alters the 2D geometry generated for the hatch. 'Front/Back' creates a profile based on the zone's bounding planes, effectively hatching only the 'skin' of the element in that view.\"\n    },\n    {\n      \"name\": \"sFilterBeams\",\n      \"technicalDefault\": \"TP;BP;\",\n      \"businessMeaning\": \"Filters beams based on their 'Beam Code' (short code, e.g., 'TP' for Top Plate). Only beams matching codes in this list will be hatched.\",\n      \"validRange\": \"Semi-colon separated string of codes (e.g., 'STUD;PLATE')\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Restricts the hatching to specific structural components. Beams with codes not listed are ignored.\"\n    },\n    {\n      \"name\": \"sFilterBeamName\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Filters beams based on their full 'Name' property. Allows for selection using naming conventions.\",\n      \"validRange\": \"Semi-colon separated string of names\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Further restricts the beams to be hatched to those whose exact name matches an entry in the list.\"\n    },\n    {\n      \"name\": \"genBeamFilterDefinition\",\n      \"technicalDefault\": \"\",\n      \"businessMeaning\": \"Links to an external advanced filter definition ('HSB_G-FilterGenBeams') to apply complex filtering logic (e.g., dimensions, custom properties) before hatching.\",\n      \"validRange\": \"List of available catalog definitions\",\n      \"unit\": \"Catalog Reference\",\n      \"affectsOutput\": \"Acts as a global pre-filter. Only beams passing this external filter are considered by the code/name filters.\"\n    },\n    {\n      \"name\": \"pHatchPattern\",\n      \"technicalDefault\": \"_HatchPatterns\",\n      \"businessMeaning\": \"The visual pattern style (e.g., ANSI31, SOLID) used to hatching standard beams.\",\n      \"validRange\": \"Standard CAD hatch patterns\",\n      \"unit\": \"Pattern Name\",\n      \"affectsOutput\": \"Changes the graphic appearance of the shaded area.\"\n    },\n    {\n      \"name\": \"dAngle\",\n      \"technicalDefault\": \"45\",\n      \"businessMeaning\": \"The rotation angle of the hatch lines.\",\n      \"validRange\": \"0 - 360\",\n      \"unit\": \"degrees\",\n      \"affectsOutput\": \"Rotates the hatch pattern within the beam profile.\"\n    },\n    {\n      \"name\": \"dHatchScale\",\n      \"technicalDefault\": \"1\",\n      \"businessMeaning\": \"Controls the density (spacing) of the hatch pattern.\",\n      \"validRange\": \"0.1 - 10\",\n      \"unit\": \"Scale Factor\",\n      \"affectsOutput\": \"Increases or decreases the spacing between hatch lines.\"\n    },\n    {\n      \"name\": \"nColorHatch\",\n      \"technicalDefault\": \"1\",\n      \"businessMeaning\": \"The color index of the hatch pattern for standard beams.\",\n      \"validRange\": \"1 - 255\",\n      \"unit\": \"Color Index\",\n      \"affectsOutput\": \"Determines the display color of the hatch.\"\n    },\n    {\n      \"name\": \"pHatchPatternSPline\",\n      \"technicalDefault\": \"_HatchPatterns\",\n      \"businessMeaning\": \"The specific hatch pattern applied exclusively to beams identified as 'SPLINE' (curved beams).\",\n      \"validRange\": \"Standard CAD hatch patterns\",\n      \"unit\": \"Pattern Name\",\n      \"affectsOutput\": \"Overrides the standard pattern for curved beams.\"\n    },\n    {\n      \"name\": \"dAngleSPline\",\n      \"technicalDefault\": \"45\",\n      \"businessMeaning\": \"The rotation angle for the spline-specific hatch.\",\n      \"validRange\": \"0 - 360\",\n      \"unit\": \"degrees\",\n      \"affectsOutput\": \"Rotates the hatch pattern for splines.\"\n    },\n    {\n      \"name\": \"dHatchScaleSPline\",\n      \"technicalDefault\": \"1\",\n      \"businessMeaning\": \"The density of the hatch pattern for splines.\",\n      \"validRange\": \"0.1 - 10\",\n      \"unit\": \"Scale Factor\",\n      \"affectsOutput\": \"Adjusts line spacing for spline hatches.\"\n    },\n    {\n      \"name\": \"nColorHatchSPline\",\n      \"technicalDefault\": \"1\",\n      \"businessMeaning\": \"The color of the hatch for spline beams.\",\n      \"validRange\": \"1 - 255\",\n      \"unit\": \"Color Index\",\n      \"affectsOutput\": \"Sets the display color for spline hatches.\"\n    },\n    {\n      \"name\": \"sSpace\",\n      \"technicalDefault\": \"|paper space|\",\n      \"businessMeaning\": \"Defines the operating environment: 'Paper Space' for manual layout views or 'Shopdraw multipage' for automated drawing generation.\",\n      \"validRange\": \"|paper space|, |shopdraw multipage|\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Switches the logic for retrieving the view coordinate system and beam set (Viewport vs. ShopDrawView).\"\n    },\n    {\n      \"name\": \"sDefaultBeamColour\",\n      \"technicalDefault\": \"No\",\n      \"businessMeaning\": \"If set to 'Yes', the script ignores the explicit hatch color settings and uses the native color of the beam entity.\",\n      \"validRange\": \"Yes, No\",\n      \"unit\": \"Boolean\",\n      \"affectsOutput\": \"Overrides 'nColorHatch' and 'nColorHatchSPline' with the beam's actual color property.\"\n    }\n  ],\n  \"parameterDependencies\": [\n    {\n      \"trigger\": \"sSpace == '|paper space|'\",\n      \"effect\": \"The script prompts the user to select a Viewport upon insertion. Calculation uses the Viewport's Element and coordinate transformation.\",\n      \"cascade\": [\"_Viewport\", \"ms2ps\", \"el\"]\n    },\n    {\n      \"trigger\": \"sSpace == '|shopdraw multipage|'\",\n      \"effect\": \"The script retrieves the active ShopDrawView and associated ViewData. Calculation uses the View's coordinate system.\",\n      \"cascade\": [\"_Entity\", \"ViewData\", \"arViewData\", \"ms2ps\"]\n    },\n    {\n      \"trigger\": \"Beam Name == 'SPLINE'\",\n      \"effect\": \"The script applies Spline-specific parameters (Pattern, Angle, Scale, Color) instead of the standard ones.\",\n      \"cascade\": [\"pHatchPatternSPline\", \"dAngleSPline\", \"dHatchScaleSPline\", \"nColorHatchSPline\"]\n    },\n    {\n      \"trigger\": \"sDefaultBeamColour == 'Yes'\",\n      \"effect\": \"The 'nColorHatch' (and Spline variant) parameter values are ignored; the beam entity's color is used for the display.\",\n      \"cascade\": [\"dpHatch\", \"dpHatchSPline\"]\n    },\n    {\n      \"trigger\": \"sFilterBeams or sFilterBeamName is populated\",\n      \"effect\": \"Beams that do not match the provided codes or names are excluded from hatching, even if they belong to the selected Zone.\",\n      \"cascade\": [\"bBmFilter\", \"bBmFilterName\", \"sBeamFilter\", \"sBeamFilterName\"]\n    },\n    {\n      \"trigger\": \"sLocationInZone == 'Front' or 'Back'\",\n      \"effect\": \"The script calculates the profile based on the zone's bounding planes (Front/Back faces) rather than projecting the entire beam volume.\",\n      \"cascade\": [\"plFront\", \"plBack\", \"extractContactFaceInPlane\"]\n    }\n  ],\n  \"outputEntities\": [\n    {\n      \"type\": \"2D Graphic (Hatch)\",\n      \"description\": \"Hatch patterns drawn over the projection of beam bodies in the 2D view.\",\n      \""
+      },
+      "tokens_used": 8349,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script launches; properties are initialized from catalog if available.",
+          "2. Dialog (Properties Palette) is shown to user for initial configuration.",
+          "3. User inserts script into drawing.",
+          "4. Script checks 'Drawing space' (sSpace) property.",
+          "5. [Conditional] User selects context entity:",
+          "   - If Paper Space: User selects a Viewport.",
+          "   - If Shopdraw Space: User selects a ShopDrawView entity.",
+          "6. Script retrieves coordinate transformation (ms2ps) and Element/Beams from the selected context.",
+          "7. Script parses 'Beam Code' and 'Beam Name' filter strings into arrays.",
+          "8. Script collects initial set of beams based on Zone (if Element exists) or Entity list.",
+          "9. Script executes external filter 'HSB_G-FilterGenBeams'.",
+          "10. Script updates beam list to only include beams passing the external filter.",
+          "11. [Validation] Script checks if filtered beam list is empty. If so, execution stops.",
+          "12. Script iterates through remaining beams to generate hatches.",
+          "13. [Conditional] Script calculates 2D profile based on 'Location in zone' (Shadow vs Contact Face).",
+          "14. Profile is transformed to Paper Space coordinates.",
+          "15. [Conditional] Script determines Hatch style (Standard vs Spline) based on Beam Name.",
+          "16. [Conditional] Script checks Beam Code/Name filters (only if not a Spline).",
+          "17. Hatch is drawn onto the view.",
+          "18. Script finishes."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Value of 'Drawing space' (sSpace) property during insertion",
+            "path1": {
+              "name": "Paper Space",
+              "steps": [
+                "Prompts user to select a Viewport.",
+                "Retrieves Element from Viewport.",
+                "Calculates Model-to-PaperSpace transform from Viewport."
+              ]
+            },
+            "path2": {
+              "name": "Shopdraw Multipage",
+              "steps": [
+                "Prompts user to select a ShopDrawView entity.",
+                "Retrieves ViewData from internal Map.",
+                "Calculates Model-to-PaperSpace transform from ViewData."
+              ]
+            }
+          },
+          {
+            "condition": "Validity of the retrieved Element (el.bIsValid())",
+            "path1": {
+              "name": "Element Context (Wall/Column)",
+              "steps": [
+                "Extracts beams from the specific Zone index (nZones).",
+                "Calculates profile using Element Coordinate System.",
+                "Supports 'Location in zone' logic (Front/Back face extraction)."
+              ]
+            },
+            "path2": {
+              "name": "Loose Beam Context",
+              "steps": [
+                "Uses beams directly from the selected entities list.",
+                "Calculates profile using local Beam Y/Z planes.",
+                "Ignores 'Location in zone' and 'Zone to hatch' properties."
+              ]
+            }
+          },
+          {
+            "condition": "Value of 'Location in zone' (sLocationInZone)",
+            "path1": {
+              "name": "All",
+              "steps": [
+                "Creates a horizontal cutting plane.",
+                "Generates profile using 'shadowProfile' (orthographic projection)."
+              ]
+            },
+            "path2": {
+              "name": "Front or Back",
+              "steps": [
+                "Calculates the bounding plane of the zone (Front or Back based on nZones direction).",
+                "Generates profile using 'extractContactFaceInPlane' (skin extraction)."
+              ]
+            }
+          },
+          {
+            "condition": "Beam Name Check (Case Insensitive)",
+            "path1": {
+              "name": "Is Spline",
+              "steps": [
+                "Applies Spline-specific Hatch Pattern, Scale, Angle, and Color.",
+                "Draws hatch immediately (ignores Code/Name filters)."
+              ]
+            },
+            "path2": {
+              "name": "Standard Beam",
+              "steps": [
+                "Checks 'Hatch Only Beams with Code' (if populated).",
+                "Checks 'Hatch Only Beams with Name' ( if populated).",
+                "Applies Standard Hatch properties."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Viewport selection in Paper Space",
+            "errorMessage": "(Implicit) Script instance is erased.",
+            "recovery": "Re-insert the script and ensure a valid Viewport is selected when prompted."
+          },
+          {
+            "check": "ShopDrawView selection in Shopdraw Space",
+            "errorMessage": "(Implicit) Script instance is erased.",
+            "recovery": "Re-insert the script and ensure a valid ShopDrawView entity is selected."
+          },
+          {
+            "check": "ViewData availability in Shopdraw Space",
+            "errorMessage": "(Implicit) Script stops execution.",
+            "recovery": "Ensure the script is running during a valid generation event or that the ViewData exists in the context."
+          },
+          {
+            "check": "Execution of external filter 'HSB_G-FilterGenBeams'",
+            "errorMessage": "Report Warning: 'Beams could not be filtered! Make sure that the tsl HSB_G-FilterGenBeams is loaded in the drawing.' Script instance is erased.",
+            "recovery": "Load the required TSL 'HSB_G-FilterGenBeams' into the drawing and re-insert the script."
+          },
+          {
+            "check": "Resulting beam list population",
+            "errorMessage": "(Silent) Script exits without drawing.",
+            "recovery": "Adjust Zone, Filter Codes, or External Filter definition to ensure beams are selected."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Hatch Appearance",
+            "how": "Edit properties in AutoCAD Properties Palette (OPM)",
+            "effect": "Updating 'Hatch pattern', 'Hatch Angle', 'Hatch Scale', or 'Hatch Color' immediately regenerates the graphics with new styles."
+          },
+          {
+            "action": "Modify Selection Filters",
+            "how": "Edit properties in OPM",
+            "effect": "Updating 'Hatch Only Beams with Code', 'Hatch Only Beams with Name', or 'Filter definition' triggers a re-evaluation of which beams receive hatching."
+          },
+          {
+            "action": "Toggle Beam Colors",
+            "how": "Edit 'Default colour should be beam colour' in OPM",
+            "effect": "Switches hatch colors between the fixed property value and the individual beam's entity color."
+          },
+          {
+            "action": "Change Drawing Source",
+            "how": "Edit 'Drawing space' in OPM",
+            "effect": "Note: This property primarily affects insertion. Changing it post-insertion might require manual re-linking or re-insertion if the underlying entity references (_Viewport vs _Entity) are not automatically updated by the system."
+          }
+        ]
+      },
+      "tokens_used": 10406,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_HatchBeams\n\n## Overview\nThis script applies hatch patterns (shading) to timber beams in 2D Paper Space layouts or generated Shop Drawings. It allows users to visually distinguish specific material types, zones, or beam layers using customizable patterns, scales, and colors.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script generates 2D geometry for drawings only. |\n| Paper Space | Yes | User selects a Viewport to apply hatching. |\n| Shop Drawing | Yes | User selects a ShopDrawView entity for automatic generation. |\n\n## Prerequisites\n- **Required Entities**: A Viewport (in Paper Space) or a ShopDrawView entity (in Shop Drawings).\n- **Minimum Beams**: At least one beam must be present in the selected view/zone.\n- **Required Settings**: The script `HSB_G-FilterGenBeams` must be loaded in the drawing if you wish to use the \"Filter definition\" property.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the command line.\n2.  Select `hsb_HatchBeams.mcr` from the file dialog.\n\n### Step 2: Configure Initial Settings\n1.  The Properties Palette will appear.\n2.  Set the **Drawing space** property to your target environment:\n    *   `|paper space|` for manual detailing on layouts.\n    *   `|shopdraw multipage|` for automated drawing generation.\n3.  Adjust **Hatch pattern**, **Angle**, and **Scale** as needed.\n\n### Step 3: Select Context\n1.  Look at the command line.\n2.  **If in Paper Space**:\n    *   Prompt: `Select Viewport:`\n    *   Action: Click on the viewport border where you want the hatching to appear.\n3.  **If in Shopdraw Multipage**:\n    *   Prompt: `Select ShopDrawView:`\n    *   Action: Click on the ShopDrawView entity (typically the view label or representation in the model).\n\n### Step 4: Refine Filters (Optional)\n1.  After insertion, select the script instance in the drawing.\n2.  In the Properties Palette, modify **Hatch Only Beams with Code** (e.g., `TP;BP;`) to target specific beam types.\n3.  Modify **Zone to hatch** (`nZones`) to target a specific layer index if dealing with a wall or floor element.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Zone to hatch | Number | 2 | Index of the construction layer to hatch (e.g., specific wall layer). |\n| Location in zone | Dropdown | All | Determines how the profile is calculated: `All` (full projection), `Front`, or `Back` (skin only). |\n| Hatch Only Beams with Code | String | TP;BP; | Filters beams by their short codes (e.g., Top Plate, Bottom Plate). Use semi-colons to separate. |\n| Hatch Only Beams with Name | String | | Filters beams by their full Name property. |\n| Filter definition | Catalog | | Links to an external advanced filter (`HSB_G-FilterGenBeams`) for complex selection logic. |\n| Hatch pattern | Pattern | _HatchPatterns | Visual pattern style for standard beams. |\n| Angle | Number | 45 | Rotation angle of the hatch pattern (degrees). |\n| Hatch Scale | Number | 1 | Density/spacing of the hatch pattern. |\n| Color Hatch | Number | 1 | Color index of the hatch for standard beams. |\n| Hatch pattern SPline | Pattern | _HatchPatterns | Visual pattern style specifically for curved beams (Splines). |\n| Angle SPline | Number | 45 | Rotation angle for spline hatches. |\n| Hatch Scale SPline | Number | 1 | Density for spline hatches. |\n| Color Hatch SPline | Number | 1 | Color index for spline hatches. |\n| Drawing space | Dropdown | \\|paper space\\| | Sets the target environment (`|paper space|` or `|shopdraw multipage|`). |\n| Default colour should be beam colour | Dropdown | No | If `Yes`, overrides the hatch color settings with the beam's native entity color. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Update / Refresh | Recalculates and redraws the hatches based on current beam geometry and script properties. (Note: Properties changes also trigger automatic updates). |\n\n## Settings Files\n- **Script**: `HSB_G-FilterGenBeams`\n- **Purpose**: Provides advanced filtering capabilities. If you define a \"Filter definition\" in the properties, ensure this script is loaded in the drawing.\n\n## Tips\n- **Skin Hatching**: Use `Location in zone` set to `Front` or `Back` to hatch only the outer skin of a wall (e.g., for sheathing or cladding representation) rather than the full cross-section.\n- **Curved Walls**: The script automatically detects \"Spline\" beams. Use the `...SPline` properties to give curved walls a different hatch style than straight walls.\n- **Layer Isolation**: If hatches appear in the wrong location, check the `Zone to hatch` index. Increasing or decreasing this number shifts the layer selection within the element.\n\n## FAQ\n- **Q: Why did the hatch not appear?**\n  - **A**: Ensure you selected a valid Viewport or ShopDrawView. Check if the `Zone to hatch` index actually contains beams, or if your `Hatch Only Beams with Code` filter is excluding all beams.\n- **Q: Can I hatch different wall layers with different patterns?**\n  - **A**: Yes. Insert the script multiple times. Set one instance to `Zone to hatch` = 1 with Pattern A, and a second instance to `Zone to hatch` = 2 with Pattern B.\n- **Q: What does the error \"Beams could not be filtered!\" mean?**\n  - **A**: This means you have selected a `Filter definition`, but the required TSL script `HSB_G-FilterGenBeams` is not loaded in your drawing. Load the script to fix this."
+      },
+      "tokens_used": 8407,
+      "error": null
+    }
+  }
+}

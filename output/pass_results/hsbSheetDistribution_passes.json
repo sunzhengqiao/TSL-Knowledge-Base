@@ -1,0 +1,376 @@
+{
+  "filename": "hsbSheetDistribution.mcr",
+  "status": "completed",
+  "total_tokens": 51034,
+  "processing_time": 344.79384565353394,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8824,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses dbCreate() to generate physical Sheet and Sip entities and interacts directly with Element (ElementRoof/ElementWall) objects. It performs 3D geometric calculations (PlaneProfile, intersectWith) and uses PainterDefinitions to constrain logic, which are characteristic of Model Space generation scripts. There is no usage of PaperSpace APIs (_Viewport, sd_* functions) or ShopDrawing detailing logic."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Sheet",
+            "Sip",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing Wall or Roof Elements.",
+          "requiredSettings": [
+            "PainterDefinitions in the 'hsbSheetDistribution' collection",
+            "Catalog entries for the script properties"
+          ]
+        }
+      },
+      "tokens_used": 7054,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n"
+      },
+      "tokens_used": 9570,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the layout and generation of sheathing sheets or Structural Insulated Panels (SIPs) over Wall or Roof elements, handling alignment, staggering, gaps, and constraint-based splitting.",
+          "category": "Cladding / Prefab / Framing",
+          "typicalUseCase": "Applying OSB sheathing to a timber frame wall, generating roof decking, or calculating SIP panel layouts for a prefabricated house kit."
+        },
+        "parameters": [
+          {
+            "name": "sModus",
+            "technicalDefault": "Element",
+            "businessMeaning": "Determines how the distribution area is defined. 'Element' covers the whole wall/roof; 'Sheet/SIP' uses a selected sheet's boundary; 'Reference Axis X/Y' uses construction lines to define the layout grid.",
+            "validRange": "Element, Sheet/SIP, Reference Axis X, Reference Axis Y",
+            "unit": "Enum",
+            "affectsOutput": "Changes the boundary calculation and initial insertion prompts. In 'Reference Axis' modes, alignment options change to 5 specific start positions."
+          },
+          {
+            "name": "sAlignment",
+            "technicalDefault": "Left-Top",
+            "businessMeaning": "Defines the origin point of the distribution grid relative to the bounding box. E.g., 'Right-Top' starts filling panels from the top-right corner.",
+            "validRange": "Left-Top, Left-Center, Left-Bottom, Center-Top, Center-Center, etc.",
+            "unit": "Enum",
+            "affectsOutput": "Moves the entire grid of sheets, changing where cuts occur and where the layout starts."
+          },
+          {
+            "name": "dSheetLength",
+            "technicalDefault": "2500",
+            "businessMeaning": "The length (long side) of the individual sheets or panels to be generated.",
+            "validRange": "500mm - 12000mm",
+            "unit": "mm",
+            "affectsOutput": "Geometry size of the generated sheets. Determines how many rows are needed."
+          },
+          {
+            "name": "dSheetWidth",
+            "technicalDefault": "1250",
+            "businessMeaning": "The width (short side) of the individual sheets or panels to be generated.",
+            "validRange": "300mm - 3000mm",
+            "unit": "mm",
+            "affectsOutput": "Geometry size of the generated sheets. Determines how many columns are needed."
+          },
+          {
+            "name": "dSheetThickness",
+            "technicalDefault": "0",
+            "businessMeaning": "Thickness of the sheathing/SIP. If set to 0, the script defaults to the thickness of the host element.",
+            "validRange": "0mm - 300mm",
+            "unit": "mm",
+            "affectsOutput": "Physical thickness of the 3D body created in the CAD model."
+          },
+          {
+            "name": "dGapX",
+            "technicalDefault": "0",
+            "businessMeaning": "The clearance gap between sheets in the primary direction (usually along the length).",
+            "validRange": "0mm - 20mm",
+            "unit": "mm",
+            "affectsOutput": "Creates spacing between sheet entities, often used for expansion or sealing."
+          },
+          {
+            "name": "dGapY",
+            "technicalDefault": "0",
+            "businessMeaning": "The clearance gap between sheets in the secondary direction (usually along the width).",
+            "validRange": "0mm - 20mm",
+            "unit": "mm",
+            "affectsOutput": "Creates spacing between sheet entities."
+          },
+          {
+            "name": "dStaggeringOffset",
+            "technicalDefault": "0",
+            "businessMeaning": "The distance to offset every other row or column to create a brick-bond or staggered pattern.",
+            "validRange": "0mm - (Sheet Width/Length)",
+            "unit": "mm",
+            "affectsOutput": "Shifts the alignment of alternating rows/columns for structural stability."
+          },
+          {
+            "name": "sPainterBeam",
+            "technicalDefault": "BeamGridY",
+            "businessMeaning": "Selects a logic filter (Painter) to identify specific structural beams. These beams act as constraints (split lines) or define the direction of the layout.",
+            "validRange": "List of available PainterDefinitions in 'hsbSheetDistribution'",
+            "unit": "String",
+            "affectsOutput": "Sheets will be split or interrupted when they intersect beams found by this painter. It can also force the layout direction to be parallel/perpendicular to these beams."
+          },
+          {
+            "name": "nZone",
+            "technicalDefault": "0",
+            "businessMeaning": "Specifies which construction zone (floor level/story) of the element to apply the distribution to.",
+            "validRange": "Integer (0 to N zones)",
+            "unit": "Count",
+            "affectsOutput": "Restricts sheet generation to specific vertical or horizontal sections of a complex element."
+          },
+          {
+            "name": "sSheetOnFirstLastBeamAxis",
+            "technicalDefault": "No",
+            "businessMeaning": "Controls whether the outer sheets align strictly with the theoretical axis of the first/last beams or with the beam faces.",
+            "validRange": "Yes/No",
+            "unit": "Bool",
+            "affectsOutput": "Adjusts the outer boundary of the sheet group to account for beam centerlines vs. edges."
+          },
+          {
+            "name": "sSheetName",
+            "technicalDefault": "",
+            "businessMeaning": "The naming prefix or specific name assigned to the generated sheet entities.",
+            "validRange": "String",
+            "unit": "Text",
+            "affectsOutput": "Entity name in the model and BIM data."
+          },
+          {
+            "name": "sSheetMaterial",
+            "technicalDefault": "",
+            "businessMeaning": "The material specification (e.g., OSB, Plywood) applied to the sheets.",
+            "validRange": "Catalog Material Names",
+            "unit": "Text",
+            "affectsOutput": "Render appearance and takeoff reports."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sModus changes to 'Reference Axis X' or 'Y'",
+            "effect": "The Alignment property options are restricted to 5 specific positions relative to the axis.",
+            "cascade": [
+              "sAlignment"
+            ]
+          },
+          {
+            "trigger": "sModus changes to 'Sheet/SIP'",
+            "effect": "The user is prompted to select an existing sheet during insertion to define the boundary zone.",
+            "cascade": [
+              "Insertion Workflow"
+            ]
+          },
+          {
+            "trigger": "dSheetThickness is set to 0",
+            "effect": "The script automatically inherits the thickness of the parent Wall or Roof element.",
+            "cascade": [
+              "Output Entity Geometry"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Sheet",
+            "description": "Planar geometric elements representing sheathing, decking, or cladding.",
+            "appliedTo": "Wall or Roof Elements (mapped to specific zones)."
+          },
+          {
+            "type": "Sip",
+            "description": "Structural Insulated Panel entities, which include geometric and specific property data for SIP manufacturing.",
+            "appliedTo": "Wall or Roof Elements."
+          }
+        ]
+      },
+      "tokens_used": 8912,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script initialization: Define constants, painter filters, and valid painter definitions.",
+          "Check Insertion/Construction State: Verify if running on Insert, Element Construction, or Db Creation.",
+          "Painter Management: Check catalog for Painter definitions; ensure 'hsbSheetDistribution' painters exist or create them.",
+          "Property Definition: Declare properties (Modus, Alignment, Dimensions, Materials, Zones, etc.) for the OPM.",
+          "User Input Prompt Phase (if _bOnInsert):",
+          "  - Determine Modus (Element, Sheet/SIP, Reference Axis).",
+          "  - 'Sheet/SIP' Mode: Prompt user to select an existing Sheet, Sip, ElementWall, or ElementRoof.",
+          "  - 'Element' Mode: Prompt user to select an ElementWall or ElementRoof.",
+          "  - 'Reference Axis' Mode: Identify relevant construction axes.",
+          "  - Prompt user for a Point to define the layout origin/alignment.",
+          "Calculation Phase (_bOnCalculation):",
+          "  - Retrieve MapX data from the Element to load previous state (properties and grip point).",
+          "  - Identify Target Entities: Filter existing Sheets/Sips associated with the element or selected entity.",
+          "  - Determine Geometry Boundary:",
+          "    - If Element: Use Element PlaneProfile and Zones.",
+          "    - If Sheet/SIP: Use the profile of the selected entity (using rayIntersection if not part of an element).",
+          "  - Generate Virtual Grid: Calculate rows and columns based on Sheet Length/Width, Gaps (X/Y), and Staggering Offset.",
+          "  - Apply Constraints:",
+          "    - Use Painter Definition to find structural beams.",
+          "    - Determine intersection of Grid/Sheets with these beams.",
+          "  - Loop Generation:",
+          "    - Iterate through virtual grid cells.",
+          "    - Create PlaneProfile for the specific sheet cell.",
+          "    - Subtract profiles of found beams (Painter) and existing openings.",
+          "    - Validate remaining area (skip if area < epsilon).",
+          "  - Entity Creation:",
+          "    - If creating 'Sheet': Generate Sheet body, assign material, assign to ElementGroup.",
+          "    - If creating 'SIP': Generate Sip body, add openings, set grain direction, assign to ElementGroup.",
+          "    - Apply attributes (Name, Label, Grade, Color) from Jig/Map.",
+          "  - Cleanup: Erase the old/previous generation of Sheets/Sips.",
+          "State Persistence: Write current properties (Strings, Doubles, Ints) and the Jig Point to the Element's SubMapX ('hsbSheetDistribution').",
+          "Finalize: Erase the script instance (eraseInstance)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Input Modus (Mode of operation)",
+            "path1": {
+              "name": "Element",
+              "steps": [
+                "Script expects selection of ElementWall or ElementRoof.",
+                "User selects a point to define origin relative to the Element bounding box.",
+                "Layout covers the full element (or specific zone)."
+              ]
+            },
+            "path2": {
+              "name": "Sheet/SIP",
+              "steps": [
+                "Script expects selection of existing Sheet or Sip.",
+                "User selects a point to position the new distribution.",
+                "Layout boundary matches the selected entity's boundary/zone."
+              ]
+            },
+            "path3": {
+              "name": "Reference Axis X / Y",
+              "steps": [
+                "Script aligns to construction lines.",
+                "User selects a point closest to 1 of 5 reference positions.",
+                "Layout grid aligns to the selected axis direction."
+              ]
+            }
+          },
+          {
+            "condition": "Target Entity Type (determines output class)",
+            "path1": {
+              "name": "Sheet",
+              "steps": [
+                "Output entities are of type 'Sheet'.",
+                "Created using dbCreate(PlaneProfile, thickness).",
+                "Standard properties applied."
+              ]
+            },
+            "path2": {
+              "name": "SIP",
+              "steps": [
+                "Output entities are of type 'Sip'.",
+                "Created using dbCreate(Pline, style) and addOpening logic.",
+                "Specific properties set (XAxisDirection, WoodGrainDirection)."
+              ]
+            }
+          },
+          {
+            "condition": "Painter Constraints (Interaction with structure)",
+            "path1": {
+              "name": "Painter Active",
+              "steps": [
+                "Beams are found using the PainterDefinition filter.",
+                "Sheet profiles are intersected and subtracted by beam profiles.",
+                "Results in cut or split sheets around obstacles."
+              ]
+            },
+            "path2": {
+              "name": "Painter Disabled/Not Found",
+              "steps": [
+                "No beam filtering occurs.",
+                "Sheets span the entire area without beam interruptions (minus standard openings)."
+              ]
+            }
+          },
+          {
+            "condition": "Debug Mode State",
+            "path1": {
+              "name": "Debug True",
+              "steps": [
+                "Script runs in visualization mode.",
+                "PlaneProfiles are displayed visually (pp.vis(6)).",
+                "No database entities are created or erased."
+              ]
+            },
+            "path2": {
+              "name": "Debug False (Normal Operation)",
+              "steps": [
+                "Script runs in production mode.",
+                "Physical entities (Sheet/Sip) are created.",
+                "Old entities are erased."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Valid Selection",
+            "errorMessage": "If user selects unsupported entity type during insert.",
+            "recovery": "User must select a valid Element (Wall/Roof) or Sheet/Sip."
+          },
+          {
+            "check": "Painter Definition Integrity",
+            "errorMessage": "If a specified Painter Definition in the catalog is missing from the database.",
+            "recovery": "Script automatically attempts to recreate the painter from the stream data stored in properties."
+          },
+          {
+            "check": "Geometry Area",
+            "errorMessage": "Calculated sheet profile area is too small (near zero).",
+            "recovery": "Script silently skips generating that specific sheet entity to prevent invalid geometry."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Move Layout",
+            "how": "Grip Point (Jig)",
+            "effect": "Dragging the grip updates the origin point in MapX, shifting the entire grid of sheets."
+          },
+          {
+            "action": "Change Dimensions/Style",
+            "how": "Object Properties Palette (OPM)",
+            "effect": "Modifying 'Sheet Length', 'Width', 'Gap', or 'Modus' triggers a recalculation, regenerating the layout."
+          },
+          {
+            "action": "Filter Obstacles",
+            "how": "Change 'Painter Beam' property",
+            "effect": "Switching painters changes which beams are treated as cut constraints."
+          },
+          {
+            "action": "Recalculate",
+            "how": "Right-click context menu 'Recalculate'",
+            "effect": "Re-executes the logic to update sheets based on changes to the host Element (e.g., moved windows)."
+          }
+        ]
+      },
+      "tokens_used": 9904,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbSheetDistribution\n\n## Overview\nAutomates the layout and generation of sheathing sheets or Structural Insulated Panels (SIPs) over Wall or Roof elements. The tool handles complex alignment, staggering, gaps, and splits based on structural beams.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script generates physical Sheet and Sip entities in the 3D model. |\n| Paper Space | No | Does not generate 2D views or annotations directly. |\n| Shop Drawing | No | This is a model generation tool, not a detailing script. |\n\n## Prerequisites\n- **Required Entities**: An existing `ElementWall` or `ElementRoof` in the model.\n- **Minimum Beam Count**: None (though beams are used for constraints/splitting).\n- **Required Settings**: PainterDefinitions within the `hsbSheetDistribution` collection must exist in the catalog to filter structural beams.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbSheetDistribution.mcr` from the file dialog.\n\n### Step 2: Select Target Element\n```\nCommand Line: Select Element / Sheet / Sip (<Entity> for insert):\nAction: Click on a Wall, Roof, or an existing Sheet/SIP entity in the model.\n```\n*Note: The selection behavior depends on the 'Modus' property setting (default is Element).*\n\n### Step 3: Define Layout Origin\n```\nCommand Line: Specify point (<Entity> for insert):\nAction: Click a point in the model to set the origin of the sheet layout grid.\n```\n*This point determines where the first sheet starts based on the 'Alignment' property.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sModus | Enum | Element | Defines the distribution area: 'Element' (whole wall/roof), 'Sheet/SIP' (match selected boundary), or 'Reference Axis' (align to construction lines). |\n| sAlignment | Enum | Left-Top | Sets the anchor point of the layout grid (e.g., Top-Left, Center-Center) relative to the selected point or bounding box. |\n| dSheetLength | Number | 2500 | The length (long side) of the sheets/panels in millimeters. |\n| dSheetWidth | Number | 1250 | The width (short side) of the sheets/panels in millimeters. |\n| dSheetThickness | Number | 0 | Thickness of the sheet in millimeters. Set to 0 to automatically match the host element's thickness. |\n| dGapX | Number | 0 | Clearance gap between sheets in the primary direction (Length). |\n| dGapY | Number | 0 | Clearance gap between sheets in the secondary direction (Width). |\n| dStaggeringOffset | Number | 0 | Offset distance for alternating rows/columns to create a staggered (brick bond) pattern. |\n| sPainterBeam | String | BeamGridY | Name of the Painter Definition used to find structural beams. Beams found act as cut lines or constraints for the sheets. |\n| nZone | Integer | 0 | Specifies which construction zone (floor level) to apply the sheets to. 0 usually applies to the whole element or default zone. |\n| sSheetOnFirstLastBeamAxis | Boolean | No | If 'Yes', outer sheets align strictly with the axis of the outermost beams rather than their faces. |\n| sSheetName | String | *Empty* | Name assigned to the generated sheet entities (visible in BIM data). |\n| sSheetMaterial | String | *Empty* | Material name (e.g., OSB, Plywood) applied to the sheets for rendering and reports. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Updates the sheet layout based on changes to the host element (e.g., moved windows) or modified properties. |\n| Move | (Grip Action) Allows you to drag the layout origin point to shift the entire grid of sheets interactively. |\n\n## Settings Files\n- **PainterDefinitions**: `hsbSheetDistribution`\n- **Location**: hsbCAD Catalog\n- **Purpose**: Stores logic filters to identify which structural beams (studs/joists) should cut or interrupt the sheet layout.\n\n## Tips\n- **Quick Adjustments**: After insertion, select the generated script instance (blue dot/grip) and drag it to slide the entire sheet layout across the wall without recalculating.\n- **Cutting Around Openings**: Ensure `sPainterBeam` is set correctly. If sheets are not splitting around studs, check if the beams match the selected Painter Definition.\n- **Thickness Handling**: Leave `dSheetThickness` as `0` when sheathing a frame; the script will automatically grab the wall thickness, ensuring the sheets sit flush even if wall dimensions change.\n\n## FAQ\n- **Q: How do I create a brick pattern (staggered joints) for my sheathing?**\n- **A:** Set the `dStaggeringOffset` property to a non-zero value (e.g., half the sheet width) and Recalculate. This will shift every other row.\n\n- **Q: My sheets are disappearing or not showing up.**\n- **A:** Check the `dSheetThickness`. If it is set to 0 but the host element has no valid thickness, or if the calculation area is too small, sheets may not generate. Also, verify you are not in \"Debug\" mode (visualization only).\n\n- **Q: Can I change the sheet size after inserting?**\n- **A:** Yes. Select the script instance, change `dSheetLength` or `dSheetWidth` in the Properties palette, and choose \"Recalculate\" from the right-click menu."
+      },
+      "tokens_used": 6770,
+      "error": null
+    }
+  }
+}

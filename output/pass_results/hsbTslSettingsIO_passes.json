@@ -1,0 +1,266 @@
+{
+  "filename": "hsbTslSettingsIO.mcr",
+  "status": "completed",
+  "total_tokens": 40540,
+  "processing_time": 256.3342914581299,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"header\": {\n    \"type\": null,\n    \"numBeamsReq\": null,\n    \"keywords\": null,\n    \"majorVersion\": null,\n    \"minorVersion\": null,\n    \"dxaOut\": null,\n    \"implInsert\": null\n  },\n  \"description\": \"This tsl imports/exports custom settings\",\n  \"versionHistory\": [\n    {\n      \"version\": \"1.9\",\n      \"date\": \"19.08.2021\",\n      \"author\": \"Thorsten Huck\",\n      \"changes\": \"HSB-12899 defaults from content general are read\"\n    },\n    {\n      \"version\": \"1.8\",\n      \"date"
+      },
+      "tokens_used": 8252,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script does not create geometry (no Body/GenBeam/Element), does not use sd_ or Multipage prefixes, and contains no #Type E or _Viewport logic. It operates via eraseInstance() and file/MapObject manipulation, which executes in the default ModelSpace or application context."
+        },
+        "prerequisites": {
+          "requiredEntities": [],
+          "minimumBeams": 0,
+          "requiredSpace": "None (Script performs background data management via MapObject/XML)",
+          "requiredSettings": [
+            "Folder 'Settings' with XML files in hsbCompany or hsbInstall/Content/General",
+            "Dictionary 'hsbTSL' in the DWG database"
+          ]
+        }
+      },
+      "tokens_used": 4811,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getString",
+              "promptOriginal": "|Are you sure to erase the settings permanently?| [|No|]/|Yes|",
+              "condition": "sMode == |Erase|",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDialog",
+            "trigger": "On Insert (if _kExecuteKey is empty)",
+            "title": null,
+            "dataSource": "Internal properties (sSetting, sMode)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sSetting",
+            "type": "PropString",
+            "displayName": "|Setting|",
+            "defaultValue": "First entry in dynamic list",
+            "inputType": "dropdown",
+            "options": "Dynamic list of XML files found in Settings folder and MapObject entries",
+            "category": "|General|",
+            "description": "|Defines the Setting|"
+          },
+          {
+            "index": 1,
+            "variable": "sMode",
+            "type": "PropString",
+            "displayName": "|Mode|",
+            "defaultValue": "|Import|",
+            "inputType": "dropdown",
+            "options": [
+              "|Import|",
+              "|Export|",
+              "|Erase|"
+            ],
+            "category": "|General|",
+            "description": "|Defines the read/write mode or erases the settings from the database of the drawing.|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": [
+          {
+            "filename": "*.xml",
+            "searchPaths": [
+              "hsbCompany\\TSL\\Settings",
+              "hsbInstall\\Content\\General\\TSL\\Settings"
+            ],
+            "purpose": "Source and destination for Import/Export operations",
+            "required": false
+          }
+        ]
+      },
+      "tokens_used": 5960,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Utility script to import, export, or erase TSL configuration sets (MapObjects) between the current project database and external XML files.",
+          "category": "System/Data Management",
+          "typicalUseCase": "Used to standardize a project by importing company-wide settings (e.g., labeling rules, machining defaults) from an XML file, or to back up specific project configurations by exporting them to a file."
+        },
+        "parameters": [
+          {
+            "name": "sSetting",
+            "technicalDefault": "First entry in dynamic list",
+            "businessMeaning": "Identifies the specific collection of parameters (Configuration Set) to be processed. This corresponds to a specific XML filename or a database entry name (e.g., 'Stacking', 'WallDefaults').",
+            "validRange": "Dynamic list based on existing XML files in 'hsbCompany\\TSL\\Settings' (or 'Content\\General') and existing entries in the DWG's 'hsbTSL' dictionary.",
+            "unit": "String",
+            "affectsOutput": "Determines the key name under which the data is stored in the drawing dictionary. Changing this allows different scripts to access different parameter sets."
+          },
+          {
+            "name": "sMode",
+            "technicalDefault": "|Import|",
+            "businessMeaning": "Specifies the direction of the data operation: 'Import' loads settings from disk into the drawing, 'Export' saves current drawing settings to disk, and 'Erase' removes settings from the drawing.",
+            "validRange": "Import, Export, Erase",
+            "unit": "String",
+            "affectsOutput": "Import: Updates the internal database values used by other TSL scripts to generate geometry/machining. Export: Writes current values to a file on the hard drive. Erase: Clears data from the drawing's memory."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sMode set to Erase",
+            "effect": "Prompts the user on the command line for confirmation ('Are you sure...') before executing.",
+            "cascade": []
+          },
+          {
+            "trigger": "sMode set to Import for a DWG-only setting",
+            "effect": "Script fails and reports error if the selected setting exists only in the DWG database and not as an XML file on disk.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "MapObject (Data Dictionary Entry)",
+            "description": "Non-graphical data entries stored in the 'hsbTSL' dictionary of the DWG. These contain key-value pairs (Strings, Doubles, Ints) that act as global variables for other scripts.",
+            "appliedTo": "Current Drawing Database (hsbTSL Dictionary)"
+          }
+        ]
+      },
+      "tokens_used": 7213,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Initialization: Define paths for 'hsbCompany' and 'hsbInstall' settings folders.",
+          "File Discovery: Scan for XML files in 'hsbCompany\\TSL\\Settings'.",
+          "Fallback Discovery: Scan 'hsbInstall\\Content\\General\\TSL\\Settings' and append unique files to the list.",
+          "Database Discovery: Retrieve all existing entries from the DWG's 'hsbTSL' dictionary.",
+          "List Compilation: Merge file list and database list, removing duplicates. Entries found only in DB are marked as 'Export Only'.",
+          "Sort & Populate: Sort combined list alphabetically and populate the 'sSetting' property dropdown.",
+          "Validation 1: If the combined list is empty, report error and erase instance immediately.",
+          "User Input: If _kExecuteKey is present, load from catalog; otherwise, show Dialog for user to select 'Setting' and 'Mode'.",
+          "Validation 2: If Mode is 'Import' and the selected setting is marked 'Export Only' (no source XML), report error and stop.",
+          "Execution - Import: Read XML file. Check for 'Identifier' tag to determine internal name. Update/Insert MapObject in DWG. Recalculate all dependent TSL instances.",
+          "Execution - Export: Read MapObject from DWG. Determine filename (use 'CustomFileName' or 'Identifier'). Write data to XML in hsbCompany folder.",
+          "Execution - Erase: Prompt user on command line for confirmation ('Are you sure...'). If confirmed, delete MapObject and update references.",
+          "Reporting: Print the contents of the processed MapObject (keys and values) to the command line.",
+          "Cleanup: Erase script instance from drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Source of Execution Command",
+            "path1": {
+              "name": "Catalog/Command Key",
+              "steps": [
+                "Script reads '_kExecuteKey'.",
+                "Attempts to match key against catalog names.",
+                "If found, loads specific properties; otherwise, loads 'LastInserted' defaults."
+              ]
+            },
+            "path2": {
+              "name": "Manual Execution",
+              "steps": [
+                "Script calls showDialog().",
+                "User selects 'Setting' and 'Mode' from the Properties Palette."
+              ]
+            }
+          },
+          {
+            "condition": "Validation of Import Mode",
+            "path1": {
+              "name": "Valid Import",
+              "steps": [
+                "XML file exists on disk.",
+                "Data is read and imported into the DWG MapObject."
+              ]
+            },
+            "path2": {
+              "name": "Invalid Import",
+              "steps": [
+                "Setting exists only in DWG (marked bOnlyExports).",
+                "Script reports: 'No import file found, the settings of [Name] can only be exported.'",
+                "Instance is erased."
+              ]
+            }
+          },
+          {
+            "condition": "User Confirmation (Erase Mode)",
+            "path1": {
+              "name": "Confirmed",
+              "steps": [
+                "User types 'Yes' (or 'Y').",
+                "MapObject entry is deleted from 'hsbTSL' dictionary.",
+                "Dependent entities are recalculated."
+              ]
+            },
+            "path2": {
+              "name": "Cancelled",
+              "steps": [
+                "User types anything else.",
+                "Script reports 'canceled'.",
+                "Instance is erased without modifying data."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Existence of settings files or database entries",
+            "errorMessage": "No settings found in the drawing and in [Path]\\Settings",
+            "recovery": "Ensure XML files exist in the company or install content folders, or that settings exist in the drawing."
+          },
+          {
+            "check": "Import source availability",
+            "errorMessage": "No import file found, the settings of [Name] can only be exported.",
+            "recovery": "Place the required XML file in the Settings folder, or change the Mode to 'Export'."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None (Script is transient)",
+            "how": "N/A",
+            "effect": "The script calls eraseInstance() immediately after execution, removing itself from the drawing database. It cannot be modified after insertion."
+          }
+        ]
+      },
+      "tokens_used": 8975,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbTslSettingsIO.mcr\n\n## Overview\nUse this script to manage custom TSL settings within your project. It allows you to import standard configurations from XML files, export current project settings to a file, or permanently erase settings from the drawing database.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Operates in the background via the drawing database. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Entities:** None (This script manages data only).\n- **Minimum Beam Count:** 0.\n- **Required Settings:** \n  - A folder named `Settings` containing XML files must exist in either `hsbCompany` or `hsbInstall\\Content\\General`.\n  - The drawing must contain the `hsbTSL` dictionary (usually created automatically by hsbCAD).\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the command line.\n2.  Select `hsbTslSettingsIO.mcr` from the list and click Open.\n\n### Step 2: Configure Properties\nA dialog or the Properties Palette will appear automatically. Set the following:\n- **Setting**: Select the configuration set you wish to manage (e.g., a specific labeling style or machining default).\n- **Mode**: Select the action:\n  - `Import`: Load settings from a file into the drawing.\n  - `Export`: Save current drawing settings to a file.\n  - `Erase`: Remove the settings from the drawing.\n\n### Step 3: Execute\n1.  Click **OK** or **Finish** in the dialog.\n2.  The script will process the request and then remove itself from the drawing.\n\n### Step 4: Confirm Erase (If Mode is Erase)\nIf you selected **Erase**, you must confirm the action on the command line:\n```\nCommand Line: Are you sure to erase the settings permanently? [No]/Yes\nAction: Type \"Yes\" and press Enter to confirm, or press Enter to cancel.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Setting | dropdown | First entry found | Selects the specific configuration collection to process. The list combines XML files found on disk and settings currently saved in the drawing. |\n| Mode | dropdown | Import | Selects the operation: **Import** (File to Drawing), **Export** (Drawing to File), or **Erase** (Delete from Drawing). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script is transient and removes itself immediately after execution. It does not offer context menu options. |\n\n## Settings Files\n- **Filename**: `*.xml`\n- **Location**: `hsbCompany\\TSL\\Settings` or `hsbInstall\\Content\\General\\TSL\\Settings`\n- **Purpose**: These files store the data definitions. When importing, the script reads these files. When exporting, the script creates or updates these files.\n\n## Tips\n- **Standardization:** Use the **Import** mode at the start of a new project to ensure all drawings use the same company-wide TSL settings.\n- **Backup:** If you have tweaked settings in a drawing that work perfectly, use **Export** mode to save them to an XML file before sharing them with others.\n- **Transience:** The script instance will disappear from your drawing immediately after running. Do not look for it in the model space afterwards.\n\n## FAQ\n- **Q: Why do I get an error saying \"No import file found\" when I try to Import?**\n  **A:** This means the selected \"Setting\" currently exists in the drawing's database but does not have a corresponding XML file on the disk (or the file is missing). You can only **Export** or **Erase** such a setting, not Import it.\n  \n- **Q: Where should I put my custom XML files so the script can see them?**\n  **A:** Place them in the `hsbCompany\\TSL\\Settings` folder. If they are not there, the script will also check the general installation folder."
+      },
+      "tokens_used": 5329,
+      "error": null
+    }
+  }
+}

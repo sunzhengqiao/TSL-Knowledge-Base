@@ -1,0 +1,335 @@
+{
+  "filename": "hsbGrainDirection.mcr",
+  "status": "completed",
+  "total_tokens": 49147,
+  "processing_time": 425.93210649490356,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9013,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly collects entities using Group().collectEntities(..., _kModelSpace). It interacts with ModelObject properties (mo) and writes to 'extendedProperties' of CLT panels for manufacturing/IFC. Logic includes 'Define Character' prompts selecting polylines in World XY. History notes references to '3D Text', 'solid representation', and 'IFC Export', indicating a 3D model context rather than 2D drafting."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element",
+            "ChildPanel"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (Must be attached to a structural element/panel)",
+          "requiredSettings": [
+            "XML settings file (located in company\\tsl\\settings\\hsbGrainDirection.xml)",
+            "Block definitions 'hsbGrainDirectionWall' or 'hsbGrainDirectionFloor' (optional, for specific symbol display)"
+          ]
+        }
+      },
+      "tokens_used": 7366,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1"
+      },
+      "tokens_used": 9797,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Manages and visualizes wood grain direction, surface quality, and nesting preferences for CLT (Cross Laminated Timber) panels within the 3D model and for production data export.",
+          "category": "Modeling/ProductionData",
+          "typicalUseCase": "Used by detailers to set the correct grain angle for structural integrity, indicate preferred nesting faces for CNC optimization, and visually mark surface qualities on shop drawings."
+        },
+        "parameters": [
+          {
+            "name": "GrainDirection",
+            "technicalDefault": "0",
+            "businessMeaning": "The angle of the wood grain relative to the panel's local coordinate system.",
+            "validRange": "0 - 360 degrees",
+            "unit": "degrees",
+            "affectsOutput": "Rotates the graphical grain symbol/lines in the model and updates the 'GrainDirection' extended property used in IFC export and production lists."
+          },
+          {
+            "name": "PreferredNestingFace",
+            "technicalDefault": "0",
+            "businessMeaning": "Designates which face (Top or Bottom) of a floor panel should be placed upwards during CNC cutting when both faces have identical quality.",
+            "validRange": "0 (None), 1 (Top), 2 (Bottom)",
+            "unit": "count",
+            "affectsOutput": "Displays a graphical arrow on the specific face in the 3D model and signals optimization software how to orient the panel."
+          },
+          {
+            "name": "VersalHeight",
+            "technicalDefault": "50.0",
+            "businessMeaning": "The height of capital letters when defining custom characters for grain direction marking.",
+            "validRange": "10.0 - 200.0",
+            "unit": "mm",
+            "affectsOutput": "Scales the geometry of custom characters defined via the 'Define Character' trigger."
+          },
+          {
+            "name": "AssociationColor",
+            "technicalDefault": "Red;Green",
+            "businessMeaning": "Color mapping used to visually differentiate between Wall and Floor panel grain associations.",
+            "validRange": "CAD color names or indices (comma or semicolon separated)",
+            "unit": "string",
+            "affectsOutput": "Changes the color of the grain symbol (e.g., Red for Walls, Green for Floors) in the drawing."
+          },
+          {
+            "name": "3DGrain",
+            "technicalDefault": "0",
+            "businessMeaning": "Determines if the grain direction is projected as geometry onto the panel for 3D visualization and IFC export.",
+            "validRange": "0 (Disabled), 1 (Enabled)",
+            "unit": "boolean",
+            "affectsOutput": "If enabled, creates lines or text geometry on the panel surface visible in 3D views and included in IFC models."
+          },
+          {
+            "name": "TextOffset",
+            "technicalDefault": "10.0",
+            "businessMeaning": "The offset distance from the panel edge to the surface quality text labels.",
+            "validRange": "0.0 - 100.0",
+            "unit": "mm",
+            "affectsOutput": "Adjusts the position of quality labels (e.g., 'S1', 'S2') to ensure legibility in plan views."
+          },
+          {
+            "name": "SurfaceQuality",
+            "technicalDefault": "N/A",
+            "businessMeaning": "The quality classification of specific panel faces (e.g., Visual vs. Industrial).",
+            "validRange": "String values defined in XML settings",
+            "unit": "string",
+            "affectsOutput": "Updates graphical markers and text labels on the panel indicating which face corresponds to which quality grade."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing 'GrainDirection'",
+            "effect": "Updates the graphical symbol and writes the new angle to the panel's ExtendedProperties.",
+            "cascade": [
+              "GrainDirection",
+              "ExtendedProperties.GrainDirection"
+            ]
+          },
+          {
+            "trigger": "Import/Export Settings",
+            "effect": "Reads or writes the XML configuration file, resetting all visual parameters to the file's values.",
+            "cascade": [
+              "All XML-based settings (TextOffset, Colors, 3DGrain, etc.)"
+            ]
+          },
+          {
+            "trigger": "Define Character",
+            "effect": "Stores new polyline geometry as a character font in the ModelObject database.",
+            "cascade": [
+              "mapFonts",
+              "mapChars"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "PLine / Line",
+            "description": "Lines drawn on the panel to indicate the direction of the wood grain.",
+            "appliedTo": "Element / GenBeam"
+          },
+          {
+            "type": "Text",
+            "description": "Labels displaying surface quality, weight, or other properties.",
+            "appliedTo": "Element / GenBeam"
+          },
+          {
+            "type": "BlockReference",
+            "description": "Standard blocks ('hsbGrainDirectionWall', 'hsbGrainDirectionFloor') inserted to represent the grain direction.",
+            "appliedTo": "Element / GenBeam"
+          },
+          {
+            "type": "MapEntry (ExtendedProperties)",
+            "description": "Writes metadata like 'GrainDirection', 'Weight', and outer contour area to the panel for BIM/Production.",
+            "appliedTo": "Element / GenBeam"
+          },
+          {
+            "type": "PlaneProfile",
+            "description": "3D geometry projected onto the panel surface for grain visualization (if 3DGrain is enabled).",
+            "appliedTo": "Element / GenBeam"
+          }
+        ]
+      },
+      "tokens_used": 7897,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initialization",
+          "2. Check for existing ModelObject (mo) to load settings from database",
+          "3. Check for XML settings file presence",
+          "4. Merge settings (Database priority > XML priority > Internal defaults)",
+          "5. Insertion Mode (_bOnInsert): Prompt user to select a structural element (GenBeam/Element/ChildPanel)",
+          "6. Attach script instance to the selected entity",
+          "7. Execute Calculation: Calculate panel properties (GrainDirection, Weight, Contour Area)",
+          "8. Write extended properties to panel (ExtendedProperties map)",
+          "9. Generate graphical representation (Lines/Text/Blocks/PlaneProfiles)",
+          "10. Update referenced ChildPanels if necessary",
+          "11. Display/Update drawing"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User executes 'Import Settings' context trigger",
+            "path1": {
+              "name": "Import Successful",
+              "steps": [
+                "Read mapSetting from XML file",
+                "Update mo with new settings",
+                "Report success message",
+                "Recalculate script (Execution Loops = 2)"
+              ]
+            },
+            "path2": {
+              "name": "File Not Found/Read Error",
+              "steps": [
+                "Trigger remains available",
+                "Script continues with current settings",
+                "(Implicit: No change applied)"
+              ]
+            }
+          },
+          {
+            "condition": "User executes 'Export Settings' context trigger",
+            "path1": {
+              "name": "Overwrite Existing File",
+              "steps": [
+                "Prompt for confirmation ('Are you sure to overwrite?')",
+                "If Yes: Write mapSetting to XML",
+                "Report success/failure",
+                "Recalculate script"
+              ]
+            },
+            "path2": {
+              "name": "New File",
+              "steps": [
+                "Verify/Create directory path",
+                "Write mapSetting to XML",
+                "Report success/failure",
+                "Recalculate script"
+              ]
+            }
+          },
+          {
+            "condition": "User executes 'Define Character' context trigger",
+            "path1": {
+              "name": "Valid Polyline Selection",
+              "steps": [
+                "Prompt user to pick base point in World XY",
+                "Prompt user to select Polylines",
+                "Prompt for character string (e.g., 'A')",
+                "Calculate bounding box and normalize geometry",
+                "Remove old character definition if exists",
+                "Store new character in ModelObject database",
+                "Update mapFonts",
+                "Recalculate script"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Geometry/Selection",
+              "steps": [
+                "Check if Polyline is in XY-World",
+                "If not: Report 'Polyline needs to be drawn in XY-World' and skip",
+                "If no char entered: Continue loop to next selection"
+              ]
+            }
+          },
+          {
+            "condition": "Insertion/Calculation Phase: 'Association' Logic",
+            "path1": {
+              "name": "ExtendedDataAssociation defined in XML",
+              "steps": [
+                "Read propSetName/propName from XML",
+                "Query attached entity's Extended Properties",
+                "Set 'GrainDirection' property based on found value"
+              ]
+            },
+            "path2": {
+              "name": "Auto-Detection (default)",
+              "steps": [
+                "Check entity normal vector",
+                "If parallel to Z-World -> Wall Association",
+                "If parallel to XY-World -> Floor/Roof Association",
+                "Apply corresponding color and symbol settings"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Polyline Geometry for Define Character",
+            "errorMessage": "Polyline needs to be drawn in XY-World",
+            "recovery": "User must draw the polyline on the World XY plane (Z=0) or flatten the entity."
+          },
+          {
+            "check": "Character Input Length",
+            "errorMessage": "(None shown, logic handles it)",
+            "recovery": "If input length < 1, the loop continues to the next selection prompt."
+          },
+          {
+            "check": "File Overwrite on Export Settings",
+            "errorMessage": "Are you sure to overwrite existing settings? [No/Yes]",
+            "recovery": "User must input 'Y' or 'Yes' to proceed, otherwise export is cancelled."
+          },
+          {
+            "check": "Directory Existence on Export",
+            "errorMessage": "(Handled via code: makeFolder)",
+            "recovery": "Script automatically creates the directory structure 'company\\tsl\\settings' if it does not exist."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Grain Direction",
+            "how": "Select 2 points in 3D space (Command Line prompt available) or Modify Property 'GrainDirection' in OPM",
+            "effect": "Rotates grain symbol, updates 'GrainDirection' in ExtendedProperties."
+          },
+          {
+            "action": "Set Nesting Preference",
+            "how": "Context Menu command 'Set Nesting Face Top/Bottom/None'",
+            "effect": "Updates 'PreferredNestingFace' property, updates graphical arrow on the panel."
+          },
+          {
+            "action": "Edit Visual Settings",
+            "how": "Properties Palette (OPM) editing of VersalHeight, TextOffset, AssociationColor, etc.",
+            "effect": "Immediate redraw of symbols/text with new parameters."
+          },
+          {
+            "action": "Manage Configuration",
+            "how": "Context Menu triggers: 'Import Settings', 'Export Settings'",
+            "effect": "Loads/Saves XML configuration to disk, affecting all instances using these settings."
+          },
+          {
+            "action": "Customize Font/Character",
+            "how": "Context Menu trigger: 'Define Character'",
+            "effect": "Allows defining custom polyline-based fonts for grain marking, stored in drawing database."
+          }
+        ]
+      },
+      "tokens_used": 9108,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbGrainDirection\n\n## Overview\nThis script manages and visualizes wood grain direction, surface quality, and nesting preferences for CLT (Cross Laminated Timber) panels. It provides graphical symbols in the 3D model and writes essential production data (like grain angle) to the panel properties for IFC export and CNC optimization.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be attached to a structural element (GenBeam, Element, or ChildPanel). |\n| Paper Space | No | This script operates on 3D model entities only. |\n| Shop Drawing | No | This is a modeling script, though it influences data used in drawings. |\n\n## Prerequisites\n- **Required Entities**: A GenBeam, Element, or ChildPanel (CLT panel) must exist in the model.\n- **Minimum Beam Count**: 1 (The script attaches to a single element).\n- **Required Settings**: \n  - XML settings file (`hsbGrainDirection.xml`) located in `company\\tsl\\settings\\` (optional but recommended for default configurations).\n  - Block definitions `hsbGrainDirectionWall` or `hsbGrainDirectionFloor` (optional, used if specific symbols are required).\n\n## Usage Steps\n\n### Step 1: Launch Script\n```\nCommand: TSLINSERT\nAction: Select hsbGrainDirection.mcr from the file list.\n```\n\n### Step 2: Select Element\n```\nCommand Line: Select Element/Beam:\nAction: Click on the CLT panel or structural beam in the 3D model to which you want to attach the grain information.\n```\n\n### Step 3: Configure Properties\n```\nAction: Once attached, select the element and open the Properties Palette (Ctrl+1).\nAction: Adjust parameters like \"GrainDirection\" or \"PreferredNestingFace\" as needed.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| GrainDirection | Double | 0 | The angle of the wood grain relative to the panel's local coordinate system (0-360 degrees). |\n| PreferredNestingFace | Integer | 0 | Sets which face (Top or Bottom) should face up during CNC cutting (0=None, 1=Top, 2=Bottom). |\n| VersalHeight | Double | 50.0 | The height of capital letters used for custom grain marking characters (in millimeters). |\n| AssociationColor | String | Red;Green | Colors used to distinguish grain symbols for Wall vs. Floor panels (e.g., \"Red;Green\"). |\n| 3DGrain | Integer | 0 | If set to 1 (Enabled), projects grain geometry onto the panel surface for 3D visualization and IFC export. |\n| TextOffset | Double | 10.0 | The distance from the panel edge to the surface quality text labels (in millimeters). |\n| SurfaceQuality | String | N/A | The quality classification of specific panel faces (e.g., Visual, Industrial). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Change Grain Direction | Prompts you to click two points in 3D space to graphically define the grain angle. |\n| Set Nesting Face Top | Sets the preferred nesting face to the Top face of the panel. |\n| Set Nesting Face Bottom | Sets the preferred nesting face to the Bottom face of the panel. |\n| Set Nesting Face None | Removes the specific nesting preference. |\n| Import Settings | Loads configuration settings from the `hsbGrainDirection.xml` file. |\n| Export Settings | Saves current configuration settings to the `hsbGrainDirection.xml` file. |\n| Define Character | Allows you to create custom font characters by selecting Polylines in the World XY plane. |\n\n## Settings Files\n- **Filename**: `hsbGrainDirection.xml`\n- **Location**: `company\\tsl\\settings\\` or the hsbCAD installation directory.\n- **Purpose**: Stores default visual settings (colors, text heights, offsets) so they can be shared across projects or users.\n\n## Tips\n- **Define Character**: When defining custom characters, ensure you draw the polylines on the **World XY plane** (flat, Z=0). If the geometry is not flat on this plane, the script will reject it.\n- **Auto-Detection**: The script automatically detects if the panel is a Wall or a Floor based on its orientation and applies the correct color from the `AssociationColor` property.\n- **Visual Check**: Enable the `3DGrain` property if you need to verify the grain direction in a rendered 3D view or if it needs to appear in IFC exports.\n\n## FAQ\n- **Q: Why can't I define a new character?**\n- **A:** Ensure the polyline you are trying to use is drawn exactly on the World XY plane. If it is drawn in a 3D view or on a different UCS, move it to Z=0 first.\n  \n- **Q: How do I show the grain direction in an IFC export?**\n- **A:** Set the `3DGrain` property to `1`. This ensures the grain geometry is generated on the panel surface and included in the export.\n\n- **Q: What does the \"PreferredNestingFace\" do?**\n- **A:** It tells the CNC optimization software which side of the panel should face upwards. This is useful for panels where one side must remain pristine (Top) or for handling specific quality requirements."
+      },
+      "tokens_used": 5966,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,340 @@
+{
+  "filename": "QuickSlice.mcr",
+  "status": "completed",
+  "total_tokens": 27956,
+  "processing_time": 322.39005517959595,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4231,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses getPoint for 3D coordinate input, PrEntity for manual entity selection, and Body.getSlice to process 3D geometry. It creates geometry using dbCreate on the 'DEFPOINTS' layer. No 'sd_' classes, '_Viewport' checks, or Shop Drawing specific prefixes (#Type E context) are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Entity"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D environment)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3609,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select Entities",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "Select start point",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "PrPoint",
+              "promptOriginal": "Select next point",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "piColor",
+            "type": "PropInt",
+            "displayName": "Color",
+            "defaultValue": 4,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "Lock Vertical plane",
+            "handler": "|Lock Vertical plane|",
+            "action": "Locks the slicing plane to a vertical orientation relative to the World/Unit Z-axis.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Commit Lines",
+            "handler": "|Commit Lines|",
+            "action": "Converts the generated slice geometry into static polylines and removes the script instance.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 3184,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates a dynamic, user-adjustable cross-section slice through selected timber elements to visualize intersections, clearances, or create layout lines.",
+          "category": "Framing/Utility",
+          "typicalUseCase": "Used by detailers to verify how complex roof planes or wall intersections meet, or to generate cutting lines for manual drafting."
+        },
+        "parameters": [
+          {
+            "name": "piColor",
+            "technicalDefault": 4,
+            "businessMeaning": "The display color index of the slice line and visual indicators in the CAD model.",
+            "validRange": "0-255 (AutoCAD Color Index)",
+            "unit": "Index",
+            "affectsOutput": "Alters the visibility contrast of the slice against the model background. Does not change geometry."
+          },
+          {
+            "name": "_Pt0 (Anchor Point)",
+            "technicalDefault": "User Input",
+            "businessMeaning": "The fixed origin point through which the slicing plane passes.",
+            "validRange": "Any 3D coordinate in model space",
+            "unit": "Length (mm/inches)",
+            "affectsOutput": "Defines the pivot location for the slicing plane. Moving this point shifts the entire slice across the timber."
+          },
+          {
+            "name": "_PtG[0] (Direction Grip 1)",
+            "technicalDefault": "User Input",
+            "businessMeaning": "Defines the primary rotation/angle of the slice plane around the anchor point.",
+            "validRange": "Any 3D coordinate offset from _Pt0",
+            "unit": "Length (mm/inches)",
+            "affectsOutput": "Rotates the cutting plane. If 'Lock Vertical' is active, this rotates the plane around the Z-axis (like a spinning door)."
+          },
+          {
+            "name": "_PtG[1] (Direction Grip 2)",
+            "technicalDefault": "User Input",
+            "businessMeaning": "Defines the tilt/pitch of the slice plane (used when not locked to vertical).",
+            "validRange": "Any 3D coordinate offset from _Pt0",
+            "unit": "Length (mm/inches)",
+            "affectsOutput": "Allows the slice to be angled or oblique, rather than perfectly vertical. Disabled if 'Lock Vertical' is active."
+          },
+          {
+            "name": "iLockPlumb (Internal State)",
+            "technicalDefault": "0",
+            "businessMeaning": "A toggle state that forces the slicing plane to be perpendicular to the World Z-axis (vertical).",
+            "validRange": "0 (Free), 1 (Locked Vertical)",
+            "unit": "Boolean",
+            "affectsOutput": "Constrains the slice to vertical only, preventing diagonal cuts. Automatically adjusts _PtG positions to maintain verticality."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of 'Lock Vertical plane' command",
+            "effect": "Enforces a vertical orientation, recalculating the plane normal based on the World Z-axis and discarding the tilt defined by the second grip point.",
+            "cascade": [
+              "Plane Normal",
+              "_PtG[1]"
+            ]
+          },
+          {
+            "trigger": "Selection of 'Commit Lines' command",
+            "effect": "Finalizes the current slice geometry by converting the temporary graphics into static polylines (PLine) and deleting the script instance.",
+            "cascade": [
+              "Script Instance Lifecycle",
+              "Database Entities"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "PLine (Polyline)",
+            "description": "Static lines representing the exact intersection curve where the plane cuts through the timber elements.",
+            "appliedTo": "Model Space (specifically on the 'DEFPOINTS' layer by default)."
+          },
+          {
+            "type": "Display (Transient Geometry)",
+            "description": "Visual feedback showing the active slice path and two circular grips indicating the anchor and direction handles.",
+            "appliedTo": "Screen only (regenerates on update)."
+          }
+        ]
+      },
+      "tokens_used": 4198,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User launches script insertion.",
+          "2. Command prompts 'Select Entities' (PrEntity).",
+          "3. User selects objects and confirms.",
+          "4. Script iterates through selection: Validates if entity has a valid RealBody. Invalid entities are skipped.",
+          "5. If no entities selected or user cancels selection: Script instance is erased and exits.",
+          "6. Command prompts 'Select start point' (getPoint) to define the Anchor (_Pt0).",
+          "7. Script enters loop for Direction Points:",
+          "   - Prompts 'Select next point'.",
+          "   - If User provides point: Point is appended to _PtG array.",
+          "   - If 2 points are collected, loop terminates automatically.",
+          "   - If User cancels (Esc/Enter), loop terminates early.",
+          "8. Script calculates slicing plane based on number of points collected (1 or 2).",
+          "9. Script intersects plane with collected entities to generate geometry.",
+          "10. Script displays slice lines and anchor grips visually.",
+          "11. Script enters standby mode waiting for user interaction (Grip edit, Property change, or Context menu)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User Input at Entity Selection",
+            "path1": {
+              "name": "Valid Selection",
+              "steps": [
+                "User selects one or more beams/bodies.",
+                "Script filters valid bodies into _Entity array.",
+                "Proceeds to point input."
+              ]
+            },
+            "path2": {
+              "name": "Cancel/Empty Selection",
+              "steps": [
+                "User presses Esc or Enter without selecting.",
+                "Script detects pre.go() != _kOk.",
+                "Script executes eraseInstance().",
+                "Script terminates."
+              ]
+            }
+          },
+          {
+            "condition": "Number of Direction Points Selected (Plane Definition)",
+            "path1": {
+              "name": "Vertical / Locked Mode (1 Point or Command Triggered)",
+              "steps": [
+                "Input consists of Anchor + 1 Direction point (or 'Lock Vertical' is active).",
+                "Script defines Base Normal using World Z (_ZW).",
+                "Script calculates Slice Normal via Cross Product of Direction Vector and Z-Axis.",
+                "Result is a perfectly vertical slicing plane."
+              ]
+            },
+            "path2": {
+              "name": "Free / 3-Point Mode (2 Points)",
+              "steps": [
+                "Input consists of Anchor + 2 Direction points.",
+                "Script uses Anchor, Point 1, and Point 2 to define the plane.",
+                "Result is a plane that can be tilted or oblique to the world Z-axis."
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Command 'Commit Lines'",
+            "path1": {
+              "name": "Commit Executed",
+              "steps": [
+                "User triggers 'Commit Lines'.",
+                "Script iterates through current slice results.",
+                "Creates static PLine entities in database (dbCreate).",
+                "Script executes eraseInstance().",
+                "Script terminates."
+              ]
+            },
+            "path2": {
+              "name": "Standard Display",
+              "steps": [
+                "No commit command detected.",
+                "Geometry remains transient (Display only).",
+                "Script instance persists for future edits."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Geometry Validity",
+            "errorMessage": "None (Silent Skip)",
+            "recovery": "Script checks ent.realBodyTry(). If null (empty or non-valid geometric entity), it continues to the next entity in the list without crashing."
+          },
+          {
+            "check": "Grip Point Proximity (Vector Length)",
+            "errorMessage": "None (Auto-Correction)",
+            "recovery": "If a direction grip is moved within 0.1 inch of the anchor point, the resulting vector length is too short for calculation. The script automatically retrieves the last valid vector from internal Map storage to maintain the plane orientation."
+          },
+          {
+            "check": "Insertion Sequence Cancellation",
+            "errorMessage": "None",
+            "recovery": "If the user cancels during 'Select Entities', the script deletes itself immediately. If cancelled during point input, the script proceeds with whatever points were successfully gathered (1 or 2)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Move Anchor Point (_Pt0)",
+            "how": "Grip Edit (Square/Circle grip at origin)",
+            "effect": "Translates the entire slicing plane through 3D space without changing its rotation or angle."
+          },
+          {
+            "action": "Move Direction Point (_PtG[0])",
+            "how": "Grip Edit (Grip 1)",
+            "effect": "Rotates the slicing plane around the Anchor point. In 'Locked Vertical' mode, this acts as an azimuth rotation. In 'Free' mode, it alters one axis of the plane's tilt."
+          },
+          {
+            "action": "Move Second Direction Point (_PtG[1])",
+            "how": "Grip Edit (Grip 2)",
+            "effect": "Adjusts the pitch/tilt of the plane (Only active if 'Lock Vertical' is OFF and 2 points were defined)."
+          },
+          {
+            "action": "Toggle 'Lock Vertical plane'",
+            "how": "Right-click Context Menu",
+            "effect": "Switches calculation logic to force the plane normal perpendicular to World Z. Resets plane to vertical orientation based on current Anchor and first Direction point."
+          },
+          {
+            "action": "Trigger 'Commit Lines'",
+            "how": "Right-click Context Menu",
+            "effect": "Converts the visual slice lines into permanent AutoCAD polylines on the 'DEFPOINTS' layer and deletes the script instance."
+          },
+          {
+            "action": "Change 'Color' Property",
+            "how": "Properties Palette (OPM)",
+            "effect": "Updates the color index (piColor) used for the transient slice lines and the anchor grip circles."
+          }
+        ]
+      },
+      "tokens_used": 7203,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# QuickSlice.mcr\n\n## Overview\nCreates a dynamic, user-adjustable cross-section slice through selected timber elements to visualize intersections and clearances. It allows you to generate static layout lines from the section geometry.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for 3D coordinate input and slicing. |\n| Paper Space | No | Not designed for 2D layouts. |\n| Shop Drawing | No | This is a modeling utility. |\n\n## Prerequisites\n- Select one or more timber entities (beams or bodies) to slice.\n- Script must be run in 3D Model Space.\n- No specific settings files are required.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `QuickSlice.mcr`\n\n### Step 2: Select Entities\n```\nCommand Line: Select Entities\nAction: Click on the beams or elements you want to slice. Press Enter to confirm selection.\n```\n\n### Step 3: Define Anchor Point\n```\nCommand Line: Select start point\nAction: Click in the model to set the fixed origin point where the slicing plane will pass through.\n```\n\n### Step 4: Define Direction\n```\nCommand Line: Select next point\nAction: Click to define the direction of the slice.\nNote: If you only want a vertical slice, you can stop here by pressing Esc or Enter.\n```\n\n### Step 5: (Optional) Define Tilt\n```\nCommand Line: Select next point\nAction: If you need a non-vertical (angled) slice, click a third point to define the tilt/pitch.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Color | Number | 4 | Sets the display color index (0-255) of the slice lines and visual indicators. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Lock Vertical plane | Forces the slicing plane to be perfectly vertical (perpendicular to the World Z-axis). Useful for standard cross-sections. |\n| Commit Lines | Converts the current dynamic slice into static polylines (placed on the 'DEFPOINTS' layer) and removes the script instance. |\n\n## Settings Files\nNone required.\n\n## Tips\n- **Grip Editing:** After insertion, use the visible grips to adjust the slice dynamically.\n    - **Anchor Grip (Circle):** Moves the slice location without changing rotation.\n    - **Direction Grip 1:** Rotates the slice around the anchor.\n    - **Direction Grip 2:** Adjusts the tilt/pitch (only available if vertical lock is off).\n- **Visualizing Intersections:** Use this tool to check how complex roof planes or wall connections meet before detailing.\n- **Finalizing Geometry:** Remember to use \"Commit Lines\" if you want the slice to remain in the drawing as permanent geometry; otherwise, deleting the script instance will remove the slice.\n\n## FAQ\n- **Q: Can I slice through multiple beams at once?**\n  - A: Yes, select all relevant beams during the initial \"Select Entities\" prompt.\n- **Q: Why can't I tilt my slice?**\n  - A: Check if \"Lock Vertical plane\" is active in the right-click menu. If locked, you can only rotate the slice vertically.\n- **Q: Where do the committed lines go?**\n  - A: When you use \"Commit Lines,\" the resulting polylines are created on the `DEFPOINTS` layer."
+      },
+      "tokens_used": 5531,
+      "error": null
+    }
+  }
+}

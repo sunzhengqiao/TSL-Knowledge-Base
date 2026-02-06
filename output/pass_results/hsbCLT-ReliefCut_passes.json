@@ -1,0 +1,362 @@
+{
+  "filename": "hsbCLT-ReliefCut.mcr",
+  "status": "completed",
+  "total_tokens": 44215,
+  "processing_time": 232.74802041053772,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 1,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl creates relief cuts between two or more panels.",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "23jan2018",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "display text changed to 'Edge Relief'"
+          },
+          {
+            "version": "1.0",
+            "date": "23jan2018",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8047,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script manipulates 3D geometry using Sip entities (realBody, vecZ, ptCenSolid). It explicitly creates new TSL instances in _kModelSpace via tslNew.dbCreate(). There are no ShopDrawing prefixes (sd_), no _Viewport handling, and no 2D drawing generation logic."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sip"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6588,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "showDialog",
+              "promptOriginal": null,
+              "condition": "_bOnInsert && sKey.length()==0",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "Select panel(s)",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "PrEntity",
+              "promptOriginal": "Select female panel(s",
+              "condition": "_bOnInsert",
+              "required": false
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "Insertion (if no Execute Key provided)",
+            "title": null,
+            "dataSource": "Internal Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dGapRelief",
+            "type": "PropDouble",
+            "displayName": "(A)   Gap Relief",
+            "defaultValue": "0",
+            "inputType": "number",
+            "options": [],
+            "category": "General",
+            "description": "Defines the gap of the relief cut"
+          },
+          {
+            "index": 0,
+            "variable": "sSide",
+            "type": "PropString",
+            "displayName": "(B)   Side",
+            "defaultValue": "Reference Side",
+            "inputType": "dropdown",
+            "options": [
+              "Reference Side",
+              "Opposite Side"
+            ],
+            "category": "General",
+            "description": "Defines the Side"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "Flip Side",
+            "handler": "Flip Side",
+            "action": "Toggles the Side property between Reference Side and Opposite Side.",
+            "alsoTriggeredBy": "Double Click"
+          },
+          {
+            "menuItem": "Reset relief cut",
+            "handler": "Reset relief cut",
+            "action": "Resets the Gap Relief property to 0.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Edit in Place",
+            "handler": "Edit in Place",
+            "action": "Toggles mode to allow individual editing of relief cuts (creates separate TSL instances).",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 7050,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically creates expansion relief cuts (notches) between adjacent CLT or timber panels where their edges are touching or collinear.",
+          "category": "Framing/Connection",
+          "typicalUseCase": "Used during the detailing of CLT floor or roof panels to ensure a specified expansion gap exists between panel connections without manual modeling."
+        },
+        "parameters": [
+          {
+            "name": "dGapRelief",
+            "technicalDefault": "U(0)",
+            "businessMeaning": "The width of the expansion gap to be cut between the panels. This determines how deep the notch is cut back from the joint centerline.",
+            "validRange": "0 mm to 50 mm (typically 5-20 mm)",
+            "unit": "mm",
+            "affectsOutput": "Controls the depth of the edge modifications. If set to 0, the script removes itself and no cuts are applied to the panels."
+          },
+          {
+            "name": "sSide",
+            "technicalDefault": "Reference Side",
+            "businessMeaning": "Defines which side of the panel (Top vs Bottom) is used as the primary reference surface for calculating the cut geometry.",
+            "validRange": "Reference Side, Opposite Side",
+            "unit": "N/A",
+            "affectsOutput": "Determines the direction of the calculation relative to the panel's normal vector (vecZ). Used to resolve ambiguity in sloped or complex roof geometries."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Flip Side command",
+            "effect": "Toggles the 'sSide' parameter between 'Reference Side' and 'Opposite Side'.",
+            "cascade": [
+              "sSide"
+            ]
+          },
+          {
+            "trigger": "Reset relief cut command",
+            "effect": "Sets 'dGapRelief' to 0.",
+            "cascade": [
+              "dGapRelief"
+            ]
+          },
+          {
+            "trigger": "Edit in Place command",
+            "effect": "Splits the single multi-relief instance into individual TSL instances for each detected edge, allowing independent parameter control per joint.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Geometry Modification / Cut",
+            "description": "Creates a notch or relief cut along the edges of the panels to accommodate the specified gap.",
+            "appliedTo": "Selected Sip entities (CLT panels)"
+          }
+        ]
+      },
+      "tokens_used": 8187,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch / Insertion",
+          "Check for 'Execute Key' (Catalog Entry)",
+          "[Branch] If Key exists: Load properties from catalog",
+          "[Branch] If Key missing: Show 'showDialog' (OPM) for user input",
+          "Prompt: Select panel(s) (Male/Reference set)",
+          "Prompt: Select female panel(s) (Optional, enables specific edge selection)",
+          "[Branch] If Female set provided: Remove females from Male set (Unique sets)",
+          "[Branch] If Female set skipped: All edges between selected panels will be processed",
+          "[Validation] Check: Minimum 2 panels total required (Erase if < 2)",
+          "Store Female entities in Map for persistence",
+          "End Insertion (_bOnInsert returns)",
+          "Calculation Cycle Starts (_bOnInsert == false)",
+          "Coordinate System Setup: Based on first male panel (Sip[0])",
+          "Check Context Menu Triggers (Flip Side, Reset, Edit In Place)",
+          "Filter Panels: Remove panels not coplanar to reference face",
+          "[Validation] Check: At least 1 male panel remains (Erase if 0)",
+          "Analyze Geometry: Identify collinear edges between Male and Female panels",
+          "[Loop] For every detected collinear edge pair:",
+          "   Calculate intersection and common length",
+          "   Calculate relief cut planes based on 'Gap Relief' and 'Side'",
+          "   [Branch] If 'Edit In Place' mode (mode=1): Create new independent TSL instance per edge",
+          "   [Branch] If Standard mode (mode=0): Apply 'stretchEdgeTo' to modify panel geometry",
+          "   Draw visual preview (Text and Graphics)",
+          "[Validation] Check: If Gap Relief <= 0 or Edit In Place active, Erase current instance",
+          "Finalize: Dependencies set, script execution ends"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User provides Female selection vs. skips it",
+            "path1": {
+              "name": "Specific Edge Mode",
+              "steps": [
+                "Select Panels",
+                "Select Female Panels",
+                "Remove Females from Male set",
+                "Process only edges connecting Male to Female panels"
+              ]
+            },
+            "path2": {
+              "name": "All Edges Mode",
+              "steps": [
+                "Select Panels",
+                "Press Enter (Skip Female selection)",
+                "Set Females = Males",
+                "Process all edges between all selected panels"
+              ]
+            }
+          },
+          {
+            "condition": "Trigger: 'Edit in Place' activated (nNumRelief > 1)",
+            "path1": {
+              "name": "Generate Individual TSLs",
+              "steps": [
+                "Set 'directEdit' flag",
+                "Loop through detected relief points",
+                "Create new TSL instance for each point",
+                "Erase parent/master TSL"
+              ]
+            },
+            "path2": {
+              "name": "Standard Master TSL",
+              "steps": [
+                "Keep single TSL instance",
+                "Modify all edges using 'stretchEdgeTo'",
+                "Draw single representation"
+              ]
+            }
+          },
+          {
+            "condition": "Trigger: 'Flip Side' or 'Reset' executed",
+            "path1": {
+              "name": "Flip Side",
+              "steps": [
+                "Toggle 'sSide' property (Reference/Opposite)",
+                "Set execution loops to 2",
+                "Recalculate script"
+              ]
+            },
+            "path2": {
+              "name": "Reset",
+              "steps": [
+                "Set 'dGapRelief' to 0",
+                "Set execution loops to 2",
+                "Recalculate script (Result: Erases instance)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Panel Count (< 2)",
+            "errorMessage": "requires at least two panels.",
+            "recovery": "Select additional panels or restart script."
+          },
+          {
+            "check": "Coplanarity",
+            "errorMessage": "None (Silent removal)",
+            "recovery": "Panels not coplanar to the reference face are automatically removed from the calculation set."
+          },
+          {
+            "check": "Gap Relief (dGapRelief)",
+            "errorMessage": "None (Silent removal)",
+            "recovery": "If Gap Relief is 0, the script erases itself. User must set a value > 0 for the cut to exist."
+          },
+          {
+            "check": "Invalid Selection Set (No Males left)",
+            "errorMessage": "Tool will be deleted.",
+            "recovery": "Ensure at least one 'Male' panel (not in Female set) is selected."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Adjust Gap Relief",
+            "how": "OPM (Object Properties) or Context Menu 'Reset relief cut'",
+            "effect": "Increasing value deepens the notch; 'Reset' sets to 0 (removes cut)."
+          },
+          {
+            "action": "Flip Side",
+            "how": "Context Menu or Double Click",
+            "effect": "Toggles the reference plane for the calculation (Reference/Opposite Side)."
+          },
+          {
+            "action": "Edit in Place",
+            "how": "Context Menu",
+            "effect": "Converts a multi-relief TSL into individual single-relief TSLs for granular control."
+          },
+          {
+            "action": "Move/Select",
+            "how": "Grip Edit / Selection",
+            "effect": "Standard AutoCAD manipulation. The 'Master' TSL is attached to the first panel's centroid."
+          }
+        ]
+      },
+      "tokens_used": 9029,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-ReliefCut.mcr\n\n## Overview\nThis script automatically creates expansion relief cuts (notches) between adjacent CLT or timber panels where their edges are touching or collinear. It is used to ensure a specified expansion gap exists between panel connections during the detailing process without manual modeling.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D panel geometry. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required entities**: Sip (CLT Panels)\n- **Minimum beam count**: 2\n- **Required settings files**: None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or select from hsbCAD Catalog) → Select `hsbCLT-ReliefCut.mcr`\n\n### Step 2: Select Reference Panels\n```\nCommand Line: Select panel(s)\nAction: Select the primary set of panels (Male panels). \n        Press Enter to confirm the selection.\n```\n\n### Step 3: Select Female Panels (Optional)\n```\nCommand Line: Select female panel(s)\nAction: \n   - Option A (Specific Edges): Select the specific mating panels to define exactly which edges get the cut.\n   - Option B (All Edges): Press Enter to skip this step. The script will process all internal edges between the panels selected in Step 2.\n```\n\n### Step 4: Configure Parameters\n```\nAction: Use the Properties Palette (Ctrl+1) to set the \"Gap Relief\" distance. \n        The visual preview will update automatically.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| (A) Gap Relief | Number | 0 | Defines the width of the expansion gap to be cut. If set to 0, the cut is removed and the script instance is deleted. |\n| (B) Side | Dropdown | Reference Side | Defines which side of the panel (Top vs Bottom) is used as the reference surface for calculating the cut geometry. Useful for complex roof slopes. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Flip Side | Toggles the Side property between \"Reference Side\" and \"Opposite Side\". Can also be triggered by Double-Clicking the element. |\n| Reset relief cut | Sets the Gap Relief value to 0, effectively removing the cut and the script instance. |\n| Edit in Place | Converts the single multi-relief instance into separate individual TSL instances for each detected edge. This allows you to control the gap size for each joint independently. |\n\n## Settings Files\n- **Filename**: None specific\n- **Location**: N/A\n- **Purpose**: This script relies on user input via the Properties Palette and does not require external XML settings files.\n\n## Tips\n- **Script Deletion**: If the \"Gap Relief\" is set to 0, the script will automatically erase itself from the drawing. You must re-insert the script if you delete it this way.\n- **Batch Processing**: To create cuts between all touching panels in a floor area, select all panels in Step 2 and skip Step 3. This is the fastest workflow for standard flooring.\n- **Visualizing the Cut**: The script displays text \"Edge Relief\" and graphics indicating the cut location. If you see no preview, check if your panels are coplanar or if the Gap Relief is 0.\n\n## FAQ\n- **Q: Why did the script disappear after I changed a property?**\n  **A**: If you set the \"Gap Relief\" to 0, the script is designed to remove itself. You must set a value greater than 0 to see the cut.\n  \n- **Q: The script isn't cutting one of my panels. Why?**\n  **A**: The script automatically filters out panels that are not coplanar (flat on the same plane) as the reference panel. Ensure your panels are aligned correctly in 3D space.\n\n- **Q: How do I make different gap sizes for different edges?**\n  **A**: Insert the script, select your panels, and then right-click and select \"Edit in Place\". This will break the single tool into multiple tools, one for each edge, which you can then edit individually."
+      },
+      "tokens_used": 5314,
+      "error": null
+    }
+  }
+}

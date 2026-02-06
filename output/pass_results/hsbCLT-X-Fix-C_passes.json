@@ -1,0 +1,317 @@
+{
+  "filename": "hsbCLT-X-Fix-C.mcr",
+  "status": "completed",
+  "total_tokens": 51969,
+  "processing_time": 309.38453125953674,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"header\": {\n    \"type\": null,\n    \"numBeamsReq\": 0,\n    \"keywords\": [],\n    \"majorVersion\": 3,\n    \"minorVersion\": 7,\n    \"dxaOut\": 0,\n    \"implInsert\": 0\n  },\n  \"description\": \"This tsl creates a distribution of X-Fix-C Connectors along a common edge of at"
+      },
+      "tokens_used": 9056,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script generates 3D geometry (Body, PlaneProfile) and attaches Hardware components (HardWrComp) to panels. It includes logic for 'Edit in Place' and calculates vector positions, which are characteristics of Model Space scripts. While it produces 'DimRequest' maps used by ShopDrawings, it executes within the 3D model environment. No 'sd_' prefix, '#Type E', or '_Viewport' usage found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space containing CLT panels",
+          "requiredSettings": [
+            "hsbCLT-X-Fix-C.xml (Settings configuration)",
+            "TslUtilities.dll (For dialog interactions)"
+          ]
+        }
+      },
+      "tokens_used": 8338,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getString",
+              "promptOriginal": "|Are you sure to overwrite existing settings?| [|No|]/[|Yes|]",
+              "condition": "_bOnRecalc && _kExecuteKey == \"|Export Settings|\" && findFile(sFullPath).length()>0",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "SelectOption",
+            "trigger": "Called by UpdateSettings function when settings updates are detected",
+            "title": "|Settings Update| {nameSettings}",
+            "dataSource": "options[] array: [\"|Keep current settings|\", \"|Update to new settings|\"]",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "|Import Settings|",
+            "handler": "|Import Settings|",
+            "action": "Imports settings from hsbCLT-X-Fix-C.xml into the current instance map",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Export Settings|",
+            "handler": "|Export Settings|",
+            "action": "Exports current instance settings to hsbCLT-X-Fix-C.xml",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "hsbCLT-X-Fix-C.xml",
+            "searchPaths": [
+              "_kPathHsbCompany\\TSL\\Settings",
+              "_kPathHsbInstall\\Content\\General\\TSL\\Settings\\"
+            ],
+            "purpose": "Stores configuration for the X-Fix-C tool types, dimensions, and distribution settings",
+            "required": false
+          }
+        ]
+      },
+      "tokens_used": 8973,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the layout, machining, and detailing of Greenethic X-Fix-C shear connectors along common edges of Cross Laminated Timber (CLT) panels.",
+          "category": "Hardware / CLT Connection",
+          "typicalUseCase": "Used in CLT construction to create shear connections between wall and floor panels or wall-to-wall joints, calculating the precise milling pockets and attaching the correct hardware data for production."
+        },
+        "parameters": [
+          {
+            "name": "sType",
+            "technicalDefault": "X-Fix-C (from Settings/XML)",
+            "businessMeaning": "The specific model or catalog number of the X-Fix-C connector (e.g., X-Fix-C 90, X-Fix-C 120). This defines the physical geometry and load-bearing capacity of the connection.",
+            "validRange": "Defined in manufacturer catalog (e.g., C90, C120)",
+            "unit": "String",
+            "affectsOutput": "Determines the lookup values for depth (`dTypeDepths`), the hardware model attached to the BOM, and the tooling geometry shape."
+          },
+          {
+            "name": "nQty",
+            "technicalDefault": "Calculated or set in Settings",
+            "businessMeaning": "The number of connectors to distribute along the selected edge.",
+            "validRange": "1 to N (where N fits within panel length)",
+            "unit": "Count",
+            "affectsOutput": "Controls the loop that generates tooling pockets and hardware instances. Multiple hardware entities are added to the element."
+          },
+          {
+            "name": "dInter",
+            "technicalDefault": "Calculated based on spacing rules",
+            "businessMeaning": "The center-to-center spacing distance between individual connectors along the edge.",
+            "validRange": "Typically 400mm - 1200mm (depending on engineering requirements)",
+            "unit": "mm",
+            "affectsOutput": "Moves the coordinate system (`transformBy`) along the edge vector for each subsequent connector placement."
+          },
+          {
+            "name": "dDepth",
+            "technicalDefault": "dTypeDepths[nType]",
+            "businessMeaning": "The vertical depth of the pocket milled into the timber panel to house the connector.",
+            "validRange": "20mm - 60mm (dependent on panel layer thickness)",
+            "unit": "mm",
+            "affectsOutput": "Determines the Z-height of the tooling profile (`dpModel`) and the depth parameter in the DimRequest for shop drawings."
+          },
+          {
+            "name": "dDoveDepth",
+            "technicalDefault": "From Settings",
+            "businessMeaning": "The specific depth of the dovetail undercut required to lock the X-Fix-C mechanism into the wood.",
+            "validRange": "Specific to tool geometry (e.g., 10-20mm)",
+            "unit": "mm",
+            "affectsOutput": "Sets the hardware visualization scale (`DScaleX`) and influences the contour of the milling shape."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of Connector Type (sType)",
+            "effect": "Updates default milling depth and dovetail geometry",
+            "cascade": [
+              "dDepth",
+              "dDoveDepth"
+            ]
+          },
+          {
+            "trigger": "Settings File Import/Export",
+            "effect": "Overwrites or saves the current parameter configuration to XML",
+            "cascade": [
+              "sType",
+              "dInter",
+              "nQty"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "HardWrComp",
+            "description": "Hardware component entry (Greenethic manufacturer) linked to the panel for BOM generation and data export (hsbMake).",
+            "appliedTo": "Element (Parent CLT Panel)"
+          },
+          {
+            "type": "Body / PlaneProfile",
+            "description": "3D Milling/Pocket geometry subtracted from the CLT panel to accommodate the X-Fix-C connector.",
+            "appliedTo": "GenBeam / Element (CLT Panels)"
+          },
+          {
+            "type": "DimRequest",
+            "description": "Annotation requests for shop drawings, indicating the position, type, and depth of the connectors in plan and section views.",
+            "appliedTo": "GenBeam / Element"
+          }
+        ]
+      },
+      "tokens_used": 9344,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Execution (Insert or Recalc)",
+          "2. Settings Initialization: Attempt to load settings from 'hsbCLT-X-Fix-C.xml' or existing MapObject",
+          "3. [Conditional] Settings Version Check: Compare current settings against XML version",
+          "4. Connector Calculation: Iterate 'nQty' to determine positions along the common edge",
+          "5. Geometry Generation: Create PlaneProfiles and PLines for milling pockets based on tool shape",
+          "6. Hardware Attachment: Remove old TSL hardware, calculate new HardWrComp parameters (Manufacturer: Greenethic)",
+          "7. Shop Drawing Annotation: Generate DimRequests for positions and cutouts",
+          "8. Database Update: Commit geometry, hardware, and properties to the instance"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Settings File Version Mismatch (Triggered by UpdateSettings function)",
+            "path1": {
+              "name": "Keep Current Settings",
+              "steps": [
+                "User selects '|Keep current settings|' in dialog",
+                "Script continues using existing instance properties",
+                "XML changes are ignored"
+              ]
+            },
+            "path2": {
+              "name": "Update to New Settings",
+              "steps": [
+                "User selects '|Update to new settings|' in dialog",
+                "Script reads values from hsbCLT-X-Fix-C.xml",
+                "MapObject is updated with new values",
+                "Report message shown to user to review model"
+              ]
+            }
+          },
+          {
+            "condition": "Export Settings Trigger (Context Menu)",
+            "path1": {
+              "name": "Overwrite Existing",
+              "steps": [
+                "User confirms overwrite when prompted on command line",
+                "MapSetting is written to 'hsbCLT-X-Fix-C.xml'",
+                "Success message displayed"
+              ]
+            },
+            "path2": {
+              "name": "Cancel Export",
+              "steps": [
+                "User selects 'No' at overwrite prompt",
+                "Function returns, no file written"
+              ]
+            }
+          },
+          {
+            "condition": "Edit in Place Mode",
+            "path1": {
+              "name": "Single Item Visualization",
+              "steps": [
+                "Script identifies execution in 'Edit in Place' mode",
+                "Distribution loop breaks after first iteration (i=0)",
+                "Only one connector geometry is generated for editing"
+              ]
+            },
+            "path2": {
+              "name": "Full Distribution",
+              "steps": [
+                "Script runs in standard mode",
+                "Loop completes all 'nQty' iterations",
+                "Full array of connectors is generated"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Settings File Existence",
+            "errorMessage": "N/A (Handled internally by findFile length check)",
+            "recovery": "If file not found, script creates default MapObject or uses hardcoded defaults"
+          },
+          {
+            "check": "Hardware Type Cleanup",
+            "errorMessage": "N/A (Prevents deletion of non-TSL hardware)",
+            "recovery": "Script specifically checks `if (hwcs[i].repType() == _kRTTsl)` before removing hardware to ensure only previous instances of this script are deleted"
+          },
+          {
+            "check": "Path Creation for Export",
+            "errorMessage": "Failed to write to path",
+            "recovery": "Script attempts `makeFolder` logic before writing XML to ensure directory structure exists"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Import Settings",
+            "how": "Right-click Context Menu -> '|Import Settings|'",
+            "effect": "Reloads parameters from hsbCLT-X-Fix-C.xml, overwriting current instance properties"
+          },
+          {
+            "action": "Export Settings",
+            "how": "Right-click Context Menu -> '|Export Settings|'",
+            "effect": "Saves current instance properties to hsbCLT-X-Fix-C.xml for future use"
+          },
+          {
+            "action": "Edit in Place",
+            "how": "Right-click Context Menu -> '|Edit in Place|'",
+            "effect": "Isolates a single connector for graphical editing without recalculating the whole distribution"
+          },
+          {
+            "action": "Add/Remove Panels",
+            "how": "Right-click Context Menu (via custom CUIX commands)",
+            "effect": "Updates the selection set of CLT panels associated with the connector distribution"
+          },
+          {
+            "action": "Flip Alignment",
+            "how": "Right-click Context Menu (via custom CUIX commands)",
+            "effect": "Reverses the orientation of the connectors along the edge"
+          }
+        ]
+      },
+      "tokens_used": 10346,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-X-Fix-C.mcr\n\n## Overview\nAutomates the layout, machining, and detailing of Greenethic X-Fix-C shear connectors along common edges of Cross Laminated Timber (CLT) panels. It generates the necessary 3D milling pockets, attaches hardware data for BOMs, and creates shop drawing annotations.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Generates 3D geometry, pockets, and hardware attachments. |\n| Paper Space | No | Script is for 3D modeling only. |\n| Shop Drawing | No | Generates data used by shop drawings but must be run in Model Space. |\n\n## Prerequisites\n- **Required entities**: CLT Panels (Element or GenBeam).\n- **Minimum beam count**: 2 (to define a common edge/joint).\n- **Required settings files**: `hsbCLT-X-Fix-C.xml` (Configuration), `TslUtilities.dll`.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbCLT-X-Fix-C.mcr`\n\n### Step 2: Select CLT Panels\n```\nCommand Line: Select beams/elements:\nAction: Select the two CLT panels that share the common edge where you want to install the connectors.\n```\n\n### Step 3: Configure Settings (if prompted)\n```\nCommand Line: |Settings Update| {nameSettings}\nAction: If a newer settings file is detected, a dialog will appear. Choose \"|Update to new settings|\" to use the latest configurations or \"|Keep current settings|\" to maintain your current parameters.\n```\n\n### Step 4: Adjust Parameters\nAction: With the script instance selected, modify parameters (Type, Quantity, Spacing) in the AutoCAD Properties Palette to fit your engineering requirements.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sType | String | X-Fix-C (from Settings) | The specific model of the connector (e.g., X-Fix-C 90, X-Fix-C 120). Determines geometry and load capacity. |\n| nQty | Integer | Calculated | The number of connectors to distribute along the edge. |\n| dInter | Double | Calculated | Center-to-center spacing between connectors (mm). |\n| dDepth | Double | Type Dependent | Vertical depth of the pocket milled into the panel (mm). |\n| dDoveDepth | Double | Type Dependent | Depth of the dovetail undercut required to lock the mechanism (mm). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Import Settings** | Loads configuration parameters from `hsbCLT-X-Fix-C.xml`, overwriting current instance values. |\n| **Export Settings** | Saves the current instance configuration to `hsbCLT-X-Fix-C.xml` for future use. Prompts for overwrite confirmation if the file exists. |\n| **Edit in Place** | Isolates a single connector for graphical editing without recalculating the full distribution. |\n| **Add/Remove Panels** | Updates the selection set of CLT panels associated with the connector joint. |\n| **Flip Alignment** | Reverses the orientation/direction of the connectors along the selected edge. |\n\n## Settings Files\n- **Filename**: `hsbCLT-X-Fix-C.xml`\n- **Location**: Searches in `_kPathHsbCompany\\TSL\\Settings` or `_kPathHsbInstall\\Content\\General\\TSL\\Settings\\`\n- **Purpose**: Stores configuration for X-Fix-C tool types, geometric dimensions (depths, dovetails), and default spacing rules.\n\n## Tips\n- Use **Edit in Place** to visually adjust a specific connector position without affecting the calculated distribution of the others.\n- If the milling pockets look incorrect, check the **sType** parameter to ensure it matches the physical hardware being used.\n- The script automatically cleans up old hardware instances attached to the panel before adding new ones, ensuring your BOM remains accurate.\n\n## FAQ\n- **Q: How do I change the spacing between connectors?**\n  A: Select the script instance and change the `dInter` property in the Properties Palette. The quantity (`nQty`) may update automatically based on the edge length.\n- **Q: What happens if I import settings?**\n  A: The script will overwrite the current parameters of the selected instance with the values found in the `hsbCLT-X-Fix-C.xml` file.\n- **Q: Can I use this on non-CLT elements?**\n  A: This script is designed for CLT panels (Element/GenBeam). Using it on standard timber may result in incorrect machining depths."
+      },
+      "tokens_used": 5912,
+      "error": null
+    }
+  }
+}

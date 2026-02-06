@@ -1,0 +1,315 @@
+{
+  "filename": "hsbCLT-Lift.mcr",
+  "status": "completed",
+  "total_tokens": 50370,
+  "processing_time": 541.63276720047,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9353,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses sip.addTool(drill), sip.addTool(bc), and BeamCut which are 3D Model Space operations. It defines Hardware components via _ThisInst.setHardWrComps and generates geometry based on Element (CLT Panel) geometry. No usage of _Viewport, #Type E, or sd_ prefixes found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space containing CLT Panels (Walls or Roofs/Floors).",
+          "requiredSettings": [
+            "Catalog entries for lifting types (Hebeschlaufe, Rampa, Würth, Stahlanker) are recommended for utilizing the script's preset functionality."
+          ]
+        }
+      },
+      "tokens_used": 7055,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [],\n  \"opmProperties\": [\n    {\n      \"index\": 0,\n      \"variable\": \"sAssociation\",\n      \"type\": \"PropString"
+      },
+      "tokens_used": 10098,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Inserts lifting hardware (loops, anchors, sockets) into CLT panels for transportation and assembly.",
+          "category": "Hardware / Tooling",
+          "typicalUseCase": "Detailing CLT walls or floors to prepare them for crane lifting by creating drilling or milling for specific anchor systems."
+        },
+        "parameters": [
+          {
+            "name": "sAssociation",
+            "technicalDefault": "Auto",
+            "businessMeaning": "Determines the orientation of the CLT panel (Vertical Wall vs. Horizontal Floor/Roof) to align the lifting hardware and symbol correctly.",
+            "validRange": "Auto, Wall, Roof/Floor",
+            "unit": "Enum",
+            "affectsOutput": "Rotates the lifting symbol and adjusts the drilling direction relative to the panel surface."
+          },
+          {
+            "name": "dDiameterOverride",
+            "technicalDefault": "0",
+            "businessMeaning": "Manually overrides the drill hole diameter. If set to 0, the diameter is automatically taken from the selected hardware subtype catalog.",
+            "validRange": "0 (Use Default) or 15mm - 60mm",
+            "unit": "mm",
+            "affectsOutput": "Changes the diameter of the drill hole or milled slot."
+          },
+          {
+            "name": "dDepth",
+            "technicalDefault": "0",
+            "businessMeaning": "Defines the depth of the drilling or the embedment depth of the anchor. If 0, uses the default depth defined for the hardware subtype.",
+            "validRange": "0 (Use Default) or 50mm - 300mm (must be <= panel thickness)",
+            "unit": "mm",
+            "affectsOutput": "Changes the depth (Z-length) of the drill hole or cut."
+          },
+          {
+            "name": "dDrillDist",
+            "technicalDefault": "0",
+            "businessMeaning": "Defines the distance between two drill holes when using double lifting points. Used specifically for floor/roof loops.",
+            "validRange": "0 (Single Point) or > 2 * Diameter",
+            "unit": "mm",
+            "affectsOutput": "Adds a second drill hole at the specified distance from the primary one."
+          },
+          {
+            "name": "dOffsetEdge",
+            "technicalDefault": "200",
+            "businessMeaning": "Sets the distance from the panel edge (or selected insertion point) to the center of the lifting device.",
+            "validRange": "50mm - 1000mm (Subject to edge distance safety rules)",
+            "unit": "mm",
+            "affectsOutput": "Translates the position of the hardware along the panel surface."
+          },
+          {
+            "name": "sChild (Type)",
+            "technicalDefault": "H1 (Dependent on Catalog)",
+            "businessMeaning": "Selects the specific hardware model/size (e.g., H1, R1, W4, S2) which dictates load capacity and default geometry.",
+            "validRange": "Defined by Catalog (e.g., H1, H2, R1, W1, S1)",
+            "unit": "String",
+            "affectsOutput": "Sets the default diameter, max load capacity checks, and determines if a simple Drill or a BeamCut (slot) is generated."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sAssociation is set to 'Roof/Floor'",
+            "effect": "Enables double drilling logic.",
+            "cascade": [
+              "dDrillDist"
+            ]
+          },
+          {
+            "trigger": "sChild (Type) is set to 'Würth' (W4) and Association is 'Wall'",
+            "effect": "Switches from a cylindrical Drill to a rectangular BeamCut (milling).",
+            "cascade": [
+              "dDiameterOverride",
+              "dDepth"
+            ]
+          },
+          {
+            "trigger": "sChild (Type) is set to 'Rampa'",
+            "effect": "Forces specific depth values and enables 3-point distribution logic.",
+            "cascade": [
+              "dDepth"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Drill",
+            "description": "Cylindrical holes through the CLT panel for standard loops or anchors.",
+            "appliedTo": "Associated CLT Element"
+          },
+          {
+            "type": "BeamCut",
+            "description": "Rectangular milling/slot for the Würth system (Wall).",
+            "appliedTo": "Associated CLT Element"
+          },
+          {
+            "type": "HardWrComp",
+            "description": "Logical hardware components exported for BOMs and CNC data (BauBit).",
+            "appliedTo": "Script Instance"
+          },
+          {
+            "type": "DimRequest",
+            "description": "2D Shop drawing symbols representing the lifting type, position, and capacity.",
+            "appliedTo": "Model Space / Layouts"
+          }
+        ]
+      },
+      "tokens_used": 8268,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Launch script via toolbar, catalog, or command line (hsbCLT-Lift.mcr).",
+          "Parse execution key (_kExecuteKey) to determine Family (Hebeschlaufe, Rampa, Würth, Stahlanker) and check if 'Single' or 'Distribution' mode is requested.",
+          "Prompt user to select one or more CLT Panels (Elements) or GenBeams.",
+          "Validate selection (ensure Element or GenBeam is selected).",
+          "Insertion Cycle 1 (Distribution/Caller Instance):",
+          "   Calculate insertion points based on single point or distribution rules (e.g., 1/3 spacing).",
+          "   Create temporary child script instances (TslInst) at calculated points.",
+          "   Set initial properties on children (Family, Association, Child Type).",
+          "   Trigger recalculation of all child instances.",
+          "   Erase the temporary caller instance.",
+          "Insertion Cycle 2+ (Child Instance Execution):",
+          "   Detect CLT Panel geometry (Thickness, Faces, Edges, Plane Shadow).",
+          "   Determine Association (Wall vs. Roof/Floor) based on Panel normal vector or property override.",
+          "   Retrieve specific Subtype (Child) parameters (e.g., H1, R1, W4) from properties.",
+          "   Calculate geometry (Diameter, Depth) based on Subtype or Override properties.",
+          "   Calculate Position relative to panel edge using 'OffsetEdge' and 'DistributionOffset'.",
+          "   Align Drill/Tool Vector (Normal to face or aligned to edge for Würth Wall).",
+          "   Generate Tools (Drill or BeamCut).",
+          "   Generate Shop Drawing Symbols (DimRequest) and Text Labels.",
+          "   Validate Load vs. Max Capacity and Geometry vs. Panel Envelope.",
+          "   Update Hardware Component (HardWrComp) for BOM/CNC export.",
+          "   Finalize Instance."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Key contains 'SINGLE'",
+            "path1": {
+              "name": "Single Insertion",
+              "steps": [
+                "Sets flag to select only one target point.",
+                "Calculates only one insertion location.",
+                "Creates one single child instance."
+              ]
+            },
+            "path2": {
+              "name": "Distribution Insertion",
+              "steps": [
+                "Prompts for Distribution Offset (e.g., '1/3' of width).",
+                "Calculates multiple points along the element.",
+                "Creates multiple child instances."
+              ]
+            }
+          },
+          {
+            "condition": "Family == 'Würth' (W4/W4.1) AND Association == 'Wall'",
+            "path1": {
+              "name": "Würth Wall Processing",
+              "steps": [
+                "Sets Tool Vector to be parallel to the panel face (Horizontal).",
+                "Aligns tool with the closest edge normal.",
+                "Uses BeamCut (Rectangular Slot) instead of Drill.",
+                "Checks if cutting body is inside panel envelope (Visual Warning)."
+              ]
+            },
+            "path2": {
+              "name": "Standard Processing",
+              "steps": [
+                "Sets Tool Vector normal to the panel face.",
+                "Uses Drill (Cylindrical Hole)."
+              ]
+            }
+          },
+          {
+            "condition": "Family == 'Hebeschlaufe' AND Association == 'Roof/Floor'",
+            "path1": {
+              "name": "Double Drill (Roof)",
+              "steps": [
+                "Checks if 'Interdistance' > 2 * Diameter.",
+                "Creates a second drill hole at the specified distance."
+              ]
+            }
+          },
+          {
+            "condition": "Family == 'Stahlanker'",
+            "path1": {
+              "name": "Steel Anchor Logic",
+              "steps": [
+                "Creates primary drill hole.",
+                "Calculates secondary side drill point on panel edge.",
+                "Adds secondary drill (Dia 17mm, Depth 400mm) perpendicular to edge."
+              ]
+            }
+          },
+          {
+            "condition": "Catalog Entry contains 'Vorgabe' (Preset)",
+            "path1": {
+              "name": "Silent Insertion",
+              "steps": [
+                "Skips interactive dialog prompts.",
+                "Uses values directly from Catalog string."
+              ]
+            },
+            "path2": {
+              "name": "Interactive Insertion",
+              "steps": [
+                "Shows selection prompts (if required)."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Panel Load vs. Subtype Max Load",
+            "errorMessage": "N/A (Visual Warning)",
+            "recovery": "Script draws a red filled circle at the lift location if load is exceeded. User must change Subtype (sChild) to a higher capacity manually."
+          },
+          {
+            "check": "Würth Wall Cutting Body inside Envelope",
+            "errorMessage": "N/A (Visual Warning)",
+            "recovery": "Script draws the excess volume in Red. User must adjust Position (dOffsetEdge) or Depth (dDepth)."
+          },
+          {
+            "check": "Entity Selection",
+            "errorMessage": "Prompt 'Select CLT Panel' repeats or script aborts.",
+            "recovery": "User must select a valid CLT Element or GenBeam."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Lifting Subtype (Size/Load)",
+            "how": "OPM Property 'Type' (sChild)",
+            "effect": "Updates Drill Diameter, Depth, Max Load Capacity, and Hardware Component."
+          },
+          {
+            "action": "Move Lifting Point",
+            "how": "Grip Edit (Drag Grip)",
+            "effect": "Moves Drill hole and Symbol along the panel surface/edge."
+          },
+          {
+            "action": "Change Orientation",
+            "how": "OPM Property 'Association' (Wall vs Roof/Floor)",
+            "effect": "Rotates the symbol and re-orients the drilling vector (Normal vs Edge aligned)."
+          },
+          {
+            "action": "Change Offset / Distances",
+            "how": "OPM Properties 'Edge Offset', 'Depth', 'Diameter', 'Interdistance'",
+            "effect": "Regenerates geometry with new dimensions. Toggles double holes on/off based on Interdistance."
+          },
+          {
+            "action": "Change Family",
+            "how": "Right-click Context Menu / Recalc Trigger",
+            "effect": "Switches logic between Loop (Drill), Würth (BeamCut), or Steel Anchor (Double Drill)."
+          }
+        ]
+      },
+      "tokens_used": 9579,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-Lift.mcr\n\n## Overview\nThis script inserts lifting hardware (loops, anchors, and sockets) into CLT panels to prepare them for crane lifting on site. It automatically generates the necessary drilling, milling, or slotting geometry and places shop drawing symbols based on the selected hardware type and panel orientation.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates on 3D CLT Panel geometry. |\n| Paper Space | No | Not applicable in Paper Space. |\n| Shop Drawing | No | Generates DimRequests that appear in layouts, but insertion occurs in Model Space. |\n\n## Prerequisites\n- **Required Entities**: CLT Panels (Elements or GenBeams).\n- **Minimum Beam Count**: 1.\n- **Required Settings**: Catalog entries for lifting types (Hebeschlaufe, Rampa, Würth, Stahlanker) are recommended to utilize preset sizes and capacities.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbCLT-Lift.mcr` from the file dialog.\n\n### Step 2: Select Target\n```\nCommand Line: Select CLT Panel\nAction: Click on the CLT Wall or Floor/Roof panel you wish to add lifting hardware to.\n```\n\n### Step 3: Define Location\n```\nCommand Line: Specify insertion point / [Options]\nAction: Click on the face of the panel to place the lifting point.\nNote: If the script is launched with a \"Distribution\" key, it may automatically calculate multiple points based on panel length.\n```\n\n### Step 4: Configure (Optional)\nAfter insertion, select the script instance and open the **Properties Palette** (Ctrl+1) to adjust the hardware type, dimensions, or orientation.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Association** | String | Auto | Determines panel orientation. Options: `Auto`, `Wall`, `Roof/Floor`. This rotates the symbol and aligns the drill vector. |\n| **Type (sChild)** | String | (Catalog) | Selects the specific hardware model (e.g., H1, R1, W4). This determines the default diameter, depth, and load capacity. |\n| **Diameter Override** | Double | 0 | Overrides the drill hole diameter (mm). Set to `0` to use the default diameter from the selected Type. |\n| **Depth** | Double | 0 | Sets the drilling depth or anchor embedment depth (mm). Set to `0` to use the default depth from the selected Type. |\n| **Edge Offset** | Double | 200 | Distance from the panel edge to the center of the lifting point (mm). |\n| **Interdistance** | Double | 0 | Distance between two drill holes for double lifting points (Roof/Floor). Set to `0` for a single point. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Change Family | Allows switching between different hardware systems (Loop, Rampa, Würth, Steel Anchor) without re-inserting the script. |\n| Recalculate | Refreshes the geometry and symbol after property changes. |\n| Move | Enables grip-edit mode to drag the lifting point along the panel surface. |\n\n## Settings Files\n- **Filename**: Catalog definitions (often company-specific XML or DB catalogs).\n- **Location**: hsbCAD company or installation directory.\n- **Purpose**: Provide default dimensions (Diameter, Depth) and Load Capacities for specific hardware subtypes (e.g., defining that \"W4\" has a specific slot size).\n\n## Tips\n- **Double Holes for Floors**: When lifting large floors, set **Association** to `Roof/Floor` and enter a value in **Interdistance** (e.g., 600mm) to automatically create a second drill hole for stability.\n- **Visual Warnings**: If a red filled circle appears, the panel load exceeds the selected hardware's maximum capacity. If a red volume appears on a Würth wall anchor, the slot is cutting outside the panel geometry.\n- **Grip Editing**: You can drag the lifting point grip directly in the model to adjust the position without manually typing the `Edge Offset`.\n- **Steel Anchors**: Selecting the `Stahlanker` family automatically adds a secondary side drill (approx. 17mm x 400mm) required for anchor installation.\n\n## FAQ\n- **Q: How do I switch from a simple hole to a slot?**\n  A: Change the **Type (sChild)** to a Würth variant (e.g., W4) and ensure **Association** is set to `Wall`.\n- **Q: My drill hole is going the wrong way (through the thickness vs. from the side).**\n  A: Change the **Association** property. `Wall` drills horizontal to the face; `Roof/Floor` drills vertical relative to the panel plane.\n- **Q: Why does the drill disappear when I change the Type?**\n  A: The new Type might have a default diameter of 0 or be incompatible with the current orientation. Check the **Diameter Override** and ensure the new Type is valid for your current Association setting."
+      },
+      "tokens_used": 6017,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,243 @@
+{
+  "filename": "hsbInstallationPoint.mcr",
+  "status": "completed",
+  "total_tokens": 43684,
+  "processing_time": 217.61559772491455,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9016,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script performs 3D modeling operations (SolidSubtract, Body creation) and accesses Element zones (el.zone(z)). It does not use sd_ prefixes, #Type E, or _Viewport. It is designed to create physical geometry (installations, milling) in the model."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element",
+            "Sheet"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Requires access to the hsbCAD model structure, specifically Elements and their composition (beams/sheets).",
+          "requiredSettings": [
+            "Block definitions in <hsbCompany>\\Block\\Electrical",
+            "hsb-E-Combination.mcr",
+            "<hsbCAD>\\utilities\\ElectraTsl\\hsbElectricalTsl.dll",
+            "Configuration XML files in <company>\\tsl\\settings or local drawing path"
+          ]
+        }
+      },
+      "tokens_used": 5496,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "SelectFromList",
+            "trigger": "Insertion / Configuration Loading",
+            "title": null,
+            "dataSource": "XML files in <hsbCompany>\\tsl\\settings or drawing path",
+            "features": {
+              "searchable": true,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "Set floor thickness",
+            "handler": "Set floor thickness",
+            "action": "Allows setting floor thickness if no room is associated.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Vorgabe laden",
+            "handler": "Vorgabe laden",
+            "action": "Reloads default settings from configuration file.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "export Settings",
+            "handler": "export Settings",
+            "action": "Exports current settings to an XML configuration file.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "<scriptName>Settings.xml",
+            "searchPaths": [
+              "<hsbCompany>\\tsl\\settings",
+              "<drawing_path>",
+              "<hsbCompany>\\Block\\Electrical"
+            ],
+            "purpose": "Stores configuration parameters for installation points, combinations, symbols, and tooling dimensions.",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 6483,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates electrical or mechanical installation points (e.g., sockets, switches) within timber walls, including the generation of cable channels (wirechases), machining (millings/drillings), and 2D plan symbols.",
+          "category": "Installation/Electrical",
+          "typicalUseCase": "Placing a junction box in a wall element and automatically generating the routing channel for cables through the studs and plates, while defining no-nail zones for safety."
+        },
+        "parameters": [
+          {
+            "name": "UseGenbeamReference",
+            "technicalDefault": "0 (False)",
+            "businessMeaning": "Determines if the installation point's position is calculated relative to the physical surface of the selected beam/stud rather than a theoretical wall line. This ensures accurate placement in walls with variable thickness or cladding.",
+            "validRange": "0 (False) or 1 (True)",
+            "unit": "Boolean",
+            "affectsOutput": "Alters the 3D coordinate origin of the installation point and subsequent machining."
+          },
+          {
+            "name": "WirechaseNoNail",
+            "technicalDefault": "0 or 1",
+            "businessMeaning": "Controls the calculation logic for 'No-Nail' (Sperrflächen) zones around the cable channel to prevent fasteners from hitting wires during assembly. Different modes affect which beams receive the protection zone.",
+            "validRange": "0=Off, 1=Icon side only horizontals, 2=Icon side horizontals + Opposite verticals (implied by history)",
+            "unit": "Integer (Mode)",
+            "affectsOutput": "Generates polygon data representing forbidden zones for nailing/screwing, visible in shop drawings."
+          },
+          {
+            "name": "ConduitExtraWidth",
+            "technicalDefault": "0",
+            "businessMeaning": "Defines an additional clearance added to the standard width of the cable channel milling.",
+            "validRange": "0 to 50 mm",
+            "unit": "mm",
+            "affectsOutput": "Increases the width of the rectangular milling cut in the timber."
+          },
+          {
+            "name": "ExtentWirechase",
+            "technicalDefault": "0 (False)",
+            "businessMeaning": "If active, forces the cable channel to mill completely through the last structural member (e.g., bottom plate) to ensure continuity to the next floor or space.",
+            "validRange": "0 (False) or 1 (True)",
+            "unit": "Boolean",
+            "affectsOutput": "Extends the depth/length of the milling operation through the beam."
+          },
+          {
+            "name": "ExtentWirechaseOffset",
+            "technicalDefault": "0",
+            "businessMeaning": "Specifies a specific distance to extend the cable channel beyond its default endpoint.",
+            "validRange": "0 to 200 mm",
+            "unit": "mm",
+            "affectsOutput": "Lengthens the milling geometry linearly."
+          },
+          {
+            "name": "CombinationStandardDiameter",
+            "technicalDefault": "U(68)",
+            "businessMeaning": "The default diameter used for circular drillings/millings associated with the installation point (e.g., for pipe penetrations or specific fittings).",
+            "validRange": "20 to 150 mm",
+            "unit": "mm",
+            "affectsOutput": "Size of cylindrical subtractions in the timber."
+          },
+          {
+            "name": "Offset",
+            "technicalDefault": "0",
+            "businessMeaning": "Shifts the position of the machining/tooling relative to the installation symbol's reference point.",
+            "validRange": "-100 to 100 mm",
+            "unit": "mm",
+            "affectsOutput": "Moves the milling/cut geometry along the defined axis."
+          },
+          {
+            "name": "FloorThickness",
+            "technicalDefault": "Calculated from Room or Prompt",
+            "businessMeaning": "Manually defines the thickness of the floor structure if the script cannot automatically detect a room boundary. Used to calculate routing depth.",
+            "validRange": "50 to 500 mm",
+            "unit": "mm",
+            "affectsOutput": "Determines where the vertical cable channel terminates."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Change in 'UseGenbeamReference'",
+            "effect": "Recalculates the coordinate system origin for the installation point.",
+            "cascade": [
+              "Millings",
+              "Drillings",
+              "ModelGraphics"
+            ]
+          },
+          {
+            "trigger": "Activation of 'ExtentWirechase'",
+            "effect": "Overrides standard termination logic of the cable channel.",
+            "cascade": [
+              "WirechaseOffset"
+            ]
+          },
+          {
+            "trigger": "Loading 'Vorgabe' (Preset)",
+            "effect": "Resets all internal parameters to values defined in the external XML configuration file.",
+            "cascade": [
+              "All script parameters"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Milling (Rectangular)",
+            "description": "Cable channels (Wirechase) routed through studs and plates.",
+            "appliedTo": "Selected GenBeams (Studs) and Sheets (Plating) within the Element."
+          },
+          {
+            "type": "Drilling/Circular Milling",
+            "description": "Round holes for conduits or installation boxes.",
+            "appliedTo": "Selected GenBeams and Sheets."
+          },
+          {
+            "type": "ModelGraphics (3D)",
+            "description": "Visual representation of the box and cables in 3D model space.",
+            "appliedTo": "Element Zones (typically Zone 1 and Zone -1 for left/right views)."
+          },
+          {
+            "type": "No-Nail Zones (Polygons)",
+            "description": "2D areas indicating where fasteners are prohibited.",
+            "appliedTo": "Manufacturing/Shop Drawings."
+          },
+          {
+            "type": "Plan Symbols",
+            "description": "2D annotations representing electrical sockets/switches in floor plan views.",
+            "appliedTo": "Plan View (Zone 0)."
+          }
+        ]
+      },
+      "tokens_used": 9278,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8189,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbInstallationPoint.mcr\n\n## Overview\nThis script creates electrical or mechanical installation points (such as sockets, switches, or junction boxes) within timber wall elements. It automatically generates cable channels (wirechases), required millings/drillings, 2D plan symbols, and safety \"no-nail\" zones.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | All geometric operations (milling, model graphics) occur here. |\n| Paper Space | No | |\n| Shop Drawing | No | While it creates entities used in shop drawings (like no-nail zones), it is not a script run *inside* a shop drawing layout. |\n\n## Prerequisites\n- **Required Entities**: An Element containing GenBeams (studs/plates) or Sheets.\n- **Minimum Beam Count**: 0 (Script creates geometry based on the Element structure).\n- **Required Settings Files**:\n  - `<hsbCompany>\\\\tsl\\\\settings` or local drawing path must contain XML configuration files.\n  - Block definitions must exist in `<hsbCompany>\\\\Block\\\\Electrical`.\n  - `hsb-E-Combination.mcr` and `hsbElectricalTsl.dll` must be accessible.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbInstallationPoint.mcr`\n\n### Step 2: Select Configuration\n```\nDialog: Select Configuration\nAction: Select the desired preset from the list (populated from XML files in your settings folder).\nNote: This sets default dimensions, symbols, and tooling strategies for the insertion.\n```\n\n### Step 3: Define Location\n```\nCommand Line: Select Element/Point\nAction: Click on the target wall Element or the specific location where the installation point should be placed.\nNote: If prompted, select the specific GenBeam (stud) if the installation requires a specific reference surface.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| UseGenbeamReference | Boolean | 0 | If **1**, positions the point relative to the physical surface of the selected beam. Use this for walls with variable cladding or thickness. |\n| WirechaseNoNail | Integer | 0 | Determines how \"No-Nail\" zones are calculated (0=Off, 1=Icon side horizontals only, etc.). Use this to prevent nailing into cables. |\n| ConduitExtraWidth | Number | 0 | Adds extra width (in mm) to the standard cable channel milling. |\n| ExtentWirechase | Boolean | 0 | If **1**, forces the cable channel to mill completely through the last structural member (e.g., bottom plate) to ensure continuity. |\n| ExtentWirechaseOffset | Number | 0 | Extends the cable channel by a specific distance (mm) beyond the default endpoint. |\n| CombinationStandardDiameter | Number | 68 | Sets the diameter (in mm) for circular drillings associated with the installation point. |\n| Offset | Number | 0 | Shifts the machining position relative to the symbol's insertion point (mm). |\n| FloorThickness | Number | Calculated | Defines the floor structure thickness. Used if a Room boundary is not detected to calculate vertical routing depth. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Set floor thickness | Prompts the user to manually enter the floor thickness if the script could not automatically detect a room boundary. |\n| Vorgabe laden | Reloads the default settings from the selected configuration (XML) file, resetting any manual changes made in the properties palette. |\n| export Settings | Exports the currently set parameters to a new XML configuration file for future reuse. |\n\n## Settings Files\n- **Filename**: `<scriptName>Settings.xml`\n- **Location**: Searches in `<hsbCompany>\\\\tsl\\\\settings`, current drawing path, or `<hsbCompany>\\\\Block\\\\Electrical`.\n- **Purpose**: Defines specific parameters for different installation types, including standard diameters, symbol styles, and default offsets.\n\n## Tips\n- **Cladded Walls**: If working on walls with uneven cladding, set `UseGenbeamReference` to **1** and select the underlying stud to ensure the box sits flush with the timber structure.\n- **Safety Zones**: Enable `WirechaseNoNail` to automatically generate polygons in your drawings that indicate where fasteners must not be used, protecting the cables.\n- **Reusability**: If you frequently use a specific non-standard setup (e.g., a specific channel depth), configure it once and use \"export Settings\" to save it as a new preset.\n\n## FAQ\n- **Q: Why is my cable channel not going through the bottom plate?**\n  A: Check the `ExtentWirechase` property. If it is set to 0, the channel stops at the calculated boundary. If set to 1, ensure the `FloorThickness` allows the routing to continue.\n- **Q: What does \"Vorgabe laden\" mean?**\n  A: It is German for \"Load Preset\". It reloads the original factory or project defaults for the selected configuration."
+      },
+      "tokens_used": 5222,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,299 @@
+{
+  "filename": "Sherpa.mcr",
+  "status": "completed",
+  "total_tokens": 41719,
+  "processing_time": 2173.694218635559,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9760,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script creates 3D geometry using 'Body bdConnector(...)', applies tooling to beams using 'House' and 'BeamCut' entities, and modifies beam geometry with 'bm0.addTool(bcMale)'. It uses 'dpModel' for display. No 'sd_' prefix, '#Type E' entity loops, or '_Viewport' usage indicative of Paper Space or Shop Drawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space (3D environment)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7505,
+      "error": null
+    },
+    "3": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "API error 429: {\"error\":{\"code\":\"1302\",\"message\":\"您的账户已达到速率限制，请您控制请求频率\"}}"
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates parametric Sherpa aluminum timber connectors between beams or panels, handling the physical connector geometry, necessary millings (pockets) for flush mounting, and hardware data for production.",
+          "category": "Hardware / Connection",
+          "typicalUseCase": "Structurally connecting two timber members (e.g., joist to bearer, rafter to purlin) using a specific Sherpa connector type, ensuring the connection is milled into the wood if required for flush alignment."
+        },
+        "parameters": [
+          {
+            "name": "sFamilyName",
+            "technicalDefault": "\"XS\"",
+            "businessMeaning": "The broad category or size series of the Sherpa connector (XS, S, M, L, XL, XXL). This determines the general load capacity and size range available.",
+            "validRange": "\"XS\", \"S\", \"M\", \"L\", \"XL\", \"XXL\"",
+            "unit": "String",
+            "affectsOutput": "Changes the internal array of available specific articles (sizes), default dimensions (width/thickness), and screw specifications."
+          },
+          {
+            "name": "nArticle",
+            "technicalDefault": "0",
+            "businessMeaning": "The specific size/model index within the selected family (e.g., 'XS 5', 'M 20', 'L 100'). This directly corresponds to the manufacturer's part number and physical dimensions.",
+            "validRange": "Dependent on Family (e.g., 0-3 for XS, 0-6 for L)",
+            "unit": "Index",
+            "affectsOutput": "Sets the exact Width, Height, and Thickness of the connector body. Updates the screw count, screw diameter, and screw length automatically."
+          },
+          {
+            "name": "nMillMode",
+            "technicalDefault": "0",
+            "businessMeaning": "Defines the mounting strategy of the connector relative to the timber surface: Surface mounted, milled into the main beam, milled into the secondary beam, or milled into both (half-and-half) to create a hidden or flush connection.",
+            "validRange": "0=None, 1=Male (Main Beam), 2=Female (Sec Beam), 3=Both (Half/Half)",
+            "unit": "Enumeration",
+            "affectsOutput": "Controls whether 'BeamCut' or 'House' tooling entities are added to the beams. Adjusts the Z-position of the connector Body to align with the bottom of the milled pocket."
+          },
+          {
+            "name": "dMaleMillDepth",
+            "technicalDefault": "U(10)",
+            "businessMeaning": "The depth of the pocket milled into the main (male) beam when 'MillMode' is set to 'Both'. It allows the user to control how much the connector sinks into the wood.",
+            "validRange": "U(1) to Connector Thickness (dConThick)",
+            "unit": "mm",
+            "affectsOutput": "Adjusts the vertical (Z) position of the connector Body and the depth of the 'BeamCut' tool applied to the main beam."
+          },
+          {
+            "name": "dShadowGap",
+            "technicalDefault": "U(1)",
+            "businessMeaning": "A small tolerance or expansion gap between the connector and the female beam (or main beam in surface mount) to account for timber swelling/contraction or paint layers.",
+            "validRange": "U(0) to U(5)",
+            "unit": "mm",
+            "affectsOutput": "Offsets the connector body slightly away from the beam surface or deeper into the pocket."
+          },
+          {
+            "name": "sCatName",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The user-defined name for saving the current configuration as a catalog entry.",
+            "validRange": "String",
+            "unit": "String",
+            "affectsOutput": "No direct geometric change. Stores the property set to the catalog database for reuse."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sFamilyName changes",
+            "effect": "Resets the list of available articles and default dimensions.",
+            "cascade": [
+              "nArticle",
+              "dWidthMain",
+              "dWidthSec",
+              "dConThick",
+              "dXS_ConHeights",
+              "nNumScrewMains"
+            ]
+          },
+          {
+            "trigger": "nArticle changes",
+            "effect": "Updates specific dimensions and hardware data.",
+            "cascade": [
+              "dConHeights",
+              "nNumScrewSums",
+              "dScrewLength",
+              "dScrewDiam",
+              "hwComps"
+            ]
+          },
+          {
+            "trigger": "nMillMode changes",
+            "effect": "Alters tooling logic and connector positioning.",
+            "cascade": [
+              "bcMale",
+              "hsFemale",
+              "bdConnector (transform)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Body",
+            "description": "The 3D representation of the aluminum connector.",
+            "appliedTo": "Model Space"
+          },
+          {
+            "type": "BeamCut",
+            "description": "A rectangular cutout (pocket) milled into the main beam.",
+            "appliedTo": "bm0 (Main Beam)"
+          },
+          {
+            "type": "House",
+            "description": "A volume tool (pocket) applied to the secondary beam or panel.",
+            "appliedTo": "bm1 (Secondary Beam) or sip1 (Panel)"
+          },
+          {
+            "type": "HardWrComp",
+            "description": "BOM data representing the connector unit and screws.",
+            "appliedTo": "Instance Properties / Export"
+          }
+        ]
+      },
+      "tokens_used": 8529,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Inserted (Launch)",
+          "[Check] Determine Execution Mode: Catalog Key vs Manual Selection",
+          "[Branch 1: Catalog Key] Parse execute key for Family and Catalog Name",
+          "[Branch 1: Catalog Key] Attempt to load properties from catalog entry",
+          "[Branch 2: Manual/No Key] Prompt user to select Main Beam (bm0) or Panel (sip0)",
+          "[Branch 2: Manual/No Key] Prompt user to select Secondary Beam (bm1) or Panel (sip1)",
+          "[Check] Validate geometry: Non-parallel, intersecting or overlapping with sufficient height/width",
+          "[Branch: Invalid Geometry] Display error at reference point, set property read-only, abort generation",
+          "[Branch: Valid Geometry] Calculate coordinate system (vecX1, vecY1, vecZ1) based on beam angles and intersection",
+          "[Check] Verify Article/Dimensions fit within beam cross-sections (dCheck1, dCheck2)",
+          "[Branch: Invalid Fit] Display error in command line (once per session), draw error text, abort generation",
+          "[Branch: Valid Fit] Generate Connector Body (bdConnector) based on Family and Article",
+          "[Check] Milling Mode (nMillMode) and Entity Types (Beam vs Panel)",
+          "[Branch: MillMode 0 (None)] Position connector on surface with offset (Shadow Gap). No tooling added.",
+          "[Branch: MillMode 1 (Male)] Apply 'BeamCut' tool to Main Beam (bm0). Position connector recessed.",
+          "[Branch: MillMode 2 (Female)] Apply 'House' tool to Secondary Beam (bm1) or Panel (sip1). Position connector flush.",
+          "[Branch: MillMode 3 (Both/Half-Half)] Apply 'BeamCut' to Main Beam (depth based on dMaleMillDepth) and 'House' to Secondary Beam/Panel. Position connector centered between cuts.",
+          "Generate Hardware Components (HardWrComp): Connector body and Screw quantity/size.",
+          "Update Display (dpModel/dpPlan): Draw connector and article text.",
+          "[Action: Right-Click Context Menu] 'setCatalog': Prompt user for name, save current properties to catalog."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "How the script is inserted (Execute Key vs Standard)",
+            "path1": {
+              "name": "Catalog Preset",
+              "steps": [
+                "Parse <^C^C(hsb_scriptinsert \"Sherpa\" \"Family-CatalogName\")>",
+                "If CatalogName exists: Load all properties silently, skip dialogs.",
+                "If CatalogName missing: Preset Family, show Property dialog for remaining settings."
+              ]
+            },
+            "path2": {
+              "name": "Manual Insertion",
+              "steps": [
+                "Execute with no arguments.",
+                "Show Step 1 Dialog: Select Family (XS, S, M, L, XL, XXL).",
+                "Show Step 2 Dialog: Configure Article, Milling, Gaps, etc.",
+                "Proceed to Entity Selection."
+              ]
+            }
+          },
+          {
+            "condition": "Type of Selected Entities (Beams vs Panels)",
+            "path1": {
+              "name": "Standard Beam-to-Beam",
+              "steps": [
+                "Select GenBeam bm0 (Main).",
+                "Select GenBeam bm1 (Secondary).",
+                "Calculate vectors based on beam centerlines.",
+                "Apply BeamCut to bm0, House to bm1 (if milling requires)."
+              ]
+            },
+            "path2": {
+              "name": "Panel Support (Beam-to-Panel or Panel-to-Panel)",
+              "steps": [
+                "Select GenBeam or Panel as bm0/sip0.",
+                "Select GenBeam or Panel as bm1/sip1.",
+                "Use specific vector logic (vx0, vy0, vz0 fixes v2.3) for panels.",
+                "Apply House tool using 'sip1.addTool' if secondary entity is a Panel."
+              ]
+            }
+          },
+          {
+            "condition": "Connector Fit Validation",
+            "path1": {
+              "name": "Success",
+              "steps": [
+                "Required material fits within beam cross-section.",
+                "Generate Body, Tooling, and Hardware.",
+                "Instance is valid."
+              ]
+            },
+            "path2": {
+              "name": "Failure",
+              "steps": [
+                "Connector too large for beam dimensions (dCheck1/dCheck2 fail).",
+                "Draw error string at reference point.",
+                "Set 'sArticle' property to Error message (Read Only).",
+                "Stop script execution."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Existence and Parallelism",
+            "errorMessage": "At least two non parallel beams are required.",
+            "recovery": "Select two different beams that intersect or overlap appropriately."
+          },
+          {
+            "check": "Geometric Fit (Height/Width)",
+            "errorMessage": "The chosen Sherpa connector does not fit in this situation (displayed at connector location).",
+            "recovery": "Select a smaller Article size, change the Family, or reposition beams to provide more material."
+          },
+          {
+            "check": "Catalog Name Uniqueness (on Save)",
+            "errorMessage": "None (handled automatically).",
+            "recovery": "If user leaves name blank, script auto-generates a unique name (e.g., 'XS 5 0 milled (1)')."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Connector Size/Family",
+            "how": "OPM (Object Properties Palette) - Change sFamilyName or nArticle.",
+            "effect": "Updates connector body dimensions, screw counts, and re-checks geometric fit."
+          },
+          {
+            "action": "Adjust Milling Strategy",
+            "how": "OPM - Change nMillMode or dMaleMillDepth.",
+            "effect": "Modifies tooling on beams (BeamCut/House) and moves the connector body (Z-offset)."
+          },
+          {
+            "action": "Save Configuration to Catalog",
+            "how": "Right-click instance -> Context Menu -> 'setCatalog'.",
+            "effect": "Prompts for name, stores current property set. Can be recalled via Execute Key."
+          },
+          {
+            "action": "Move/Stretch Beams",
+            "how": "Grip edit or Move command on the connected beams.",
+            "effect": "Script recalculates position. Note: Script logic attempts to keep size constant, but may fail validation if beams move too far apart (error state)."
+          }
+        ]
+      },
+      "tokens_used": 10041,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Sherpa.mcr\n\n## Overview\nGenerates parametric Sherpa aluminum timber connectors between beams or panels. It automatically creates the 3D connector body, applies the necessary millings (pockets) to the timber for flush mounting, and generates hardware data for production lists.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script creates 3D geometry and modifies beam contours. |\n| Paper Space | No | Not designed for 2D drawings or layout views. |\n| Shop Drawing | No | Not a shop drawing generation script. |\n\n## Prerequisites\n- **Required Entities**: Two GenBeams (or a combination of GenBeams and Panels).\n- **Minimum Beam Count**: 2.\n- **Required Settings**: None (uses internal Sherpa size databases).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `Sherpa.mcr` from the list.\n\n### Step 2: Select Connector Family\n```\nDialog: Select Family\nAction: Choose the size series (XS, S, M, L, XL, XXL) and click OK.\n```\nThis determines the load capacity range and available sizes.\n\n### Step 3: Configure Connector Settings\n```\nDialog: Configure Sherpa\nAction: \n1. Select the specific Article (Size index).\n2. Set the Milling Mode (Surface mount, recessed in Main, recessed in Secondary, or Half/Half).\n3. Adjust depths or gaps if necessary.\n4. Click OK.\n```\n\n### Step 4: Select Main Beam\n```\nCommand Line: Select beam or panel:\nAction: Click on the primary timber element (e.g., the bearer or rafter).\n```\n\n### Step 5: Select Secondary Beam\n```\nCommand Line: Select beam or panel:\nAction: Click on the secondary timber element (e.g., the joist or purlin) that intersects the first.\n```\n\n### Step 6: Verification\nThe script automatically checks if the beams are parallel or if the connector is too large for the timber cross-section.\n- **Success**: The connector body is inserted, and toolings (pockets) are applied to the beams.\n- **Failure**: An error text appears at the insertion point, and the `sArticle` property displays the specific error.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sFamilyName | String | \"XS\" | The size series of the connector (XS, S, M, L, XL, XXL). Changing this resets available sizes. |\n| nArticle | Index | 0 | The specific model number within the selected family (determines exact width, height, and thickness). |\n| nMillMode | Enumeration | 0 | **Mounting Strategy**: 0=None (Surface), 1=Male (Milled into Main Beam), 2=Female (Milled into Sec Beam), 3=Both (Half/Half). |\n| dMaleMillDepth | Length | U(10) | Depth of the pocket milled into the main beam (only used in Mode 3). |\n| dShadowGap | Length | U(1) | Tolerance gap between connector and timber (accounts for swelling/paint). |\n| sCatName | String | \"\" | Name used to save the current configuration to the catalog. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| setCatalog | Prompts you to enter a name and saves the current property configuration (Size, Family, Milling settings) to the catalog for future use. |\n\n## Settings Files\n- **Catalog Entries**: Stored via the internal `setCatalog` function.\n- **Purpose**: Allows you to save \"presets\" (e.g., \"M 20 Half-Half\") so they can be inserted quickly later without re-entering values.\n\n## Tips\n- **Milling Mode 3 (Both)** is best for hidden connections where you want the connector centered between the two timber members. Ensure your beams are thick enough to accommodate the pocket depth.\n- **Fit Error**: If you see \"The chosen Sherpa connector does not fit,\" try selecting a smaller `nArticle` or `sFamilyName`.\n- **Re-use Configurations**: If you frequently use a specific size (e.g., \"L 60\" milled halfway), use the `setCatalog` context menu. You can then insert it directly using the execute key logic if mapped to a toolbar button.\n\n## FAQ\n- **Q: Why does the script fail with \"At least two non parallel beams are required\"?**\n  **A**: The connector is designed for intersecting members (e.g., T-junctions). You cannot connect two beams that run perfectly parallel to each other with this script.\n\n- **Q: Can I use this on CLT panels or just solid timber?**\n  **A**: You can use this on Panels. The script detects if you select a Panel and applies the tooling (using the House entity) appropriately.\n\n- **Q: How do I change the connector size after inserting?**\n  **A**: Select the connector instance in the model, open the Properties Palette (Ctrl+1), and change the `sFamilyName` or `nArticle` dropdown. The geometry will update automatically."
+      },
+      "tokens_used": 5884,
+      "error": null
+    }
+  }
+}

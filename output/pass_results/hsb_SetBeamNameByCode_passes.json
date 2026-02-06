@@ -1,0 +1,316 @@
+{
+  "filename": "hsb_SetBeamNameByCode.mcr",
+  "status": "completed",
+  "total_tokens": 44399,
+  "processing_time": 262.3507158756256,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "30.04.2012",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "First version"
+          },
+          {
+            "version": "1.2",
+            "date": "31.05.2012",
+            "author": null,
+            "changes": "Add Name and grade as a property"
+          },
+          {
+            "version": "1.4",
+            "date": "03.08.2012",
+            "author": null,
+            "changes": "Add beam type _kSupportingCrossBeam"
+          },
+          {
+            "version": "1.5",
+            "date": "10.10.2012",
+            "author": null,
+            "changes": "Removed check for grade to see if it is empty.  If property is empty it will overwrite the grade to empty"
+          }
+        ],
+        "settingsFiles": [
+          "Materials.xml"
+        ],
+        "dependencies": []
+      },
+      "tokens_used": 6945,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select Element() objects and iterates through Beam() objects to modify properties like Name, Material, Grade, and Color. It does not use ShopDrawing API (sd_*) or interact with Viewports/Sheets."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "Abbund\\Materials.xml"
+          ]
+        }
+      },
+      "tokens_used": 5895,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8904,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the batch assignment of timber attributes (Name, Material, Grade, and Color) to beams based on user-defined code matching, with fallback rules for standard and transverse roof joists.",
+          "category": "Data Management / Configuration",
+          "typicalUseCase": "Used to standardize beam properties across a project or selection by matching a beam's existing code (e.g., 'ST' for Stud) to a specific timber grade and material, or to apply default properties to roof joists."
+        },
+        "parameters": [
+          {
+            "name": "sBeamCode1..8",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The trigger code (key) that the script searches for in the beam's existing 'BeamCode' property. If a match is found, the associated Name, Material, Grade, and Color are applied.",
+            "validRange": "Short text string (e.g., 'WALL', 'FLR', 'RFT'). Case-insensitive.",
+            "unit": "Text",
+            "affectsOutput": "Determines which rule set (1-8) is applied to a specific beam. Empty codes disable that specific rule."
+          },
+          {
+            "name": "sBeamName1..8",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The descriptive name assigned to the beam (e.g., 'Stud', 'Plate', 'Joist').",
+            "validRange": "Text string (typically limited by CAD field length)",
+            "unit": "Text",
+            "affectsOutput": "Updates the beam's 'Name' property visible in lists and labels."
+          },
+          {
+            "name": "sBeamMaterial1..8",
+            "technicalDefault": "List from Materials.xml",
+            "businessMeaning": "The specific timber species or product to assign (e.g., 'C24', 'GL28h', 'KLH').",
+            "validRange": "Must exist in the configured 'Materials.xml' (e.g., C14, C24, GL24h).",
+            "unit": "Text",
+            "affectsOutput": "Sets the beam material, which impacts engineering calculations, weight, and labeling."
+          },
+          {
+            "name": "sBeamGrade1..8",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The structural strength grade of the timber.",
+            "validRange": "Standard grading codes (e.g., 'C24', 'GL24h', 'C30').",
+            "unit": "Text",
+            "affectsOutput": "Updates the 'Grade' property used for structural analysis and production data."
+          },
+          {
+            "name": "nColor1..8",
+            "technicalDefault": "32",
+            "businessMeaning": "The visual color index used to display the beam in the CAD model.",
+            "validRange": "0 to 255 (AutoCAD Color Index).",
+            "unit": "Index",
+            "affectsOutput": "Changes the on-screen color of the beam for visual differentiation."
+          },
+          {
+            "name": "sBeamName9 (Standard Joist)",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Default name for rectangular beams within a Roof Element that are NOT transverse (purlins) and have no matching code.",
+            "validRange": "Text string (e.g., 'Rafter', 'Standard Joist').",
+            "unit": "Text",
+            "affectsOutput": "Fallback naming for structural roof members running parallel to the slope."
+          },
+          {
+            "name": "sBeamName10 (Transverse Joist)",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Default name for rectangular beams within a Roof Element that ARE transverse (purlins) and have no matching code.",
+            "validRange": "Text string (e.g., 'Purlin', 'Transverse Joist').",
+            "unit": "Text",
+            "affectsOutput": "Fallback naming for members running perpendicular to the roof slope."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sBeamCodeX is empty",
+            "effect": "That specific rule set (indices 1-8) is ignored/skipped during processing.",
+            "cascade": [
+              "sBeamNameX",
+              "sBeamMaterialX",
+              "sBeamGradeX",
+              "nColorX"
+            ]
+          },
+          {
+            "trigger": "Beam has no matching code AND is a rectangular profile in a Roof Element",
+            "effect": "Script defaults to using 'Standard Joist' (Cat 9) or 'Transverse Joist' (Cat 10) parameters based on orientation.",
+            "cascade": [
+              "sBeamName9/10",
+              "sBeamMaterial9/10",
+              "sBeamGrade9/10",
+              "nColor9/10"
+            ]
+          },
+          {
+            "trigger": "sMaterial List initialization",
+            "effect": "Reads valid timber types from 'Abbund\\Materials.xml'. If missing, properties show empty and script warns.",
+            "cascade": [
+              "sBeamMaterial1..10"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam Properties",
+            "description": "Updates metadata attributes on existing Beam entities.",
+            "appliedTo": "All beams contained within the user-selected Elements."
+          }
+        ]
+      },
+      "tokens_used": 6791,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script starts and sets unit to mm.",
+          "Script locates and reads 'Abbund\\Materials.xml' from the hsbCompany path.",
+          "Script checks if Material list was loaded successfully; issues a report notice if it failed, but continues.",
+          "Properties are initialized: 8 Code categories (Code 1-8) and 2 Default categories (Standard/Transverse Joist).",
+          "User executes the script in AutoCAD.",
+          "[Insert Phase] Script prevents multiple execution cycles (eraseInstance if cycle > 1).",
+          "[Insert Phase] If executed manually (no ExecuteKey), the configuration dialog is displayed.",
+          "[Insert Phase] User is prompted to select Elements (PrEntity).",
+          "[Insert Phase] Selected Elements are stored in the global _Element array, and the script pauses/returns.",
+          "[Calculation Phase] Script re-runs. Validates that Elements were selected; erases script if selection is empty.",
+          "Script trims whitespace and converts all defined Beam Codes (1-8) to uppercase.",
+          "Script populates runtime arrays (sCodes, sNames, etc.) excluding any rule sets where the Code is empty.",
+          "Script iterates through each selected Element.",
+          "For each Element, script detects if it is a Roof Element and determines Transverse direction (Purlin).",
+          "Script iterates through every Beam in the Element.",
+          "Script checks if the Beam Type matches internal auto-coding rules (e.g., ExtraBlock gets 'ST').",
+          "Script retrieves the Beam's current 'BeamCode' property.",
+          "Script checks if the BeamCode matches any of the active Code 1-8 rules.",
+          "If match found: Apply Name, Material, Grade, and Color from that rule.",
+          "If no match (Code is empty): Check Zone Index. If not 0, skip beam.",
+          "If Code is empty and Zone is 0: Check Beam Profile.",
+          "If Profile is not Rectangular: Set Beam Name to the Profile string (e.g., 'I-JOIST').",
+          "If Profile is Rectangular: Determine orientation (Transverse vs Standard) and apply the corresponding Joist defaults (Code 9 or 10).",
+          "Script completes processing and deletes its own instance (eraseInstance)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Materials.xml File Check",
+            "path1": {
+              "name": "File Found",
+              "steps": [
+                "Populate material dropdown lists for properties.",
+                "Proceed to execution."
+              ]
+            },
+            "path2": {
+              "name": "File Missing",
+              "steps": [
+                "Report 'Materials not been set' notice to user.",
+                "Material dropdowns remain empty.",
+                "Proceed to execution (User must type material manually)."
+              ]
+            }
+          },
+          {
+            "condition": "Beam Code Matching Logic",
+            "path1": {
+              "name": "Code Match Found (Rules 1-8)",
+              "steps": [
+                "Locate the rule index in the active code list.",
+                "Apply the Name, Material, Grade, and Color associated with that rule."
+              ]
+            },
+            "path2": {
+              "name": "No Match / Empty Code",
+              "steps": [
+                "Verify beam is not in a sub-zone (ZoneIndex 0).",
+                "Check Profile type (Rectangular vs Other)."
+              ]
+            }
+          },
+          {
+            "condition": "Empty Code & Profile Type",
+            "path1": {
+              "name": "Non-Rectangular Profile",
+              "steps": [
+                "Set Beam Name to match the Profile name (e.g. 'I-JOIST').",
+                "Do not change Material/Grade/Color."
+              ]
+            },
+            "path2": {
+              "name": "Rectangular Profile",
+              "steps": [
+                "Determine Roof Orientation (Transverse vs Standard).",
+                "Apply attributes from 'Code 10' (Transverse) or 'Code 9' (Standard)."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Existence of 'Materials.xml' in hsbCompany path",
+            "errorMessage": "\\n Materials not been set, please run hsbMaterial Utility or contact SupportDesk",
+            "recovery": "User must ensure materials are configured via hsbMaterial utility or edit properties manually."
+          },
+          {
+            "check": "Content of Materials.xml (MATERIAL[] map)",
+            "errorMessage": "\\n Materials not been set, please run hsbMaterial Utility or contact SupportDesk",
+            "recovery": "User must ensure XML contains valid material data."
+          },
+          {
+            "check": "User Element Selection",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Script erases itself if user cancels selection or selects nothing; user must re-run command."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Script Self-Destruction",
+            "how": "Automatic",
+            "effect": "The TSL instance removes itself from the drawing immediately after processing, leaving only the modified beams."
+          },
+          {
+            "action": "Update Beam Properties",
+            "how": "Direct Database Modification",
+            "effect": "Beams within selected elements have their Name, Material, Grade, and Color properties permanently updated based on the logic rules."
+          }
+        ]
+      },
+      "tokens_used": 9472,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SetBeamNameByCode\n\n## Overview\nAutomatically batch-assigns timber attributes (Name, Material, Grade, and Color) to beams based on specific code matches. It also includes smart fallback logic to assign default properties for roof joists (distinguishing between standard rafters and transverse purlins) when no code is found.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script is designed to work on 3D model Elements. |\n| Paper Space | No | Not intended for layout or sheet views. |\n| Shop Drawing | No | Does not process manufacturing views. |\n\n## Prerequisites\n- **Required Entities**: `Element` objects containing `Beam` entities.\n- **Minimum Beam Count**: 0 (Script processes whatever is found in the selection).\n- **Required Settings**: The file `Materials.xml` must exist in the `hsbCompany\\Abbund\\` folder.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or use your assigned toolbar shortcut) → Select `hsb_SetBeamNameByCode.mcr`.\n\n### Step 2: Configure Parameters\nA configuration dialog or Properties Palette appears.\n- **Define Code Rules (1-8)**: Enter a code (e.g., \"ST\") to match against existing beam codes. Then define the Name, Material, Grade, and Color to apply if a match is found.\n- **Define Defaults (9-10)**: Set default properties for roof joists. Set **Category 9** for standard joists (parallel to slope) and **Category 10** for transverse joists (perpendicular to slope).\n\n### Step 3: Select Elements\n```\nCommand Line: Select element(s):\nAction: Click on the Elements (walls, roofs, floors) containing the beams you wish to update. Press Enter to confirm selection.\n```\n\n### Step 4: Processing\nThe script immediately scans the selected Elements.\n- It updates beams matching your defined codes.\n- It applies roof defaults to rectangular beams without codes.\n- The script instance automatically deletes itself from the drawing once finished.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Beam Code 1..8** | Text | (Empty) | The trigger code to search for in the beam's 'BeamCode' property (e.g., \"FLR\", \"WALL\"). If empty, that rule is skipped. |\n| **Beam Name 1..8** | Text | (Empty) | The descriptive name to assign (e.g., \"Floor Joist\", \"Stud\") if the Beam Code matches. |\n| **Beam Material 1..8** | List | (From XML) | The timber material to assign (e.g., \"C24\", \"GL28h\"). Must exist in your Materials.xml. |\n| **Beam Grade 1..8** | Text | (Empty) | The structural grade to assign (e.g., \"C24\", \"GL24h\"). |\n| **Color 1..8** | Index | 32 | The AutoCAD color index to apply to the beam for visual identification. |\n| **Beam Name 9 (Standard)** | Text | (Empty) | Default name for rectangular roof beams running parallel to the slope (Standard Joist). |\n| **Beam Name 10 (Transverse)** | Text | (Empty) | Default name for rectangular roof beams running perpendicular to the slope (Purlins). |\n| **Material 9 / 10** | List | (From XML) | Default materials for Standard and Transverse roof joists. |\n| **Grade 9 / 10** | Text | (Empty) | Default grades for Standard and Transverse roof joists. |\n| **Color 9 / 10** | Index | 32 | Default colors for Standard and Transverse roof joists. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | The script automatically erases itself after processing. There are no context menu options available after execution. |\n\n## Settings Files\n- **Filename**: `Materials.xml`\n- **Location**: `hsbCompany\\Abbund\\`\n- **Purpose**: Provides the valid list of materials (e.g., C14, C24, GL24h) available in the dropdown lists. If this file is missing, the material lists will be empty, and a warning will be displayed.\n\n## Tips\n- **Roof Logic**: The script is smart enough to detect Roof Elements. If a beam in a roof has no code, it checks the orientation. Beams crossing the roof slope are treated as \"Transverse\" (Category 10), while others are \"Standard\" (Category 9).\n- **I-Joists**: If a beam has no code and a non-rectangular profile (e.g., an I-Joist), the script automatically sets the Name to match the Profile Name (e.g., \"I-JOIST\").\n- **Zones**: Beams located in sub-zones (Zone Index != 0) are ignored by the \"Default\" logic to prevent unwanted overwrites.\n- **Empty Properties**: If a property (like Grade) is left empty in the script settings, the script will overwrite the existing beam grade with an empty value.\n\n## FAQ\n- **Q: The script disappeared after I ran it. Is that normal?**\n  - A: Yes. This is a \"command\" script that performs a task and then self-destructs to clean up your drawing.\n- **Q: The Material dropdown is empty or shows an error.**\n  - A: Ensure `Materials.xml` exists in your `hsbCompany\\Abbund` folder and contains valid data. You may need to run the `hsbMaterial` utility to generate this file.\n- **Q: Why did some beams in my roof not update?**\n  - A: Check if the beams are inside a specific \"Zone\" (Zone Index > 0). The script skips beams in zones for the default fallback logic. Also, verify that the beams have a rectangular profile if you expect the Category 9/10 logic to apply."
+      },
+      "tokens_used": 6392,
+      "error": null
+    }
+  }
+}

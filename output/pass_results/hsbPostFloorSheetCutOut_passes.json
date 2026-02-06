@@ -1,0 +1,194 @@
+{
+  "filename": "hsbPostFloorSheetCutOut.mcr",
+  "status": "completed",
+  "total_tokens": 39288,
+  "processing_time": 168.23761463165283,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": 1,
+          "minorVersion": 3,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl creates a connection between post beams and sheets. \nPost beams will penetrate through the sheet taking into account a gap between the beam and the sheet.\nEvery sheet that is included in the area of the beam section + the gap will be cut out.\nIf after the cutting, a sheet will be splitted into different parts, the new parts are added\nas new sheets.\nA new TSL will overwrite an existing TSL if the selection of intersecting shhets of the pos or\nthe gap differs from the existing TSL. Otherwise the insert will be neglected",
+        "versionHistory": [
+          {
+            "version": "1.3",
+            "date": "17.09.2019",
+            "author": "marsel.nakuci@hsbcad.com",
+            "changes": "TFC-39 remove unnecessary messages"
+          },
+          {
+            "version": "1.2",
+            "date": "2feb2019",
+            "author": "marsel.nakuci@hsbcad.com",
+            "changes": "gap is included if new TSL should be inserted"
+          },
+          {
+            "version": "1.1",
+            "date": "31jan2019",
+            "author": "marsel.nakuci@hsbcad.com",
+            "changes": "added functionality to avoid dublication"
+          },
+          {
+            "version": "1.0",
+            "date": "28jan2019",
+            "author": "marsel.nakuci@hsbcad.com",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7933,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No sd_* or Multipage* prefix found. The script explicitly uses '_kModelSpace' in the 'tslNew.dbCreate' call to insert new instances into Model Space. It operates on 3D geometry (Beam, Sheet) and modifies the model geometry (cutouts, splitting sheets)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Beam",
+            "Sheet"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space with vertical Post beams (vecX parallel to ZW) and horizontal floor sheets (vecZ parallel to ZW).",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4791,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity.go",
+              "promptOriginal": "|Select sheets and beams|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity.go",
+              "promptOriginal": "|Select sheet(s)|",
+              "condition": "_bOnRecalc && (_kExecuteKey==|Add Sheet| || _kExecuteKey==TslDoubleClick)",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "Properties Dialog",
+            "trigger": "_bOnInsert (when no execution key is set)",
+            "title": "Properties",
+            "dataSource": "Internal Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dGap",
+            "type": "PropDouble",
+            "displayName": "Gap",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": "General",
+            "description": "|Defines the Gap between the sheets and the columns|"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "|Add Sheet|",
+            "handler": "|Add Sheet|",
+            "action": "Prompts user to select additional sheets to append to the current TSL instance.",
+            "alsoTriggeredBy": "TslDoubleClick"
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 5710,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically cuts rectangular clearance holes in floor sheets for vertical post beams, accounting for a specified tolerance gap, and splits sheets if the cutout divides them.",
+          "category": "Framing/Modeling",
+          "typicalUseCase": "Preparing floor panels (decking/sheeting) to accommodate vertical columns or posts, ensuring proper clearance for installation or material expansion."
+        },
+        "parameters": [
+          {
+            "name": "dGap",
+            "technicalDefault": 0,
+            "businessMeaning": "The clearance distance maintained around the post beam. It defines the space between the edge of the post and the edge of the hole cut in the floor sheet.",
+            "validRange": "0 - 50 mm",
+            "unit": "mm",
+            "affectsOutput": "Increases the dimensions of the cutout rectangle in the sheet (Post Width + 2*Gap, Post Height + 2*Gap). If the gap results in a cutout that severs the sheet into separate pieces, the script automatically generates new sheet entities for the split parts."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Value of dGap",
+            "effect": "The size of the cutout is dynamically calculated based on the specific Post Beam dimensions (Width and Height) plus twice the value of dGap.",
+            "cascade": [
+              "Post Beam Width",
+              "Post Beam Height"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Contour Cutout / Machining",
+            "description": "A rectangular opening cut into the selected sheet geometry to allow the post to pass through.",
+            "appliedTo": "Selected Sheet elements"
+          },
+          {
+            "type": "Sheet Split",
+            "description": "New Sheet entities created if the original sheet is geometrically divided into two or more disconnected pieces by the cutout.",
+            "appliedTo": "Selected Sheet elements that are intersected by the post profile"
+          }
+        ]
+      },
+      "tokens_used": 7543,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9495,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbPostFloorSheetCutOut.mcr\n\n## Overview\nThis script automatically creates a connection between vertical post beams and horizontal floor sheets. It cuts rectangular clearance holes in the sheets to allow posts to pass through, accounting for a specified gap, and splits the sheets into new parts if the cutout divides them.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in Model Space. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required Entities**: \n  - At least one vertical Post beam (X-axis parallel to World Z).\n  - At least one horizontal Floor sheet (Z-axis parallel to World Z).\n- **Minimum Beam Count**: 1 Post.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbPostFloorSheetCutOut.mcr`\n\n### Step 2: Select Entities\n```\nCommand Line: Select sheets and beams\nAction: Select the vertical post beam(s) and the floor sheet(s) that intersect them. Press Enter to confirm.\n```\n\n### Step 3: Configure Parameters\nThe script will insert. In the Properties Palette (Ctrl+1), adjust the `Gap` if necessary. The script will automatically update the cutout geometry based on the post dimensions and the gap value.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Gap | Number | 0 | Defines the clearance distance between the post beam and the edge of the cutout in the sheet. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Add Sheet | Prompts you to select additional sheet(s) to include in the current cutout instance. This can also be triggered by double-clicking the TSL instance. |\n\n## Settings Files\nNone.\n\n## Tips\n- **Sheet Splitting**: If the cutout is large enough to sever the sheet into disconnected parts, the script will automatically create new sheet entities for the resulting pieces.\n- **Orientation**: Ensure your post beams are vertical (X-axis up) and floor sheets are horizontal for the script to detect the intersection correctly.\n- **Updates**: If you change the `Gap` or the intersecting sheets, the script will update existing geometry automatically without needing to delete and re-insert the TSL.\n\n## FAQ\n- **Q: Can I add more sheets to an existing connection without re-inserting?**\n  **A:** Yes. Right-click the TSL instance and select \"Add Sheet\" or simply double-click the instance, then select the new sheets.\n- **Q: What happens if the cutout cuts the sheet completely in half?**\n  **A:** The script automatically splits the original sheet into two separate new sheet elements in the model."
+      },
+      "tokens_used": 3816,
+      "error": null
+    }
+  }
+}

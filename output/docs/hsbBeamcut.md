@@ -1,125 +1,83 @@
-# hsbBeamcut
+# hsbBeamcut.mcr
 
-## Description
+## Overview
+This script creates a configurable volumetric cut (such as a notch, slot, or recess) on a specific face of a timber beam, wall, or element. It allows for precise material removal using either fixed property dimensions or dynamic on-screen point input.
 
-**hsbBeamcut** is a tool script that creates a rectangular cut (notch) on one face of a timber beam. This script is commonly used to create pockets, grooves, or clearance cuts for other structural members, conduits, or hardware installations to pass through or seat into a beam.
+## Usage Environment
+| Space | Supported | Notes |
+|-------|-----------|-------|
+| Model Space | Yes | This script creates 3D geometry and modifies beam bodies. |
+| Paper Space | No | Not intended for 2D drawing generation. |
+| Shop Drawing | No | This is a modeling/CAM script. |
 
-The beamcut can be applied to:
-- Individual beams (GenBeam)
-- Wall elements (ElementWallSF) - applies to horizontal beams
-- Door/window openings (OpeningSF)
-- Installation points (hsbInstallationPoint TSL) - for MEP conduit routing
+## Prerequisites
+- **Required entities**: GenBeam, ElementWallSF, OpeningSF, or TslInst (Electrical Installations/Doors).
+- **Minimum beam count**: 0 (Can be attached to walls or installations).
+- **Required settings files**: None.
 
-When linked to openings or installation points, the beamcut automatically adjusts its position and dimensions to match the referenced object.
+## Usage Steps
 
-## Script Information
+### Step 1: Launch Script
+**Command**: `TSLINSERT` → Select `hsbBeamcut.mcr` from the list.
 
-| Property | Value |
-|----------|-------|
-| Script Type | O-Type (Object) |
-| Version | 2.6 |
-| Keywords | Beam, Beamcut |
-| File | hsbBeamcut.mcr |
+### Step 2: Select Reference Item
+```
+Command Line: Select reference item (Beam, Walls, E-Installations or Doors)
+Action: Click on the beam, wall, or installation object where you want to apply the cut.
+```
 
-## Properties
+### Step 3: Define Dimensions and Position
+*The prompts depend on the **Length** property setting (default is 300mm).*
 
-### Geometry
+**Scenario A: If Length is set to a specific value (> 0)**
+```
+Command Line: Insertion Point
+Action: Click on the face of the beam to place the center of the cut.
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Length | PropDouble | 300 mm | Defines the length of the beamcut along the beam axis. Set to 0 for full beam length. When linked to an opening or installation, setting length to 0 locks the position to the referenced object. |
-| Width | PropDouble | 30 mm | Defines the width of the beamcut (perpendicular to beam axis). Set to 0 to match complete beam width. |
-| Depth | PropDouble | 30 mm | Defines the depth of the beamcut (how deep the cut goes into the beam face). |
+Command Line: Specify direction <Enter> to insert at center
+Action: Move your mouse to rotate the cut, then click to set direction, or press Enter to align it to the center axis.
+```
 
-### Alignment
+**Scenario B: If Length is set to 0 or dynamic**
+```
+Command Line: Pick point to specify length by points, <Enter> to insert full length
+Action: Click the start point for the cut on the beam face.
 
-| Property | Type | Default | Options | Description |
-|----------|------|---------|---------|-------------|
-| Offset | PropDouble | 0 mm | - | Defines the lateral offset from the beam axis. Use '+' or '-' to align to an edge, or enter a specific value for offset from center. |
-| Reference Side | PropString | ECS Y | ECS Y, ECS Z, ECS -Y, ECS -Z | Defines which face of the beam receives the cut. Options are based on the beam's Element Coordinate System (ECS). When attached to a wall, this is locked to "ECS -Y" (bottom side). |
+Command Line: Pick second point
+Action: Click the end point to define the exact length visually.
+```
 
-## Usage Workflow
+## Properties Panel Parameters
 
-### Inserting on a Single Beam
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| **Length** | Number | 300 mm | Defines the longitudinal size of the cut along the beam axis. Set to `0` to cut the full length of the beam or installation. |
+| **Width** | Number | 30 mm | Defines the lateral size across the beam face. Set to `0` to cut the complete width/height of the face. |
+| **Depth** | Number | 30 mm | Defines how deep the cut penetrates into the material from the reference face. |
+| **Offset** | Number | 0 mm | Shifts the cut laterally from the beam's center axis. Enter `+` or `-` to quickly align the cut flush to the top/bottom or side edges. |
+| **Reference Side** | Dropdown | ECS Y | Selects which face of the beam the cut is applied to relative to the Element Coordinate System (Options: ECS Y, ECS Z, ECS -Y, ECS -Z). |
 
-1. Start the hsbBeamcut command
-2. A dialog appears allowing you to configure properties or select a catalog preset
-3. Select a beam, wall, opening, or installation point as the reference
-4. **If selecting a beam:**
-   - Click to specify the insertion point
-   - Click a second point to specify the direction (or press Enter to place at center)
-   - If Length > 0, the second point only defines direction
-   - If Length = 0, the distance between points determines the length
-5. The beamcut is created on the specified face
+## Right-Click Menu Options
 
-### Inserting on Walls/Elements
+| Menu Item | Description |
+|-----------|-------------|
+| **Add Beam** | Recalculates the script and adds the selected beam to the list of elements affected by this cut. |
+| **Remove Beam** | Recalculates the script and removes the selected beam from the list of affected elements. |
 
-1. Start the hsbBeamcut command
-2. Select a wall element
-3. Pick an insertion point on the wall
-4. Pick a direction point (or Enter for center)
-5. The beamcut is applied to horizontal beams that intersect the defined cutting zone
-6. Note: Reference Side is automatically locked to bottom (ECS -Y) for walls
+## Settings Files
+- **Filename**: None
+- **Location**: N/A
+- **Purpose**: This script relies on standard Properties and Catalog inputs; no external settings file is required.
 
-### Inserting on Openings or Installations
+## Tips
+- **Quick Alignment**: Instead of calculating the exact offset distance, type `+` or `-` in the Offset field to instantly align the cut to the outer edges of the beam.
+- **Full Face Cuts**: Setting Width or Length to `0` is useful for creating dado slots that span the entire available dimension of the material.
+- **Graphical Editing**: After insertion, you can select the cut in the model and drag the blue **Grip Points** to visually adjust the Length, Width, and Offset without opening the Properties panel.
 
-When you select multiple openings or installation points:
-- The script automatically creates beamcuts at each location
-- For installation points with milling settings, separate beamcuts are created for top and bottom as needed
-- Length = 0 causes the beamcut to match the opening width or installation milling width
-
-### Adjusting After Placement
-
-- **Grips**: Drag the corner grips to interactively adjust length, width, and depth
-- **Properties Palette**: Modify numeric values directly in the AutoCAD Properties Palette (OPM)
-- **Double-Click**: Cycles through reference sides (rotates the cut to different beam faces)
-
-## Context Menu Commands
-
-Right-click on an hsbBeamcut instance to access these commands:
-
-| Command | Description |
-|---------|-------------|
-| **Add Beam** | Add additional beams to receive the same beamcut. Select one or more beams when prompted. |
-| **Remove Beam** | Remove beams from the beamcut. The last beam cannot be removed. |
-
-## Special Behaviors
-
-### Automatic Length from Reference
-
-- When linked to an **opening**, setting Length = 0 uses the opening's width
-- When linked to an **installation point**, setting Length = 0 uses the milling width defined in the installation
-
-### Width Spanning Multiple Beams
-
-When the beamcut is linked to multiple beams (via Add Beam), and Width = 0:
-- The width automatically spans from the outermost edge of the first beam to the outermost edge of the last beam
-
-### Full-Length Mode
-
-Setting Length = 0 causes the beamcut to extend the full solid length of the beam.
-
-### Grip-Based Editing
-
-The two corner grips allow intuitive editing:
-- Moving grips along the beam axis changes **Length**
-- Moving grips perpendicular to the beam axis changes **Width** and **Offset**
-- Moving grips toward/away from the beam face changes **Depth**
-
-## Tips for Designers
-
-1. **Use catalogs**: Save commonly used configurations (depth for cable routing, pipe clearances, etc.) as catalog entries for quick access.
-
-2. **Link to installations**: For MEP coordination, attach beamcuts to hsbInstallationPoint objects so cuts automatically update when conduit positions change.
-
-3. **Zero values**: Remember that 0 values for Length and Width mean "use full dimension" - this is useful for cuts that should always match beam dimensions.
-
-4. **Wall mode restrictions**: When attached to a wall element, the Reference Side is locked to the bottom face. Create separate beamcuts if you need cuts on other faces.
-
-5. **Copy support**: The beamcut can be copied to other beams while maintaining its parametric properties.
-
-## Related Scripts
-
-- **hsbInstallationPoint** - MEP installation points that can drive beamcut positioning
-- **hsbSlot** - For through-slots in beams
-- **hsbMortise** - For mortise cuts in timber joinery
+## FAQ
+- **Q: Why is my cut not going through the entire beam?**
+  **A**: Ensure the **Width** or **Length** properties are set to `0`, or check that the **Depth** is sufficient to penetrate the material thickness.
+- **Q: Can I use this to cut a hole for a pipe?**
+  **A**: This script creates a rectangular cut (notch/slot). For circular holes, you would need a different script (e.g., `hsbCylinder`).
+- **Q: How do I flip the cut to the other side of the beam?**
+  **A**: Change the **Reference Side** property in the dropdown menu (e.g., from "ECS Y" to "ECS -Y").

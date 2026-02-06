@@ -1,0 +1,291 @@
+{
+  "filename": "hsbWall2WallFixing.mcr",
+  "status": "completed",
+  "total_tokens": 51035,
+  "processing_time": 294.21315932273865,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"header\": {\n    \"type\": null,\n    \"numBeamsReq\": null,\n    \"keywords\": [],\n    \"majorVersion\": null,\n    \"minorVersion\": null,\n    \"dxaOut\": null,\n    \"implInsert\": null\n  },\n  \"description\": \"\",\n  \"versionHistory\": [\n    {\n      \"version\": \"1.2\",\n      \"date\": \"14.01.2022\",\n      \"author\": \"Marsel Nakuci\",\n      \"changes\": \"TSL to be attached as element TSL\"\n    },\n    {\n      \"version\": \"1.1\",\n      \"date\": \"21.12.2021\",\n      \"author\": \"Marsel Nakuci\",\n      \"changes\": \"Fix TSL assignment, consider only beams of zone 0 for nailing\"\n    },\n    {\n      \"version\": \"1.0\",\n      \"date\": \"13jan2021\",\n      \"author\": \"mars"
+      },
+      "tokens_used": 8934,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "PrEntity selection filter using ElementWallSF, CncExport usage for 'FrameNailTool', addTool methods on GenBeam objects, assignToElementGroup logic, and absence of sd_ or Multipage prefixes."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWallSF"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7085,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"PrEntity.go\",\n        \"promptOriginal\": \"T(\\\"|Select stick frame walls|\\\")\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [\n    {\n      \"type\": \"ShowDialog\",\n      \"trigger\": \"_bOnInsert (standard insert) or _bOnMapIO\",\n      \"title\": \"Properties\",\n      \"dataSource\": \"PropInt/PropDouble/PropString definitions\",\n      \"features\": {\n        \"searchable\": false,\n        \"multiSelect\": false\n      }\n    }\n  ],\n  \"opmProperties\": [\n    {\n      \"index\": 0,\n      \"variable\": \"nNailIndex\",\n      \"type\": \"PropInt\",\n      \"displayName\": \"T"
+      },
+      "tokens_used": 9847,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the placement and calculation of nailing patterns for connecting timber walls (Corner, T, and E connections), generating CNC export data for nail guns.",
+          "category": "Hardware / Assembly",
+          "typicalUseCase": "Used during the detailing phase to define how two stick-frame walls are nailed together at their junctions, ensuring code-compliant spacing and exporting the nail positions to production machinery."
+        },
+        "parameters": [
+          {
+            "name": "nNailIndex",
+            "technicalDefault": "1",
+            "businessMeaning": "Selects the specific nail gun tool or nail type to be used from the CNC machinery library (referenced as 'ToolIndex' in exports).",
+            "validRange": "1 - 99 (Integer)",
+            "unit": "Index/Count",
+            "affectsOutput": "Updates the 'FrameNailTool' CNC export property, determining which tool head is fired and which nail size is driven."
+          },
+          {
+            "name": "sDirection",
+            "technicalDefault": "Inner",
+            "businessMeaning": "Specifies which wall acts as the 'female' (receiving) element versus the 'male' (penetrating) element in the connection.",
+            "validRange": "Inner, Outer",
+            "unit": "Enumeration",
+            "affectsOutput": "Determines the calculation of the insertion vector (vecNail) and controls which wall element the TSL instance is assigned to for reporting."
+          },
+          {
+            "name": "sModeDistribution",
+            "technicalDefault": "Even",
+            "businessMeaning": "Defines the calculation logic for spacing nails: 'Even' optimizes spacing to fill the area, 'Fixed' maintains exact user-defined spacing.",
+            "validRange": "Even, Fixed",
+            "unit": "Enumeration",
+            "affectsOutput": "Alters the mathematical distribution of points along the vertical connection line (affects 'dDistanceBetweenResult' and 'nNrResult')."
+          },
+          {
+            "name": "dDistanceBottom",
+            "technicalDefault": "0",
+            "businessMeaning": "The offset distance from the bottom of the wall overlap (or bottom plate) to the center of the first nail.",
+            "validRange": "0 - 500 mm",
+            "unit": "mm",
+            "affectsOutput": "Shifts the start position of the nailing pattern upwards or downwards along the connection."
+          },
+          {
+            "name": "dDistanceTop",
+            "technicalDefault": "0",
+            "businessMeaning": "The offset distance from the top of the wall overlap (or top plate) to the center of the last nail.",
+            "validRange": "0 - 500 mm",
+            "unit": "mm",
+            "affectsOutput": "Shifts the end position of the nailing pattern downwards or upwards along the connection."
+          },
+          {
+            "name": "dDistanceBetween",
+            "technicalDefault": "10",
+            "businessMeaning": "Target spacing between nails (positive) OR a specific number of nails desired (negative integer).",
+            "validRange": "6 - 600 mm OR -2 to -50",
+            "unit": "mm or Count (if negative)",
+            "affectsOutput": "Primary driver for the number of nails ('nNrResult') and the actual calculated spacing ('dDistanceBetweenResult')."
+          },
+          {
+            "name": "sCode",
+            "technicalDefault": "(empty)",
+            "businessMeaning": "Filters which walls can be connected based on their wall code (e.g., only nail Exterior to Interior, not Exterior to Exterior).",
+            "validRange": "String (e.g., 'INT;EXT')",
+            "unit": "Text",
+            "affectsOutput": "If set, the script will only generate nailing if the connected wall's code matches the list; otherwise, no nails are generated."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing 'dDistanceBetween' to a positive value",
+            "effect": "The script interprets the value as a physical distance in mm.",
+            "cascade": [
+              "dDistanceBetweenResult",
+              "nNrResult"
+            ]
+          },
+          {
+            "trigger": "Changing 'dDistanceBetween' to a negative integer",
+            "effect": "The script interprets the absolute value as the exact count of nails required.",
+            "cascade": [
+              "dDistanceBetweenResult",
+              "nNrResult"
+            ]
+          },
+          {
+            "trigger": "Changing 'sModeDistribution' to 'Fixed'",
+            "effect": "Nails are placed at the exact interval defined in 'dDistanceBetween', potentially leaving a gap at the end if it doesn't fit perfectly.",
+            "cascade": [
+              "dDistanceBetweenResult",
+              "nNrResult"
+            ]
+          },
+          {
+            "trigger": "Changing 'sModeDistribution' to 'Even'",
+            "effect": "The script divides the available length by the count/interval to find a mathematically perfect spacing.",
+            "cascade": [
+              "dDistanceBetweenResult",
+              "nNrResult"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "CncExport (FrameNailTool)",
+            "description": "Generates specific machining instructions for nail guns, including Tool Index, Start Point, and End Point vectors.",
+            "appliedTo": "The specific GenBeams (studs/plates) identified at the connection overlap (bmPlate)."
+          },
+          {
+            "type": "Visual Representation (PLine)",
+            "description": "Draws circles (nail heads) and crosshair vectors in the CAD model to represent nail locations and direction.",
+            "appliedTo": "Model Space overlay at the intersection of the selected walls."
+          }
+        ]
+      },
+      "tokens_used": 8076,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Triggered: Execution starts (Insert, Recalc, or MapIO).",
+          "2. Check 'bOnInsert': If true, proceed to Insert Mode; else proceed to Calculation Mode.",
+          "3. Insert Mode - Property Source: Check if a Catalog Key (_kExecuteKey) is provided. If yes, load properties from catalog; if no, open Properties Dialog.",
+          "4. Insert Mode - Selection: Prompt user to select stick frame walls (ElementWallSF).",
+          "5. Insert Mode - Validation: Verify at least 2 walls are selected. If not, report error and erase instance.",
+          "6. Insert Mode - Handoff: Set internal 'iMode' to 1 (Batch) and return to trigger connection detection.",
+          "7. Calculation Mode - Map Loading: If 'iMode' is 0 (Detail) or MapIO is active, load properties from the _Map object.",
+          "8. Element Analysis: Identify the two connected walls (Primary/Male and Secondary/Female) at the insertion point.",
+          "9. Code Filtering: If 'sCode' property is set, filter out connected walls that do not match the allowed codes.",
+          "10. Geometry Analysis: Calculate the overlapping vertical range (dY) between the two wall elements.",
+          "11. Geometry Validation: Check if overlap dY > 0. If not, report error and erase instance.",
+          "12. Length Validation: Check if dDistanceBottom + dDistanceTop + partLength fits within total length.",
+          "13. Distribution Logic: Calculate nail points based on dDistanceBetween (Spacing vs Count) and sModeDistribution (Even vs Fixed).",
+          "14. Output Generation: Draw visual geometry (circles/crosshairs) and create CncExport (FrameNailTool) entities.",
+          "15. Assignment: Assign the TSL instance to the appropriate wall element group based on 'sDirection'."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Value of 'dDistanceBetween'",
+            "path1": {
+              "name": "Positive Value (Spacing)",
+              "steps": [
+                "Interpret value as distance in mm.",
+                "Sub-branch: If 'sModeDistribution' is 'Even', divide total length to find optimized spacing.",
+                "Sub-branch: If 'sModeDistribution' is 'Fixed', step by exact user distance."
+              ]
+            },
+            "path2": {
+              "name": "Negative Value (Count)",
+              "steps": [
+                "Interpret absolute value as number of nails.",
+                "Divide total length by (Count - 1) to find spacing.",
+                "Special case: If Count is 1, place single nail at dDistanceBottom."
+              ]
+            }
+          },
+          {
+            "condition": "User Right-Click / Double Click",
+            "path1": {
+              "name": "Swap Direction Triggered",
+              "steps": [
+                "Detect execution key 'Swap Direction' or DoubleClick.",
+                "Toggle 'sDirection' property (Inner <-> Outer).",
+                "Force a recalculation (setExecutionLoops(2))."
+              ]
+            },
+            "path2": {
+              "name": "Standard Recalc",
+              "steps": [
+                "Recalculate geometry based on current properties.",
+                "Update existing CNC exports and visual geometry."
+              ]
+            }
+          },
+          {
+            "condition": "Insertion Context (_bOnInsert)",
+            "path1": {
+              "name": "Manual Insert",
+              "steps": [
+                "Show Dialog.",
+                "Prompt for Entity Selection.",
+                "Run in Batch Mode (iMode=1)."
+              ]
+            },
+            "path2": {
+              "name": "Element/Map Insert",
+              "steps": [
+                "Load properties from Map (if available).",
+                "Run in Detail Mode (iMode=0).",
+                "Detect connected elements automatically."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Number of selected elements during insert",
+            "errorMessage": "\"At least two walls are needed\"",
+            "recovery": "User must select more walls or script erases itself."
+          },
+          {
+            "check": "Geometric overlap between walls (dY)",
+            "errorMessage": "\"no common range\" / \"distribution not possible\"",
+            "recovery": "User must move walls to intersect; script erases instance."
+          },
+          {
+            "check": "Total offsets vs Available length",
+            "errorMessage": "\"no distribution possible\"",
+            "recovery": "User must reduce 'Distance Bottom/Top' or increase overlap."
+          },
+          {
+            "check": "Wall Code Filter (sCode)",
+            "errorMessage": "None (Silent filtering)",
+            "recovery": "Connection is ignored if connected wall code does not match the semicolon-separated list."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify OPM Properties",
+            "how": "AutoCAD Properties Palette",
+            "effect": "Immediately recalculates nail positions and quantity; updates Visuals and CNC exports."
+          },
+          {
+            "action": "Swap Direction",
+            "how": "Right-click Context Menu or Double-click",
+            "effect": "Toggles nail direction vector ('Inner' to 'Outer' or vice versa) and reassigns TSL to the opposite wall element."
+          },
+          {
+            "action": "Change Wall Geometry",
+            "how": "Move/Stretch Wall Element",
+            "effect": "Triggers '_bOnElementConstructed' or '_bOnDbCreated', forcing a recalculation of the overlap and nail pattern."
+          }
+        ]
+      },
+      "tokens_used": 10869,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbWall2WallFixing.mcr\n\n## Overview\nThis script automates the placement and calculation of nailing patterns for connecting stick-frame walls (such as Corner, T, or E connections). It generates visual representations of nail locations and exports CNC data for nail guns based on specified spacing or quantities.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for selecting wall elements and viewing geometry. |\n| Paper Space | No | Not designed for 2D drawing generation. |\n| Shop Drawing | No | Operates in the 3D model context to generate manufacturing data. |\n\n## Prerequisites\n- **Required Entities:** At least two `ElementWallSF` (Stick Frame Walls) that intersect or overlap vertically.\n- **Minimum Beam Count:** 2 (The script requires two wall elements to establish a connection).\n- **Required Settings:** None (uses internal properties and standard CNC tool definitions).\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command:** Type `TSLINSERT` in the command line (or select from the hsbCAD menu) and choose `hsbWall2WallFixing.mcr` from the file list.\n\n### Step 2: Configure Properties\nA properties dialog will appear automatically upon insertion.\n- **Action:** Review default settings for Nail Index, Spacing, and Offsets. Click \"OK\" to proceed.\n\n### Step 3: Select Walls\n```\nCommand Line: Select stick frame walls\nAction: Click on the first wall, then click on the second wall to create the connection.\n```\n\n### Step 4: Validation\n- The script automatically calculates the vertical overlap between the selected walls.\n- If the overlap is insufficient or walls do not intersect, the script will display an error (\"no common range\") and delete itself.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Nail Index (nNailIndex) | Integer | 1 | Selects the specific nail gun tool (1-99) from the CNC machinery library to be used for this connection. |\n| Direction (sDirection) | Dropdown | Inner | Determines which wall acts as the primary element (Inner vs. Outer). Affects the calculation direction and element assignment. |\n| Distribution Mode (sModeDistribution) | Dropdown | Even | **Even:** Optimizes spacing to fill the area evenly.<br>**Fixed:** Uses the exact spacing defined in 'Distance Between', potentially leaving a remainder gap. |\n| Distance Bottom (dDistanceBottom) | Double | 0 mm | The offset distance from the bottom of the wall overlap to the center of the first nail. |\n| Distance Top (dDistanceTop) | Double | 0 mm | The offset distance from the top of the wall overlap to the center of the last nail. |\n| Distance Between (dDistanceBetween) | Double | 10 | **Positive Value:** The desired physical spacing between nails in mm.<br>**Negative Value (e.g., -5):** Forces a specific *count* of nails (e.g., 5 nails total). |\n| Wall Code Filter (sCode) | String | (empty) | Filters connections based on wall codes (e.g., \"INT;EXT\"). If set, nails are only generated if the connected wall code matches the list. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Swap Direction | Toggles the `sDirection` property (Inner <-> Outer). This swaps which wall the nails are assigned to and recalculates the vector. |\n| Recalculate | Refreshes the nailing pattern based on current geometry and properties. |\n\n## Settings Files\n- **Filename:** N/A (Relies on System CNC Database)\n- **Location:** hsbCAD System Configuration\n- **Purpose:** The `nNailIndex` parameter references tool definitions stored in your hsbCAD CNC export configuration, not a local XML file for this specific script.\n\n## Tips\n- **Quick Quantity Control:** To place exactly 10 nails between two plates, simply type `-10` into the `Distance Between` property. The script will automatically calculate the required spacing.\n- **Visualizing Direction:** If the nail vectors point the wrong way (e.g., through the wrong plate), use the \"Swap Direction\" right-click option to flip them instantly.\n- **Code Filtering:** Use the `sCode` property to automate detailing. For example, set it to `EXT` to ensure the script only generates nails when an interior wall intersects an exterior wall, ignoring interior-to-interior intersections.\n\n## FAQ\n- **Q: Why did the script disappear after I selected the walls?**\n  A: The script deletes itself if it detects \"no common range\" (overlap). Ensure the two walls actually intersect vertically.\n- **Q: How do I specify a fixed spacing of 150mm regardless of the wall height?**\n  A: Set `sModeDistribution` to \"Fixed\" and set `dDistanceBetween` to `150`.\n- **Q: Can I use this for non-rectangular walls?**\n  A: The script is designed for standard stick-frame wall intersections. It looks for vertical overlap ranges; complex non-planar intersections may not calculate correctly."
+      },
+      "tokens_used": 6224,
+      "error": null
+    }
+  }
+}

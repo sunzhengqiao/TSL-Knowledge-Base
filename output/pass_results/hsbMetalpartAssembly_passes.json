@@ -1,0 +1,311 @@
+{
+  "filename": "hsbMetalpartAssembly.mcr",
+  "status": "completed",
+  "total_tokens": 40921,
+  "processing_time": 462.2756407260895,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7614,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script filename uses 'hsb' prefix instead of 'sd_' or 'Multipage'. The logic handles 3D entity selection (GenBeam, FastenerAssemblyEnt, MassGroup) via PrEntity and creates 3D geometric visualizations (ECS Marker, PLine circles) based on coordinate vectors (_XE, _YE, _ZE). It sets a map flag 'createChildPages' to trigger shopdrawing generation, acting as a 3D definition object rather than a 2D layout script."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "FastenerAssemblyEnt",
+            "MassGroup",
+            "Entity with Solid Body"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5831,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select entities|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "Specify point",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sCreateSD",
+            "type": "PropString",
+            "displayName": "|Create Nested Shopdrawings|",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": [
+              "|No|",
+              "|Yes|"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sShowECS",
+            "type": "PropString",
+            "displayName": "|Show ECS Marker|",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": [
+              "|No|",
+              "|Yes|"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "dScale",
+            "type": "PropDouble",
+            "displayName": "|Scale|",
+            "defaultValue": 1,
+            "inputType": "number",
+            "options": null,
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "|Add Entity|",
+            "handler": "|Add Entity|",
+            "action": "Prompts user to select an entity to append to the assembly",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Remove Entity|",
+            "handler": "|Remove Entity|",
+            "action": "Prompts user to select an entity to remove from the assembly",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 8219,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Defines a logical assembly grouping of various entities (beams, fasteners, etc.) for the purpose of generating nested shop drawings, providing a visual marker for the assembly's coordinate system.",
+          "category": "ShopDrawing / Organization",
+          "typicalUseCase": "Used when specific components (e.g., a truss, a column, or a complex steel connection) need to be grouped together into a single manufacturing or assembly drawing package."
+        },
+        "parameters": [
+          {
+            "name": "sCreateSD",
+            "technicalDefault": "|No|",
+            "businessMeaning": "Determines whether the system will automatically generate a separate shop drawing (detail view) for the contents of this assembly.",
+            "validRange": "|No|, |Yes|",
+            "unit": "Enum",
+            "affectsOutput": "Controls the map flag 'createChildPages'. If set to Yes, downstream shopdrawing scripts are triggered to create a distinct drawing page for this group."
+          },
+          {
+            "name": "sShowECS",
+            "technicalDefault": "|No|",
+            "businessMeaning": "Toggles the visibility of the 3D orientation marker (compass/axes) representing the assembly's local coordinate system.",
+            "validRange": "|No|, |Yes|",
+            "unit": "Enum",
+            "affectsOutput": "Visual display only. If Yes, draws a dynamic compass graphic at the insertion point to visualize the X, Y, and Z axes directions relative to the assembly."
+          },
+          {
+            "name": "dScale",
+            "technicalDefault": "1",
+            "businessMeaning": "Adjusts the visual size of the coordinate system marker and internal reference geometry relative to the default radius.",
+            "validRange": "0.1 - 10.0",
+            "unit": "Multiplier",
+            "affectsOutput": "Scales the size of the ECS marker, the radius of the orientation circle, and the length of the directional vectors in the 3D model view. Does not affect the actual size of the contained entities."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dScale changes",
+            "effect": "Recalculates the radius used for the ECS marker and grip point distances relative to the insertion point.",
+            "cascade": [
+              "dRadius"
+            ]
+          },
+          {
+            "trigger": "Selection of entities (_Entity)",
+            "effect": "Generates a comparison key based on entity type and position numbers to ensure consistent database referencing.",
+            "cascade": [
+              "compKey"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Logical Assembly Group",
+            "description": "A container entity that holds references to selected beams, fasteners, and other components, grouping them as a single unit.",
+            "appliedTo": "User-selected entities in the Model Space"
+          },
+          {
+            "type": "Visual ECS Marker",
+            "description": "A graphical representation of the assembly's X, Y, and Z axes, consisting of circles and directional arrows.",
+            "appliedTo": "Assembly insertion point (_Pt0)"
+          },
+          {
+            "type": "Entity Center Markers",
+            "description": "Small local axes (crosses) drawn at the centroid of each solid entity within the assembly to visualize individual orientation.",
+            "appliedTo": "Each solid entity in the _Entity array"
+          }
+        ]
+      },
+      "tokens_used": 5798,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User launches script (Insertion).",
+          "2. System prompts to select entities (PrEntity).",
+          "3. User selects entities (Beams, Fasteners, etc.).",
+          "4. System prompts for assembly origin point (getPoint).",
+          "5. System initializes default grip points based on UCS.",
+          "6. Script executes recalculation logic.",
+          "7. System sorts selected entities by Type and Position Number (internal).",
+          "8. System generates unique Compare Key based on sorted entities.",
+          "9. System validates that at least one selected entity has a solid body (volume > epsilon).",
+          "10. [Conditional] System updates Map flags (createChildPages, compKey).",
+          "11. [Conditional] System draws ECS Marker if property is set to Yes.",
+          "12. System draws the aggregated assembly body.",
+          "13. Script sets 'isAssembly' flag to true in Map."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Property 'Show ECS Marker' (sShowECS)",
+            "path1": {
+              "name": "|Yes|",
+              "steps": [
+                "System draws a compass circle at insertion point.",
+                "System draws grid lines at 15-degree intervals.",
+                "System draws X, Y, and Z vector arrows with directional heads."
+              ]
+            },
+            "path2": {
+              "name": "|No|",
+              "steps": [
+                "System skips all ECS graphic generation."
+              ]
+            }
+          },
+          {
+            "condition": "User drags a Grip Point to rotate orientation",
+            "path1": {
+              "name": "Drag X-Grip (_PtG0)",
+              "steps": [
+                "System normalizes new X-vector.",
+                "System recalculates Z and Y vectors to maintain orthogonality.",
+                "System updates all grip positions to match new rotation."
+              ]
+            },
+            "path2": {
+              "name": "Drag Y-Grip (_PtG1) or Z-Grip (_PtG2)",
+              "steps": [
+                "System normalizes new respective vector.",
+                "System recalculates remaining axes to maintain orthogonality.",
+                "System updates all grip positions to match new rotation."
+              ]
+            }
+          },
+          {
+            "condition": "Right-click Context Menu Selection",
+            "path1": {
+              "name": "|Add Entity|",
+              "steps": [
+                "System prompts user to select an entity.",
+                "System checks if entity is already in list.",
+                "If new, appends entity to _Entity array.",
+                "Script forces a second execution loop."
+              ]
+            },
+            "path2": {
+              "name": "|Remove Entity|",
+              "steps": [
+                "System prompts user to select an entity.",
+                "System searches for entity in _Entity array.",
+                "If found, removes entity from array.",
+                "Script forces a second execution loop."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Presence of Solid Bodies in Selection",
+            "errorMessage": "\n|No Solid found in selection set.|",
+            "recovery": "Script erases the instance immediately. User must re-run script and ensure at least one selected object (Beam, MassGroup, etc.) generates a valid 3D body volume."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Adjust Visual Scale",
+            "how": "Change 'Scale' (dScale) property in Properties Palette (OPM)",
+            "effect": "Updates the radius variable, resizing the ECS marker circle and resetting the distance of the grip points from the insertion point."
+          },
+          {
+            "action": "Toggle Shopdrawing Generation",
+            "how": "Change 'Create Nested Shopdrawings' (sCreateSD) property in OPM",
+            "effect": "Updates the Map flag 'createChildPages' (0 or 1). Downstream processes use this to determine if a separate detail view should be generated for this assembly."
+          },
+          {
+            "action": "Reorient Assembly",
+            "how": "Drag the X, Y, or Z Triangular Grips in the 3D model",
+            "effect": "Recalculates the assembly's local coordinate system vectors (_XE, _YE, _ZE) to align with the new grip direction, rotating the visual marker and local logic."
+          },
+          {
+            "action": "Modify Assembly Contents",
+            "how": "Right-click script instance and select '|Add Entity|' or '|Remove Entity|'",
+            "effect": "Adds or removes entities from the _Entity array. The Compare Key is regenerated and the assembly body is recalculated."
+          }
+        ]
+      },
+      "tokens_used": 8413,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbMetalpartAssembly.mcr\n\n## Overview\nThis script groups selected entities (such as beams, fasteners, and mass groups) into a single logical assembly. It is primarily used to organize components for manufacturing output and provides a visual 3D marker to represent the assembly's local coordinate system.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script runs in the 3D model to group entities. |\n| Paper Space | No | Not designed for 2D layout. |\n| Shop Drawing | No | While it controls shop drawing generation, the script itself is a model-space definition object. |\n\n## Prerequisites\n- **Required Entities**: At least one entity with a solid body (GenBeam, FastenerAssemblyEnt, MassGroup, or any Entity with a Solid Body).\n- **Minimum Beam Count**: 0 (It works with any combination of valid solid entities).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbMetalpartAssembly.mcr` from the list.\n\n### Step 2: Select Entities\n```\nCommand Line: |Select entities|\nAction: Select the beams, fasteners, or other components you want to include in this assembly group. Press Enter to confirm selection.\n```\n\n### Step 3: Specify Insertion Point\n```\nCommand Line: Specify point\nAction: Click in the model to set the origin point (0,0,0) for the assembly's local coordinate system.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Create Nested Shopdrawings | dropdown | No | Determines whether the system automatically generates a separate shop drawing (detail view) for this specific assembly group. |\n| Show ECS Marker | dropdown | No | Toggles the visibility of the 3D orientation marker (compass/axes) at the insertion point. |\n| Scale | number | 1 | Adjusts the visual size of the coordinate system marker. This does not change the size of the actual parts, only the helper graphics. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Add Entity | Prompts you to select an additional entity from the model to append to the current assembly. |\n| Remove Entity | Prompts you to select an entity currently in the assembly to remove it from the group. |\n\n## Settings Files\nNone required. This script relies on entity properties and user input.\n\n## Tips\n- **Rotate the Assembly**: Use the triangular grips (X, Y, or Z) visible on the ECS marker to rotate the assembly's orientation graphically.\n- **Troubleshooting**: If the script disappears immediately after insertion, ensure you selected at least one object that has a physical volume (solid body).\n- **Visualization**: If the marker is too small or too large to grab easily, increase the `Scale` property in the Properties Palette.\n\n## FAQ\n- **Q: Why did the script vanish after I placed it?**\n- **A:** The script requires at least one \"solid\" entity in the selection set. If you selected only points or lines without volume, the script will self-delete. Ensure you select beams or solid objects.\n- **Q: Does changing the Scale property resize my beams?**\n- **A:** No, the `Scale` property only affects the size of the visual coordinate marker (the compass/arrows), not the actual timber or steel parts.\n- **Q: How do I group additional parts later?**\n- **A:** Right-click on the assembly instance in the model and select \"|Add Entity|\", then pick the new part you wish to include."
+      },
+      "tokens_used": 5046,
+      "error": null
+    }
+  }
+}

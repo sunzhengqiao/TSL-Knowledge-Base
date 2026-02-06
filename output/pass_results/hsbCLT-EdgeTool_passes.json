@@ -1,0 +1,283 @@
+{
+  "filename": "hsbCLT-EdgeTool.mcr",
+  "status": "completed",
+  "total_tokens": 52115,
+  "processing_time": 552.5331153869629,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9632,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script directly adds machining tools (BeamCut, Rabbet, Mortise, Slot, FreeProfile, Drill) to a 'Sip' (Single Insulated Panel) entity using `sip.addTool()`. It implements `_bOnJig` for interactive user feedback during insertion. In the Drill Pattern section, it explicitly creates sub-instances using `_kModelSpace`. There are no references to Viewports, SD prefixes, or Paper Space specific drawing generation."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sip (Single Insulated Panel)",
+            "EntPLine (for Free Profile tool)",
+            "Circle (for Drill Pattern tool)"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7093,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10374,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A multi-purpose edge machining tool for CLT panels that applies various cuts, profiles, or drill holes based on user selection.",
+          "category": "Machining/Connection",
+          "typicalUseCase": "Adding standard woodworking connections (like rabbets or mortises) to the edges of Cross Laminated Timber (CLT) panels, or creating custom free-form profiles and drill patterns."
+        },
+        "parameters": [
+          {
+            "name": "nTool",
+            "technicalDefault": "0",
+            "businessMeaning": "Selects the type of machining operation to perform on the panel edge (e.g., Free Profile, BeamCut, Rabbet, Mortise, Slot, House, Drill, or Drill Pattern).",
+            "validRange": "0-7 (Integer)",
+            "unit": "count",
+            "affectsOutput": "Switches the geometric calculation logic and determines which other parameters (Length, Width, Radius) are visible or required."
+          },
+          {
+            "name": "dLength",
+            "technicalDefault": "0.0",
+            "businessMeaning": "The length of the cut along the edge of the panel.",
+            "validRange": "0 mm to Panel Length",
+            "unit": "mm",
+            "affectsOutput": "Determines the longitudinal extent of rectangular tools (BeamCut, Rabbet, Mortise, Slot, House). Automatically calculated for Free Profiles based on the selected polyline."
+          },
+          {
+            "name": "dWidth",
+            "technicalDefault": "0.0",
+            "businessMeaning": "The horizontal depth of the cut into the panel material (perpendicular to the edge).",
+            "validRange": "0 mm to Panel Width",
+            "unit": "mm",
+            "affectsOutput": "Controls how far into the panel the machining penetrates from the side. Automatically calculated for Free Profiles."
+          },
+          {
+            "name": "dDepth",
+            "technicalDefault": "0.0",
+            "businessMeaning": "The vertical depth of the cut relative to the panel face (thickness direction).",
+            "validRange": "0 mm to Panel Thickness",
+            "unit": "mm",
+            "affectsOutput": "Controls the height of the machining. Note: For Mortise tools, the input value is doubled in the code."
+          },
+          {
+            "name": "dRadius",
+            "technicalDefault": "0.0",
+            "businessMeaning": "Defines the corner radius for rectangular tools (Mortise, House) or the diameter radius for Drill tools.",
+            "validRange": "0 mm to Tool Width/2",
+            "unit": "mm",
+            "affectsOutput": "Rounds the corners of slots/mortises or defines the size of a cylindrical drill hole."
+          },
+          {
+            "name": "dAngle",
+            "technicalDefault": "0.0",
+            "businessMeaning": "The rotation angle of the tool around its insertion point.",
+            "validRange": "0-360 degrees",
+            "unit": "degrees",
+            "affectsOutput": "Rotates the profile or tool orientation on the panel edge."
+          },
+          {
+            "name": "dAxisOffset",
+            "technicalDefault": "0.0",
+            "businessMeaning": "Displacement of the machining along the panel's local axis system.",
+            "validRange": "-PanelLength to +PanelLength",
+            "unit": "mm",
+            "affectsOutput": "Shifts the position of the tool relative to the calculated insertion point."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "nTool changes to 0 (Free Profile)",
+            "effect": "Hides dAxisOffset, dLength, and dWidth as these are derived from the selected Polyline geometry.",
+            "cascade": [
+              "dAxisOffset",
+              "dLength",
+              "dWidth"
+            ]
+          },
+          {
+            "trigger": "nTool changes to 6 (Drill)",
+            "effect": "Hides dLength and dWidth as a drill is defined primarily by Radius and Depth.",
+            "cascade": [
+              "dLength",
+              "dWidth"
+            ]
+          },
+          {
+            "trigger": "nTool changes to 7 (Drill Pattern)",
+            "effect": "The script erases the main instance and generates individual drill tool instances based on selected Circles.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Machining Tool (BeamCut/Rabbet/Mortise/Slot/House/Drill/FreeProfile)",
+            "description": "Geometric voids added to the panel body representing the cut material.",
+            "appliedTo": "The selected Sip (Single Insulated Panel) entity."
+          },
+          {
+            "type": "TslInst (Sub-instances)",
+            "description": "In Drill Pattern mode, creates separate instances of this script for each selected circle to represent individual drills.",
+            "appliedTo": "ModelSpace (_kModelSpace)."
+          }
+        ]
+      },
+      "tokens_used": 9508,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Launch Script: User executes command to insert 'hsbCLT-EdgeTool'.",
+          "Input Selection: User selects a Sip (Single Insulated Panel) entity via command line prompt.",
+          "Tool Selection: Script prompts user to select a tool type (Free Profile, BeamCut, Rabbet, etc.) if not pre-set.",
+          "Optional Geometry Selection: Depending on tool type, user selects auxiliary geometry (Polyline for Free Profile, Circles for Drill Pattern).",
+          "Interactive Jigging: User moves cursor to define insertion point. Script highlights the detected edge face and displays dimension preview dynamically.",
+          "Insertion Point Confirmation: User clicks to set the insertion point (_Pt0) on the panel edge.",
+          "Geometry Calculation: Script calculates local coordinate system (vecXT, vecYT, vecZT) and tool dimensions based on panel geometry and input parameters.",
+          "Tool Application: Script generates the specific machining tool (BeamCut, Rabbet, FreeProfile, etc.) and applies it to the Sip entity using `sip.addTool()`.",
+          "Validation: Script verifies if the resulting tool volume intersects the panel body.",
+          "Finalization: If valid, the tool is committed. For Drill Patterns, the main instance is erased and replaced by sub-instances."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "nTool == 0 (Free Profile)",
+            "path1": {
+              "name": "Free Profile Workflow",
+              "steps": [
+                "Script hides dAxisOffset, dLength, and dWidth properties (derived from geometry).",
+                "User selects a Polyline (EntPLine).",
+                "Script aligns Polyline to the panel edge coordinate system.",
+                "Script creates a FreeProfile tool and adds it to the panel."
+              ]
+            }
+          },
+          {
+            "condition": "nTool == 1 to 5 (Standard Cuts: BeamCut, Rabbet, Mortise, Slot, House)",
+            "path1": {
+              "name": "Standard Cut Workflow",
+              "steps": [
+                "Script reads Length, Width, Depth, and Radius properties.",
+                "Specific logic applies: Mortise/House check for Radius > 0 to round corners.",
+                "Specific logic applies: Rabbet, Mortise, Slot, and House double the input dDepth.",
+                "Script creates the corresponding tool object and adds it to the panel."
+              ]
+            }
+          },
+          {
+            "condition": "nTool == 6 (Drill)",
+            "path1": {
+              "name": "Drill Workflow",
+              "steps": [
+                "Script hides dLength and dWidth properties.",
+                "Script creates a temporary tube body to calculate correct depth intersection with the panel face.",
+                "Script creates a Drill tool based on radius and calculated depth and adds it to the panel."
+              ]
+            }
+          },
+          {
+            "condition": "nTool == 7 (Drill Pattern)",
+            "path1": {
+              "name": "Drill Pattern Workflow",
+              "steps": [
+                "User selects multiple Circle entities.",
+                "Script iterates through circles to determine center points and radii.",
+                "Script creates new sub-instances of this script (TslInst) for each circle, setting their type to Drill (6).",
+                "Script calls `eraseInstance()` to remove the parent pattern instance."
+              ]
+            }
+          },
+          {
+            "condition": "Post-Calculation Validation",
+            "path1": {
+              "name": "Valid Intersection",
+              "steps": [
+                "Tool volume overlaps panel body.",
+                "Script draws the resulting profile slice on the face."
+              ]
+            },
+            "path2": {
+              "name": "Invalid Intersection",
+              "steps": [
+                "Tool volume does not overlap panel body.",
+                "Script reports 'Tool does not intersect panel'.",
+                "Script calls `eraseInstance()` to remove the tool."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Panel Existence",
+            "errorMessage": "Prompt requires valid Sip selection.",
+            "recovery": "User must select a valid Single Insulated Panel."
+          },
+          {
+            "check": "Tool-Panel Intersection",
+            "errorMessage": "Tool does not intersect panel. Tool will be deleted.",
+            "recovery": "User must adjust the tool position (Pt0), Depth, or Width to ensure it penetrates the panel material."
+          },
+          {
+            "check": "Polyline/Circle Selection",
+            "errorMessage": "Implicit failure if incorrect entity type selected for Free Profile or Drill Pattern.",
+            "recovery": "User must select correct geometry type (PLine for Free Profile, Circle for Drill Pattern)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Dimensions",
+            "how": "Properties Palette (OPM)",
+            "effect": "Updating dLength, dWidth, dDepth, or dRadius immediately recalculates and regenerates the tool geometry."
+          },
+          {
+            "action": "Reposition Tool",
+            "how": "Grip Edit (Pt0)",
+            "effect": "Dragging the insertion point grip moves the tool along the edge; Jig previews edge detection."
+          },
+          {
+            "action": "Switch Tool Type",
+            "how": "Properties Palette (OPM) - nTool",
+            "effect": "Changing nTool completely switches the logic (e.g., from BeamCut to Drill), showing/hiding relevant properties."
+          },
+          {
+            "action": "Align Free Profile",
+            "how": "Right-click Context Menu -> 'Align EPL'",
+            "effect": "Re-prompts for a polyline selection to redefine the FreeProfile shape while maintaining position."
+          }
+        ]
+      },
+      "tokens_used": 9356,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-EdgeTool\n\n## Overview\nAdds various machining operations (such as cuts, rabbets, mortises, and drill holes) to the edges of Cross Laminated Timber (CLT) panels. It supports standard shapes, custom profiles, and automated drill patterns based on user selection.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script operates on 3D panel entities in the model. |\n| Paper Space | No | Not designed for 2D drawing layouts. |\n| Shop Drawing | No | Not intended for manufacturing view generation. |\n\n## Prerequisites\n- **Required Entities:** A Single Insulated Panel (Sip/CLT) must exist in the model.\n  - *For Free Profile:* A Polyline defining the cut shape.\n  - *For Drill Pattern:* Circles defining hole locations.\n- **Minimum Entities:** 1 Panel.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbCLT-EdgeTool.mcr` from the list.\n\n### Step 2: Select Panel\n```\nCommand Line: Select Sip\nAction: Click on the Single Insulated Panel (CLT panel) you wish to modify.\n```\n\n### Step 3: Select Tool Type\n```\nCommand Line: Select Tool Type\nAction: Choose the desired operation from the list (e.g., BeamCut, Rabbet, Mortise, Slot, House, Drill, Free Profile, or Drill Pattern).\n```\n\n### Step 4: (Conditional) Select Geometry\n- **If Free Profile (nTool=0):**\n  ```\n  Command Line: Select PLine\n  Action: Select a Polyline in the drawing that represents the cross-sectional shape of the cut.\n  ```\n- **If Drill Pattern (nTool=7):**\n  ```\n  Command Line: Select Circles\n  Action: Select multiple Circles in the model to define the positions and sizes of the drill holes.\n  ```\n\n### Step 5: Position Tool\n```\nCommand Line: Specify insertion point\nAction: Move your cursor along the edge of the panel. The script will highlight the detected edge face. Click to set the insertion point for the tool.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| nTool | Integer (0-7) | 0 | Selects the machining type: 0=Free Profile, 1=BeamCut, 2=Rabbet, 3=Mortise, 4=Slot, 5=House, 6=Drill, 7=Drill Pattern. |\n| dLength | Double | 0.0 | The length of the cut along the panel edge (Not used for Free Profile or Drill). |\n| dWidth | Double | 0.0 | The horizontal depth of the cut into the panel from the side (Not used for Free Profile or Drill). |\n| dDepth | Double | 0.0 | The vertical depth of the cut (thickness direction). Note: For Rabbet, Mortise, Slot, and House, this value is automatically doubled. |\n| dRadius | Double | 0.0 | Defines the corner radius for slots/mortises or the drill hole radius. |\n| dAngle | Double | 0.0 | The rotation angle of the tool around the insertion point. |\n| dAxisOffset | Double | 0.0 | Shifts the tool position along the panel's local axis relative to the insertion point. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Align EPL | Available for Free Profile tools. Re-prompts you to select a new Polyline to update the shape while keeping the current position. |\n\n## Settings Files\n- **None Required**: This script relies entirely on user interaction and panel geometry.\n\n## Tips\n- **Drill Pattern Behavior**: When using Drill Pattern mode (nTool=7), the main script instance will disappear after insertion. It is replaced by individual Drill tool instances for every circle you selected.\n- **Visual Feedback**: During insertion, pay attention to the highlighted edge face; it shows exactly which side of the panel the tool will be applied to.\n- **Grip Editing**: After insertion, you can drag the grip point to move the tool along the edge or use the Properties Palette to fine-tune dimensions.\n\n## FAQ\n- **Q: Why did my tool disappear immediately after I placed it?**\n  A: The tool likely did not physically intersect the panel body (e.g., it was placed too far outside the material). Ensure your Width and Depth settings penetrate the panel.\n- **Q: Why are the dLength and dWidth fields hidden?**\n  A: These parameters are automatically hidden depending on the tool type. For example, Drills and Free Profiles calculate dimensions from geometry/radius rather than manual length/width inputs.\n- **Q: Can I switch a Mortise to a Rabbet without re-inserting?**\n  A: Yes. Select the tool in the model, open the Properties Palette (Ctrl+1), and change the `nTool` value from 3 (Mortise) to 2 (Rabbet)."
+      },
+      "tokens_used": 6152,
+      "error": null
+    }
+  }
+}

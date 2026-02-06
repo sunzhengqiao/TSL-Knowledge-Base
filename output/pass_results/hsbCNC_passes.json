@@ -1,0 +1,201 @@
+{
+  "filename": "hsbCNC.mcr",
+  "status": "completed",
+  "total_tokens": 49877,
+  "processing_time": 271.4495675563812,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9222,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script contains no references to paper space constructs such as _Viewport, sd_* prefixes, or ShopDrawing specific entities (#Type E with _Entity[]). The logic relies on model geometry such as Element, GenBeam, and Sheet to generate tools (milling, sawing, no-nail areas). It uses standard 3D coordinate systems (CoordSys) and 3D geometric operations (PlaneProfile, PLine in 3D), typical for ModelSpace interaction. The script interacts with production properties (CNC) which are managed on the model entity."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Sheet"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Must be run in the context of an Element or a Sheet within ModelSpace to calculate tool intersections and geometry.",
+          "requiredSettings": [
+            "Catalogs for tool properties (implied by 'catalog based insertion' in history)",
+            "TslUtilities.dll (implied for UI/Selection if used, though not explicitly shown in snippet, standard for hsbCAD)"
+          ]
+        }
+      },
+      "tokens_used": 5771,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10030,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Generates CNC machining operations (saw cuts, millings, and no-nail zones) on timber elements based on user-defined polylines or geometric references.\",\n    \"category\": \"Manufacturing/CNC\",\n    \"typicalUseCase\": \"Used during the design or detailing phase to create door/window openings (saws), wiring channels or grooves (millings), or indicate areas where nailing is prohibited (no-nail zones) on wall panels or timber beams.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"nTool\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"The type of CNC operation to generate (Saw cut, Milling, or No-Nail zone).\",\n      \"validRange\": \"0 (Saw), 1 (Milling), 2 (No-Nail)\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Determines the underlying entity type created (ElemSaw, ElemMill, or ElemNoNail) and the available geometric properties (e.g., angle is only available for saws).\"\n    },\n    {\n      \"name\": \"dDepth\",\n      \"technicalDefault\": \"20.0\",\n      \"businessMeaning\": \"The depth of the cut or milling operation into the material.\",\n      \"validRange\": \"0mm to Material Thickness\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Controls the Z-dimension of the machining. If the depth exceeds the current zone thickness, logic may apply the cut to zones below (as per script history).\"\n    },\n    {\n      \"name\": \"dAngle\",\n      \"technicalDefault\": \"0.0\",\n      \"businessMeaning\": \"The tilt angle of the saw blade relative to the vertical axis, used for creating beveled or mitered edges.\",\n      \"validRange\": \"-89.0° to 89.0°\",\n      \"unit\": \"degrees\",\n      \"affectsOutput\": \"Rotates the cutting plane of the saw tool. Only applicable if nTool is set to Saw (0).\"\n    },\n    {\n      \"name\": \"nSide\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"Defines on which side of the defining geometry (left, right, center) the tool is applied, or if it should be determined automatically based on the element's normal.\",\n      \"validRange\": \"Left, Right, Center, Automatic\",\n      \"unit\": \"Enumeration\",\n      \"affectsOutput\": \"Offsets the tool geometry laterally from the reference line/polyline.\"\n    },\n    {\n      \"name\": \"sTxt\",\n      \"technicalDefault\": \"\\\"\\\"\",\n      \"businessMeaning\": \"A text label displayed in the model/CAM view, supporting dynamic variables such as dimensions or beam names.\",\n      \"validRange\": \"Alphanumeric string (e.g., '@(Name)', 'Cut 1')\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Adds annotation to the drawing; does not affect physical geometry but provides information to the manufacturer.\"\n    },\n    {\n      \"name\": \"nZone\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"Specifies the specific material layer (zone) within the element to which the tool is applied. Special values -99 and 99 target the outermost zones.\",\n      \"validRange\": \"Integer index of element layers or -99/99\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Restricts the machining operation to a specific layer of a multi-layer wall panel (e.g., only the OSB layer).\"\n    },\n    {\n      \"name\": \"dClearToolDiameter\",\n      \"technicalDefault\": \"0.0\",\n      \"businessMeaning\": \"Used to calculate clearance offsets for closed contours, ensuring the entire area is machined by the tool diameter.\",\n      \"validRange\": \"0mm to Tool Width\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Adjusts the tool path offset to ensure complete material removal for pocketing operations (Clear tooling).\"\n    },\n    {\n      \"name\": \"dTxtH\",\n      \"technicalDefault\": \"100.0\",\n      \"businessMeaning\": \"The height of the text label displayed in the model.\",\n      \"validRange\": \"10mm to 500mm\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Visual size of the annotation text.\"\n    }\n  ],\n  \"parameterDependencies\": [\n    {\n      \"trigger\": \"nTool is set to 0 (Saw)\",\n      \"effect\": \"Enables the dAngle parameter for mitered cuts.\",\n      \"cascade\": [\n        \"dAngle\"\n      ]\n    },\n    {\n      \"trigger\": \"nTool is set to 1 (Milling) or 2 (No-Nail)\",\n      \"effect\": \"Disables the dAngle parameter as angles only apply to saws.\",\n      \"cascade\": [\n        \"dAngle\"\n      ]\n    },\n    {\n      \"trigger\": \"Defining geometry is a closed contour (Polyline/Circle)\",\n      \"effect\": \"Enables 'Clear tooling' / clearing logic to offset the tool within the boundary.\",\n      \"cascade\": [\n        \"dClearToolDiameter\"\n      ]\n    },\n    {\n      \"trigger\": \"Element has multiple zones/layers\",\n      \"effect\": \"nZone parameter becomes active to select the specific target layer.\",\n      \"cascade\": [\n        \"nZone\"\n      ]\n    }\n  ],\n  \"outputEntities\": [\n    {\n      \"type\": \"ElemSaw\",\n      \"description\": \"A linear cut operation, typically cutting completely through or partially into the material.\",\n      \"appliedTo\": \"Sheets or Elements within the specified Zone.\"\n    },\n    {\n      \"type\": \"ElemMill\",\n      \"description\": \"A material removal operation that does not go all the way through, creating a groove or pocket.\",\n      \"appliedTo\": \"Sheets or Elements within the specified Zone.\"\n    },\n    {\n      \"type\": \"ElemNoNail\",\n      \"description\": \"An informational region indicating that fasteners (nails/screws) should not be placed"
+      },
+      "tokens_used": 9610,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch Script: User executes hsbCNC.mcr.",
+          "2. Initial Validation: Script checks for valid Element context.",
+          "3. Insertion Mode (_bOnInsert): User is prompted to select a defining entity (Element, GenBeam, Sheet, or TSL) if one isn't detected.",
+          "4. Coordinate System Setup: The script establishes the local coordinate system (elzo) based on the selected Zone.",
+          "5. Geometry Construction: The tool shape (Saw/Mill/NoNail) is constructed based on the defining entity and tool parameters (Depth, Angle, Side).",
+          "6. Zone Processing: The tool is applied to the specified Zone (handling special values -99 and 99).",
+          "7. Solid/Tool Generation: Depending on the tool type, ElemSaw, ElemMill, or ElemNoNail entities are generated and added to the Element.",
+          "8. Visualization: The tool is drawn in the model using specific colors and text labels.",
+          "9. Completion: The script instance is saved to the Element."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "nTool (Tool Type) Selection",
+            "path1": {
+              "name": "Saw Cut (0)",
+              "steps": [
+                "Enables dAngle property for mitered cuts.",
+                "Generates ElemSaw entity.",
+                "Draws specific saw symbol in block definition mode."
+              ]
+            },
+            "path2": {
+              "name": "Milling (1)",
+              "steps": [
+                "Disables dAngle property.",
+                "Generates ElemMill entity.",
+                "Supports 'Clear tooling' if contour is closed.",
+                "Draws milling symbol in block definition mode."
+              ]
+            },
+            "path3": {
+              "name": "No-Nail (2)",
+              "steps": [
+                "Disables dAngle property.",
+                "Generates ElemNoNail entity based on intersection of tool contour with zone.",
+                "Draws hatched rectangle in block definition mode."
+              ]
+            }
+          },
+          {
+            "condition": "Defining Geometry Status",
+            "path1": {
+              "name": "Valid Entity Detected",
+              "steps": [
+                "Script extracts geometry from the linked Element, Beam, Sheet, or TSL.",
+                "Calculates tool path directly."
+              ]
+            },
+            "path2": {
+              "name": "Manual Input / New Insertion",
+              "steps": [
+                "Prompts user to select an Entity on screen.",
+                "Sets the selected entity as the defining reference."
+              ]
+            }
+          },
+          {
+            "condition": "Depth vs. Zone Thickness",
+            "path1": {
+              "name": "Depth < Zone Thickness",
+              "steps": [
+                "Standard tool application within the specific layer."
+              ]
+            },
+            "path2": {
+              "name": "Depth > Zone Thickness",
+              "steps": [
+                "Solid operation logic attempts to extend the cut/mill to zones below the selected one (if applicable)."
+              ]
+            }
+          },
+          {
+            "condition": "nSide (Side) Mode",
+            "path1": {
+              "name": "Automatic (0)",
+              "steps": [
+                "Script determines side based on the normal of the defining entity or zone."
+              ]
+            },
+            "path2": {
+              "name": "Left/Right/Center",
+              "steps": [
+                "Script applies a fixed offset relative to the coordinate system vectors."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Existence",
+            "errorMessage": "No Element found in context.",
+            "recovery": "Script erases instance; user must run inside a valid Element."
+          },
+          {
+            "check": "Replicator Mode (Block Definition)",
+            "errorMessage": "RepDef mode requires at least 2 grips",
+            "recovery": "Instance erased; ensure sufficient geometry is selected for block creation."
+          },
+          {
+            "check": "Zone Index Validity",
+            "errorMessage": "Invalid zone index specified",
+            "recovery": "Script resolves -99 or 99 to outer zones, or checks for valid layer index."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Edit Geometry (Grips)",
+            "how": "Drag grips in the model to adjust tool contour.",
+            "effect": "Updates the shape and length of the CNC tool."
+          },
+          {
+            "action": "Modify Properties (OPM)",
+            "how": "Change nTool, dDepth, dAngle, nSide, sTxt, etc., in the Properties Palette.",
+            "effect": "Instantly recalculates tool geometry, type, and depth."
+          },
+          {
+            "action": "Toggle Side (Double Click)",
+            "how": "Double-click the script instance.",
+            "effect": "Toggles the side of the saw/milling line (Left <-> Right)."
+          },
+          {
+            "action": "Swap Direction",
+            "how": "Context menu command 'Swap Direction'.",
+            "effect": "Reverses the direction of the tool path."
+          },
+          {
+            "action": "Clear Tooling",
+            "how": "Context menu command (available for closed contours).",
+            "effect": "Applies offset logic to cover the entire area with the tool (pocketing)."
+          }
+        ]
+      },
+      "tokens_used": 9328,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCNC.mcr\n\n## Overview\nGenerates CNC machining operations (saw cuts, millings, and no-nail zones) on timber elements and wall panels based on user-defined polylines or geometric references.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Must be run inside an active Element or Sheet context. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | Manufacturing data is applied directly to the 3D model. |\n\n## Prerequisites\n- **Required Entities**: An existing `Element` (e.g., a wall) or `Sheet` must exist in the drawing.\n- **Minimum Beams**: 0 (Can be applied to sheets/panels without beams).\n- **Required Settings**: Standard hsbCAD catalogs for tool properties.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbCNC.mcr` from the list.\n\n### Step 2: Select Target Element\n```\nCommand Line: Select Element / Sheet:\nAction: Click on the timber wall, floor, or single sheet where the CNC operation should be applied.\n```\n*Note: If the script detects you are already inside an element context, it may skip this step.*\n\n### Step 3: Define Geometry\n```\nCommand Line: Select Entity / [Select Point]:\nAction:\nOption A: Click an existing line, polyline, or beam in the model to use as the reference path.\nOption B: Click a point in space to manually draw the tool path.\n```\n\n### Step 4: Configure Tool\nOnce placed, select the script instance and open the **Properties Palette** (Ctrl+1). Adjust the `nTool` parameter to define the operation type (Saw, Milling, or No-Nail).\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| nTool | Index | 0 | **Tool Type**: 0 = Saw cut, 1 = Milling, 2 = No-Nail zone. |\n| dDepth | Double | 20.0 | **Cut Depth**: The depth of the machining into the material (mm). |\n| dAngle | Double | 0.0 | **Saw Angle**: The tilt angle of the saw blade relative to vertical (-89° to 89°). Only used for Saws. |\n| nSide | Enum | 0 | **Side Application**: 0 = Automatic, 1 = Left, 2 = Right, 3 = Center. Determines lateral offset. |\n| nZone | Int | 0 | **Target Layer**: Specifies which material layer (zone) to machine. Use -99 or 99 for outermost layers. |\n| dClearToolDiameter | Double | 0.0 | **Clear Tooling**: Diameter offset used for pocketing closed contours to ensure full material removal. |\n| sTxt | String | \"\" | **Label Text**: Annotation text for the shop drawing (e.g., 'Window Cut'). Supports dynamic variables like '@(Name)'. |\n| dTxtH | Double | 100.0 | **Text Height**: Visual height of the label text in the model (mm). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Swap Direction | Reverses the direction of the tool path (e.g., Start Point becomes End Point). |\n| Clear Tooling | Calculates offsets for closed contours to ensure the entire area is machined (pocketing). |\n\n## Settings Files\n- **Catalogs**: Standard hsbCAD Tool/Machine catalogs.\n- **Location**: Defined in your hsbCAD configuration folder.\n- **Purpose**: Provides default parameters for tool widths and speeds.\n\n## Tips\n- **Toggle Side Quickly**: Double-click the script instance in the model to instantly toggle the machining side (Left <-> Right).\n- **Layered Walls**: Use the `nZone` parameter to restrict a milling operation to a specific layer (e.g., only the OSB sheathing) without cutting the structural timber.\n- **Dynamic Labels**: Use `@(Name)` in the `sTxt` field to automatically display the name of the element or beam the tool is applied to.\n- **Pocketing**: If you need to mill out a completely closed rectangle (pocket), ensure `dClearToolDiameter` is set to your tool width and use the \"Clear Tooling\" option.\n\n## FAQ\n- **Q: Why is the dAngle parameter greyed out?**\n  **A:** The angle property is only valid for Saw cuts (`nTool` = 0). It is disabled for Millings and No-Nail zones.\n- **Q: How do I cut through the entire wall thickness?**\n  **A:** Set the `dDepth` to a value greater than or equal to the total thickness of the target zone/element.\n- **Q: What is the difference between \"Left\" and \"Right\" side settings?**\n  **A:** This depends on the direction the tool path was drawn. \"Left\" is typically to the left side of the direction vector from the start point to the end point. Using \"Automatic\" (0) is recommended for complex geometry."
+      },
+      "tokens_used": 5916,
+      "error": null
+    }
+  }
+}

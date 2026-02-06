@@ -1,0 +1,285 @@
+{
+  "filename": "hsbConvertSip2Beam.mcr",
+  "status": "completed",
+  "total_tokens": 23474,
+  "processing_time": 516.7857162952423,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.3",
+            "date": "23mar12",
+            "author": "th@hsbCAD.de",
+            "changes": "new option to keep or delete the original panel after conversion"
+          },
+          {
+            "version": "1.2",
+            "date": "23mar12",
+            "author": "th@hsbCAD.de",
+            "changes": "X-Axis of panel always matches X-Axis of beam"
+          },
+          {
+            "version": "1.1",
+            "date": "05dec11",
+            "author": "th@hsbCAD.de",
+            "changes": "properties will be copied, posnum will be applied if possible"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4498,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses 'Sip' entities and performs geometric operations (dbCreate, dbErase) typical of model space manipulation. No 'sd_' or '#Type E' ShopDrawing patterns found. No _Viewport references."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sip"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1797,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select sips",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "Script Insertion (if no catalog in use)",
+            "title": null,
+            "dataSource": "OPM Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "nIncr",
+            "type": "PropInt",
+            "displayName": "Increment PosNum",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "(< 1 = no automatic posnum)"
+          },
+          {
+            "index": 0,
+            "variable": "sDeleteSource",
+            "type": "PropString",
+            "displayName": "Delete origin body",
+            "defaultValue": "No",
+            "inputType": "dropdown",
+            "options": [
+              "No",
+              "Yes"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2749,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Converts Structural Insulated Panels (Sip entities) into standard timber beams while preserving geometry, attributes, and material assignments.",
+          "category": "Model Management / Conversion",
+          "typicalUseCase": "Used when a component was initially modeled as a panel but needs to be treated as a structural beam for detailing, reports, or export."
+        },
+        "parameters": [
+          {
+            "name": "nIncr",
+            "technicalDefault": "0",
+            "businessMeaning": "Position Number Offset. Adds a specific value to the source panel's Position Number (PosNum) to generate the new beam's PosNum. This prevents numbering conflicts with existing beams.",
+            "validRange": "0 to 10000",
+            "unit": "count",
+            "affectsOutput": "If greater than 0, the new beam receives a calculated PosNum (Panel PosNum + nIncr). If 0, the beam is created without automatic PosNum assignment."
+          },
+          {
+            "name": "sDeleteSource",
+            "technicalDefault": "No",
+            "businessMeaning": "Determines if the original panel should be removed from the model after conversion.",
+            "validRange": "\"No\", \"Yes\"",
+            "unit": "selection",
+            "affectsOutput": "If 'Yes', the original panel is deleted (Replacement mode). If 'No', the original panel remains alongside the new beam (Copy/Clone mode)."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "GenBeam",
+            "description": "A new timber beam entity created using the geometric body and orientation of the selected panel. It inherits material, grade, name, and element grouping from the source panel.",
+            "appliedTo": "N/A (Creates new independent entities in Model Space)"
+          }
+        ]
+      },
+      "tokens_used": 3895,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution starts (User inserts script or runs command)",
+          "Check insertCycleCount; if greater than 1, script erases itself and exits immediately",
+          "Determine input source: Check if _kExecuteKey is set (Catalog usage)",
+          "Branch: If Catalog key is set, load properties from Catalog; otherwise, display Property Dialog (showDialog)",
+          "Prompt user to select entities ('Select sips')",
+          "Filter selection: Iterate through selected entities and collect only those of type 'Sip' into an array",
+          "Iterate backwards through the collected Sip panels",
+          "Extract geometry (Body) and orientation vectors (X, Y, Z) from the source Sip",
+          "Create new GenBeam entity using the extracted Body and orientation",
+          "Transfer attributes from Sip to Beam: Element Group, Material, Name, Grade, Label, SubLabel, Information, and Color",
+          "Branch: Check nIncr property value",
+          "If nIncr > 0: Attempt to assign new Position Number (Source PosNum + nIncr) to the new Beam",
+          "Validate Position Number: Check if the assigned PosNum matches the intended value (detects if number was already in use)",
+          "Branch: Check sDeleteSource property ('Yes' or 'No')",
+          "If 'Yes': Erase the original Sip panel from the model",
+          "End Loop: Repeat for all selected panels",
+          "Erase script instance (eraseInstance) and finish execution"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Catalog Key presence (_kExecuteKey)",
+            "path1": {
+              "name": "Manual Execution",
+              "steps": [
+                "Trigger showDialog()",
+                "User manually sets 'Increment PosNum' and 'Delete origin body' properties",
+                "User confirms dialog"
+              ]
+            },
+            "path2": {
+              "name": "Catalog/Execution Key",
+              "steps": [
+                "Call setPropValuesFromCatalog(_kExecuteKey)",
+                "Properties are pre-defined by catalog settings"
+              ]
+            }
+          },
+          {
+            "condition": "Position Number Increment (nIncr)",
+            "path1": {
+              "name": "Auto-Assign PosNum",
+              "steps": [
+                "Calculate target PosNum = Panel.PosNum + nIncr",
+                "Call bmNew.assignPosnum()",
+                "Verify if assignment succeeded without incrementing further (Collision detection)"
+              ]
+            },
+            "path2": {
+              "name": "No PosNum Logic",
+              "steps": [
+                "Skip position number assignment",
+                "Beam is created without an automatically assigned PosNum"
+              ]
+            }
+          },
+          {
+            "condition": "Delete Source Entity (sDeleteSource)",
+            "path1": {
+              "name": "Replace Mode",
+              "steps": [
+                "Convert Panel to Beam",
+                "Call sp[i].dbErase() to remove the original panel"
+              ]
+            },
+            "path2": {
+              "name": "Copy Mode",
+              "steps": [
+                "Convert Panel to Beam",
+                "Leave original panel in the model"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script automatically erases itself to prevent double execution."
+          },
+          {
+            "check": "Entity Type Filter",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script ignores any selected entities that are not of type 'Sip'."
+          },
+          {
+            "check": "Position Number Availability",
+            "errorMessage": "'Required posnum could not be assigned to conversion result of panel: [PosNum] Please check posnums'",
+            "recovery": "The beam is created but with a different PosNum (likely the next available one). User must manually inspect and correct the numbering in the project."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Resulting Beam Geometry",
+            "how": "Standard AutoCAD/hsbCAD grips and properties",
+            "effect": "The resulting Beam is a standard GenBeam entity. It is not parametrically linked to the original script or panel."
+          },
+          {
+            "action": "Script Parameters",
+            "how": "Not Applicable",
+            "effect": "The script instance erases itself immediately after execution. The TSL parameters (nIncr, sDeleteSource) cannot be changed later to affect the created beams."
+          }
+        ]
+      },
+      "tokens_used": 5952,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbConvertSip2Beam.mcr\n\n## Overview\nConverts Structural Insulated Panels (Sip entities) into standard timber beams (GenBeams) while preserving their geometry and attributes. It provides options to automatically adjust position numbers and either replace the original panel or keep it as a copy.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script operates on Sip entities within the model. |\n| Paper Space | No | This script is not designed for Paper Space. |\n| Shop Drawing | No | This script is not used for generating shop drawings. |\n\n## Prerequisites\n- **Required Entities**: Structural Insulated Panels (Sip) must exist in the model.\n- **Minimum Beam Count**: N/A (This script creates beams from panels).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbConvertSip2Beam.mcr`\n\n### Step 2: Configure Properties\nA properties dialog will appear automatically upon insertion (unless triggered by a catalog).\n- **Increment PosNum**: Enter a number (e.g., 1, 10) to add to the panel's original position number for the new beam. Leave as `0` to disable automatic numbering.\n- **Delete origin body**: Select `No` to keep the original panel, or `Yes` to remove it from the drawing.\nClick OK to proceed.\n\n### Step 3: Select Panels\n```\nCommand Line: Select sips\nAction: Click on the Structural Insulated Panels (Sip) you wish to convert. You can select multiple panels. Press Enter to confirm selection.\n```\n\n### Step 4: Processing\nThe script will convert the selected panels into beams. The script instance will erase itself automatically once the process is complete.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Increment PosNum | Number | 0 | Adds this value to the source panel's PosNum for the new beam. If set to 0 (default), no position number is automatically assigned. |\n| Delete origin body | Dropdown | No | Determines whether the original panel is deleted. Select \"Yes\" to replace the panel with a beam, or \"No\" to keep both. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script executes immediately and erases itself; therefore, it has no persistent right-click menu options. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Undo**: You can use the standard AutoCAD `UNDO` command immediately after running the script if the result is not as expected.\n- **Number Conflicts**: If your project already uses the target position numbers, the script may warn you that it could not assign the specific number. Use the `Increment PosNum` setting to offset the new beams into a clear number range (e.g., set to 1000).\n- **Visual Check**: If you set \"Delete origin body\" to No, visually verify that the new beam is correctly placed before manually deleting the original panel to avoid overlapping elements.\n\n## FAQ\n- **Q: Why didn't the new beam get a position number?**\n- **A:** By default, the \"Increment PosNum\" property is set to 0. This disables automatic numbering. Change this value to 1 or higher to enable automatic position number assignment.\n\n- **Q: Can I edit the settings after I run the script?**\n- **A:** No. The script erases itself immediately after execution. You must insert the script again to run it with different settings.\n\n- **Q: What happens if I select something that isn't a Sip panel?**\n- **A:** The script includes a filter that ignores any selected entities that are not Structural Insulated Panels (Sip). Only valid panels will be converted."
+      },
+      "tokens_used": 4583,
+      "error": null
+    }
+  }
+}

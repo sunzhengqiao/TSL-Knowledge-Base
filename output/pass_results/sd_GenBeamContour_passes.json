@@ -1,0 +1,373 @@
+{
+  "filename": "sd_GenBeamContour.mcr",
+  "status": "completed",
+  "total_tokens": 47325,
+  "processing_time": 285.75055599212646,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "Consumes any GenBeam and creates several dimrequests in dependency of the contour and containg drills",
+        "versionHistory": [
+          {
+            "version": "1.9",
+            "date": "14.03.2011",
+            "author": "th@hsbCAD.de",
+            "changes": "bugfix drill chain content, 'Diameter at Reference Point' if this mode is selected the program will fall back to the mode 'Diameter only' if different diameters have been detected New option for the drill chain content 'Individual Diameter at Reference Point' This option will create as many dimlines as different drill diameters are collected. The stereotypes for these dimlines are composed with the string 'Drill' and the corresponding diameter in mm 'Drill'<Diameter[mm]>, i.e. for a diameter of 14mm one needs to add a stereotype called Drill14. If no corresponding stereotypes are foundi it will fall back to the default stereotype which could then also be used as one stereotype for all diameter variations"
+          },
+          {
+            "version": "1.8",
+            "date": "11.03.2011",
+            "author": "th@hsbCAD.de",
+            "changes": "bugfix"
+          },
+          {
+            "version": "1.7",
+            "date": "11.03.2011",
+            "author": "th@hsbCAD.de",
+            "changes": "new option to display extrusion profile based views in a different level of detailing. Default is low detail."
+          },
+          {
+            "version": "1.6",
+            "date": "28.02.2011",
+            "author": "th@hsbCAD.de",
+            "changes": "dimensioning of drills enhanced simple housings supported"
+          },
+          {
+            "version": "1.5",
+            "date": "09.02.2011",
+            "author": "th@hsbCAD.de",
+            "changes": "intersecting drills at contour do not lead into staggered vertex dimension openings of sheets and sip panels supported"
+          },
+          {
+            "version": "1.4",
+            "date": "18.01.2011",
+            "author": "th@hsbCAD.de",
+            "changes": "real Genbeam support. requires hsbCAD 2012"
+          },
+          {
+            "version": "1.3",
+            "date": "08.11.2010",
+            "author": "th@hsbCAD.de",
+            "changes": "new options"
+          },
+          {
+            "version": "1.0",
+            "date": "19.10.2010",
+            "author": "th@hsbCAD.de",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": [
+          "mapIO_GetArcPLine.mcr"
+        ]
+      },
+      "tokens_used": 8288,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ShopDrawing",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": true,
+          "isMultipageScript": true,
+          "detectionEvidence": "Filename prefix 'sd_', <insert> comment states 'executed by the shopdraw engine', usage of _Entity array, usage of addDimRequest(), dependency on Multipage style rulesets mentioned in comments."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (for instance insertion) and Shopdrawing engine context",
+          "requiredSettings": [
+            "mapIO_GetArcPLine.mcr"
+          ]
+        }
+      },
+      "tokens_used": 7045,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6965,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the dimensioning of timber beams in shop drawings by detecting contours, drill holes, and cut-outs to generate precise dimension requests.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Used by a detailer to automatically apply dimensioning styles (drill labels, overall lengths, angles) to a beam during the creation of production drawings, ensuring consistent annotation standards."
+        },
+        "parameters": [
+          {
+            "name": "ChainContentDrill",
+            "technicalDefault": "0 (Chain Dimension)",
+            "businessMeaning": "Determines how drill holes are annotated on the drawing. Controls whether dimension lines show position only, position with diameter, or diameter only, and whether different drill sizes are grouped onto separate dimension lines.",
+            "validRange": "List options: 0=Chain Dim, 1=Chain Dim + Diameter, 2=Diameter Only, 3=Diameter at Ref Point, 4=Individual Diameter at Ref Point",
+            "unit": "Enumeration",
+            "affectsOutput": "Changes the text content and quantity of dimension lines associated with drilling operations. Option 4 requires specific stereotypes (e.g., 'Drill14') to be configured in the drawing style."
+          },
+          {
+            "name": "DiameterUnit",
+            "technicalDefault": "0 (DWG Unit)",
+            "businessMeaning": "Specifies the unit of measurement (mm, inches, etc.) used for displaying drill diameter text in the dimension labels.",
+            "validRange": "DWG Unit, m, cm, mm, in, ft",
+            "unit": "String",
+            "affectsOutput": "Modifies the text string appended to drill dimensions, ensuring readability for the manufacturing team regardless of the drawing's global unit settings."
+          },
+          {
+            "name": "AddExtremes",
+            "technicalDefault": "0 (No)",
+            "businessMeaning": "Controls whether an overall dimension line (spanning the maximum extents of the beam) is added in addition to the detailed contour dimensions.",
+            "validRange": "0=No, 1=Yes",
+            "unit": "Boolean/Int",
+            "affectsOutput": "If Yes, adds extra dimension lines marking the start and end points of the beam's geometry (stereotype 'Extremes')."
+          },
+          {
+            "name": "AddAngles",
+            "technicalDefault": "0 (Add)",
+            "businessMeaning": "Manages the display of angular dimensions for non-90-degree cuts (e.g., hip cuts, haunches). Includes logic to suppress duplicate angles if they are nearby.",
+            "validRange": "0=Add, 1=Add and suppress same angle near by, 2=Do not show",
+            "unit": "Enumeration",
+            "affectsOutput": "Adds or removes angular dimension annotations from the drawing view."
+          },
+          {
+            "name": "SegmentToArcLength",
+            "technicalDefault": "5.0",
+            "businessMeaning": "Defines the tolerance for smoothing jagged geometry. If a straight line segment is shorter than this value, the script attempts to interpret it as part of an arc. This is critical for dimensioning curved beams that are approximated by small lines.",
+            "validRange": "1.0 to 50.0 (mm)",
+            "unit": "Length (mm)",
+            "affectsOutput": "Affects the geometric interpretation of the beam contour. Higher values may cause straight corners to be dimensioned as arcs; lower values may result in 'jagged' dimension lines on curved elements."
+          },
+          {
+            "name": "ExtrProfDimMode",
+            "technicalDefault": "0 (Low Detail)",
+            "businessMeaning": "Controls the level of detailing for beams based on extrusion profiles (e.g., I-Joists, glulam curves). Determines if every vertex is dimensioned or just the overall bounding box.",
+            "validRange": "0=Low Detail, 1=High Detail, 2=Do not show",
+            "unit": "Enumeration",
+            "affectsOutput": "In Low Detail, only major extreme points are dimensioned. In High Detail, specific geometric features of the profile are dimensioned."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "ChainContentDrill is set to 'Individual Diameter at Reference Point'",
+            "effect": "The script attempts to find specific dimension stereotypes matching drill diameters (e.g., Drill12, Drill14). If these are missing from the drawing style, dimensions may not display correctly.",
+            "cascade": [
+              "Drawing Style Configuration (Stereotypes)"
+            ]
+          },
+          {
+            "trigger": "SegmentToArcLength is increased",
+            "effect": "Contour detection logic merges small straight segments into arcs.",
+            "cascade": [
+              "Contour Dimensioning logic",
+              "Angular Dimension placement"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "DimRequest",
+            "description": "Requests for the Shop Drawing engine to place dimensions. These are not drawn directly by the script but queued for the drawing generator.",
+            "appliedTo": "The selected GenBeam"
+          },
+          {
+            "type": "Dimension Stereotypes",
+            "description": "Logical tags assigned to dimension requests to control their visual style (layer, color, text size) in the final layout.",
+            "appliedTo": "Generated Dimensions (Stereotypes: Drill, Drill<diameter>, Extremes, Contour, Beamcut)"
+          }
+        ]
+      },
+      "tokens_used": 8337,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initialization: Load script dependencies (mapIO_GetArcPLine.mcr) and declare default unit (mm) and debug variables.",
+          "2. Insertion Phase Check: Verify if script is running in Insertion Mode (_bOnInsert).",
+          "3. User Input (Insertion Mode): Prompt user to select a GenBeam and a reference point (_Pt0). Store in _GenBeam array. Exit script.",
+          "4. MapIO Phase Check: Verify if script is running in Configuration Mode (_bOnMapIO).",
+          "5. Configuration Dialog Display: Define properties for Drill Chains, Diameter Units, Extremes, Angles, Arc Smoothing, and Extrusion Profile Detailing. Show dialog to user.",
+          "6. Save Settings: Read user input from dialog, update the _Map object with selected indices/values, and exit script.",
+          "7. Main Execution: Determine target beam. Check _GenBeam array first (if added manually), otherwise use _Entity[0] (Shopdraw engine context).",
+          "8. Beam Validation: Check if the identified GenBeam object is valid.",
+          "9. Failure Handling: If no valid beam is found, report error message and erase the script instance.",
+          "10. Map Options Processing: Parse the _Map object to retrieve saved configuration values. Convert strings to integers/doubles as required.",
+          "11. Geometry Analysis: Extract the beam's envelope, outline, and drill holes. Analyze wall/plate contours.",
+          "12. Dimension Generation Loop: Iterate through views (Top, Side). For each view, process geometry (segments, arcs, drills, openings).",
+          "13. Drill Dimensioning: Generate dimension requests based on 'ChainContentDrill' setting (Standard chain, Diameter text, or Individual Diameters).",
+          "14. Contour & Opening Dimensioning: Generate dimension requests for the beam envelope and internal openings (sheets/SIPs), respecting 'AddExtremes' and 'AddAngles' settings.",
+          "15. Beamcut Dimensioning: Detect simple housing/dado cuts and generate specific dimension requests for them.",
+          "16. Finalization: Add all generated DimRequests to the Shopdraw engine list for rendering."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script Execution Context",
+            "path1": {
+              "name": "Insertion Mode (_bOnInsert = true)",
+              "steps": [
+                "Prompt user to select a GenBeam.",
+                "Prompt user to select a reference point.",
+                "Save data to _GenBeam and _Pt0.",
+                "Return (Exit)."
+              ]
+            },
+            "path2": {
+              "name": "Configuration/MapIO Mode (_bOnMapIO = true)",
+              "steps": [
+                "Load current settings from _Map.",
+                "Display Property Palette Dialog.",
+                "Read user selections.",
+                "Update _Map with new values.",
+                "Return (Exit)."
+              ]
+            },
+            "path3": {
+              "name": "Execution/Calculation Mode",
+              "steps": [
+                "Retrieve Beam from _GenBeam or _Entity.",
+                "Validate Beam.",
+                "Load options from Map.",
+                "Execute Geometry Analysis.",
+                "Generate Dimensions."
+              ]
+            }
+          },
+          {
+            "condition": "Beam Source",
+            "path1": {
+              "name": "Manual Insert",
+              "steps": [
+                "Use _GenBeam[0] as the target entity."
+              ]
+            },
+            "path2": {
+              "name": "Shopdraw Engine Call",
+              "steps": [
+                "Use _Entity[0] (passed by engine) as the target entity."
+              ]
+            }
+          },
+          {
+            "condition": "Drill Chain Content Setting (nChainContentDrill)",
+            "path1": {
+              "name": "Standard Chain (0, 1, 2, 3)",
+              "steps": [
+                "Group all drills into a single dimension line or chain.",
+                "Apply text based on specific mode (Position, Diameter, etc.)."
+              ]
+            },
+            "path2": {
+              "name": "Individual Diameter at Ref Point (4)",
+              "steps": [
+                "Collect unique drill diameters.",
+                "Create separate dimension lines for each diameter.",
+                "Attempt to assign specific stereotypes (e.g., Drill14).",
+                "Fallback to default stereotype if specific one is missing."
+              ]
+            }
+          },
+          {
+            "condition": "Segment vs Arc Detection",
+            "path1": {
+              "name": "Segment Length > SegmentToArcLength",
+              "steps": [
+                "Treat geometry as straight line.",
+                "Apply linear dimensioning logic."
+              ]
+            },
+            "path2": {
+              "name": "Segment Length <= SegmentToArcLength",
+              "steps": [
+                "Attempt to fit segment to an Arc.",
+                "Apply radial/arc dimensioning logic if successful."
+              ]
+            }
+          },
+          {
+            "condition": "Extrusion Profile Dimensioning (nExtrProfDimMode)",
+            "path1": {
+              "name": "Low Detail (0)",
+              "steps": [
+                "Dimension only major bounding box/extreme points."
+              ]
+            },
+            "path2": {
+              "name": "High Detail (1)",
+              "steps": [
+                "Dimension every vertex of the profile."
+              ]
+            },
+            "path3": {
+              "name": "Do not show (2)",
+              "steps": [
+                "Skip dimensioning of extrusion profile geometry."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam Availability",
+            "errorMessage": "No GenBeam found. !Instance erased.",
+            "recovery": "Ensure the script is attached to a valid GenBeam or that a GenBeam is selected before insertion. In Shopdraw context, ensure the style is applied to a beam entity."
+          },
+          {
+            "check": "Dependency Check (mapIO_GetArcPLine.mcr)",
+            "errorMessage": "(Implicit error if mapIO_GetArcPLine.mcr is missing when arc detection is called)",
+            "recovery": "Ensure mapIO_GetArcPLine.mcr is located in the drawing or one of the hsbCAD search paths."
+          },
+          {
+            "check": "Stereotype Availability (for Individual Drill mode)",
+            "errorMessage": "Dimensions missing or incorrect style",
+            "recovery": "If using 'Individual Diameter at Reference Point' mode, ensure corresponding stereotypes (e.g., Drill12, Drill14) exist in the Drawing Style, or accept fallback to default 'Drill' stereotype."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Dimensioning Settings",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changing properties like 'ChainContentDrill', 'AddExtremes', or 'SegmentToArcLength' and updating the script will immediately regenerate the dimension requests based on new logic."
+          },
+          {
+            "action": "Move Reference Point",
+            "how": "Grip Edit",
+            "effect": "Moving the script instance (_Pt0) changes the origin point for dimension calculation offsets (visualized in code as Line(_Pt0,...))."
+          },
+          {
+            "action": "Update after Geometry Change",
+            "how": "Automatic (hsbCAD Recalculation) or Right-click Recalc",
+            "effect": "If the GenBeam's geometry (drills, size, cuts) changes, the script re-runs, re-detects the contour/drills, and updates the dimension requests to match the new geometry."
+          }
+        ]
+      },
+      "tokens_used": 10119,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# sd_GenBeamContour.mcr\n\n## Overview\nThis script automates the dimensioning of timber beams in shop drawings. It detects beam contours, drill holes, and cut-outs to generate precise dimension requests based on your configured styles and standards.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Can be inserted manually onto a beam. |\n| Paper Space | Yes | Supported via the Shopdrawing engine. |\n| Shop Drawing | Yes | Primarily designed to run within the Shopdrawing context. |\n\n## Prerequisites\n- **Required Entities**: 1 GenBeam (General Beam).\n- **Minimum Beam Count**: 1.\n- **Required Settings Files**: `mapIO_GetArcPLine.mcr` (Must be available in the hsbCAD search paths).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `sd_GenBeamContour.mcr`\n\n### Step 2: Select Beam\n```\nCommand Line: Select GenBeam:\nAction: Click on the timber beam you wish to dimension.\n```\n\n### Step 3: Set Reference Point\n```\nCommand Line: Give reference point:\nAction: Click in the drawing to set the insertion point for the script instance.\n```\n\n### Step 4: Configure Properties\n```\nAction: Select the script instance and press `Ctrl+1` to open the Properties Palette.\nAdjust dimensioning settings (e.g., drill chain content, angles, arc smoothing) as required.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| ChainContentDrill | dropdown | 0 (Chain Dim) | Defines how drill holes are dimensioned. Options include: Chain Dimension, Chain + Diameter, Diameter Only, Diameter at Reference Point, or Individual Diameters (requires specific stereotypes). |\n| DiameterUnit | text | DWG Unit | Sets the unit of measurement for drill diameter text (e.g., mm, in). |\n| AddExtremes | Int (0/1) | 0 (No) | If set to Yes (1), adds an overall dimension line spanning the total length of the beam. |\n| AddAngles | dropdown | 0 (Add) | Controls angular dimensions for cuts. Options: Add angles; Add angles but suppress nearby duplicates; Do not show angles. |\n| SegmentToArcLength | Number | 5.0 | Smoothing tolerance for curved geometry (in mm). Segments shorter than this are treated as arcs. Increase this if curved dimensions look jagged. |\n| ExtrProfDimMode | dropdown | 0 (Low Detail) | Sets the detail level for extrusion profiles (like I-Joists). Options: Low Detail (major points only), High Detail (all vertices), Do not show. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Updates the dimension requests to reflect changes in beam geometry or script properties. |\n\n## Settings Files\n- **Filename**: `mapIO_GetArcPLine.mcr`\n- **Location**: hsbCAD System or Company Search Path\n- **Purpose**: Provides geometry processing functions required to detect and calculate arcs within the beam contour.\n\n## Tips\n- **Stereotypes for Drills**: If you select \"Individual Diameter at Reference Point\" for the drill chain content, ensure your Drawing Style contains specific stereotypes for each drill size (e.g., `Drill14`, `Drill20`) or verify that a default `Drill` stereotype exists as a fallback.\n- **Smoothing Curves**: If you see many small, jagged dimension lines on a curved beam, increase the `SegmentToArcLength` value (e.g., from 5.0 to 10.0) to help the script recognize the smooth curve.\n- **Automatic Execution**: While you can insert this script manually, it is most effective when linked to a Shopdrawing Style, where it runs automatically for every beam in the layout.\n\n## FAQ\n- **Q: Why are my drill dimensions not appearing or showing the wrong style?**\n  **A:** Check the `ChainContentDrill` property. If using \"Individual Diameter at Reference Point,\" you likely need to create specific dimension stereotypes in your Drawing Style (e.g., `Drill14`) for the script to find and use.\n- **Q: The script is dimensioning every tiny facet of my curved beam as a straight line.**\n  **A:** Your `SegmentToArcLength` value is too low. Increase it in the Properties Palette to force the script to interpret short segments as part of a larger arc.\n- **Q: I changed the beam size, but the dimensions didn't update.**\n  **A:** Select the script instance, right-click, and choose **Recalculate** to force it to process the new geometry."
+      },
+      "tokens_used": 6571,
+      "error": null
+    }
+  }
+}

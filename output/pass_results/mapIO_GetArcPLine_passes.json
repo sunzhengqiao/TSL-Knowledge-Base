@@ -1,0 +1,323 @@
+{
+  "filename": "mapIO_GetArcPLine.mcr",
+  "status": "completed",
+  "total_tokens": 37439,
+  "processing_time": 663.1368129253387,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl converts a given segmented polyline into a polyline with arcs if at least three short segments could form an arc. if the polyline consists bulges the tsl will fail. It can be called via mapIO or be inserted on a pline with straight segments This TSL is exclusively used as a function of  other tsl's. It can not be inserted and used by the user. To ensure the functionality one must save this tsl in the path <hsbCompany>\\TSL.",
+        "versionHistory": [
+          {
+            "version": "1.4",
+            "date": "08.11.2010",
+            "author": "th@hsbCAD.de",
+            "changes": "return map for an converted circle fixed"
+          },
+          {
+            "version": "1.3",
+            "date": "05.11.2010",
+            "author": "th@hsbCAD.de",
+            "changes": ""
+          },
+          {
+            "version": "1.0",
+            "date": "28.10.2010",
+            "author": "th@hsbCAD.de",
+            "changes": ""
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6792,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script operates on generic Entity geometry (EntPLine/PLine) and is designed primarily as a mapIO utility called by other scripts. No 'sd_' prefix, _Viewport checks, or specific ShopDrawing logic (sdMsg, sdInsert) are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "EntPLine"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5845,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "showDialog",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": false
+            },
+            {
+              "step": 2,
+              "function": "getEntPLine",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "getPoint",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dMaxSegLength",
+            "type": "PropDouble",
+            "displayName": "max Segment Length",
+            "defaultValue": 5.0,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5520,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A utility script that converts jagged or segmented polylines into smooth geometry by replacing short linear segments with true arcs, or vice-versa, preparing the geometry for accurate detailing or dimensioning.",
+          "category": "Utility/Geometry",
+          "typicalUseCase": "Used internally by other scripts (mapIO) to clean up digitized roof curves or wall plates created from point clouds, ensuring they are mathematically defined as arcs rather than hundreds of small straight lines."
+        },
+        "parameters": [
+          {
+            "name": "dMaxSegLength",
+            "technicalDefault": "U(5)",
+            "businessMeaning": "The threshold length determining if a segment is part of a potential arc. Segments shorter than this are checked to see if they form a curve; longer segments are treated as straight lines.",
+            "validRange": "10mm to 200mm",
+            "unit": "mm",
+            "affectsOutput": "Controls the sensitivity of arc detection. Setting this too high may convert long straight walls into curves; setting it too low may leave rough arcs segmented."
+          },
+          {
+            "name": "reportDebug",
+            "technicalDefault": "0 (false)",
+            "businessMeaning": "Toggles diagnostic output to the command line to help debug the conversion process, such as reporting vertex counts and arc detection status.",
+            "validRange": "0 (false) or 1 (true)",
+            "unit": "Boolean",
+            "affectsOutput": "No geometric changes; only generates text messages for the user or developer."
+          },
+          {
+            "name": "pline",
+            "technicalDefault": "Selected Entity",
+            "businessMeaning": "The input polyline geometry to be analyzed and reconstructed.",
+            "validRange": "Polyline with straight segments only, >4 vertices",
+            "unit": "N/A",
+            "affectsOutput": "Directly defines the final shape. The script modifies this entity (conceptually) by replacing linear approximations with true arc definitions."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dMaxSegLength increases",
+            "effect": "Increases the likelihood that sequential short segments will be merged into a single arc definition.",
+            "cascade": [
+              "pline"
+            ]
+          },
+          {
+            "trigger": "pline vertex count < 5",
+            "effect": "Script aborts conversion logic and returns the original polyline.",
+            "cascade": [
+              "Arc[]"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "PLine",
+            "description": "The optimized polyline containing a mix of true Arc segments and straight lines, returned to the mapIO 'pline' key.",
+            "appliedTo": "Parent Script / Model Space"
+          },
+          {
+            "type": "Map Collection (Arc[])",
+            "description": "A structured list of maps containing data for every detected arc (Center Point, Chord Point, Arc Geometry), typically used to apply radial dimensions.",
+            "appliedTo": "N/A (Data Only)"
+          }
+        ]
+      },
+      "tokens_used": 6156,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch: Determine execution mode (Insert vs. mapIO call).",
+          "[Branch] Execution Mode Check: Is _bOnInsert true?",
+          "Insert Mode: Check insertCycleCount.",
+          "Insert Mode: Show properties dialog (showDialog).",
+          "Insert Mode: Prompt user to select a PLine (getEntPLine).",
+          "Insert Mode: Prompt user to select a reference point (getPoint).",
+          "Insert Mode: Terminate script execution (return).",
+          "mapIO Mode / Dependency Mode: Retrieve input parameters from _Map or _Entity.",
+          "mapIO Mode: Extract 'pline', 'MaxSegLength', and 'reportDebug' from map.",
+          "Dependency Mode: Extract PLine from attached entity (_Entity).",
+          "Validate Vertex Count: Check if the PLine has more than 4 vertices.",
+          "[Branch] Vertex Count Check: If > 4 vertices, proceed to conversion; otherwise, skip to output.",
+          "Conversion Loop: Iterate through vertices to analyze segment geometry.",
+          "Geometry Analysis: Check 3-vertex windows for arc fit (using max segment length and deviation checks).",
+          "Type Assignment: Mark vertices as straight (1), arc start (2), arc on (3), arc end (4), or alternating (5).",
+          "Circle Detection: Check if the PLine forms a perfect circle based on node types.",
+          "[Branch] Geometry Type Check: Is it a circle?",
+          "Circle Path: Generate circle geometry, store single arc map (Center, Chord).",
+          "Mixed/Curve Path: Iterate from determined start point, generate PLine with true arcs.",
+          "Output: Set the optimized 'pline' and 'Arc[]' map in _Map.",
+          "Completion: Script finishes and returns data."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script execution trigger (Insert vs. mapIO)",
+            "path1": {
+              "name": "Insert Mode (_bOnInsert)",
+              "steps": [
+                "Check insertCycleCount (abort if > 1).",
+                "Show properties dialog.",
+                "Prompt for Entity selection.",
+                "Prompt for Point selection.",
+                "Erase instance if interactive (effectively waiting for update/dependency)."
+              ]
+            },
+            "path2": {
+              "name": "mapIO / Dependency Mode",
+              "steps": [
+                "Read PLine from _Map ('pline') or _Entity.",
+                "Read MaxSegLength from _Map ('MaxSegLength') or use default.",
+                "Read debug flag from _Map ('reportDebug').",
+                "Proceed to geometric processing."
+              ]
+            }
+          },
+          {
+            "condition": "PLine Vertex Count (> 4)",
+            "path1": {
+              "name": "Complex Geometry (> 4 vertices)",
+              "steps": [
+                "Initialize arc detection arrays.",
+                "Loop through vertices to detect curvature.",
+                "Identify start/end points of arcs.",
+                "Recompose PLine with true arc segments.",
+                "Generate Arc data map."
+              ]
+            },
+            "path2": {
+              "name": "Simple Geometry (<= 4 vertices)",
+              "steps": [
+                "Skip geometric analysis/loops.",
+                "Set output PLine to the original input PLine.",
+                "Return empty/null Arc data."
+              ]
+            }
+          },
+          {
+            "condition": "Geometry Type (Circle vs. Mixed)",
+            "path1": {
+              "name": "Circle Detected",
+              "steps": [
+                "Calculate average center point.",
+                "Calculate radius from center to vertex.",
+                "Create PLine using createCircle.",
+                "Store single arc entry in map."
+              ]
+            },
+            "path2": {
+              "name": "Mixed Segments (Arcs and Lines)",
+              "steps": [
+                "Locate start index of the path.",
+                "Traverse vertices wrapping around index.",
+                "Add straight vertices.",
+                "Calculate arc center/chord for arc sequences.",
+                "Store multiple arc entries in map."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Selection Type",
+            "errorMessage": "None explicit in script, but logic filters for EntPLine.",
+            "recovery": "User must select a valid Polyline entity during insertion."
+          },
+          {
+            "check": "Segment Length Threshold",
+            "errorMessage": "None explicit (script logic ignores long segments for arc fitting).",
+            "recovery": "Adjust 'MaxSegLength' property if arcs are not detected or straight lines are incorrectly curved."
+          },
+          {
+            "check": "Vertex Count",
+            "errorMessage": "None explicit, but logic only processes > 4 vertices.",
+            "recovery": "Ensure input polyline has sufficient segmentation to define an arc (min 5 points)."
+          },
+          {
+            "check": "Polyline Bulges",
+            "errorMessage": "Script description states 'if the polyline consists bulges the tsl will fail'.",
+            "recovery": "Explode or simplify the polyline to straight segments only before running."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Adjust Max Segment Length",
+            "how": "OPM Properties Palette",
+            "effect": "Increases or decreases the sensitivity of arc detection, changing which linear segments are merged into arcs."
+          },
+          {
+            "action": "Modify Input Geometry",
+            "how": "Grip edit or move the source PLine",
+            "effect": "The script (if used as a dynamic TSL/dependency) will recalculate and update the output polyline and arc data."
+          }
+        ]
+      },
+      "tokens_used": 7875,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# mapIO_GetArcPLine.mcr\n\n## Overview\nThis script converts jagged, segmented polylines into smooth geometry by replacing short linear segments with true arcs. While primarily used as a utility function by other scripts (mapIO), it can be manually inserted to optimize roof curves or wall plates created from point clouds or digitized data.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Operates on generic Entity geometry (EntPLine). |\n| Paper Space | No | Not designed for Paper Space layout. |\n| Shop Drawing | No | Not a Shop Drawing script. |\n\n## Prerequisites\n- **Required Entities**: A Polyline (PLine) with straight segments.\n- **Minimum Beam Count**: 0 (This script works on 2D geometry, not beams).\n- **Required Settings**: None.\n- **Installation**: Must be saved in the `<hsbCompany>\\TSL` path to function correctly when called by other scripts.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `mapIO_GetArcPLine.mcr` from the file dialog.\n\n### Step 2: Configure Properties\n```\nCommand Line: [None / Properties Palette opens]\nAction: Adjust the \"max Segment Length\" in the Properties Palette if necessary, then close the palette or click in the drawing area to proceed.\n```\n\n### Step 3: Select Polyline\n```\nCommand Line: Select Entity:\nAction: Click on the polyline you wish to process.\n```\n\n### Step 4: Select Reference Point\n```\nCommand Line: Select Point:\nAction: Click a point in the drawing to define the insertion reference (this is used for script positioning/updates).\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| max Segment Length | Number | 5.0 (mm) | The threshold length to determine if a segment is part of a potential arc. Segments shorter than this are checked to see if they form a curve; longer segments are treated as straight lines. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu items are defined for this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Straight Segments Only**: The script will fail if the input polyline already contains bulges (curved segments). Explode or simplify existing curves before using this script.\n- **Vertex Count**: The polyline must have more than 4 vertices for the arc detection logic to process. Simple shapes (rectangles) will be ignored.\n- **Sensitivity**: If arcs are not being detected where you expect, increase the `max Segment Length`. If straight lines are being incorrectly turned into curves, decrease it.\n- **Script Path**: Ensure the file is saved in `<hsbCompany>\\TSL` so that other scripts can find and use it as a utility function.\n\n## FAQ\n- **Q: Why did the script fail to convert my polyline?**\n  **A:** Check if your polyline contains existing bulges (curved segments). This script only accepts polylines composed entirely of straight line segments.\n- **Q: The script ran, but the geometry didn't change.**\n  **A:** Ensure your polyline has more than 4 vertices. Additionally, check the `max Segment Length` setting; your segments might be too long to be considered candidates for arc conversion.\n- **Q: How does this script differ from standard PEDIT?**\n  **A:** This script is specifically designed for hsbCAD data flow (mapIO). It not only creates the geometry but also generates a data map of the detected arcs (centers, chords) which other scripts can use for dimensioning or processing."
+      },
+      "tokens_used": 5251,
+      "error": null
+    }
+  }
+}

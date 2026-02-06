@@ -1,0 +1,299 @@
+{
+  "filename": "hsbCLT-TongueGroove.mcr",
+  "status": "completed",
+  "total_tokens": 49671,
+  "processing_time": 693.529149055481,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9025,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Explicit usage of `_kModelSpace` in `tslNew.dbCreate` call. Script logic relies on `ElementWall`, `Sip`, and `GenBeam` which are 3D construction entities. No `_Viewport`, `_kPaperSpace`, or `sd_` prefixes found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall",
+            "Sip"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": [
+            "hsbSettings (HH2-Tab for milling heads)",
+            "TslUtilities.dll"
+          ]
+        }
+      },
+      "tokens_used": 6251,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9737,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates a tongue and groove (dovetail) connection profile on the edges of CLT panels, allowing for single or double connections with configurable gaps and chamfers.",
+          "category": "Manufacturing/Machining",
+          "typicalUseCase": "Creating watertight or structural connections between Cross Laminated Timber (CLT) wall or floor panels, often used to pre-cut panels before transport or to define panel splits during design."
+        },
+        "parameters": [
+          {
+            "name": "sReference",
+            "technicalDefault": "\"Reference Side\"",
+            "businessMeaning": "Determines which side of the connection acts as the primary reference for the geometry (the 'Male' or 'Female' side logic relative to the insertion point).",
+            "validRange": "\"Reference Side\", \"Axis\", \"Opposite Side\"",
+            "unit": "Enumeration",
+            "affectsOutput": "Swaps the geometry between the reference panel and the opposing/connected panel."
+          },
+          {
+            "name": "dInterdistance",
+            "technicalDefault": "11",
+            "businessMeaning": "The distance between two parallel tongue/groove profiles (creating a double connection). If set to 0, a single profile is generated.",
+            "validRange": "0 - 300 mm",
+            "unit": "mm",
+            "affectsOutput": "Switches between a single central groove/tongue and a double slot/twin tenon configuration."
+          },
+          {
+            "name": "dGapCen",
+            "technicalDefault": "0",
+            "businessMeaning": "The width of the material web left in the center of a double connection (between the two grooves/tongues).",
+            "validRange": "0 - 100 mm",
+            "unit": "mm",
+            "affectsOutput": "Determines the structural spine between double cuts."
+          },
+          {
+            "name": "dReferenceOffset",
+            "technicalDefault": "10",
+            "businessMeaning": "The offset distance from the start of the interaction/edge where the profile begins. A value of 0 means the profile runs 'Through' the entire intersecting length.",
+            "validRange": "0 - 2000 mm",
+            "unit": "mm",
+            "affectsOutput": "Shortens the length of the machining profile from the reference point."
+          },
+          {
+            "name": "dGapRef",
+            "technicalDefault": "0",
+            "businessMeaning": "The angle of the dovetail slope on the reference side. Converts a rectangular tongue/groove into a locking dovetail connection.",
+            "validRange": "0 - 90 degrees",
+            "unit": "degrees",
+            "affectsOutput": "Angles the vertical sides of the cut to create an interlocking mechanical connection."
+          },
+          {
+            "name": "dGapOpp",
+            "technicalDefault": "1",
+            "businessMeaning": "The clearance gap in the depth of the connection on the opposite side to ensure panels fit together without binding.",
+            "validRange": "0 - 10 mm",
+            "unit": "mm",
+            "affectsOutput": "Adds tolerance space in the mating female part."
+          },
+          {
+            "name": "dChamferRef",
+            "technicalDefault": "0",
+            "businessMeaning": "The size of the chamfer (beveled edge) on the reference side entry of the profile.",
+            "validRange": "0 - 50 mm",
+            "unit": "mm",
+            "affectsOutput": "Bevels the start/end of the cut on the reference side for easier assembly."
+          },
+          {
+            "name": "dChamferOpp",
+            "technicalDefault": "0",
+            "businessMeaning": "The size of the chamfer (beveled edge) on the opposite side entry of the profile.",
+            "validRange": "0 - 50 mm",
+            "unit": "mm",
+            "affectsOutput": "Bevels the start/end of the cut on the opposite side for easier assembly."
+          },
+          {
+            "name": "dWidthTongue",
+            "technicalDefault": "19",
+            "businessMeaning": "The depth of the tongue/groove from the face of the panel (working into the panel thickness). A value of 0 automatically sets this to 50% of the panel thickness.",
+            "validRange": "0 - 300 mm (or 50% thickness)",
+            "unit": "mm",
+            "affectsOutput": "Controls how deep the router/cutter goes into the panel face."
+          },
+          {
+            "name": "dZDepth",
+            "technicalDefault": "15",
+            "businessMeaning": "The width/length of the tongue/groove profile along the edge of the panel.",
+            "validRange": "5 - 300 mm",
+            "unit": "mm",
+            "affectsOutput": "Controls the size of the 'slot' or 'tenon' along the panel edge."
+          },
+          {
+            "name": "dGapTongue",
+            "technicalDefault": "0",
+            "businessMeaning": "General clearance gap (tolerance) added to the tongue dimensions to ensure loose fit during assembly.",
+            "validRange": "0 - 5 mm",
+            "unit": "mm",
+            "affectsOutput": "Reduces the size of the male part slightly to prevent binding."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dInterdistance > 0",
+            "effect": "Enables double connection mode, making dGapCen relevant.",
+            "cascade": [
+              "dGapCen"
+            ]
+          },
+          {
+            "trigger": "dWidthTongue = 0",
+            "effect": "Automatically calculates depth as 50% of the panel thickness.",
+            "cascade": [
+              "Panel Thickness"
+            ]
+          },
+          {
+            "trigger": "sReference = 'Opposite Side'",
+            "effect": "Swaps the interpretation of 'Ref' parameters (dGapRef, dChamferRef) to apply to the opposite panel.",
+            "cascade": [
+              "dGapRef",
+              "dChamferRef",
+              "dGapOpp",
+              "dChamferOpp"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Contour/Solid Subtraction",
+            "description": "Complex 3D profiling operation (Dovetail/Tongue & Groove) on the panel edge.",
+            "appliedTo": "ElementWall or Sip entities (CLT Panels)"
+          }
+        ]
+      },
+      "tokens_used": 8357,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User launches script and selects panel(s) and points.",
+          "2. Instance created in Model Space; system validates reference element.",
+          "3. Check for Catalog key; if present, load preset properties.",
+          "4. Calculate coordinate system and determine 'Side' (Reference/Opposite) based on insertion point.",
+          "5. Check for Construction entities (Sips/GenBeams).",
+          "6. [Conditional] If construction is missing (no Sips): Draw plan symbol and stop.",
+          "7. [Conditional] If construction exists: Initialize Splitting Logic (Mode 0).",
+          "8. Define a Split Plane perpendicular to the edge at the insertion point.",
+          "9. Split the selected panel(s) using 'dbSplit'.",
+          "10. Clone script instance onto the split parts with internal 'Mode=1'.",
+          "11. (Mode 1) Calculate Tongue/Groove profile geometry based on properties.",
+          "12. Apply Solid Subtraction to the panel edges."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Construction Entity Availability (Sips)",
+            "path1": {
+              "name": "Pre-Construction / Symbol Mode",
+              "steps": [
+                "Detects no GenBeam/Sip entities.",
+                "Sets visibility flag 'bShow' to true.",
+                "Draws text symbol in Plan view.",
+                "Machining logic is skipped."
+              ]
+            },
+            "path2": {
+              "name": "Post-Construction / Machining Mode",
+              "steps": [
+                "Detects Sip entities.",
+                "Sets execution loops to 2.",
+                "Calculates intersection with split plane.",
+                "Executes 'dbSplit' to separate panels.",
+                "Creates new instances in Mode 1 to generate geometry."
+              ]
+            }
+          },
+          {
+            "condition": "Interdistance Parameter (dInterdistance)",
+            "path1": {
+              "name": "Single Connection",
+              "steps": [
+                "dInterdistance is 0.",
+                "Generates a single central tongue/groove profile.",
+                "ignores 'dGapCen' parameter."
+              ]
+            },
+            "path2": {
+              "name": "Double Connection",
+              "steps": [
+                "dInterdistance is > 0.",
+                "Generates two parallel profiles.",
+                "Calculates web thickness using 'dGapCen'."
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu - 'Flip Side' Trigger",
+            "path1": {
+              "name": "Execute Flip",
+              "steps": [
+                "Multiply 'nSide' by -1.",
+                "Transform insertion point '_Pt0' across the panel thickness.",
+                "Return immediately to apply visual change."
+              ]
+            },
+            "path2": {
+              "name": "Normal Recalc",
+              "steps": [
+                "Proceed with standard geometry generation based on existing 'nSide'."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Reference Element Type",
+            "errorMessage": "<scriptName> could not find reference to element.",
+            "recovery": "Ensure a valid ElementWall is selected as the primary element."
+          },
+          {
+            "check": "Catalog Key Validity",
+            "errorMessage": "Could not find [Key] in the list of catalog entries.",
+            "recovery": "Script continues with default values; user must select a valid catalog name manually."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Flip Side",
+            "how": "Right-click Context Menu",
+            "effect": "Swaps the reference side to the opposite face of the panel (moves insertion point)."
+          },
+          {
+            "action": "Flip Direction",
+            "how": "Right-click Context Menu",
+            "effect": "Toggles the orientation of the machining direction along the edge."
+          },
+          {
+            "action": "Edit Geometry Properties",
+            "how": "AutoCAD Properties Palette (OPM)",
+            "effect": "Real-time update of profile dimensions, gaps, chamfers, and offsets (triggers recalc)."
+          }
+        ]
+      },
+      "tokens_used": 10351,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-TongueGroove.mcr\n\n## Overview\nGenerates a tongue and groove (dovetail) connection profile on the edges of CLT panels. This script supports single or double connections with configurable gaps, chamfers, and offsets, allowing for watertight or structural joints between wall or floor panels.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates in 3D model space only. |\n| Paper Space | No | Not designed for 2D layout or shop drawings. |\n| Shop Drawing | No | Generates physical geometry/machining, not annotations. |\n\n## Prerequisites\n- **Required Entities**: `ElementWall` (CLT Wall) or `Sip` entities.\n- **Minimum Count**: At least 1 CLT panel.\n- **Required Settings**:\n  - `hsbSettings` (specifically the HH2-Tab for milling head configurations).\n  - `TslUtilities.dll` (must be loaded).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbCLT-TongueGroove.mcr` from the list.\n\n### Step 2: Select Reference Panel\n```\nCommand Line: Select element:\nAction: Click on the CLT wall or floor panel you wish to machine.\n```\n\n### Step 3: Define Insertion Point\n```\nCommand Line: Give point:\nAction: Click on the edge of the panel where the tongue and groove connection should begin.\n```\n*Note: The side of the edge where you click determines the \"Reference Side\" vs. \"Opposite Side\".*\n\n### Step 4: Automatic Processing\n- **If Construction (Sips) exists**: The script will automatically split the panel at the insertion point and apply the 3D machining (groove/tongue) to the respective sides.\n- **If no Construction exists**: The script will draw a plan symbol indicating the location of the future joint. Machining will be applied automatically once the Sips/Construction are generated.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sReference | Dropdown | Reference Side | Determines which side of the connection acts as the primary reference (Male vs Female logic). Options: Reference Side, Axis, Opposite Side. |\n| dInterdistance | Number | 11 | Distance between two parallel profiles. Set to **0** for a single connection. |\n| dGapCen | Number | 0 | Width of the material web left in the center of a double connection (ignored if single connection). |\n| dReferenceOffset | Number | 10 | Offset distance from the insertion point where the profile actually starts. Set to 0 for the profile to run through the entire intersecting length. |\n| dGapRef | Number | 0 | Angle of the dovetail slope on the reference side (0-90 degrees). Use 0 for a rectangular tongue/groove. |\n| dGapOpp | Number | 1 | Clearance gap (mm) in the depth of the connection on the opposite side to prevent binding during assembly. |\n| dChamferRef | Number | 0 | Size of the chamfer (bevel) on the entry edge of the reference side. |\n| dChamferOpp | Number | 0 | Size of the chamfer (bevel) on the entry edge of the opposite side. |\n| dWidthTongue | Number | 19 | Depth of the tongue/groove from the panel face. Set to **0** to automatically use 50% of panel thickness. |\n| dZDepth | Number | 15 | Width/length of the tongue/groove profile along the panel edge. |\n| dGapTongue | Number | 0 | General clearance gap (tolerance) added to the tongue dimensions for a loose fit. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Flip Side | Swaps the reference side to the opposite face of the panel. This effectively moves the insertion point to the other side of the material thickness. |\n| Flip Direction | Rotates the orientation of the machining profile 180 degrees along the edge. |\n\n## Settings Files\n- **Filename**: `hsbSettings`\n- **Location**: Defined in your hsbCAD company or installation path.\n- **Purpose**: Provides default data for milling heads (HH2-Tab) required to generate the toolpaths correctly.\n\n## Tips\n- **Splitting Behavior**: This script automatically splits the selected panel using a split plane. You do not need to pre-split the wall.\n- **Double Connections**: To create a \"Double Tongue and Groove\" (often used for watertightness), ensure `dInterdistance` is greater than 0. This creates two parallel grooves with a web in between defined by `dGapCen`.\n- **Automatic Depth**: If you want the tongue to sit exactly in the center of the panel thickness, set `dWidthTongue` to 0.\n\n## FAQ\n- **Q: Why does the script only draw a line and doesn't cut the panel?**\n  **A:** The script requires Sips (Construction entities) to calculate the 3D cut. If you are in the early design phase (only ElementWalls exist), it draws a symbol. Generate the construction (Sips) and the script will automatically update to perform the cut.\n- **Q: How do I change from a rectangular groove to a dovetail?**\n  **A:** Change the `dGapRef` property. A value of 0 is rectangular. Increasing this value adds the angled slope to the dovetail.\n- **Q: Can I move the connection after inserting it?**\n  **A:** Yes, use the AutoCAD `MOVE` command on the script instance (the TSL symbol). The machining on the panels will update to the new location."
+      },
+      "tokens_used": 5950,
+      "error": null
+    }
+  }
+}

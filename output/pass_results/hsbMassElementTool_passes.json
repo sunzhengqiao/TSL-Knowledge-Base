@@ -1,0 +1,274 @@
+{
+  "filename": "hsbMassElementTool.mcr",
+  "status": "completed",
+  "total_tokens": 51899,
+  "processing_time": 539.2100796699524,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9274,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script prompts for entity selection using getBeam/PrEntity for GenBeam and MassElement, performs 3D geometric calculations (Line.intersect, Plane), and adds tools (Drill, BeamCut, Slot) directly to beams via bm.addTool(). It uses setEraseAndCopyWithBeams() which is typical for Model Space connections. No sd_ prefixes, Viewport handling, or Sheet entities are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "MassElement"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing Beams and MassElements to serve as tool locators.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6648,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9998,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates beam machining tools (Drills, Slots, BeamCuts) based on the geometry of selected MassElements, which act as 3D templates defining the position and size of the tool.",
+          "category": "Hardware/Machining",
+          "typicalUseCase": "Used when detailing complex timber connections where hardware geometry (like a steel plate or bolt group) is already modeled as MassElements, and the corresponding timber modifications need to be generated automatically from those shapes."
+        },
+        "parameters": [
+          {
+            "name": "sConnectionType",
+            "technicalDefault": "E-Type",
+            "businessMeaning": "Defines the structural relationship between the beams and how the tool instance behaves during updates. 'E-Type' applies tools to a single beam. 'T-Type' involves a Male (primary) and Female (secondary) beam relationship, automatically trimming the Male beam to align with the Female beam.",
+            "validRange": "E-Type, T-Type, O-Type",
+            "unit": "Enum",
+            "affectsOutput": "Determines the number of beams required (1 vs 2+), sets the 'Erase and Copy' logic (copying with the primary beam), and triggers an automatic 'Cut' on the Male beam in T-Type connections to facilitate the junction."
+          },
+          {
+            "name": "Depth (dD)",
+            "technicalDefault": "0 (Complete through)",
+            "businessMeaning": "The depth of the drilling or slotting operation. A value of 0 indicates a through-hole (passing completely through the beam cross-section), while a positive value defines a blind hole depth.",
+            "validRange": "0 to Beam Depth",
+            "unit": "mm",
+            "affectsOutput": "Controls the 'Z' dimension of the Drill or Slot tool. Changing this prevents the tool from cutting through the entire beam or ensures it penetrates deep enough to intersect opposing members."
+          },
+          {
+            "name": "MassElement (ssEnts)",
+            "technicalDefault": "User Selection",
+            "businessMeaning": "Acts as the geometric template or 'locator' for the machining operation. The physical dimensions of the MassElement (Diameter for Cylinders, Width/Depth/Height for Boxes) define the size of the tool.",
+            "validRange": "Standard MassElements (Cylinders or Boxes)",
+            "unit": "3D Geometry",
+            "affectsOutput": "Directly maps MassElement properties to Tool properties: Cylinder Radius -> Drill Diameter; Box Dimensions -> BeamCut/Slot Width and Depth. The position of the MassElement determines where the tool is applied to the beam."
+          },
+          {
+            "name": "Tool Type (sToolType)",
+            "technicalDefault": "Drill",
+            "businessMeaning": "Specifies the machining operation to be applied. Cylinders are restricted to Drills. Boxes can be either BeamCuts (volume removal) or Slots (blind routing).",
+            "validRange": "Drill, BeamCut, Slot",
+            "unit": "Enum",
+            "affectsOutput": "Determines the class of tool added to the beam (Drill, BeamCut, or Slot), which affects CNC output and display styles."
+          },
+          {
+            "name": "Pt0 (Stretching Plane / Alignment)",
+            "technicalDefault": "Center of first MassElement",
+            "businessMeaning": "In T-Type connections, this defines the reference point on the 'stretching plane' used to calculate the intersection and orientation of the automatic beam trim. In Alignment Dependencies, it serves as the anchor point for coordinate transformations.",
+            "validRange": "Any Point3d in Model Space",
+            "unit": "Coordinates (mm)",
+            "affectsOutput": "In T-Type, shifting this point changes the location where the Male beam is Cut. In Alignment mode, it defines the origin for rotation/translation calculations of the MassElements."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "MassElement Shape Type",
+            "effect": "Restricts available Tool Types",
+            "cascade": [
+              "Cylinder -> Drill only",
+              "Box -> BeamCut or Slot"
+            ]
+          },
+          {
+            "trigger": "sConnectionType == T-Type",
+            "effect": "Adds automatic Cut tool and requires secondary beam selection",
+            "cascade": [
+              "Cut tool added to _Beam[0]",
+              "Erase/Copy set to _kBeam01",
+              "Alignment Dependency logic enabled"
+            ]
+          },
+          {
+            "trigger": "Depth Input (dD)",
+            "effect": "Overrides default depth calculation",
+            "cascade": [
+              "Drill/Slot length set to input value",
+              "If input is 0, length defaults to beam thickness (through)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Drill",
+            "description": "A cylindrical hole through the beam. Generated from 'Cylinder' MassElements.",
+            "appliedTo": "The specific beam selected and linked to the MassElement."
+          },
+          {
+            "type": "Slot",
+            "description": "A rectangular blind or through milling operation. Generated from 'Box' MassElements when 'Slot' is selected as the tool type.",
+            "appliedTo": "The specific beam selected and linked to the MassElement."
+          },
+          {
+            "type": "BeamCut",
+            "description": "A volumetric cut removing material from the beam. Generated from 'Box' MassElements when 'BeamCut' is selected.",
+            "appliedTo": "The specific beam selected and linked to the MassElement."
+          },
+          {
+            "type": "Cut (Auto-Trim)",
+            "description": "An orthogonal cut applied to the Male beam in a T-Type connection to trim it against the Female beam based on the stretching plane.",
+            "appliedTo": "Beam[0] (Male Beam) in T-Type configurations."
+          }
+        ]
+      },
+      "tokens_used": 8944,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User executes hsbMassElementTool command.",
+          "2. Dialog displays prompting for 'Connection Type' (E-Type, T-Type, O-Type).",
+          "3. [Conditional] User selects Beams based on Connection Type.",
+          "4. User selects MassElements to serve as tool templates.",
+          "5. User selects a Beam to apply the selected MassElements to (Repeated loop if selecting multiple groups).",
+          "6. User defines 'Depth' for the operation (0 = through beam).",
+          "7. Script sets Reference Point (Pt0) based on Connection Type (Input vs MassElement Center).",
+          "8. Script calculates geometry and inserts Instance.",
+          "9. [Recalculation] Script validates inputs, applies Auto-Cuts (if T-Type), and processes Alignment Dependencies.",
+          "10. Script generates Drill/Slot/BeamCut tools and adds them to the linked Beams."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Selection of Connection Type",
+            "path1": {
+              "name": "E-Type (Single Beam)",
+              "steps": [
+                "Prompt: Select Beam(s) (Multi-select allowed).",
+                "Skip 'Stretching Plane' prompt.",
+                "Set Reference Point (_Pt0) to the center of the main MassElement.",
+                "Set 'Erase and Copy' to depend on the primary beam."
+              ]
+            },
+            "path2": {
+              "name": "T-Type (Male/Female)",
+              "steps": [
+                "Prompt: Select Male Beam (Single).",
+                "Prompt: Select Female Beam(s) (Multi-select).",
+                "Prompt: Select point on stretching plane.",
+                "Calculate and apply automatic orthogonal Cut to Male Beam.",
+                "Set Reference Point (_Pt0) to user input.",
+                "Enable Alignment Dependency logic."
+              ]
+            },
+            "path3": {
+              "name": "O-Type (Other)",
+              "steps": [
+                "Skip initial Beam selection prompts.",
+                "During MassElement selection loop, prompt for Target Beam per element.",
+                "Set Reference Point (_Pt0) to the center of the MassElement."
+              ]
+            }
+          },
+          {
+            "condition": "MassElement Shape Type",
+            "path1": {
+              "name": "Cylinder",
+              "steps": [
+                "Restrict Tool Type to 'Drill'.",
+                "Use Cylinder Radius for Drill diameter.",
+                "Project axis to closest beam edge if necessary."
+              ]
+            },
+            "path2": {
+              "name": "Box",
+              "steps": [
+                "Allow Tool Type 'BeamCut' or 'Slot'.",
+                "Use Box dimensions (Width/Depth/Height) for tool volume.",
+                "If 'Slot', use Height as depth or prompt for depth."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "(None - Silent failure)",
+            "recovery": "Script automatically erases the duplicate instance and returns to prevent double execution."
+          },
+          {
+            "check": "Valid Beam Selection per Connection Type",
+            "errorMessage": "invalid selection set. Tool will be deleted",
+            "recovery": "User must restart the command and ensure they select at least 1 beam for E-Type or 2 beams for T-Type."
+          },
+          {
+            "check": "Existence of Valid MassElements",
+            "errorMessage": "(None - Silent deletion)",
+            "recovery": "Script erases instance if no MassElements (Cylinders or Boxes) are selected in the PrEntity loop."
+          },
+          {
+            "check": "MassElement Shape compatibility with Tool Type",
+            "errorMessage": "Logic enforced via Context Menu prompts (Cylinder prompts for Drills, Box prompts for BeamCut/Slot).",
+            "recovery": "User cannot select incompatible shapes due to filtered prompts (e.g., 'Add Drill' only processes Cylinders)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Add/Remove Drills",
+            "how": "Right-click Context Menu -> Add/Remove Drills",
+            "effect": "Prompts selection of Cylindrical MassElements. Toggles their presence in the tool list (Removes if exists, Adds if new)."
+          },
+          {
+            "action": "Add/Remove BeamCut",
+            "how": "Right-click Context Menu -> Add/Remove Beamcut",
+            "effect": "Prompts selection of Box MassElements. Toggles BeamCut tools based on Box geometry."
+          },
+          {
+            "action": "Add/Remove Slot",
+            "how": "Right-click Context Menu -> Add/Remove Slot",
+            "effect": "Prompts selection of a Box MassElement. Toggles Slot tool and prompts for specific depth."
+          },
+          {
+            "action": "Add Alignment Dependency",
+            "how": "Right-click Context Menu -> Add/Remove Alignment Dependency",
+            "effect": "Links selected MassElements to a specific beam. If the beam moves or rotates, the MassElements transform automatically to maintain relative position."
+          },
+          {
+            "action": "Move/Rotate MassElements",
+            "how": "Grip Edit / Standard CAD Move/Rotate",
+            "effect": "Since script runs `_bOnRecalc` on entity change, the generated tools update their position/size to match the moved MassElement geometry."
+          }
+        ]
+      },
+      "tokens_used": 10524,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbMassElementTool\n\n## Overview\nThis script generates machining tools (Drills, Slots, and BeamCuts) on timber beams by using MassElements (Cylinders or Boxes) as 3D geometric templates. It automates the creation of connections based on the size and position of the selected MassElements.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for selecting 3D beams and MassElements. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required Entities**: `GenBeam` (Timber beams) and `MassElement` (Cylinders or Boxes).\n- **Minimum Beam Count**: \n  - 1 Beam for **E-Type** connections.\n  - 2 Beams (1 Male, 1 Female) for **T-Type** connections.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbMassElementTool.mcr`\n\n### Step 2: Define Connection Type\n```\nDialog Box: Select Connection Type\nAction: Choose E-Type, T-Type, or O-Type and click OK.\n```\n- **E-Type**: Single beam connection (End connection).\n- **T-Type**: Intersection connection (Male/Female beams).\n- **O-Type**: Other (Manual selection).\n\n### Step 3: Select Beams\n```\nCommand Line: Select Beams <Select entities>:\nAction: Click the beam(s) to be machined.\n```\n- *If E-Type*: Select the primary beam(s).\n- *If T-Type*: Select the **Male beam** first, then the **Female beam(s)**.\n- *If O-Type*: This step is skipped initially.\n\n### Step 4: Select MassElements\n```\nCommand Line: Select MassElements <Select entities>:\nAction: Select the Cylinders (for drills) or Boxes (for cuts/slots) that define the tool geometry.\n```\n*Note: You can select multiple MassElements.*\n\n### Step 5: Assign Target Beam (if applicable)\n```\nCommand Line: Select Beam to apply MassElements to:\nAction: Click the specific beam where the selected MassElements should create tools.\n```\n*Note: This step repeats if you selected multiple MassElements in Step 4.*\n\n### Step 6: Define Depth\n```\nCommand Line: Enter Depth <0>:\nAction: Enter a value in mm or press Enter for 0.\n```\n- **0**: Creates a through-hole/cut (penetrates the entire beam).\n- **>0**: Creates a blind hole/cut to the specified depth.\n\n### Step 7: Set Reference Point (T-Type Only)\n```\nCommand Line: Select point on stretching plane:\nAction: Click a point in 3D space to define where the Male beam should be cut.\n```\n*Note: This step is skipped for E-Type and O-Type connections.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Connection Type** | Dropdown | E-Type | Defines the structural behavior. E-Type (Single), T-Type (Male/Female with auto-trim), or O-Type (Manual). |\n| **Tool Type** | Dropdown | Drill | Specifies the machining operation. Options: Drill, BeamCut, Slot. (Limited by MassElement shape). |\n| **Depth (dD)** | Number | 0 | The depth of the tool in millimeters. A value of 0 indicates a through operation. |\n| **Pt0 (Ref Point)** | Coordinate | Calculated | Reference point for alignment. In T-Type, this determines the intersection plane location. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Add/Remove Drills** | Prompts you to select Cylindrical MassElements. Adds them as Drills if new, or removes them if they already exist. |\n| **Add/Remove Beamcut** | Prompts you to select Box MassElements. Adds/Removes volumetric cuts based on the Box dimensions. |\n| **Add/Remove Slot** | Prompts you to select a Box MassElement. Adds/Removes a Slot tool and allows depth adjustment. |\n| **Add/Remove Alignment Dependency** | Links selected MassElements to a specific beam. The MassElements will move/rotate automatically if the beam is modified. |\n\n## Settings Files\n- **Filename**: N/A\n- **Location**: N/A\n- **Purpose**: This script relies on direct user input and standard entity properties rather than external settings files.\n\n## Tips\n- **Through Holes**: Always enter `0` for depth if you want the tool to cut completely through the beam cross-section.\n- **Shape Matters**: Use **Cylinders** for Drills and **Boxes** for Slots or BeamCuts. The script restricts tools based on shape.\n- **T-Type Auto-Trim**: In T-Type connections, the script automatically calculates and applies a cut to the Male beam to fit against the Female beam. Ensure the Reference Point (Step 7) is picked accurately on the intersection face.\n- **Dynamic Updates**: Use the \"Add Alignment Dependency\" right-click option if you expect the beams to move. This keeps the MassElements (and thus the tools) attached to the beams during updates.\n\n## FAQ\n- **Q: Why can't I select a \"Slot\" tool when using a Cylinder?**\n  - **A:** Slots are only compatible with Box-shaped MassElements. Cylinders are strictly used for Drills.\n- **Q: What happens if I enter a depth greater than the beam size?**\n  - **A:** The tool will generate a blind hole/cut. It will not continue through the other side of the beam unless the depth is 0.\n- **Q: How do I fix a tool if I moved the MassElement by mistake?**\n  - **A:** Simply use the standard AutoCAD **Move** or **Rotate** commands on the MassElement. The script will recalculate and update the tool position automatically when you regenerate the drawing."
+      },
+      "tokens_used": 6511,
+      "error": null
+    }
+  }
+}

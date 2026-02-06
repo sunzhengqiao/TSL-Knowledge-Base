@@ -1,0 +1,265 @@
+{
+  "filename": "SIP-MPM.mcr",
+  "status": "completed",
+  "total_tokens": 50108,
+  "processing_time": 401.05354166030884,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 1,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "26.02.2025",
+            "author": "Thorsten Huck",
+            "changes": "HSB-23420 painter based grouping supported"
+          },
+          {
+            "version": "1.0",
+            "date": "07.05.2024",
+            "author": "Thorsten Huck",
+            "changes": "HSB-21851 initial version"
+          }
+        ],
+        "settingsFiles": [
+          "SIP-MPM.xml"
+        ],
+        "dependencies": []
+      },
+      "tokens_used": 8383,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script operates on 'MasterPanel' and 'Sip' entities using 3D coordinate systems (_XW, _YW, _ZW) and explicitly collects entities from '_kModelSpace' (Line: Entity entChilds[] = Group().collectEntities(true, ChildPanel(), _kModelSpace);). No sd_* prefixes, Viewport interactions, or drawing view generation logic typical of Paper Space/Shop Drawing scripts were found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sip",
+            "ChildPanel",
+            "MasterPanel"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing structural panels to be nested or grouped.",
+          "requiredSettings": [
+            "SIP-MPM.xml"
+          ]
+        }
+      },
+      "tokens_used": 5836,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select master panels|",
+              "condition": "_bOnRecalc && _kExecuteKey == \"|Add Stock Sizes|\"",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getString",
+              "promptOriginal": "|Are you sure to overwrite existing settings?| [|No|]/[|Yes|]",
+              "condition": "_bOnRecalc && _kExecuteKey == \"|Export Settings|\" && file exists",
+              "required": false
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "|Add Stock Sizes|",
+            "handler": "sTriggerAddStockSize",
+            "action": "Prompts user to select MasterPanels to add their dimensions to the internal stock list.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Clone Stock Sizes|",
+            "handler": "sTriggerCloneStockSizes",
+            "action": "Copies stock sizes from the first style entry to all other MasterPanel styles.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Import Settings|",
+            "handler": "sTriggerImportSettings",
+            "action": "Loads style and size settings from the external XML file.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Export Settings|",
+            "handler": "sTriggerExportSettings",
+            "action": "Saves current style and size settings to the external XML file.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "SIP-MPM.xml",
+            "searchPaths": [
+              "_kPathHsbCompany\\SIP\\"
+            ],
+            "purpose": "Stores MasterPanel styles and associated stock size dimensions (Length/Width).",
+            "required": false
+          }
+        ]
+      },
+      "tokens_used": 9755,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Groups and nests individual Structural Insulated Panels (SIPs) into larger Master Panels based on available stock sizes and sorting rules.\",\n    \"category\": \"Manufacturing / Optimization\",\n    \"typicalUseCase\": \"Used during the production phase to optimize material usage by arranging designed wall/floor panels onto raw Master Panel sheets for CNC cutting or transport.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"Stock Size (Length/Width)\",\n      \"technicalDefault\": \"Defined in SIP-MPM.xml mapStyles\",\n      \"businessMeaning\": \"The dimensions of the raw material Master Panels available in inventory. The script attempts to fit the designed Sips into these sizes.\",\n      \"validRange\": \"1000mm - 16000mm (typical manufacturing limits)\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Determines the bounding box of the generated Master Panels. Invalid sizes will cause nesting failures or panels to be left ungrouped.\"\n    },\n    {\n      \"name\": \"Painter Definition (sPainterDef)\",\n      \"technicalDefault\": \"String variable used in SortByPainter\",\n      \"businessMeaning\": \"The attribute-based rule used to sort and group the Sips before nesting (e.g., grouping by length, width, or custom attributes).\",\n      \"validRange\": \"Valid hsbCAD Painter string (e.g., '@(Length)')\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Controls the order and grouping of panels within the Master Panel, affecting cut patterns and potentially material waste.\"\n    },\n    {\n      \"name\": \"Sort Direction (sSortDirection)\",\n      \"technicalDefault\": \"Ascending/Descending (kAscending/kDescending)\",\n      \"businessMeaning\": \"The sorting order for the panels during the nesting process.\",\n      \"validRange\": \"Ascending or Descending\",\n      \"unit\": \"N/A\",\n      \"affectsOutput\": \"Influences nesting efficiency; typically 'Descending' is used to place larger parts first to minimize waste.\"\n    },\n    {\n      \"name\": \"MasterPanel Style\",\n      \"technicalDefault\": \"Retrieved from selected entity properties\",\n      \"businessMeaning\": \"The specific catalog style of the Master Panel to be generated, which maps to specific stock sizes in the settings.\",\n      \"validRange\": \"Any valid MasterPanel Style in the hsbCAD catalog\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Selects which set of Stock Sizes (Length/Width) to use for the nesting operation.\"\n   "
+      },
+      "tokens_used": 10215,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Execution/Recalculation triggered.",
+          "2. Load configuration settings from 'SIP-MPM.xml' or internal map.",
+          "3. Check for specific Execution Keys (_kExecuteKey) triggered via Context Menu.",
+          "4. [Branch] If no specific key, proceed to Main Nesting Routine (Mode 99).",
+          "5. Main Routine: Collect all Sip entities from the current context.",
+          "6. Sort Sips using 'SortByPainter' based on Painter Definition (e.g., Length, Width, attribute) and Sort Direction (Ascending/Descending).",
+          "7. Filter Sips: Remove Sips that already have an associated ChildPanel ('GetSipsNoChilds').",
+          "8. Generate PlaneProfiles (geometry) for the remaining Sips.",
+          "9. Calculate Flattened Transformations (Nesting) based on stock sizes and panel profiles.",
+          "10. Draw/Visualize the resulting nested layout and labels in Model Space."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User executes 'Export Settings' and the settings file already exists at the target path.",
+            "path1": {
+              "name": "Overwrite Confirmation",
+              "steps": [
+                "Prompt user: 'Are you sure to overwrite existing settings? [No]/[Yes]'",
+                "If user inputs 'Yes' (or 'Y'), proceed to write file.",
+                "If user inputs 'No' (or 'N'), cancel export operation."
+              ]
+            },
+            "path2": {
+              "name": "New File",
+              "steps": [
+                "Target file does not exist.",
+                "Write settings directly to XML file without confirmation prompt."
+              ]
+            }
+          },
+          {
+            "condition": "Validation of Painter Definition during sorting routine.",
+            "path1": {
+              "name": "Invalid Painter",
+              "steps": [
+                "Check if PainterDefinition is valid.",
+                "Check if Painter type is 'Panel' or 'GenBeam'.",
+                "If invalid: Report message 'Painter invalid: [definition]' or 'Type of Painter Definition invalid'.",
+                "Skip sorting process and continue with unsorted list."
+              ]
+            },
+            "path2": {
+              "name": "Valid Painter",
+              "steps": [
+                "Filter Sips based on Painter rules.",
+                "Generate tags for grouping (e.g., resolving Length/Width tokens).",
+                "Sort Sip array based on generated tags and Direction."
+              ]
+            }
+          },
+          {
+            "condition": "Availability of 'Clone Stock Sizes' context menu item.",
+            "path1": {
+              "name": "Available",
+              "steps": [
+                "Check if internal map contains exactly 1 style entry.",
+                "Check if Catalog contains more than 1 MasterPanelStyle.",
+                "Add trigger to context menu."
+              ]
+            },
+            "path2": {
+              "name": "Hidden",
+              "steps": [
+                "Conditions not met.",
+                "Menu item is not added."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Painter Definition Syntax and Type",
+            "errorMessage": "|Painter invalid|: [string] or |Type of Painter Definition invalid, unexpected type:| [type]",
+            "recovery": "Ensure the Painter Definition string (property or variable) is a valid hsbCAD Painter string for Panels or GenBeams."
+          },
+          {
+            "check": "File Write Permissions (Export)",
+            "errorMessage": "|Failed to write to| [filepath]",
+            "recovery": "Check folder permissions and ensure the target directory (_kPathHsbCompany\\SIP\\) exists."
+          },
+          {
+            "check": "MasterPanel Selection (Add Stock Sizes)",
+            "errorMessage": "None explicit in code, relies on PrEntity success.",
+            "recovery": "User must select valid MasterPanel entities at the command prompt."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Add Stock Sizes",
+            "how": "Right-click script instance -> Context Menu -> |Add Stock Sizes|",
+            "effect": "Prompts selection of MasterPanels. Extracts Style, Length, and Width from selection, then adds these dimensions to the script's internal stock list map."
+          },
+          {
+            "action": "Clone Stock Sizes",
+            "how": "Right-click script instance -> Context Menu -> |Clone Stock Sizes|",
+            "effect": "Copies the stock size definitions from the first style entry in the settings to all other MasterPanel styles found in the catalog."
+          },
+          {
+            "action": "Import Settings",
+            "how": "Right-click script instance -> Context Menu -> |Import Settings|",
+            "effect": "Reloads the Style and Stock Size configuration from the external SIP-MPM.xml file, overwriting current in-memory settings."
+          },
+          {
+            "action": "Export Settings",
+            "how": "Right-click script instance -> Context Menu -> |Export Settings|",
+            "effect": "Saves the current in-memory Style and Stock Size configuration to the external SIP-MPM.xml file for future use or sharing."
+          }
+        ]
+      },
+      "tokens_used": 9929,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# SIP-MPM\n\n## Overview\nThis script automates the grouping and nesting of individual Structural Insulated Panels (SIPs) into larger Master Panels. It calculates optimal layouts based on defined stock sizes and sorting rules to prepare panels for manufacturing or CNC cutting.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script processes Sip entities in the 3D model. |\n| Paper Space | No | Not intended for layout views or shop drawings. |\n| Shop Drawing | No | Does not generate 2D drawings directly. |\n\n## Prerequisites\n- **Required Entities**: `Sip` entities must exist in the drawing.\n- **Required Settings**: `SIP-MPM.xml` (Optional, but recommended for managing stock sizes).\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command**: `TSLINSERT` (or insert via the hsbCAD toolbar)\n**Action**: Select `SIP-MPM.mcr` from the file list and click **Open**.\n\n### Step 2: Automatic Processing\n**Action**: Upon insertion, the script automatically scans the Model Space for all available `Sip` entities. It filters out panels that are already grouped (ChildPanels) and proceeds to nest the remaining panels into Master Panels based on the current settings.\n\n### Step 3: Review Results\n**Action**: The script generates the nested layout in Model Space. Verify that the Sips are correctly grouped into the Master Panels and that the labels are visible.\n\n## Properties Panel Parameters\n*Note: This script does not expose direct user-editable properties in the AutoCAD Properties Palette. Configuration is handled via the Settings File and Right-Click Menu.*\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | No OPM properties exposed. |\n\n## Right-Click Menu Options\nRight-click the script instance in the drawing to access the following options:\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Add Stock Sizes** | Prompts the user to select existing MasterPanels. <br> **Command Line**: `Select master panels` <br> *Action*: Select panels in the drawing to extract their dimensions (Style, Length, Width) and add them to the internal stock list. |\n| **Clone Stock Sizes** | Copies the stock size definitions from the first style entry in the configuration to all other MasterPanel styles found in the catalog. |\n| **Import Settings** | Reloads the Style and Stock Size configuration from the external `SIP-MPM.xml` file. |\n| **Export Settings** | Saves the current in-memory Style and Stock Size configuration to the `SIP-MPM.xml` file. <br> **Command Line**: `Are you sure to overwrite existing settings? [No]/[Yes]` (Only if file exists). <br> *Action*: Type `Y` to overwrite or `N` to cancel. |\n\n## Settings Files\n- **Filename**: `SIP-MPM.xml`\n- **Location**: `_kPathHsbCompany\\SIP\\` (Your company hsbCAD folder).\n- **Purpose**: Stores the mapping between MasterPanel Styles and their specific Stock Size dimensions (Length/Width).\n\n## Tips\n- **Update Stock Sizes**: Use the **Add Stock Sizes** context menu option to quickly populate your stock list by selecting representative MasterPanels from an existing project.\n- **Backup Config**: Use **Export Settings** frequently to save your optimized stock configurations to the XML file.\n- **Sorting**: The script uses a \"Painter Definition\" to sort panels before nesting. Ensure your panels have consistent properties (like Length or Width) for the best nesting efficiency.\n\n## FAQ\n- **Q: Why are some panels not being nested by the script?**\n  **A**: The script filters out Sips that already have an associated ChildPanel. Also, ensure the panel dimensions do not exceed the maximum Stock Sizes defined in your settings.\n\n- **Q: How do I change the sheet material sizes used for nesting?**\n  **A**: Use the **Add Stock Sizes** option to select a panel with the desired dimensions, or manually edit the `SIP-MPM.xml` file and use **Import Settings**.\n\n- **Q: Can I undo the nesting process?**\n  **A**: Yes, you can use the standard AutoCAD `UNDO` command to revert the script execution, which will remove the generated MasterPanels and ChildPanels."
+      },
+      "tokens_used": 5990,
+      "error": null
+    }
+  }
+}

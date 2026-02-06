@@ -15,7 +15,7 @@ from config import (
     USE_CODING_ENDPOINT,
     MAX_RETRIES,
     RETRY_DELAY,
-    MAX_TOKENS,
+    MAX_OUTPUT_TOKENS,
     TEMPERATURE
 )
 
@@ -51,7 +51,7 @@ class GLMClient:
         self,
         user_message: str,
         system_message: str = "You are a helpful assistant specialized in analyzing TSL scripts for hsbCAD.",
-        max_tokens: int = MAX_TOKENS,
+        max_tokens: int = MAX_OUTPUT_TOKENS,
         temperature: float = TEMPERATURE
     ) -> GLMResponse:
         """

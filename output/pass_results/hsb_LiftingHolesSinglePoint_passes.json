@@ -1,0 +1,167 @@
+{
+  "filename": "hsb_LiftingHolesSinglePoint.mcr",
+  "status": "completed",
+  "total_tokens": 35969,
+  "processing_time": 562.5952377319336,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7151,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "PrEntity selects Element(); Code casts to ElementWallSF; Uses assignToElementGroup(el, TRUE, 0, 'I'); No _Viewport, sd_ prefix, or Multipage patterns found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWallSF",
+            "GenBeam",
+            "Beam (Specifically Top Plates: _kSFTopPlate, _kTopPlate, _kSFAngledTPLeft, _kSFAngledTPRight)"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (Element context)",
+          "requiredSettings": [
+            "Materials.xml located in _kPathHsbCompany\\Abbund\\",
+            "Script 'hsbCenterOfGravity' must be accessible for mapIO call"
+          ]
+        }
+      },
+      "tokens_used": 5092,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "On Insert (if _kExecuteKey is empty)",
+            "title": null,
+            "dataSource": "Script Properties (dEdgeOffset, nColor)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dEdgeOffset",
+            "type": "PropDouble",
+            "displayName": "Min Distance from edge of the wall",
+            "defaultValue": "600",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "nColor",
+            "type": "PropInt",
+            "displayName": "Color",
+            "defaultValue": "4",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": [
+          {
+            "filename": "Materials.xml",
+            "searchPaths": [
+              "_kPathHsbCompany\\Abbund\\"
+            ],
+            "purpose": "Provides Material and Density data for weight calculations",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 4536,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Calculates the Center of Gravity (CoG) of a wall panel and generates visual markers on the face to indicate optimal lifting point positions, ensuring a safe offset from the wall edges.",
+          "category": "ShopDrawing / Visualization",
+          "typicalUseCase": "Used during detailing to visualize where lifting holes or lifting straps should be placed on a wall panel to balance the load during transport or installation."
+        },
+        "parameters": [
+          {
+            "name": "dEdgeOffset",
+            "technicalDefault": "600",
+            "businessMeaning": "The minimum safety distance required from the left or right edge of the wall panel to the center of a lifting hole. This prevents the hole from being too close to the end grain, which could cause the timber to split under load.",
+            "validRange": "100 - 1500",
+            "unit": "mm",
+            "affectsOutput": "Moves the calculated lifting points inward if they fall within this distance from the wall ends. It effectively reduces the spread of the lifting points if the Center of Gravity is close to an edge."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "4",
+            "businessMeaning": "The color used to draw the lifting markers in the CAD model and exported drawings (e.g., DXA/DXF).",
+            "validRange": "1 - 255 (AutoCAD Color Index)",
+            "unit": "Color Index",
+            "affectsOutput": "Changes the visual appearance of the lifting point markers for visibility or layer differentiation."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Calculated distance from Center of Gravity to nearest edge is less than dEdgeOffset",
+            "effect": "The lifting point spread is compressed to ensure the minimum edge offset is respected.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Visual Marker (PLine)",
+            "description": "Draws a 'V' or chevron shape on the front face of the wall to indicate the location of the lifting hole calculated on the top plate.",
+            "appliedTo": "Wall Element Front Face (projected from Top Plate positions)"
+          }
+        ]
+      },
+      "tokens_used": 6356,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"1. User launches script 'hsb_LiftingHolesSinglePoint.mcr'.\",\n    \"2. [Conditional] If _kExecuteKey is empty (manual launch), show Dynamic Dialog for properties.\",\n    \"3. Prompt user to select a set of elements (PrEntity).\",\n    \"4. User selects Element(s) (Casts to ElementWallSF).\",\n    \"5. [Loop] For each selected element, spawn a new script instance attached to that element via dbCreate, passing dEdgeOffset.\",\n    \"6. Original insertion instance erases itself.\",\n    \"7. [Per Element Execution] Attached instance validates Element (bIsValid).\",\n    \"8. Script attempts to locate and load 'Materials.xml' from _kPathHsbCompany\\\\Abbund\\\\.\",\n    \"9. [Conditional] If Materials.xml missing or empty, report error and erase instance.\",\n    \"10. Script calls external script 'hsbCenterOfGravity' via mapIO to calculate the panel's weight and Center of Gravity (CoG).\",\n    \"11. Script determines the wall's min and max X-extents (left/right edges).\",\n    \"12. Script filters beams to identify Top Plates (_kSFTopPlate, etc.).\",\n    \"13. Calculate optimal spread: Half the distance from CoG to the nearest edge (dHalfMinDistance).\",\n    \"14. [Conditional Branch] Check if calculated spread is too small (dHalfMinDistance < dEdgeOffset).\",\n    \"15. Calculate two potential lifting points along the X-axis relative to CoG.\",\n    \"16. [Per Point] Attempt to project point onto a Top Plate envelope along Y-axis.\",\n    \"17. [Conditional Branch] Determine valid drilling position based on intersection success.\",\n    \"18. Project valid drilling position to the front face of the wall.\",\n    \"19. Draw visual markers ('V' shape) on the wall face at calculated locations.\",\n    \"20. Assign script to Element Group 'I'.\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Calculated spread (dHalfMinDistance) vs Minimum Edge Offset (dEdgeOffset)\",\n      \"path1\": {\n        \"name\": \"Safe Spread\",\n        \"steps\": [\n          \"dHalfMinDistance >= dEdgeOffset\",\n          \"Lifting points are placed at CoG ± (dMinDist * 0.5).\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Clamped Spread\",\n        \"steps\": [\n          \"dHalfMinDistance < dEdgeOffset\",\n          \"Spread is reduced to ensure minimum distance from edge.\",\n          \"Lifting points placed at CoG ± (dMinDist - dEdgeOffset).\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Intersection of lifting ray with Top Plate geometry\",\n      \"path1\": {\n        \"name\": \"Direct Intersection\",\n        \"steps\": [\n          \"Line from calculated point along Y-axis hits a Top Plate envelope.\",\n          \"Drilling point is set to the intersection point.\"\n        ]\n      },\n    {\n      \"name\": \"Closest Plate Fallback\",\n      \"steps\": [\n        \"No intersection found (point falls 'outside' plates or geometry is non-planar).\",\n        \"Finds the Top Plate with the closest center point.\",\n        \"Projects drilling point onto that specific plate's center plane.\"\n      ]\n    }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"Element Type Validity\",\n      \"errorMessage\": \"(Implicit) Script fails if selected entity is not a valid ElementWallSF.\",\n      \"recovery\": \"Select a valid timber wall element.\"\n    },\n    {\n      \"check\": \"Materials.xml Existence\",\n      \"errorMessage\": \"\\\"\\\\nhsbMaterial Table not found, please set the right company folder and rerun this command.\\\"\",\n      \"recovery\": \"Ensure _kPathHsbCompany points to a valid folder containing the 'Abbund\\\\Materials.xml' file.\"\n    },\n    {\n      \"check\": \"Materials.xml Content\",\n      \"errorMessage\": \"(Implicit) Script erases instance if Material data is empty.\",\n      \"recovery\": \"Verify Materials.xml contains valid 'MATERIAL[]' map with 'DENSITY' entries.\"\n    },\n    {\n      \"check\": \"Top Plate Presence\",\n      \"errorMessage\": \"(Implicit) No lifting holes generated.\",\n      \"recovery\": \"Ensure the wall element contains beams of types _kSFTopPlate, _kTopPlate, _kSFAngledTPLeft, or _kSFAngledTPRight.\"\n    }\n  ],\n  \"postInsertionActions\": [\n    {\n      \"action\": \"Adjust Offset/Color\",\n      \"how\": \"OPM (AutoCAD Properties Palette)\",\n      \"effect\": \"Changing 'dEdgeOffset' recalculates lifting point positions; changing 'nColor' updates marker color.\"\n    },\n    {\n      \"action\": \"Geometry Update\",\n      \"how\": \"Modify Wall Element (Add/Remove beams, resize)\",\n      \"effect\": \"Script recalculation triggers automatically; CoG and lifting positions update to match new geometry.\"\n    }\n  ]\n}\n```"
+      },
+      "tokens_used": 7617,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_LiftingHolesSinglePoint.mcr\n\n## Overview\nThis script calculates the Center of Gravity (CoG) of a wall panel and generates visual markers on the front face to indicate optimal lifting point positions, ensuring a safe offset from the wall edges to prevent splitting.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in the model context on wall elements. |\n| Paper Space | No | Not supported in layout views. |\n| Shop Drawing | No | This is a detailing/modeling script, not a drawing generation script. |\n\n## Prerequisites\n- **Required Entities**: `ElementWallSF` (Standard Wall).\n- **Minimum Beams**: 1 (Must include Top Plates: `_kSFTopPlate`, `_kTopPlate`, `_kSFAngledTPLeft`, or `_kSFAngledTPRight`).\n- **Required Settings Files**:\n  - `Materials.xml` located in `_kPathHsbCompany\\Abbund\\`.\n  - Script `hsbCenterOfGravity` must be accessible.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse and select `hsb_LiftingHolesSinglePoint.mcr`.\n\n### Step 2: Configure Properties (Optional)\n```\nCommand Line: [Dialog appears]\nAction: Set the initial \"Min Distance from edge\" and \"Color\" if prompted. Click OK to proceed.\n```\n*Note: This step may be skipped depending on your system configuration.*\n\n### Step 3: Select Wall Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the Wall Element(s) you wish to calculate lifting points for. Press Enter to finish selection.\n```\n\n### Step 4: View Results\nThe script will attach to the elements and draw \"V\" shaped markers on the front face indicating the calculated lifting positions.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Min Distance from edge of the wall | Number | 600 | The minimum safety distance (mm) from the left or right edge of the wall to the center of the lifting hole. |\n| Color | Number | 4 | The AutoCAD color index used to draw the lifting markers. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu options are defined for this script. |\n\n## Settings Files\n- **Filename**: `Materials.xml`\n- **Location**: `_kPathHsbCompany\\Abbund\\`\n- **Purpose**: Provides material density data required to calculate the accurate weight and Center of Gravity (CoG) of the wall panel.\n\n## Tips\n- **Dynamic Updates**: If you modify the wall geometry (e.g., add windows or change studs), the script will automatically recalculate the lifting points to match the new Center of Gravity.\n- **Visualizing Safety**: If the calculated CoG is very close to one edge, increasing the `Min Distance from edge of the wall` parameter will push the lifting points inward to ensure structural safety, though this may reduce the spread between points.\n- **Troubleshooting**: If markers do not appear, ensure the `_kPathHsbCompany` variable is set correctly so the script can find the `Abbund\\Materials.xml` file.\n\n## FAQ\n- **Q: Why didn't the script generate any markers?**\n  A: Ensure the selected element is a valid Wall (`ElementWallSF`) and that it contains recognized Top Plates. Also, verify that `Materials.xml` exists in the specified Company folder.\n\n- **Q: What happens if my wall is too narrow for the calculated spread?**\n  A: The script logic automatically detects if the distance between the lifting points is too small relative to the edge offset. It will \"clamp\" the positions to ensure the minimum edge distance is maintained.\n\n- **Q: Can I change the marker color after insertion?**\n  A: Yes. Select the script instance (or the wall), open the Properties palette (Ctrl+1), and change the \"Color\" integer value (e.g., 1 for Red, 2 for Yellow, etc.)."
+      },
+      "tokens_used": 5217,
+      "error": null
+    }
+  }
+}

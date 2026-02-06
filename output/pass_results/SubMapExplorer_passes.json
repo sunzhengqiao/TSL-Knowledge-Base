@@ -1,0 +1,226 @@
+{
+  "filename": "SubMapExplorer.mcr",
+  "status": "completed",
+  "total_tokens": 19758,
+  "processing_time": 233.27099919319153,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2013,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses `getEntity()` without explicit space arguments or viewport logic. No `sd_`/`Multipage` prefixes or `#Type E` declarations found. It acts as a utility to inspect SubMaps and launch an external executable (`hsbMapExplorer.exe`), typically used in the 3D modeling environment."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Entity (GenBeam, Element, etc.)"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Active space (where entity exists)",
+          "requiredSettings": [
+            "hsbMapExplorer.exe (located at _kPathHsbInstall\\Utilities\\hsbMapExplorer)"
+          ]
+        }
+      },
+      "tokens_used": 3502,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getEntity",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getString",
+              "promptOriginal": "Enter Map Number",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 1931,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A debugging and diagnostic utility used to export internal data maps (SubMaps) from a selected element and view them using an external tool.",
+          "category": "Utility/Debugging",
+          "typicalUseCase": "When a developer or power user needs to inspect the raw data properties, calculations, or custom attributes stored within a specific beam or element to troubleshoot script logic."
+        },
+        "parameters": [
+          {
+            "name": "ent",
+            "technicalDefault": "Entity()",
+            "businessMeaning": "The timber beam or element selected from the drawing that contains the SubMap data to be inspected.",
+            "validRange": "Any valid hsbCAD Entity (GenBeam, Element, etc.)",
+            "unit": "Object",
+            "affectsOutput": "Defines the source of data. The script reads the SubMap keys from this entity to generate the list of available maps for export."
+          },
+          {
+            "name": "stMapIndex",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The numerical index identifying which specific data map (SubMap or SubMapX) to export and open in the external explorer.",
+            "validRange": "Integer >= 0. The maximum value depends on the number of maps found on the selected entity (displayed in the command line).",
+            "unit": "Index",
+            "affectsOutput": "Determines which specific Map object is serialized into a .dxx file and launched in the hsbMapViewer."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects a new Entity",
+            "effect": "The list of available Map indices (valid range for stMapIndex) changes based on the SubMaps present on the new entity.",
+            "cascade": [
+              "stMapIndex"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "ExternalFile",
+            "description": "Generates a temporary .dxx file containing the map data and launches hsbMapExplorer.exe.",
+            "appliedTo": "Local file system (_kPathDwg)"
+          }
+        ]
+      },
+      "tokens_used": 3889,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script inserted (launch command)",
+          "Prompt user to select a single Entity (Beam/Element)",
+          "[Check] Validate if selected entity is valid (bIsValid)",
+          "[Branch] If invalid: Erase instance and terminate script",
+          "If valid: Retrieve all SubMap keys and SubMapX keys from the entity",
+          "Concatenate lists and print enumerated map names to the command line",
+          "Prompt user to 'Enter Map Number' (Index)",
+          "[Check] Validate if user input is not empty",
+          "[Branch] If empty (cancelled): Erase instance and terminate script",
+          "Convert input string to integer (Index)",
+          "[Check] Determine if Index falls within SubMap range or SubMapX range",
+          "[Branch] Retrieve Map object using either ent.subMap() or ent.subMapX()",
+          "Determine output filename (uses map key/name or defaults to script name)",
+          "Serialize Map data to a .dxx file in the current drawing folder",
+          "Launch external utility 'hsbMapExplorer.exe' with the .dxx file path",
+          "Erase script instance",
+          "Script complete"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Entity Selection Validity",
+            "path1": {
+              "name": "Valid Entity",
+              "steps": [
+                "Proceed to scan entity for SubMaps/SubMapXs",
+                "Display list of maps in command line"
+              ]
+            },
+            "path2": {
+              "name": "Invalid/No Entity",
+              "steps": [
+                "eraseInstance()",
+                "Return (Script ends)"
+              ]
+            }
+          },
+          {
+            "condition": "User Input (Map Number)",
+            "path1": {
+              "name": "Input Provided (Number)",
+              "steps": [
+                "Parse string to integer",
+                "Export specific map and launch viewer"
+              ]
+            },
+            "path2": {
+              "name": "Empty Input (User cancelled)",
+              "steps": [
+                "eraseInstance()",
+                "Return (Script ends)"
+              ]
+            }
+          },
+          {
+            "condition": "Map Index Range Check",
+            "path1": {
+              "name": "Index < SubMap count",
+              "steps": [
+                "Retrieve data via ent.subMap(index)"
+              ]
+            },
+            "path2": {
+              "name": "Index >= SubMap count",
+              "steps": [
+                "Retrieve data via ent.subMapX(adjusted index)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Validity",
+            "errorMessage": "(No specific message, but script halts)",
+            "recovery": "Select a valid Entity during the getEntity() prompt."
+          },
+          {
+            "check": "Map Number Input Not Empty",
+            "errorMessage": "(No specific message, but script halts)",
+            "recovery": "Provide a valid integer index when prompted, or press Esc to cancel cleanly."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 4211,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# SubMapExplorer\n\n## Overview\nThis script is a debugging utility that allows you to inspect internal data maps (SubMaps) stored within a specific timber element. It exports the selected data to a file and opens it in an external viewer tool for detailed analysis.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Used primarily in the 3D model to inspect beam or element properties. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | Not used for generating manufacturing drawings. |\n\n## Prerequisites\n- **Required Entities**: Any valid hsbCAD Entity (e.g., GenBeam, Element).\n- **Minimum Beam Count**: 1.\n- **Required Settings**: The external tool `hsbMapExplorer.exe` must be present in the hsbCAD installation folder (`...\\Utilities\\hsbMapExplorer`).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or your assigned shortcut) → Select `SubMapExplorer.mcr` from the file dialog.\n\n### Step 2: Select Element\n```\nCommand Line: Select entity\nAction: Click on the beam or element in the model that you wish to inspect.\n```\n*Note: A list of available data maps (SubMaps) associated with this element will be printed in the command line history (e.g., 0, 1, 2...).*\n\n### Step 3: Enter Map Number\n```\nCommand Line: Enter Map Number\nAction: Type the number (index) corresponding to the specific map you want to view and press Enter.\n```\n*If you wish to cancel, press Enter without typing a number.*\n\n### Step 4: View Data\nThe script will automatically generate a temporary data file (`.dxx`) and launch the `hsbMapExplorer.exe` application to display the contents. The script instance will then remove itself from the drawing.\n\n## Properties Panel Parameters\nThis script does not use Properties Panel parameters. It runs via command line input and erases itself upon completion.\n\n## Right-Click Menu Options\nThis script does not add specific items to the right-click context menu.\n\n## Settings Files\nNo specific settings files (XML) are required for this script. It relies on the internal logic of the selected element and the external executable.\n\n## Tips\n- **Check the Command Line**: After selecting an element, look at the text history (F2 if necessary) to see the list of available map numbers.\n- **Automatic Cleanup**: Do not be alarmed if the script instance disappears immediately after running; this is intended behavior to keep the drawing clean.\n- **Use Cases**: This is primarily used by developers or advanced users to troubleshoot script logic or verify calculated values hidden inside the element's data structure.\n\n## FAQ\n- **Q: Can I edit the data in the viewer?**\n  - A: No, the `hsbMapExplorer` is typically a read-only viewer used for inspection and debugging.\n- **Q: What happens if I enter a number that is not in the list?**\n  - A: The script may fail to find the data or export an empty file. Ensure you select a valid index number displayed in the command line history.\n- **Q: I selected an element but no maps were listed.**\n  - A: This means the selected element does not currently contain any SubMap data structures to inspect. Try a different element."
+      },
+      "tokens_used": 4212,
+      "error": null
+    }
+  }
+}

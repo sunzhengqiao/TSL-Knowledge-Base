@@ -1,0 +1,259 @@
+{
+  "filename": "hsb_RemoveSheetingFromZone.mcr",
+  "status": "completed",
+  "total_tokens": 18538,
+  "processing_time": 421.70724296569824,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "01.03.2012",
+            "author": "Chirag Sawjani (csawjani@itw-industry.com)",
+            "changes": "Release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2680,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select 'ElementWallSF' and iterates through _Element[] to manipulate Sheet entities via dbErase(). It lacks 'sd_' prefixes, Viewport interactions, or the #Type E declaration pattern found in ShopDrawing scripts. The logic targets 3D construction elements."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing Wall Elements with Sheeting",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1445,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select one or More Elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sZones",
+            "type": "PropString",
+            "displayName": "Sheet Zone",
+            "defaultValue": "1",
+            "inputType": "dropdown",
+            "options": [
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "10"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2174,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Removes specific wall sheathing sheets based on a selected zone index.",
+          "category": "Modification/Construction",
+          "typicalUseCase": "Used to delete specific layers or sections of automatically generated wall sheathing (e.g., removing sheeting from the interior side of a wall or specific vertical zones) without deleting the entire wall element."
+        },
+        "parameters": [
+          {
+            "name": "sZones",
+            "technicalDefault": "1",
+            "businessMeaning": "Identifies the specific 'Zone' of sheathing to be removed. In the context of hsbCAD wall elements, zones typically correspond to specific sides of the wall (Positive vs Negative) or vertical/horizontal segments. The selection maps user indices 1-10 to internal zone IDs 1 through 5 (positive face) and -1 through -5 (negative face).",
+            "validRange": "1 to 10",
+            "unit": "Selection (Index)",
+            "affectsOutput": "Controls which set of Sheet entities are selected from the Wall Elements for erasure. Changing this value targets a different physical layer or section of the wall cladding."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Sheet (Geometry Removal)",
+            "description": "The script performs a deletion operation on Sheet entities found within the specified zone index of the selected elements.",
+            "appliedTo": "Selected Wall Elements (ElementWallSF)"
+          }
+        ]
+      },
+      "tokens_used": 3834,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Launch: Instance created (Sequence 80), Units set to mm.",
+          "2. Property Initialization: Map 'sZones' dropdown (1-10) to internal 'nZone' values (1..5, -1..-5).",
+          "3. Insertion Cycle Check: If insertCycleCount > 1, erase instance and exit.",
+          "4. User Prompt (Command Line): PrEntity dialog prompts user to select one or more ElementWallSF entities.",
+          "5. Selection Confirmation: If selection is confirmed, elements are appended to the internal _Element list.",
+          "6. Early Exit: Script returns immediately after insertion logic to await re-execution in calculation phase.",
+          "7. Post-Insertion Execution: Instance re-activated (Not _bOnInsert).",
+          "8. Validation: If no elements exist in _Element list, erase instance and exit.",
+          "9. Iteration Loop: Iterate through each selected Element.",
+          "10. Element Check: If Element is invalid (deleted/corrupted), skip to next element.",
+          "11. Geometry Retrieval: Extract local Coordinate System and Vectors from the Element.",
+          "12. Sheet Retrieval: Query all Sheet entities associated with the specific 'nZone' index.",
+          "13. Deletion: Erase (dbErase) every Sheet found in that zone.",
+          "14. Completion: If calculation finished or erase flag set, script instance self-deletes."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle State (insertCycleCount > 1)",
+            "path1": {
+              "name": "Duplicate Cycle",
+              "steps": [
+                "Detect multiple insert cycles",
+                "Erase instance",
+                "Terminate script"
+              ]
+            },
+            "path2": {
+              "name": "First Cycle",
+              "steps": [
+                "Proceed with showDialogOnce()",
+                "Prompt for Element selection"
+              ]
+            }
+          },
+          {
+            "condition": "User Selection at PrEntity",
+            "path1": {
+              "name": "Selection Made",
+              "steps": [
+                "Append elements to _Element array",
+                "Return (await calculation)"
+              ]
+            },
+            "path2": {
+              "name": "Selection Cancelled",
+              "steps": [
+                "Element array remains empty",
+                "Script proceeds to validation (will self-erase)"
+              ]
+            }
+          },
+          {
+            "condition": "Element Array Validity (_Element.length() == 0)",
+            "path1": {
+              "name": "Valid List",
+              "steps": [
+                "Proceed to Element iteration loop",
+                "Process sheathing removal"
+              ]
+            },
+            "path2": {
+              "name": "Empty List",
+              "steps": [
+                "Erase instance",
+                "Exit"
+              ]
+            }
+          },
+          {
+            "condition": "Element Integrity (el.bIsValid())",
+            "path1": {
+              "name": "Valid Element",
+              "steps": [
+                "Get Coordinate System",
+                "Get Sheets for Zone",
+                "Erase Sheets"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Element",
+              "steps": [
+                "Continue to next element in loop"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Check if selected Elements are of type ElementWallSF.",
+            "errorMessage": "Implicitly handled by PrEntity filter. Non-wall elements cannot be selected.",
+            "recovery": "User must select valid Wall Surface elements."
+          },
+          {
+            "check": "Check if _Element array contains entities after insertion.",
+            "errorMessage": "None visible to user (Silent failure).",
+            "recovery": "User must ensure they select entities when prompted."
+          },
+          {
+            "check": "Check if specific Zone (nZone) contains Sheets.",
+            "errorMessage": "None. Script loops safely regardless of sheet count.",
+            "recovery": "Not applicable."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Zone Parameter",
+            "how": "OPM (Object Properties Palette)",
+            "effect": "Updating 'Sheet Zone' (sZones) via OPM triggers the script logic again, targeting a different set of sheathing (e.g., changing from Zone 1 to Zone 2). The script will erase the new zone's sheets and self-delete."
+          }
+        ]
+      },
+      "tokens_used": 3753,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_RemoveSheetingFromZone.mcr\n\n## Overview\nThis script allows you to selectively remove sheathing (sheeting) from wall elements based on a specific zone index. It is designed to delete specific layers or sections of automatically generated wall cladding (e.g., removing interior sheeting while keeping exterior sheeting) without deleting the structural wall element itself.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D Wall Elements. |\n| Paper Space | No | Not designed for layout views. |\n| Shop Drawing | No | Modifies construction geometry, not drawing views. |\n\n## Prerequisites\n- **Required Entities**: Wall Elements (`ElementWallSF`) that have sheathing/sheets already generated and attached.\n- **Minimum Beams**: 0 (Targets wall elements, not beams).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the command line.\n2.  Select `hsb_RemoveSheetingFromZone.mcr` from the list.\n\n### Step 2: Select Wall Elements\n```\nCommand Line: Select one or More Elements\nAction: Click on the wall elements from which you wish to remove sheathing.\n```\nYou can select multiple walls at once. Press Enter to confirm selection.\n\n### Step 3: Configure Sheeting Zone (Optional)\n1.  Immediately after selecting the walls, the script instance is created.\n2.  Select the script instance (or ensure it is selected) and open the **Properties Palette** (OPM).\n3.  Locate the **Sheet Zone** property.\n4.  Select the zone number corresponding to the sheathing layer you want to delete.\n    *   **1-5**: Typically correspond to specific zones on the primary side of the wall.\n    *   **6-10**: Typically correspond to zones on the opposite side (mapped to negative indices).\n\n### Step 4: Execute Removal\n1.  Trigger a model calculation (if manual) or allow the hsbCAD automatic calculation to proceed.\n2.  The script will identify all sheets within the specified zone for the selected walls and erase them.\n3.  The script instance will automatically delete itself from the drawing once the operation is complete.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Sheet Zone | dropdown | 1 | Select the specific sheathing layer to remove. Options 1-10 map to internal wall zones (1 through 5, and -1 through -5). |\n\n## Right-Click Menu Options\nNone. This script executes based on insertion and property configuration.\n\n## Settings Files\nNone. This script does not use external settings files.\n\n## Tips\n- **Identify Zones First**: If you are unsure which Zone number corresponds to the sheathing you want to remove, check your Wall Element construction setup or generate a test wall to see how sheeting is indexed.\n- **Batch Processing**: You can select as many wall elements as needed during the \"Select Elements\" prompt. The script will process all of them simultaneously.\n- **Script Disappears**: Once the script runs successfully, it removes itself from the drawing. This is normal behavior. To remove sheeting from different zones, you must run the script again.\n\n## FAQ\n- **Q: The script vanished after I ran it. Did it fail?**\n  - A: No. The script is designed to erase itself after it has deleted the target sheathing to keep your drawing clean.\n- **Q: I selected Zone 1 but the interior sheeting is still there.**\n  - A: The interior sheeting might be assigned to a different zone index (e.g., Zone 6 or Zone 2 depending on your wall configuration). Try selecting a different Zone number and running the script again.\n- **Q: Can I undo this?**\n  - A: Yes, you can use the standard AutoCAD `UNDO` command to restore the erased sheathing and the script instance."
+      },
+      "tokens_used": 4652,
+      "error": null
+    }
+  }
+}

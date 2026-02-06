@@ -1,0 +1,282 @@
+{
+  "filename": "hsbElementFilter.mcr",
+  "status": "completed",
+  "total_tokens": 31305,
+  "processing_time": 423.0436055660248,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6146,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script targets 'Element' entities via PrEntity and _Map.getEntityArray. It contains no references to sd_*, Multipage*, or _Viewport. It operates on database objects (dictionaries) and sets up logical filters rather than generating graphical output in layouts. The script erases itself immediately upon execution, indicating it is a data processing script rather than a generator script for a specific space."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (for interactive selection during insert) or Map context (for _bOnMapIO).",
+          "requiredSettings": [
+            "A valid 'ElementTypes' dictionary in the hsbCAD database containing entries with 'Types' string values."
+          ]
+        }
+      },
+      "tokens_used": 2559,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity.go",
+              "promptOriginal": "|Select elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "Insertion (_bOnInsert) when _kExecuteKey is empty or invalid",
+            "title": "Properties",
+            "dataSource": "Instance Properties (OPM)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "enabled",
+            "type": "PropString",
+            "displayName": "Enabled",
+            "defaultValue": "True",
+            "inputType": "dropdown",
+            "options": [
+              "True",
+              "False"
+            ],
+            "category": "Element filter",
+            "description": "Specifies whether the filter is enabled"
+          },
+          {
+            "index": 1,
+            "variable": "operationElementFilter",
+            "type": "PropString",
+            "displayName": "Operation element filter",
+            "defaultValue": "Exclude",
+            "inputType": "dropdown",
+            "options": [
+              "Exclude",
+              "Include"
+            ],
+            "category": "Element filter",
+            "description": "Include or exclude elements meeting the filter criteria. This operation results in a set of elements."
+          },
+          {
+            "index": 2,
+            "variable": "filterElementTypes",
+            "type": "PropString",
+            "displayName": "Filter element types",
+            "defaultValue": "None",
+            "inputType": "dropdown",
+            "options": [
+              "None",
+              "<Dynamic combinations from 'ElementTypes' dictionary>"
+            ],
+            "category": "Element filter",
+            "description": "The criteria used to filter the elements"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6221,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Filters a selection of construction elements (Walls, Roofs, Floors) based on predefined type categories, passing only the specified subset to downstream scripts or processes.",
+          "category": "Utility / Data Processing",
+          "typicalUseCase": "Used in Maps or parent scripts to ensure that only specific element types (e.g., 'Exterior Walls') are processed for detailing, exporting, or further calculation, while ignoring others (e.g., 'Floors' or 'Interior Walls')."
+        },
+        "parameters": [
+          {
+            "name": "enabled",
+            "technicalDefault": "True",
+            "businessMeaning": "Master switch to activate the filter. If False, the script effectively does nothing, allowing all elements to pass through or halting processing depending on the calling context.",
+            "validRange": "True, False",
+            "unit": "N/A",
+            "affectsOutput": "If 'False', the script exits immediately and no filtering is applied to the elements."
+          },
+          {
+            "name": "operationElementFilter",
+            "technicalDefault": "Exclude",
+            "businessMeaning": "Determines the logic of the filter: 'Exclude' removes elements that match the selected types (acting as a blacklist), while 'Include' keeps only elements that match the selected types (acting as a whitelist).",
+            "validRange": "Exclude, Include",
+            "unit": "N/A",
+            "affectsOutput": "Reverses the selection logic, determining whether the filtered types are kept or discarded from the final set."
+          },
+          {
+            "name": "filterElementTypes",
+            "technicalDefault": "None",
+            "businessMeaning": "The specific construction categories to target (e.g., specific wall or floor configurations defined in the project database).",
+            "validRange": "'None' or dynamic combinations of keys found in the 'ElementTypes' database dictionary (e.g., 'Wall_Ext;Roof_Main').",
+            "unit": "N/A",
+            "affectsOutput": "Defines exactly which elements are checked against the Operation logic. Elements with codes matching these entries are affected."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Database Definition",
+            "effect": "The options available in the 'filterElementTypes' dropdown are entirely dependent on the entries present in the 'ElementTypes' dictionary in the hsbCAD database.",
+            "cascade": [
+              "filterElementTypes"
+            ]
+          },
+          {
+            "trigger": "enabled set to 'False'",
+            "effect": "The script ignores the values for 'operationElementFilter' and 'filterElementTypes'.",
+            "cascade": [
+              "operationElementFilter",
+              "filterElementTypes"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Element Collection (Logical)",
+            "description": "A filtered array of Element entities representing the construction elements that met the criteria.",
+            "appliedTo": "The resulting set is passed to the parent script or stored in the Map entity array for subsequent processing steps."
+          }
+        ]
+      },
+      "tokens_used": 5895,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script initialization: Defines filter categories (Element filter) and properties (enabled, operationElementFilter, filterElementTypes).",
+          "2. Database lookup: Retrieves all entry names from the 'ElementTypes' dictionary to construct dynamic filter options (combinations of types).",
+          "3. Property setup: If the script is called via a catalog key (_kExecuteKey), properties are loaded from the catalog.",
+          "4. [Branch on Context: Insert Mode]",
+          "   - Check insert cycle. If > 1, erase instance and exit.",
+          "   - If no valid catalog key, invoke ShowDynamicDialog (Properties Palette) for user input.",
+          "5. [Branch on Context: Map IO Mode]",
+          "   - If valid catalog key exists, load properties from catalog.",
+          "6. Property Resolution: Parse 'enabled' status, 'operationElementFilter' (Exclude/Include), and 'filterElementTypes' string into a usable array of types.",
+          "7. Dictionary Expansion: For each entry in 'filterElementTypes', look up the 'Types' string in the 'ElementTypes' dictionary and expand it into a master list of element codes to filter (e.g., 'Wall_Ext;Roof_Main').",
+          "8. Dependency Check: Report notices if dictionary entries are missing or invalid.",
+          "9. Validation: Check 'enabled' property.",
+          "   - If 'False': Erase instance (Insert) or Return (Map) immediately. No filtering occurs.",
+          "10. Execution (If Enabled):",
+          "   - [Insert Mode]: Prompt user for element selection (PrEntity). Iterate elements.",
+          "   - [Map IO Mode]: Retrieve entity array from Map (_Map.getEntityArray). Iterate entities.",
+          "11. Filtering Logic per Element:",
+          "   - Get element code.",
+          "   - Check code against the master list of types to filter.",
+          "   - If 'Exclude' operation: Discard element if code is found in list.",
+          "   - If 'Include' operation: Discard element if code is NOT found in list.",
+          "   - Keep valid elements.",
+          "12. Finalization:",
+          "   - [Insert Mode]: Add valid elements to _Element array. Erase instance.",
+          "   - [Map IO Mode]: Update Map with the filtered entity array (_Map.setEntityArray)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Mode (_bOnInsert vs _bOnMapIO)",
+            "path1": {
+              "name": "Interactive Insertion",
+              "steps": [
+                "Check insert cycle count (abort if > 1).",
+                "Show Properties Dialog if _kExecuteKey is missing.",
+                "Prompt user to select Elements (PrEntity).",
+                "Filter the selected elements based on user criteria.",
+                "Populate internal _Element array.",
+                "Erase script instance from drawing."
+              ]
+            },
+            "path2": {
+              "name": "Map Integration",
+              "steps": [
+                "Retrieve properties from _kExecuteKey if present.",
+                "Extract 'Elements' array from the Map context.",
+                "Filter the Map elements based on criteria.",
+                "Overwrite the Map 'Elements' array with the filtered result.",
+                "Script remains active in Map context."
+              ]
+            }
+          },
+          {
+            "condition": "Filter Operation (operationElementFilter)",
+            "path1": {
+              "name": "Exclude Logic",
+              "steps": [
+                "Identify elements matching the selected types.",
+                "Remove these elements from the result set.",
+                "Keep all non-matching elements."
+              ]
+            },
+            "path2": {
+              "name": "Include Logic",
+              "steps": [
+                "Identify elements matching the selected types.",
+                "Keep these elements in the result set.",
+                "Remove all non-matching elements."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Availability of 'ElementTypes' dictionary.",
+            "errorMessage": "Element type dictionary is not found or empty.",
+            "recovery": "The script proceeds but will have no effective filter types (beyond 'None') unless the dictionary is populated. The user must configure the hsbCAD database."
+          },
+          {
+            "check": "Existence of specific filter keys in the dictionary.",
+            "errorMessage": "Selected element type filter could not be found in the dictionary. (Reported as notice)",
+            "recovery": "The script continues processing but skips the missing key. User should verify the dictionary entries or select a valid filter option in the properties."
+          },
+          {
+            "check": "Master Switch (Enabled property).",
+            "errorMessage": "None (Script exits silently).",
+            "recovery": "User must change 'Enabled' to 'True' in the properties and re-run or update the script trigger."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 5507,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbElementFilter.mcr\n\n## Overview\nThis script filters construction elements (such as Walls, Roofs, or Floors) based on specific categories defined in your project database. It allows you to automatically include only specific elements or exclude others, streamlining the selection process for detailing or exporting.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Used for interactive selection of elements. |\n| Paper Space | No | Not applicable. |\n| Shop Drawing | No | Not applicable. |\n\n## Prerequisites\n- **Required Entities**: Element entities (e.g., walls, roofs, floors) must exist in the drawing.\n- **Required Settings**: A valid dictionary named `ElementTypes` must exist in the hsbCAD database containing your project's element category definitions.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbElementFilter.mcr` from the list.\n\n### Step 2: Configure Properties\n```\nCommand Line: \nAction: The \"Properties\" dialog box appears automatically.\n```\n- Set **Enabled** to `True` to activate the filter.\n- Choose **Operation element filter**:\n  - Select `Exclude` to remove elements that match your criteria.\n  - Select `Include` to keep *only* elements that match your criteria.\n- Select **Filter element types** from the dropdown list (populated from your database settings, e.g., \"Ext_Walls\").\n\n### Step 3: Select Elements\n```\nCommand Line: Select elements\nAction: Click on the elements in your model you wish to process, then press Enter.\n```\n*Note: If used within a Map (processing script), this step is skipped automatically.*\n\n### Step 4: Execution\n```\nCommand Line: \nAction: The script processes the selection and removes itself from the drawing. The filtered set of elements is passed to the next step.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Enabled | dropdown | True | Activates or deactivates the filter. If False, no filtering occurs. |\n| Operation element filter | dropdown | Exclude | Determines the logic: \"Exclude\" removes matching items; \"Include\" keeps only matching items. |\n| Filter element types | dropdown | None | The specific category to filter by (e.g., Exterior Walls). Options are dynamic based on your project database. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu options are available for this script. |\n\n## Settings Files\n- **Filename**: N/A (Uses internal Database Dictionary)\n- **Location**: hsbCAD Database (`ElementTypes` dictionary)\n- **Purpose**: Stores the mapping between filter names (e.g., \"Ext_Walls\") and the actual element codes they represent.\n\n## Tips\n- **Database Setup**: If the \"Filter element types\" dropdown only shows \"None\", check with your BIM Manager to ensure the `ElementTypes` dictionary is correctly populated in your project database.\n- **Map Usage**: When used inside an hsbCAD Map, this script automatically filters the elements coming from the previous step without needing you to manually select anything.\n- **Script Behavior**: The script instance erases itself immediately after running to keep your drawing clean. It acts as a transient processor.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I inserted it?**\n  - A: This is normal behavior. The script performs its filtering function and then self-destructs to avoid cluttering the drawing.\n- **Q: I selected \"Include\" but nothing happened.**\n  - A: Ensure that the elements you selected actually match the codes defined in the \"Filter element types\" category. If the codes do not match, the result of an \"Include\" operation will be an empty set.\n- **Q: Can I use this to filter beams?**\n  - A: No, this script is specifically designed for hsbCAD Elements (Walls, Roofs, Floors). It will not function on standard GenBeams."
+      },
+      "tokens_used": 4977,
+      "error": null
+    }
+  }
+}

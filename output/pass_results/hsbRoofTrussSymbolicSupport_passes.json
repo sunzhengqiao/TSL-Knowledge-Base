@@ -1,0 +1,341 @@
+{
+  "filename": "hsbRoofTrussSymbolicSupport.mcr",
+  "status": "completed",
+  "total_tokens": 23759,
+  "processing_time": 236.0993947982788,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2828,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No sd_ or Multipage prefixes found. No #Type E or _Viewport usage detected. The script uses getTrussEntity/getEntity which are 3D Model Space selection functions. It manipulates TrussEntity and Entity objects directly in the database context."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "TrussEntity",
+            "ElementWallSF or Beam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2154,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getTrussEntity",
+              "promptOriginal": "Select truss",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getEntity",
+              "promptOriginal": "Select supporting object",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "prStrActive",
+            "type": "PropString",
+            "displayName": "Active",
+            "defaultValue": "Yes",
+            "inputType": "dropdown",
+            "options": [
+              "Yes",
+              "No"
+            ],
+            "category": "Truss support",
+            "description": "Indicates if the support is active."
+          },
+          {
+            "index": 0,
+            "variable": "prDoubleTolerance",
+            "type": "PropDouble",
+            "displayName": "Vertical tolerance",
+            "defaultValue": null,
+            "inputType": "number",
+            "options": [],
+            "category": "Truss support",
+            "description": "The maximum allowed gap between truss and its supporting object."
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3071,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Defines and visualizes a structural support link between a roof truss and a supporting element (wall or beam), validating load transfer geometry and tolerances.",
+          "category": "Structural Connection / Modeling",
+          "typicalUseCase": "When a roof truss is placed on a wall or beam to establish the bearing constraints for structural calculations and drawing generation."
+        },
+        "parameters": [
+          {
+            "name": "prStrActive",
+            "technicalDefault": "Yes",
+            "businessMeaning": "Manually enables or disables the structural support link. If 'Yes', the connection is treated as a valid bearing point. If the supporting object is flagged as non-load-bearing in the model, this option automatically locks to 'No'.",
+            "validRange": "Yes, No",
+            "unit": "String (Boolean)",
+            "affectsOutput": "Controls the display color of the symbolic lines (Green/Red for active, Grey for inactive) and determines if the support is considered valid in downstream analysis."
+          },
+          {
+            "name": "prDoubleTolerance",
+            "technicalDefault": "<System Default (TrussSupport)>",
+            "businessMeaning": "The maximum permissible vertical gap between the bottom of the truss and the top of the supporting object. If the actual distance exceeds this value, the support may be flagged as invalid or inactive.",
+            "validRange": "0 mm to 50 mm",
+            "unit": "mm",
+            "affectsOutput": "Determines the validity of the geometric connection. If the gap exceeds this tolerance, the script may force the support to be inactive or fail to create the link."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Supporting object (Wall/Beam) 'LoadBearing' property is False",
+            "effect": "The 'Active' property (prStrActive) becomes read-only and is forced to 'No', effectively disabling the support.",
+            "cascade": [
+              "prStrActive"
+            ]
+          },
+          {
+            "trigger": "Geometric gap exceeds 'Vertical tolerance'",
+            "effect": "The internal validity check fails, which likely sets the support to inactive regardless of the 'Active' property setting.",
+            "cascade": [
+              "Visual representation (Grey color)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Symbolic Visualization / Logical Link",
+            "description": "Draws colored lines and rectangles representing the connection between the truss and the support. The color indicates status (Active = Green/Red, Inactive = Grey). Does not create physical cuts or drillings.",
+            "appliedTo": "The selected Truss Entity and the selected Support Entity (Wall/Beam)."
+          }
+        ]
+      },
+      "tokens_used": 4459,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution begins; Unit conversion set to mm.",
+          "Check if _bOnInsert is true (inserted from UI).",
+          "[If _bOnInsert] Prompt user to select a Truss.",
+          "[If _bOnInsert] Prompt user to select a Supporting object.",
+          "Validate that exactly two entities exist in the list. If not, erase script instance and exit.",
+          "Cast entities to TrussEntity and Entity; validate they are valid. If not, erase instance and exit.",
+          "Determine if the supporting entity is load-bearing (check ElementWallSF or Beam properties).",
+          "Initialize Properties: 'Active' (Yes/No) and 'Vertical tolerance'.",
+          "Check if supporting entity is non-load-bearing. If true, lock 'Active' property to read-only.",
+          "Calculate if support is Active: 'Active' prop == 'Yes' AND isLoadBearing == true AND geometry validation passes (ts.canHaveValidGeom).",
+          "Attempt to create the logical TrussSupport link. If it fails (e.g., duplicate support), erase instance and exit.",
+          "Set dependencies on Truss and Supporting entity.",
+          "Calculate drawing geometry (truss envelope, alignment offsets).",
+          "Determine colors based on active status (Green/Red for active, Grey for inactive).",
+          "Draw symbolic lines and rectangles on the support object.",
+          "Draw symbolic lines on the truss.",
+          "Draw connecting lines between truss and support.",
+          "Script execution ends."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Origin of insertion (UI vs Code)",
+            "path1": {
+              "name": "UI Insertion (_bOnInsert == true)",
+              "steps": [
+                "Prompt 'Select truss'",
+                "Prompt 'Select supporting object'",
+                "Proceed to validation"
+              ]
+            },
+            "path2": {
+              "name": "Code Insertion (_bOnInsert == false)",
+              "steps": [
+                "Skip prompts (use entities supplied in _Entity list)",
+                "Proceed to validation"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Validation",
+            "path1": {
+              "name": "Valid Input",
+              "steps": [
+                "_Entity.length() == 2",
+                "Entities are valid TrussEntity and Entity",
+                "Continue to properties initialization"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Input",
+              "steps": [
+                "Entity count mismatch or invalid entity types",
+                "eraseInstance() called",
+                "Script terminates"
+              ]
+            }
+          },
+          {
+            "condition": "Supporting Object Load-Bearing Capability",
+            "path1": {
+              "name": "Load-Bearing Support",
+              "steps": [
+                "isLoadBearing determined as true",
+                "'Active' property remains editable",
+                "Proceed to geometric validity check"
+              ]
+            },
+            "path2": {
+              "name": "Non-Load-Bearing Support",
+              "steps": [
+                "isLoadBearing determined as false",
+                "'Active' property set to Read-Only",
+                "'Active' property description updated to explain inactivity",
+                "Support treated as inactive (isActive = false)"
+              ]
+            }
+          },
+          {
+            "condition": "Support Creation Status (ts.create)",
+            "path1": {
+              "name": "Creation Success",
+              "steps": [
+                "ts.create returns true",
+                "Dependencies set",
+                "Visualization drawn"
+              ]
+            },
+            "path2": {
+              "name": "Creation Failure",
+              "steps": [
+                "ts.create returns false (e.g., duplicate link exists)",
+                "eraseInstance() called",
+                "Script terminates"
+              ]
+            }
+          },
+          {
+            "condition": "Calculated Active Status (isActive)",
+            "path1": {
+              "name": "Active",
+              "steps": [
+                "isActive is true",
+                "Colors set to Red (Truss) and Green (Support)",
+                "Standard visualization drawn"
+              ]
+            },
+            "path2": {
+              "name": "Inactive",
+              "steps": [
+                "isActive is false (due to property setting, load-bearing flag, or geometry)",
+                "Colors set to Grey (64, 64, 64)",
+                "Dimmed visualization drawn"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity List Count",
+            "errorMessage": "No explicit error message to user in log, but script self-destructs.",
+            "recovery": "Re-insert the script ensuring both the truss and supporting object are selected or supplied correctly."
+          },
+          {
+            "check": "Entity Validity (bIsValid)",
+            "errorMessage": "No explicit error message to user in log, but script self-destructs.",
+            "recovery": "Ensure the selected objects are valid TrussEntities and structural elements (Walls/Beams)."
+          },
+          {
+            "check": "TrussSupport Link Creation",
+            "errorMessage": "No explicit error message to user in log, but script self-destructs.",
+            "recovery": "Check if a support link already exists between this specific truss and support object. If so, delete the old one or select different entities."
+          },
+          {
+            "check": "Geometric Validity (ts.canHaveValidGeom)",
+            "errorMessage": "Internal failure (set to inactive).",
+            "recovery": "Ensure the truss is physically positioned close enough to the support object within the defined 'Vertical tolerance'."
+          },
+          {
+            "check": "Load-Bearing Status",
+            "errorMessage": "Property 'Active' becomes read-only.",
+            "recovery": "This is a structural constraint. To enable support, the underlying wall or beam must be marked as load-bearing in its properties."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Toggle Support Active Status",
+            "how": "OPM (Object Properties Palette) -> Active property",
+            "effect": "Changing to 'No' (if editable) sets colors to Grey and marks support inactive. Changing to 'Yes' sets colors to Red/Green, provided geometry and load-bearing checks pass."
+          },
+          {
+            "action": "Adjust Vertical Tolerance",
+            "how": "OPM (Object Properties Palette) -> Vertical tolerance property",
+            "effect": "Updates the maximum allowed gap for geometric validation. If increased, a previously invalid/inactive support might become valid/active."
+          },
+          {
+            "action": "Move Truss or Support",
+            "how": "AutoCAD Move/Grip Edit",
+            "effect": "Script has dependency on entities. Moving them triggers recalculation. The geometric validity (ts.canHaveValidGeom) is re-evaluated, potentially changing the active status and visualization."
+          },
+          {
+            "action": "Change Support Load-Bearing Status",
+            "how": "Modify properties of the underlying Wall/Beam entity",
+            "effect": "If the support object is changed to non-load-bearing, this script will lock its 'Active' property and turn grey. If changed back to load-bearing, 'Active' unlocks."
+          }
+        ]
+      },
+      "tokens_used": 5960,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbRoofTrussSymbolicSupport.mcr\n\n## Overview\nThis script establishes a symbolic structural link between a roof truss and a supporting element (such as a wall or beam). It validates the geometric connection and load-bearing status to ensure the truss is properly supported for structural analysis and drawing generation.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in the 3D model environment. |\n| Paper Space | No | Not designed for layout or paper space usage. |\n| Shop Drawing | No | Not a shop drawing sub-script. |\n\n## Prerequisites\n- **Required Entities:** One Roof Truss (`TrussEntity`) and one supporting element (Wall or Beam).\n- **Minimum Beam Count:** None (entities are selected interactively).\n- **Required Settings:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbRoofTrussSymbolicSupport.mcr`\n\n### Step 2: Select Truss\n```\nCommand Line: Select truss\nAction: Click on the roof truss entity in the model that needs to be supported.\n```\n\n### Step 3: Select Supporting Object\n```\nCommand Line: Select supporting object\nAction: Click on the wall or beam that will bear the truss.\n```\n\n### Step 4: Verify Connection\nOnce selected, the script will draw symbolic lines connecting the truss to the support.\n- **Green/Red lines:** The support is active and valid.\n- **Grey lines:** The support is inactive (e.g., geometry is out of tolerance or the support is non-load-bearing).\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Active | dropdown | Yes | Enables or disables the structural support link. If the supporting object is non-load-bearing, this will lock to \"No\". |\n| Vertical tolerance | number | 50 (mm) | The maximum allowed gap (in mm) between the bottom of the truss and the top of the support object. If the gap exceeds this, the support becomes invalid. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu items are added by this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Visual Feedback:** Pay attention to the color of the connecting lines. If they turn grey, check the \"Active\" property or the vertical gap between the truss and the wall.\n- **Load-Bearing Check:** Ensure the supporting wall or beam is marked as \"Load-bearing\" in its own properties; otherwise, this script will force the support to be inactive.\n- **Automatic Updates:** If you move the truss or the supporting wall using standard AutoCAD grips or move commands, the script will automatically recalculate and update the visual link.\n- **Duplicate Links:** If you try to place a second support link on the exact same connection, the script will delete itself to prevent duplicates.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I selected the objects?**\n  **A:** This usually happens if a support link already exists between these two specific entities. It can also happen if the entities selected were not valid (e.g., selecting a non-structural element).\n\n- **Q: Why is the \"Active\" property greyed out and set to \"No\"?**\n  **A:** This occurs when the supporting object (the wall or beam) is defined as non-load-bearing. To fix this, modify the properties of the wall/beam to be load-bearing.\n\n- **Q: The lines are grey even though \"Active\" is set to \"Yes\". Why?**\n  **A:** The geometry likely fails the validation check. Check the \"Vertical tolerance\" setting; the gap between the truss and the support might be too large."
+      },
+      "tokens_used": 5287,
+      "error": null
+    }
+  }
+}

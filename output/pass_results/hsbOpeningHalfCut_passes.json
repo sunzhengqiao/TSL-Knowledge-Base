@@ -1,0 +1,236 @@
+{
+  "filename": "hsbOpeningHalfCut.mcr",
+  "status": "completed",
+  "total_tokens": 24954,
+  "processing_time": 253.02982831001282,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5718,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script modifies 3D geometry by adding HalfCut tools to beams (bm.addTool). It retrieves Elements and Beams from an Opening. No 'sd_' prefix, '_Viewport' usage, or drawing generation logic typically found in ShopDrawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Opening",
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space containing an Element with an Opening and intersecting Beams",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3002,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getOpening",
+              "promptOriginal": "Select opening",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dDepth",
+            "type": "PropDouble",
+            "displayName": "Depth",
+            "defaultValue": "10",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "Sets the depth of the half cut"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2740,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically creates two half-cut saw cuts on the sill beam located below a selected opening, typically to allow floor material to run under the wall or to create a rebate.",
+          "category": "Machining",
+          "typicalUseCase": "Used when floor layers (e.g., laminate, wood flooring) need to pass underneath door thresholds or window sills to maintain continuity across the room."
+        },
+        "parameters": [
+          {
+            "name": "dDepth",
+            "technicalDefault": "U(10)",
+            "businessMeaning": "The depth of the saw cut measured downwards from the top surface of the sill beam. This controls how thick the material being recessed (like flooring) can be.",
+            "validRange": "1mm to Beam Height (typically 15mm - 50mm for flooring applications)",
+            "unit": "mm",
+            "affectsOutput": "Adjusts the vertical position of the saw plane. Increasing the value moves the cut deeper into the beam, removing more material."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "HalfCut",
+            "description": "Two saw cuts (machining operations) applied to the beam geometry at the width of the opening.",
+            "appliedTo": "The horizontal sill beam identified directly below the selected Opening entity."
+          }
+        ]
+      },
+      "tokens_used": 4347,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User launches script (hsbOpeningHalfCut)",
+          "2. Command prompts 'Select opening'",
+          "3. User selects an Opening entity in the model",
+          "4. Command prompts for a point (getPoint) to finalize insertion location",
+          "5. Script retrieves the parent Element from the Opening",
+          "6. Script calculates the opening's position relative to the Element coordinate system",
+          "7. Script initializes/updates 2 graphical grips representing the left and right cut boundaries",
+          "8. Script projects grips onto the Element's reference plane (Z-axis projection)",
+          "9. Script searches for horizontal beams intersecting the opening's midpoint",
+          "10. [Branch] If beams are found, script validates if the beam geometry supports the cut",
+          "11. [Branch] If valid, script generates HalfCut tools on the sill beam based on grip positions and 'Depth' property",
+          "12. [Branch] If no beams are found, script enters 'Wait mode' (pauses execution until model changes)",
+          "13. [Branch] If geometry is invalid, script deletes itself"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count Check",
+            "path1": {
+              "name": "Fresh Insert",
+              "steps": [
+                "Prompt for Opening selection",
+                "Prompt for Point",
+                "Calculate geometry",
+                "Proceed to Beam Detection"
+              ]
+            },
+            "path2": {
+              "name": "Re-insertion detected",
+              "steps": [
+                "Erase instance immediately",
+                "Stop execution"
+              ]
+            }
+          },
+          {
+            "condition": "Horizontal Beam Detection (filterBeamsHalfLineIntersectSort)",
+            "path1": {
+              "name": "Beams Found",
+              "steps": [
+                "Select closest horizontal beam (index 0)",
+                "Proceed to Geometry Validation"
+              ]
+            },
+            "path2": {
+              "name": "No Beams Found",
+              "steps": [
+                "Return to wait mode",
+                "Display preview only",
+                "Wait for model update to re-check"
+              ]
+            }
+          },
+          {
+            "condition": "Geometry Validation (dRange > d1 && dRange > d2)",
+            "path1": {
+              "name": "Valid Sill Position",
+              "steps": [
+                "Visualize beam",
+                "Calculate cut points based on Grip locations and Depth property",
+                "Apply 2 HalfCut tools to beam"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Geometry",
+              "steps": [
+                "Erase script instance",
+                "Remove from model"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Selection of valid Opening entity",
+            "errorMessage": "N/A (Prompt loops until valid selection)",
+            "recovery": "User must select a valid Opening from the Element"
+          },
+          {
+            "check": "Existence of intersecting horizontal beam (Sill)",
+            "errorMessage": "No explicit error, script enters Wait mode",
+            "recovery": "User must draw or move a horizontal beam to intersect with the opening area"
+          },
+          {
+            "check": "Beam depth vs Opening position (dRange > d1 && dRange > d2)",
+            "errorMessage": "Script silently deletes itself",
+            "recovery": "Ensure the sill beam is positioned correctly relative to the Element origin and Opening reference point so the cut falls within the beam's physical volume"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Adjust Cut Depth",
+            "how": "OPM Property 'Depth'",
+            "effect": "Recalculates the vertical position of the saw cuts deeper into or shallower within the beam."
+          },
+          {
+            "action": "Adjust Cut Width/Position",
+            "how": "Grip Edit (Drag square cyan grips)",
+            "effect": "Moving the left or right grip updates the `_PtG` coordinates, shifting the position of the saw cuts laterally."
+          },
+          {
+            "action": "Move/Modify Opening",
+            "how": "Standard CAD commands",
+            "effect": "Script detects change in Opening geometry, recalculates midpoint and reference point, and updates cut locations."
+          },
+          {
+            "action": "Element Deletion",
+            "how": "Erase Element",
+            "effect": "_bOnElementDeleted flag triggers script to erase itself automatically."
+          }
+        ]
+      },
+      "tokens_used": 5073,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbOpeningHalfCut.mcr\n\n## Overview\nThis script automatically creates two half-cut saw cuts on the sill beam located directly below a selected opening. It is typically used to create a recess or rebate, allowing floor materials (like laminate or wood flooring) to run underneath door thresholds or window sills.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script modifies 3D geometry and requires an Element with an Opening. |\n| Paper Space | No | This is a model generation script. |\n| Shop Drawing | No | This script operates on the 3D model, not 2D drawings. |\n\n## Prerequisites\n- **Required Entities**: An `Element` containing an `Opening` entity.\n- **Minimum Beams**: At least one horizontal beam (sill) must intersect the opening area.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbOpeningHalfCut.mcr`\n\n### Step 2: Select Opening\n```\nCommand Line: Select opening\nAction: Click on the desired Opening entity in your 3D model.\n```\n\n### Step 3: Insertion Point\n```\nCommand Line: [Point Selection]\nAction: Click anywhere in the drawing area to finalize the script insertion.\n```\n\n### Step 4: Verify Cuts\nThe script will automatically detect the horizontal sill beam below the opening and apply two saw cuts. You will see square cyan grips indicating the cut boundaries.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Depth | Number | 10 | Sets the vertical depth of the saw cut measured downwards from the top surface of the beam. Increase this value if the floor material is thicker. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| (Standard Items) | No custom options are added to the right-click menu. Use the Properties Palette to adjust parameters. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Adjusting Width**: Select the script instance and drag the square **cyan grips** to adjust the left and right positions of the saw cuts.\n- **Dynamic Updates**: If you move the Opening or the Sill beam, the cuts will automatically recalculate to follow the geometry.\n- **Troubleshooting**: If the script disappears after insertion, it likely could not find a valid horizontal beam intersecting the opening midpoint. Ensure your sill beam is properly aligned with the opening.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I inserted it?**\n  A: The script requires a horizontal beam (sill) to intersect directly with the opening area. If no beam is found, or if the opening position is invalid relative to the element origin, the script deletes itself automatically.\n  \n- **Q: How do I make the cut deeper into the beam?**\n  A: Select the script, open the **Properties (OPM)** palette, and increase the **Depth** value.\n\n- **Q: Can I use this on vertical beams?**\n  A: No, this script is designed specifically to find horizontal beams (sills) located below an opening."
+      },
+      "tokens_used": 4074,
+      "error": null
+    }
+  }
+}

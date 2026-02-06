@@ -1,0 +1,185 @@
+{
+  "filename": "hsbSolid2PanelConversion.mcr",
+  "status": "completed",
+  "total_tokens": 47387,
+  "processing_time": 422.47274446487427,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9213,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script name 'hsbSolid2PanelConversion' and logic专注于 converting 3D Solids to hsbPanels. Code explicitly uses '_kModelSpace' in tslNew.dbCreate calls. Operates on 'Body' entities and hsbPanel properties (realBody, dH). No usage of '_Viewport', '_kPaperSpace', 'sd_' prefixes, or '#Type E' constructs typical of drawing generation scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Body",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6903,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select text|",
+              "condition": "_bOnRecalc && _kExecuteKey == sTriggerCreateGroup && bDebug",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "|Create Group from Text|",
+            "handler": "sTriggerCreateGroup",
+            "action": "Prompts user to select a text entity to create and assign a group based on the text content.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 8424,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Converts generic 3D solid bodies (imported geometry) into intelligent hsbCAD Panels, detecting and mapping complex geometry like drilling, countersinks, and grain direction for manufacturing.\",\n    \""
+      },
+      "tokens_used": 9676,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch Script: User runs script or selects 3D Solid/GenBeam entity.",
+          "2. Analysis: Script analyzes source geometry (bounding box, voids, material mapping, meta-data).",
+          "3. Preview Generation: Script generates a preview of the resulting Panel (Body, Grain direction, Tools).",
+          "4. User Decision: User inspects preview and/or edits properties via OPM (Material, Code, etc.).",
+          "5. Conversion Execution: User sets 'bConversionAccepted' (mechanism not fully visible in snippet, but implied by logic) to finalize.",
+          "6. Tool Creation: Loop through detected holes to create hsbPanelDrill entities (or static drills if TSL fails).",
+          "7. Meta-Data Application: Assign Position Numbers (PosNum) and run Post-Processing scripts if defined in map.",
+          "8. Cleanup: Erase source 'bodyImporter' and source Solid (if not a beam).",
+          "9. Termination: Script deletes itself ('eraseInstance'), leaving only the new hsbPanel."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Validity of hsbPanelDrill TSL for detected holes",
+            "path1": {
+              "name": "Intelligent Drill (TSL)",
+              "steps": [
+                "Instantiate 'hsbPanelDrill' TSL.",
+                "Pass diameter, depth, and sink parameters.",
+                "Attach to panel dynamically."
+              ]
+            },
+            "path2": {
+              "name": "Static Drill (Fallback)",
+              "steps": [
+                "TSL instantiation fails.",
+                "Create static Drill object using coordinates.",
+                "Add tool to panel using 'addToolStatic'."
+              ]
+            }
+          },
+          {
+            "condition": "Source Entity Type",
+            "path1": {
+              "name": "Source is Solid",
+              "steps": [
+                "Convert geometry.",
+                "On acceptance: Erase original Solid."
+              ]
+            },
+            "path2": {
+              "name": "Source is Beam",
+              "steps": [
+                "Convert geometry.",
+                "On acceptance: Keep original Beam (implied by '!bIsBeam' check)."
+              ]
+            }
+          },
+          {
+            "condition": "PosNum Assignment Conflict",
+            "path1": {
+              "name": "PosNum Available",
+              "steps": [
+                "Assign requested PosNum directly."
+              ]
+            },
+            "path2": {
+              "name": "PosNum Occupied",
+              "steps": [
+                "Release current PosNum.",
+                "Assign new PosNum (Requested + 1000).",
+                "Store requested number in SubLabel2."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Meta Data PosNum Availability",
+            "errorMessage": "(Internal) PosNum assignment failed.",
+            "recovery": "Automatically increments PosNum by 1000 and sets SubLabel2 to original request."
+          },
+          {
+            "check": "hsbPanelDrill Instantiation",
+            "errorMessage": "(Internal) TSL not found or invalid parameters.",
+            "recovery": "Falls back to creating a static drill geometry on the panel."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Create Group from Text",
+            "how": "Context Menu (Debug Mode Only)",
+            "effect": "Prompts user to select text, creates a new Group based on text string, and assigns Panel, Solid, and Tools to it."
+          },
+          {
+            "action": "Rotate X-Axis and Grain Direction",
+            "how": "Context Menu (Per History Comments)",
+            "effect": "Adjusts the coordinate system and wood grain direction of the previewed panel."
+          },
+          {
+            "action": "Discard Conversion",
+            "how": "Context Menu (Per History Comments)",
+            "effect": "Cancels the operation and removes the script instance."
+          }
+        ]
+      },
+      "tokens_used": 8570,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbSolid2PanelConversion.mcr\n\n## Overview\nConverts imported 3D solid bodies (generic geometry) into intelligent hsbCAD Panels. It detects complex features like holes and countersinks, maps material properties, and applies grain direction for manufacturing.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates exclusively in the 3D model environment. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | This is a model generation script, not a detailing script. |\n\n## Prerequisites\n- **Required Entities**: A 3D Solid (Body) or a GenBeam in the drawing.\n- **Minimum Beam Count**: 0 (Operates on Solids or existing Beams).\n- **Required Settings**: None specific.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbSolid2PanelConversion.mcr` from the list.\n\n### Step 2: Select Source Geometry\n```\nCommand Line: (Implicit selection or prompt)\nAction: Click on the 3D Solid or GenBeam entity you wish to convert into a panel.\n```\n*Note: The script will analyze the selected geometry to determine bounding box, voids (holes), and material mapping.*\n\n### Step 3: Review Preview\nThe script generates a preview of the resulting hsbPanel.\n1.  Check the orientation of the panel.\n2.  Verify the grain direction (indicated visually).\n3.  Inspect detected holes/drills.\n\n### Step 4: Edit Properties (Optional)\nWith the preview active, open the **Properties Palette** (Ctrl+1).\n- Update Material, Code, or other metadata as required.\n\n### Step 5: Finalize Conversion\nConfirm the conversion to generate the final hsbPanel entity.\n- The original **3D Solid** will be erased.\n- The original **GenBeam** (if used) will remain in the drawing.\n- The script instance will delete itself automatically upon completion.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Material | String | *From Map* | Assigns the timber material to the new panel. |\n| Code | String | *From Map* | Sets the element code for the panel. |\n| bConversionAccepted | Boolean | False | Toggle to True to finalize the conversion and create the panel. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Create Group from Text | Prompts you to select a text entity in the drawing to create and assign a group to the panel and its tools (Debug mode only). |\n| Rotate X-Axis and Grain Direction | Rotates the coordinate system of the preview to adjust the panel's orientation and wood grain direction. |\n| Discard Conversion | Cancels the current operation and removes the script instance without creating a panel. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: This script relies on internal geometry analysis and manual property input rather than external XML settings files.\n\n## Tips\n- **Original Geometry**: If you convert a standard AutoCAD 3D Solid, the original solid is deleted. If you need to keep it, copy it before running the script.\n- **Drill Detection**: The script attempts to create intelligent `hsbPanelDrill` tools for detected holes. If the specific drill TSL is not found, it falls back to static geometry, so the visual result remains correct.\n- **PosNum Handling**: If your requested Position Number is already in use, the script will automatically add 1000 to it and store the requested number in `SubLabel2`.\n\n## FAQ\n- **Q: Can I convert a Beam into a Panel?**\n  - A: Yes, you can select a GenBeam. Unlike a 3D Solid, the original GenBeam will not be deleted after conversion.\n- **Q: What happens if the drill detection fails?**\n  - A: The script includes a fallback mechanism. If the intelligent drill component cannot be loaded, it creates a static drill representation on the panel so no manufacturing data is lost.\n- **Q: How do I cancel the conversion?**\n  - A: Right-click on the script instance and select \"Discard Conversion\" before you finalize the process."
+      },
+      "tokens_used": 4601,
+      "error": null
+    }
+  }
+}

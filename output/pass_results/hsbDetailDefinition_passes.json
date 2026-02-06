@@ -1,0 +1,394 @@
+{
+  "filename": "hsbDetailDefinition.mcr",
+  "status": "completed",
+  "total_tokens": 47026,
+  "processing_time": 646.215348482132,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "14dec11",
+            "author": "th@hsbCAD.de",
+            "changes": "error display if invalid section is defined"
+          },
+          {
+            "version": "1.0",
+            "date": "15dec11",
+            "author": "th@hsbCAD.de",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6860,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script prompts for Point3d inputs via getPoint indicating 3D model interaction; uses collectEntities(..., _kModelSpace) to scan the drawing; creates a 3D bounding body (Body bdBound) to intersect with selected entities; lacks 'sd_' filename prefix and 'ShopDrawing' specific headers; operates as a definition object within the 3D model to define regions for later detailing."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Entity"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6451,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9227,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Defines a 3D bounding volume or 2D section plane in the model to isolate specific timber elements for generating separate detail drawings, views, or cross-sections.",
+          "category": "ShopDrawing/Detailing",
+          "typicalUseCase": "Used to define complex connection details (e.g., a purlin to rafter connection) or vertical building sections that need to be extracted and dimensioned on a separate drawing sheet."
+        },
+        "parameters": [
+          {
+            "name": "sDetailName",
+            "technicalDefault": "\"|Detail|\"",
+            "businessMeaning": "The unique identifier for this detail instance. This name is used to link the 3D model definition to the generated 2D drawing view.",
+            "validRange": "Text string, unique within the drawing context.",
+            "unit": "String",
+            "affectsOutput": "Updates the label displayed in the model view and the mapping data read by detailing scripts. Prevents duplication if a detail with the same name already exists."
+          },
+          {
+            "name": "sType",
+            "technicalDefault": "\"|Detail Definition|\"",
+            "businessMeaning": "Specifies the nature of the generated view: a 3D box cutout (Detail), a vertical elevation (View), or a vertical slice (Section).",
+            "validRange": "List: 'Detail Definition', 'Vertical View Definition', 'Vertical Section'.",
+            "unit": "Enum",
+            "affectsOutput": "Changes the graphical visualization from a bounding box with text to a section line with directional arrows (hollow or filled). Publishes the type to the model map for downstream processing."
+          },
+          {
+            "name": "dX",
+            "technicalDefault": "U(500)",
+            "businessMeaning": "The length (size) of the detail box along the local X-axis.",
+            "validRange": "> 0 mm.",
+            "unit": "mm",
+            "affectsOutput": "Resizes the clipping volume horizontally. Affects which parts of intersected beams are visible and exported."
+          },
+          {
+            "name": "dY",
+            "technicalDefault": "U(500)",
+            "businessMeaning": "The width (size) of the detail box along the local Y-axis.",
+            "validRange": "> 0 mm.",
+            "unit": "mm",
+            "affectsOutput": "Resizes the clipping volume depth-wise. Affects which parts of intersected beams are visible and exported."
+          },
+          {
+            "name": "dZ",
+            "technicalDefault": "0",
+            "businessMeaning": "The height (size) of the detail box along the local Z-axis. A value of 0 automatically stretches the box to fit the full height of all selected entities.",
+            "validRange": ">= 0 mm (0 = Auto-fit to content).",
+            "unit": "mm",
+            "affectsOutput": "Resizes the clipping volume vertically. In Auto mode, ensures the detail captures the entire vertical extent of the selected construction."
+          },
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "_DimStyles",
+            "businessMeaning": "The CAD text style used for the detail label and markers.",
+            "validRange": "Any valid DimStyle defined in the drawing.",
+            "unit": "String",
+            "affectsOutput": "Alters the font and appearance of the 'Detail Name' text and section markers."
+          },
+          {
+            "name": "dTxtH",
+            "technicalDefault": "U(150)",
+            "businessMeaning": "The height of the text labels used for the detail name.",
+            "validRange": "> 0 mm.",
+            "unit": "mm",
+            "affectsOutput": "Visually scales the detail name and section bubbles."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "170",
+            "businessMeaning": "The display color of the detail bounding box/lines and text in the CAD model.",
+            "validRange": "0-255 (AutoCAD Color Index).",
+            "unit": "Index",
+            "affectsOutput": "Changes the visual layering or highlighting of the definition object in the 3D model."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User drags X-grips (_PtG0/_PtG1)",
+            "effect": "Updates the 'dX' property and re-centers the insertion point (_Pt0) if the grip move is asymmetrical.",
+            "cascade": [
+              "dX",
+              "_Pt0"
+            ]
+          },
+          {
+            "trigger": "User drags Y-grips (_PtG2/_PtG3)",
+            "effect": "Updates the 'dY' property and re-centers the insertion point (_Pt0) if the grip move is asymmetrical.",
+            "cascade": [
+              "dY",
+              "_Pt0"
+            ]
+          },
+          {
+            "trigger": "User drags Z-grip (_PtG4)",
+            "effect": "Updates the 'dZ' property. Dragging past the base flips the Z and Y axes (inverts the detail volume).",
+            "cascade": [
+              "dZ",
+              "_YE",
+              "_ZE",
+              "vy",
+              "vz"
+            ]
+          },
+          {
+            "trigger": "User changes 'dX' property",
+            "effect": "Recalculates positions of the X-grips (_PtG0, _PtG1) to match the new value.",
+            "cascade": [
+              "_PtG0",
+              "_PtG1"
+            ]
+          },
+          {
+            "trigger": "User changes 'dY' property",
+            "effect": "Recalculates positions of the Y-grips (_PtG2, _PtG3) to match the new value.",
+            "cascade": [
+              "_PtG2",
+              "_PtG3"
+            ]
+          },
+          {
+            "trigger": "User changes 'dZ' property",
+            "effect": "Recalculates position of the Z-grip (_PtG4) to match the new value.",
+            "cascade": [
+              "_PtG4"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "VisualRepresentation (Wireframe/Text)",
+            "description": "Draws a 3D rectangular wireframe box (for Details) or a section line with bubbles (for Views/Sections) to visualize the cut area.",
+            "appliedTo": "Model Space (at insertion point)"
+          },
+          {
+            "type": "ClippedBody (Intersection)",
+            "description": "Generates temporary body geometry representing the intersection of the selected beams/entities with the defined bounding box.",
+            "appliedTo": "Entities linked to the TSL instance"
+          },
+          {
+            "type": "MapData (Export)",
+            "description": "Stores the extreme points of the bounding box and the type index (Detail/View/Section) in the instance map. This data is consumed by shop drawing scripts to generate the actual 2D views.",
+            "appliedTo": "TSL Instance Map"
+          }
+        ]
+      },
+      "tokens_used": 8156,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Start Script Insertion",
+          "2. Prompt user to select Lower Left corner (pt1)",
+          "3. Prompt user to select Upper Right corner (pt2)",
+          "4. Prompt user to select Entities (Beams/Elements) to include in the detail",
+          "5. Filter selected entities to keep only those with valid solid bodies",
+          "6. Calculate Base Length (dX) and Width (dY) from the picked points",
+          "7. Open Properties Dialog using '_LastInserted' catalog settings",
+          "8. Check Height (dZ) property: If 0, auto-calculate height to fit selected entities + offset; else use user input",
+          "9. Set insertion point (_Pt0) to the center of the base rectangle",
+          "10. Generate Grip Points for X, Y, Z, and Text Label",
+          "11. Store coordinate vectors (_Map) and exit insert mode",
+          "12. Run Validation: Check for duplicate Detail Name against other instances in Model Space",
+          "13. Run Validation: Check if Dimensions (dX, dY, dZ) are valid (> 0)",
+          "14. Generate Display: Create Bounding Body and Intersect with linked Entities",
+          "15. Draw Visuals based on Type (Wireframe Box or Section Line with bubbles)",
+          "16. Store final Extremes and Type in Instance Map for downstream scripts"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Height (dZ) value during insertion",
+            "path1": {
+              "name": "Auto-Calculate Height",
+              "steps": [
+                "Check if dZ <= 0",
+                "Get extreme Z vertices of the combined selected body",
+                "Calculate height span + 100mm offset",
+                "Adjust base points (pt1, pt2) vertically to center the box on the content",
+                "Set dZ to calculated value"
+              ]
+            },
+            "path2": {
+              "name": "User Defined Height",
+              "steps": [
+                "Use the specific dZ value from the property or dialog",
+                "Do not adjust vertical position of base points based on content"
+              ]
+            }
+          },
+          {
+            "condition": "Detail Name uniqueness",
+            "path1": {
+              "name": "Name is Unique",
+              "steps": [
+                "Keep user input name",
+                "Proceed to visualization"
+              ]
+            },
+            "path2": {
+              "name": "Duplicate Detected",
+              "steps": [
+                "Find existing instances with same script name",
+                "Append ' (n)' to the name (incrementing n until unique)",
+                "Report message to user indicating the change",
+                "Update sDetailName property"
+              ]
+            }
+          },
+          {
+            "condition": "Visualization Type (sType)",
+            "path1": {
+              "name": "Detail Definition (Index 0)",
+              "steps": [
+                "Draw 3D Bounding Box wireframe",
+                "Draw Detail Name text at label grip location"
+              ]
+            },
+            "path2": {
+              "name": "Vertical View/Section (Index 1 or 2)",
+              "steps": [
+                "Draw Section Line (DASHDOT) between X-grips",
+                "Draw End Bubbles/Arrows at X-grips",
+                "Draw Detail Name in bubbles",
+                "Fill Arrows if Type is Vertical Section, Hollow if Vertical View"
+              ]
+            }
+          },
+          {
+            "condition": "Z-Grip Interaction (Dragging down)",
+            "path1": {
+              "name": "Normal Drag (Up/Positive)",
+              "steps": [
+                "Update dZ based on distance from base",
+                "Maintain current Z/Y axis orientation"
+              ]
+            },
+            "path2": {
+              "name": "Inverted Drag (Down/Negative)",
+              "steps": [
+                "Invert Z vector (vz)",
+                "Invert Y vector (vy)",
+                "Update local element axes (_YE, _ZE)",
+                "Flip the bounding volume orientation"
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Execution (Add/Remove)",
+            "path1": {
+              "name": "Add Entity",
+              "steps": [
+                "Prompt user to select new entities",
+                "Append selected entities to _Entity array if not already present"
+              ]
+            },
+            "path2": {
+              "name": "Remove Entity",
+              "steps": [
+                "Prompt user to select entities",
+                "Remove selected entities from _Entity array if found"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Detail Name Uniqueness",
+            "errorMessage": "Detail Name 'X' already exists in this drawing. Name has been changed to: 'X (N)'.",
+            "recovery": "Script automatically appends a counter to the name to ensure uniqueness."
+          },
+          {
+            "check": "Bounding Volume Dimensions",
+            "errorMessage": "The section volume may not be empty.",
+            "recovery": "Script draws an error text and stops generating geometry. User must increase dX, dY, or dZ via properties or grips."
+          },
+          {
+            "check": "Solid Body Presence",
+            "errorMessage": "None (Silent)",
+            "recovery": "Entities without valid body volume (or volume < epsilon) are ignored during intersection logic."
+          },
+          {
+            "check": "Grip Distance (Zero Size)",
+            "errorMessage": "None (Reset)",
+            "recovery": "If grips are dragged to make a dimension 0 (or epsilon), the script resets the dimension to the previous valid value and resets grip positions."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Resize Detail Box",
+            "how": "Drag X/Y/Z grips or modify dX/dY/dZ properties in OPM",
+            "effect": "Updates the clipping volume dimensions. If grips are moved asymmetrically, the insertion point shifts to remain centered. The geometry of clipped bodies updates."
+          },
+          {
+            "action": "Change View Type",
+            "how": "Modify 'sType' property in OPM (Detail Definition / Vertical View / Vertical Section)",
+            "effect": "Switches the visualization from a 3D Box to a 2D Section Line with arrows and bubbles."
+          },
+          {
+            "action": "Modify Included Entities",
+            "how": "Right-click instance -> 'Add Entity' or 'Remove Entity'",
+            "effect": "Opens selection prompt. Updates the internal list of entities intersected by the detail box. Recalculates the combined visual."
+          },
+          {
+            "action": "Rename Detail",
+            "how": "Modify 'sDetailName' property in OPM",
+            "effect": "Updates the text label in the model and the map data. Triggers uniqueness check."
+          },
+          {
+            "action": "Invert Detail Vertical Orientation",
+            "how": "Drag the Z-grip (_PtG4) below the base plane",
+            "effect": "Flips the Z and Y axes of the instance, effectively turning the detail box upside down or reversing the section cut direction."
+          }
+        ]
+      },
+      "tokens_used": 9855,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbDetailDefinition\n\n## Overview\nThis script creates a definition object in the 3D model to isolate specific timber elements for detailing. It allows you to define a 3D bounding box or a vertical section line, which serves as the clipping volume for generating separate detail views, elevations, or cross-sections in shop drawings.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates entirely within the 3D model to define cut regions. |\n| Paper Space | No | Not applicable for Paper Space. |\n| Shop Drawing | No | This script prepares data *for* shop drawings but is inserted in the model. |\n\n## Prerequisites\n- **Required Entities**: None required to insert the script, but beams or elements should be selected during insertion to utilize auto-fitting features.\n- **Minimum Beam Count**: 0.\n- **Required Settings**: None specific.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command**: `TSLINSERT` (or `tsl` alias) → Select `hsbDetailDefinition.mcr` from the catalog.\n\n### Step 2: Define Base Rectangle\n```\nCommand Line: Give lower left point\nAction: Click in the Model Space to set the start corner of the detail's base.\n```\n```\nCommand Line: Give upper right point\nAction: Click to set the opposite corner. This defines the length (dX) and width (dY) of the detail.\n```\n\n### Step 3: Select Entities\n```\nCommand Line: Select entities\nAction: Select the beams, elements, or solids you wish to include in the detail. Press Enter to confirm.\n```\n\n### Step 4: Configure Properties\nAfter selection, the Properties Palette will display the script parameters.\n- If `dZ` (Height) is left at **0**, the script automatically calculates the height to fit all selected entities.\n- Adjust the **Detail Name** to ensure it is unique.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **sDetailName** | String | \\|Detail\\| | The unique identifier for this detail. It is used to link the 3D definition to the 2D drawing label. |\n| **sType** | List | Detail Definition | Sets the visualization type: <br>• *Detail Definition*: 3D Bounding Box<br>• *Vertical View Definition*: Section line with hollow arrows<br>• *Vertical Section*: Section line with filled arrows |\n| **dX** | Double | 500 mm | The length of the detail box along the local X-axis. |\n| **dY** | Double | 500 mm | The width of the detail box along the local Y-axis. |\n| **dZ** | Double | 0 mm | The height of the detail box. A value of **0** automatically stretches the box to fit the height of selected entities. |\n| **sDimStyle** | String | _DimStyles | The text style used for the detail label and markers. |\n| **dTxtH** | Double | 150 mm | The height of the text label. |\n| **nColor** | Index | 170 | The color of the bounding box/lines and text. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Add Entity** | Prompts you to select additional entities from the model to be included inside the current detail volume. |\n| **Remove Entity** | Prompts you to select entities currently inside the detail to remove them from the definition. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script uses internal properties and does not rely on external XML settings files.\n\n## Tips\n- **Auto-Fit Height**: Leave the `dZ` property set to 0 during insertion. The script will automatically snap the top of the box to the highest point of the selected elements.\n- **Visual Editing**: Use the grips in the model view to resize the box dynamically.\n    - Drag the **X/Y grips** to resize the base.\n    - Drag the **Z grip** (top center) to adjust height. Dragging it below the base will flip the vertical orientation of the detail.\n- **Renaming**: If you change the `sDetailName`, the script automatically checks for duplicates. If a name already exists, it will append a counter (e.g., \"Detail (1)\") to ensure uniqueness.\n\n## FAQ\n- **Q: Why is my detail box not showing anything inside it?**\n- **A**: Ensure you have actually linked entities to the definition. Use the right-click menu **Add Entity** to select the beams you want to clip. Alternatively, check if your `dX`, `dY`, or `dZ` dimensions are too small to intersect the beams.\n\n- **Q: What is the difference between \"Vertical View\" and \"Vertical Section\"?**\n- **A**: Both display a section line in the model. \"Vertical View\" uses hollow arrows, typically used for elevation views, while \"Vertical Section\" uses filled arrows, typically used for cross-sections.\n\n- **Q: Can I change the type from a Box to a Section Line later?**\n- **A**: Yes. Simply select the detail object and change the `sType` property in the Properties Palette. The visualization will update immediately."
+      },
+      "tokens_used": 6477,
+      "error": null
+    }
+  }
+}

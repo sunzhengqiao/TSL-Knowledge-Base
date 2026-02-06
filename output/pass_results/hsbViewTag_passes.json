@@ -1,0 +1,367 @@
+{
+  "filename": "hsbViewTag.mcr",
+  "status": "completed",
+  "total_tokens": 44960,
+  "processing_time": 181.81006360054016,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9017,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "Both",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": true,
+          "isMultipageScript": true,
+          "detectionEvidence": "History logs mention 'multipage blockspace', 'Shopdraw blockmode', 'viewports', and 'element viewports'. The script differentiates between Model Space, Viewports (Paper Space), and ShopDrawing contexts. Code includes logic to handle 'bIsElementViewport' and references to 'sd_' contexts (ShopDrawing)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element",
+            "ElementRoof",
+            "Opening",
+            "MetalPartCollection",
+            "FastenerAssembly",
+            "Entity"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Requires an hsbCAD environment (hsbDesign 24+). Can function in Model Space for tagging or within Paper Space/Viewports for automatic generation of tags based on zones and clipping profiles.",
+          "requiredSettings": [
+            "Painter Group definitions (stored in catalog or memory map)",
+            "Format configuration (XML or internal strings)",
+            "hsbViewTagSettings.xml (Import/Export functionality)"
+          ]
+        }
+      },
+      "tokens_used": 5577,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": [
+            {
+              "prompt": "|Are you sure to overwrite existing settings?| [|No|]/|Yes|]",
+              "options": [
+                "No",
+                "Yes"
+              ]
+            }
+          ]
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "Context menu '|Painter Group Settings|'",
+            "title": "hsbViewTag",
+            "dataSource": "Internal map construction (mapPainterGroups, mapSetting)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "|Assign Posnums|",
+            "handler": "|Assign Posnums|",
+            "action": "Assigns position numbers to genbeams that are currently not numbered (gbNoPosNums).",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Painter Group Settings|",
+            "handler": "|Painter Group Settings|",
+            "action": "Opens a dialog to configure Painter Group definitions (HatchSolid, ColorList, Transparency).",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Import Settings|",
+            "handler": "|Import Settings|",
+            "action": "Imports configuration settings from 'hsbViewTagSettings.xml'.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Export Settings|",
+            "handler": "|Export Settings|",
+            "action": "Exports current configuration settings to 'hsbViewTagSettings.xml'. Prompts for overwrite if file exists.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "hsbViewTagSettings.xml",
+            "searchPaths": [
+              "Company path (_kPathHsbCompany + \\hsbViewTag)",
+              "Install path (_kPathHsbInstall + \\Content\\General)"
+            ],
+            "purpose": "Stores and retrieves script configuration settings, including Painter Groups and formatting rules.",
+            "required": false
+          }
+        ]
+      },
+      "tokens_used": 6663,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically generates and manages annotation tags (labels) for structural elements in 2D views, such as floor plans, sections, and shop drawings. It handles grouping, numbering, collision avoidance, and visual formatting based on element properties and viewport contexts.",
+          "category": "ShopDrawing/Annotation",
+          "typicalUseCase": "Used in production drawings to automatically label beams, walls, roofs, and components with position numbers, dimensions, or custom data, ensuring tags are legible and correctly positioned relative to viewports and clipping profiles."
+        },
+        "parameters": [
+          {
+            "name": "bHatchSolidPG",
+            "technicalDefault": "false",
+            "businessMeaning": "Determines if Painter Groups should use a solid hatch pattern for visual highlighting in the drawing.",
+            "validRange": "true, false",
+            "unit": "Boolean",
+            "affectsOutput": "Controls the fill style of grouped tags or background indicators in the CAD view."
+          },
+          {
+            "name": "nSeqColors",
+            "technicalDefault": "varies (typically 1-7)",
+            "businessMeaning": "Defines a sequence of color indices used to differentiate Painter Groups or tag clusters.",
+            "validRange": "1-255 (AutoCAD color indices)",
+            "unit": "Integer (Color Index)",
+            "affectsOutput": "Cycles the color of tag backgrounds or grouping indicators to visually distinguish adjacent entities or groups."
+          },
+          {
+            "name": "ntPG",
+            "technicalDefault": "0",
+            "businessMeaning": "Sets the transparency level for Painter Group highlighting.",
+            "validRange": "0-100",
+            "unit": "Percentage",
+            "affectsOutput": "Adjusts how opaque the hatch or fill for a group appears, allowing underlying geometry to remain visible."
+          },
+          {
+            "name": "dSectionDepth",
+            "technicalDefault": "0.0",
+            "businessMeaning": "The depth distance extending perpendicular to the section cut line to determine which elements are included in the tag collection.",
+            "validRange": "> 0",
+            "unit": "mm",
+            "affectsOutput": "Defines the 3D thickness of the section; elements outside this depth are ignored for tagging in that section."
+          },
+          {
+            "name": "dSectionOffset",
+            "technicalDefault": "0.0",
+            "businessMeaning": "The distance from the theoretical section line where the actual tagging calculation or clipping plane begins.",
+            "validRange": "any real number",
+            "unit": "mm",
+            "affectsOutput": "Shifts the effective clipping plane forward or backward, useful for excluding clutter near the cut line."
+          },
+          {
+            "name": "nPriority",
+            "technicalDefault": "50",
+            "businessMeaning": "Execution priority determining the order in which this script runs relative to other TSL scripts in the same environment.",
+            "validRange": "0-100",
+            "unit": "Count",
+            "affectsOutput": "Lower values execute earlier; critical if this tag depends on other scripts or vice versa."
+          },
+          {
+            "name": "nSequence",
+            "technicalDefault": "50",
+            "businessMeaning": "Sequencing value controlling the logical order of execution, often used to manage dependencies between scripts.",
+            "validRange": "0-100",
+            "unit": "Count",
+            "affectsOutput": "Ensures this script runs at a specific point in the calculation chain, preventing conflicts with dimensioning or labeling scripts."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Context menu '|Assign Posnums|'",
+            "effect": "Triggers position number assignment for detected unnumbered GenBeams, followed by a script recalculation.",
+            "cascade": [
+              "gbNoPosNums",
+              "nExecutionLoops"
+            ]
+          },
+          {
+            "trigger": "Context menu '|Painter Group Settings|' (Dialog)",
+            "effect": "Updates the internal Painter Group configuration (hatch, colors, transparency) and forces a drawing-wide recalculation of dependent entities.",
+            "cascade": [
+              "mapPainterGroups",
+              "bHatchSolidPG",
+              "nSeqColors",
+              "ntPG"
+            ]
+          },
+          {
+            "trigger": "Import/Export Settings",
+            "effect": "Overwrites or saves the internal `mapSetting` structure to XML, affecting all Painter Groups and formatting rules.",
+            "cascade": [
+              "mapSetting",
+              "mapPainterGroups"
+            ]
+          },
+          {
+            "trigger": "dSectionDepth > 0",
+            "effect": "Activates graphical preview indicators in the drawing to show the section depth volume.",
+            "cascade": [
+              "dpInfo.draw() calls"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Annotation Tag (Text/Leader)",
+            "description": "Generates text labels containing position numbers, dimensions, or other attribute data, connected by leaders to the tagged entity.",
+            "appliedTo": "GenBeams, Elements, Walls, Roofs, Openings, MetalParts, and other structural entities within the specified view or zone."
+          },
+          {
+            "type": "Graphical Preview (Rectangles/Profiles)",
+            "description": "Draws temporary rectangles or filled profiles indicating the section depth, offset, and clipping ranges when editing or debugging.",
+            "appliedTo": "The viewport or model space context where the script is active."
+          }
+        ]
+      },
+      "tokens_used": 8142,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Initialization: Load properties from catalog/defaults. Determine execution context (Model Space, Paper Space, or ShopDrawing/Element Viewport).",
+          "Entity Collection: Collect entities based on context. In Viewports, collect by zone and clipping profile; in Model Space, use user selection or manual point input.",
+          "Painter Group Filtering: Filter collected entities against 'Painter Group' definitions. Check for 'bGroupByPainter' status and apply specific formatting rules if configured.",
+          "Collision Analysis: Perform geometric checks to determine tag placement. Calculate leader paths avoiding obstacles using horizontal/vertical displacement strategies.",
+          "Tag Generation: Create text labels and leader geometry. Apply formatting (color, height, background hatch) based on Painter Group settings or direct OPM properties.",
+          "Post-Processing: Execute debug visualizations (if enabled) or performance logging. Handle specific triggers like Assign Posnums if unnumbered GenBeams were detected."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Context (Model vs. Paper vs. ShopDrawing)",
+            "path1": {
+              "name": "Model Space",
+              "steps": [
+                "Check if user selected entities or points.",
+                "If no selection, prompt for point insertion.",
+                "Generate tags for explicitly selected entities."
+              ]
+            },
+            "path2": {
+              "name": "Paper Space / Viewport",
+              "steps": [
+                "Detect Viewport boundaries and clipping profiles (ClippingBody).",
+                "Retrieve Zone indices associated with the viewport.",
+                "Auto-collect entities intersecting the section cut and within the specified Zone/Depth.",
+                "Apply Element Viewport specific logic (e.g., `bIsElementViewport`)."
+              ]
+            }
+          },
+          {
+            "condition": "Presence of Unnumbered GenBeams",
+            "path1": {
+              "name": "Assign Posnums Triggered",
+              "steps": [
+                "User selects context menu '|Assign Posnums|'.",
+                "Script iterates through `gbNoPosNums` array.",
+                "Calls `assignPosnum()` for each beam.",
+                "Forces a second execution loop (`setExecutionLoops(2)`)."
+              ]
+            },
+            "path2": {
+              "name": "Standard Execution",
+              "steps": [
+                "Proceeds with standard tagging logic using existing position numbers."
+              ]
+            }
+          },
+          {
+            "condition": "Painter Group Settings Modification",
+            "path1": {
+              "name": "Dialog Interaction",
+              "steps": [
+                "User triggers '|Painter Group Settings|'.",
+                "Dynamic dialog displays current Map data (Hatch, Colors, Transparency).",
+                "User modifies values and confirms.",
+                "Internal `mapPainterGroups` is updated and written to `mapSetting`.",
+                "Triggers full script recalculation to apply changes."
+              ]
+            }
+          },
+          {
+            "condition": "Export Settings File Status",
+            "path1": {
+              "name": "File Exists",
+              "steps": [
+                "User triggers '|Export Settings|'.",
+                "Script detects existing `hsbViewTagSettings.xml`.",
+                "Prompt: '|Are you sure to overwrite existing settings?|'.",
+                "If 'Yes', overwrite file; if 'No', abort."
+              ]
+            },
+            "path2": {
+              "name": "File Does Not Exist",
+              "steps": [
+                "User triggers '|Export Settings|'.",
+                "Script creates directory if missing.",
+                "Writes `mapSetting` to new XML file directly."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Body Validity",
+            "errorMessage": "None explicit (handled silently).",
+            "recovery": "Script checks for valid solid bodies; invalid bodies (e.g., from MetalParts) are caught and skipped to prevent crashes."
+          },
+          {
+            "check": "Settings File Path (Import)",
+            "errorMessage": "None explicit.",
+            "recovery": "Import context menu option is only added if `findFile(sFullPath)` returns a valid path."
+          },
+          {
+            "check": "Painter Group Configuration",
+            "errorMessage": "None explicit.",
+            "recovery": "If a specific Painter Group name is not found in the configuration map, the script typically falls back to default formatting or ignores the grouping command for that entity."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Script Instance",
+            "how": "AutoCAD Properties Palette (OPM).",
+            "effect": "Updating properties like `dSectionDepth`, `nSequence`, or formatting strings triggers a recalculation of the tag layout."
+          },
+          {
+            "action": "Interactive Tag Positioning",
+            "how": "Grip edit on the generated tags (Grouped styles).",
+            "effect": "User can drag tags to new locations within a defined range; leader lines update automatically."
+          },
+          {
+            "action": "Global Settings Management",
+            "how": "Right-click Context Menu.",
+            "effect": "'Import/Export Settings' allows sharing configurations across projects. 'Painter Group Settings' changes visual appearance globally."
+          },
+          {
+            "action": "Batch Renumbering",
+            "how": "Context Menu -> '|Assign Posnums|'.",
+            "effect": "Automatically assigns position numbers to unnumbered beams within the script's scope, ensuring tags display correct data."
+          }
+        ]
+      },
+      "tokens_used": 9284,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbViewTag\n\n## Overview\nAutomatically generates and manages annotation tags (labels) for structural elements in 2D views, such as floor plans, sections, and shop drawings. It handles grouping, numbering, collision avoidance, and visual formatting based on element properties and viewport contexts.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Used for manual tagging of selected entities or specific point locations. |\n| Paper Space | Yes | Automatically detects viewports and clipping profiles to tag elements within the view. |\n| Shop Drawing | Yes | Supports Element Viewports and multi-page Shop Drawing blocks. |\n\n## Prerequisites\n- **Required Entities**: GenBeams, Elements (Walls/Roofs), Openings, MetalParts, or FastenerAssemblies.\n- **Minimum Beam Count**: 0 (Script can run on empty viewports or wait for user selection).\n- **Required Settings**: `hsbViewTagSettings.xml` (Optional; script uses defaults if file is missing).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbViewTag.mcr`\n\n### Step 2: Select Context\n**If in Model Space:**\n```\nCommand Line: Select entities or [Enter] to select point:\nAction: Select the beams, walls, or parts you want to tag, or press Enter to click a specific location in the drawing.\n```\n\n**If in Paper Space / Shop Drawing:**\n```\nAction: The script automatically detects the active viewport and element clipping profiles. Tags will generate automatically for entities visible in that view.\n```\n\n### Step 3: Adjust Configuration (Optional)\nRight-click the script instance to access Context Menu options (e.g., Painter Group Settings or Assign Posnums) to customize appearance or numbering.\n\n### Step 4: Fine-Tune Layout\nSelect the generated tags and use AutoCAD grips to drag them to preferred positions. The leader lines will update automatically.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **bHatchSolidPG** | Boolean | false | If true, Painter Groups use a solid hatch pattern for visual highlighting. |\n| **nSeqColors** | Integer | Varies (1-7) | Sequence of color indices used to differentiate Painter Groups or tag clusters. |\n| **ntPG** | Integer | 0 | Transparency level for Painter Group highlighting (0-100%). |\n| **dSectionDepth** | Double (mm) | 0.0 | The depth perpendicular to the section cut line used to determine which elements are tagged. |\n| **dSectionOffset** | Double (mm) | 0.0 | Distance from the section line where the tagging calculation begins. |\n| **nPriority** | Integer | 50 | Execution priority relative to other scripts (0-100). |\n| **nSequence** | Integer | 50 | Sequencing value to manage calculation order. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Assign Posnums** | Scans for GenBeams without position numbers and assigns them automatically. Triggers a recalculation. |\n| **Painter Group Settings** | Opens a dialog to configure visual styles for groups, including hatch patterns, color lists, and transparency. |\n| **Import Settings** | Loads configuration settings from `hsbViewTagSettings.xml`. |\n| **Export Settings** | Saves current configuration to `hsbViewTagSettings.xml`. Prompts for confirmation if the file already exists. |\n\n## Settings Files\n- **Filename**: `hsbViewTagSettings.xml`\n- **Location**: \n  - Company Path: `_kPathHsbCompany\\hsbViewTag`\n  - Install Path: `_kPathHsbInstall\\Content\\General`\n- **Purpose**: Stores Painter Group definitions (colors, hatching), formatting rules, and section depth preferences for reuse across projects.\n\n## Tips\n- **Section Depth**: In section views, if tags are missing for elements you expect to see, increase the `dSectionDepth` property value.\n- **Clutter Reduction**: Use the `ntPG` (Transparency) parameter in Painter Group Settings to make tag backgrounds less obtrusive.\n- **Numbering**: If tags appear empty or show \"??\", use the \"Assign Posnums\" context menu option to ensure all beams have valid position numbers.\n- **Grip Editing**: You can manually move tags by selecting them and using the blue AutoCAD grips. This is useful for resolving overlapping text in dense areas.\n\n## FAQ\n- **Q: Why are my tags not appearing in a viewport?**\n  A: Check if the viewport has a defined Clipping Profile. Also, verify that the entities within the viewport belong to a Zone included in the script logic or that the `dSectionDepth` covers the element locations.\n  \n- **Q: Can I share my tag configuration with a colleague?**\n  A: Yes. Right-click the script, select \"Export Settings\", and share the generated XML file. Your colleague can use \"Import Settings\" to load your configuration.\n\n- **Q: What happens if I change the `nPriority` setting?**\n  A: This changes when the script runs relative to other TSL scripts. If tags are being overwritten by other annotations, try lowering the priority number to make this script run earlier."
+      },
+      "tokens_used": 6277,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,275 @@
+{
+  "filename": "hsb_SIP-SetSizeConvention.mcr",
+  "status": "completed",
+  "total_tokens": 23693,
+  "processing_time": 331.94136786460876,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "02.07.2012",
+            "author": "Chirag Sawjani (csawjani@itw-industry.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.1",
+            "date": "03.07.2012",
+            "author": "Chirag Sawjani (csawjani@itw-industry.com)",
+            "changes": "Setting of width/height fixed when beams were flat to the element"
+          },
+          {
+            "version": "1.3",
+            "date": "15.04.2016",
+            "author": "Chirag Sawjani (csawjani@itw-industry.com)",
+            "changes": "Bugfix on extrusion profiles which are natively the wrong convention. Generation handles them properly anyhow."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4296,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select an Element, which is a Model Space entity. It iterates through Element beams and modifies their geometric properties (CoordSys and dimensions) in 3D. There are no references to sd_* functions, _Viewport, or #Type E."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (must select an Element containing beams)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1861,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect Element",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3391,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically detects and corrects rectangular beams within a SIP (Structural Insulated Panel) element that have their width and height dimensions swapped or are incorrectly rotated, ensuring the longer dimension aligns with the element's vertical or major axis.",
+          "category": "Utility/Data Correction",
+          "typicalUseCase": "Used after importing data or generating elements where wall plates or studs are defined with Width > Height (e.g., 200mm wide x 45mm high instead of 45mm wide x 200mm high), causing geometric errors in the model."
+        },
+        "parameters": [
+          {
+            "name": "ssE",
+            "technicalDefault": "User Selection",
+            "businessMeaning": "The target SIP Element containing the beams to be analyzed and corrected. It acts as the container for the operation.",
+            "validRange": "Any valid Element entity in the current drawing containing beams.",
+            "unit": "Selection",
+            "affectsOutput": "Defines the scope of the script; only beams belonging to this element are scanned and modified."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects an Element via 'ssE'",
+            "effect": "Script iterates through beams in the element. Only beams with 'Rectangular' extrusion profiles are checked.",
+            "cascade": [
+              "Beam Width (dW)",
+              "Beam Height (dH)"
+            ]
+          },
+          {
+            "trigger": "Beam Width > Beam Height (dWidth > dHeight)",
+            "effect": "The script identifies this as a 'wrong convention' and triggers a correction routine: rotating the beam 90 degrees around its X-axis and swapping the width/height values.",
+            "cascade": [
+              "Beam CoordSys",
+              "Beam Dimensions"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Modified GenBeam",
+            "description": "Rectangular beams within the selected element that had Width > Height are rotated 90 degrees locally, and their width/height properties are swapped so that the larger dimension becomes the height (Z-axis) and the smaller becomes the width (Y-axis).",
+            "appliedTo": "Beams with ExtrProfile == Rectangular found inside the selected Element."
+          }
+        ]
+      },
+      "tokens_used": 4288,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script instance created.",
+          "2. Check insert cycle count.",
+          "3. [Conditional] If cycle > 1, erase instance and stop.",
+          "4. Command line prompt: 'Select Element'.",
+          "5. User selects an Element entity.",
+          "6. System validates and stores selected Elements.",
+          "7. [Conditional] If no Elements stored, erase instance and stop.",
+          "8. Iterate through stored Elements.",
+          "9. Retrieve all beams associated with the current Element.",
+          "10. [Conditional] If no beams found, erase instance and stop.",
+          "11. Iterate through each beam in the Element.",
+          "12. [Conditional] Check beam extrusion profile type.",
+          "13. [Filter] If not Rectangular, skip to next beam.",
+          "14. If Rectangular, extract current Width (dW) and Height (dH).",
+          "15. [Conditional] Compare Width vs Height.",
+          "16. [Branch A] If Width > Height: Calculate 90-degree rotation around X-axis, apply new Coordinate System, swap Width/Height values.",
+          "17. [Branch B] If Width <= Height: Do nothing.",
+          "18. Loop ends (next beam/element).",
+          "19. Script instance erases itself."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count",
+            "path1": {
+              "name": "First Cycle",
+              "steps": [
+                "Proceed to user input prompt."
+              ]
+            },
+            "path2": {
+              "name": "Subsequent Cycle",
+              "steps": [
+                "Erase script instance immediately.",
+                "Exit execution."
+              ]
+            }
+          },
+          {
+            "condition": "Element Selection Validation",
+            "path1": {
+              "name": "Valid Element Selected",
+              "steps": [
+                "Store element in _Element array.",
+                "Proceed to beam processing."
+              ]
+            },
+            "path2": {
+              "name": "No Element / Empty Selection",
+              "steps": [
+                "Erase script instance.",
+                "Exit execution."
+              ]
+            }
+          },
+          {
+            "condition": "Beam Profile Check",
+            "path1": {
+              "name": "Rectangular Profile",
+              "steps": [
+                "Proceed to dimension check."
+              ]
+            },
+            "path2": {
+              "name": "Non-Rectangular Profile",
+              "steps": [
+                "Skip current beam.",
+                "Continue to next beam."
+              ]
+            }
+          },
+          {
+            "condition": "Dimension Convention (Width > Height)",
+            "path1": {
+              "name": "True (Incorrect Convention)",
+              "steps": [
+                "Create rotation CoordSys (90 deg around X-axis).",
+                "Transform beam CoordSys.",
+                "Set Height (Z-axis) to original Width.",
+                "Set Width (Y-axis) to original Height."
+              ]
+            },
+            "path2": {
+              "name": "False (Correct Convention)",
+              "steps": [
+                "Leave beam unmodified.",
+                "Continue to next beam."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "N/A (Automatic script termination)"
+          },
+          {
+            "check": "Element Selection",
+            "errorMessage": "None (Handled by PrEntity filter)",
+            "recovery": "User must select a valid Element object when prompted."
+          },
+          {
+            "check": "Element contains Beams",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "User must select an Element that actually contains beams; otherwise, the script terminates."
+          },
+          {
+            "check": "Beam Profile Type",
+            "errorMessage": "None",
+            "recovery": "Beams with profiles other than 'Rectangular' are ignored and not modified."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "Script Self-Deletion",
+            "effect": "The script calls eraseInstance() at the end of execution, removing itself from the drawing. The changes to the beams are permanent, but the script tool cannot be re-edited via grips or properties as it no longer exists."
+          }
+        ]
+      },
+      "tokens_used": 5620,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SIP-SetSizeConvention.mcr\n\n## Overview\nThis script automatically detects and corrects rectangular beams within a SIP (Structural Insulated Panel) element that have their width and height swapped. It ensures that the longer dimension of the beam always acts as the vertical height, fixing geometric errors caused by incorrect data import or generation.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script operates on Element entities found in the 3D model. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | Does not generate 2D drawings. |\n\n## Prerequisites\n- **Required Entities**: An Element (e.g., a wall or panel) containing GenBeams.\n- **Minimum Beam Count**: 1 (The element must contain at least one beam to process).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the command line.\n2. Navigate to the location of `hsb_SIP-SetSizeConvention.mcr` and select it.\n\n### Step 2: Select Element\n```\nCommand Line: \nSelect Element\n```\n**Action**: Click on the Element (Wall/Panel) in the model that contains the beams you wish to correct.\n\n### Step 3: Completion\nThe script will immediately scan the selected element. It will swap the width and height dimensions and rotate any rectangular beams where the width was greater than the height. The script instance will automatically delete itself upon completion.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script has no editable properties in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | No custom context menu options are available for this script. |\n\n## Settings Files\n- None required.\n\n## Tips\n- **Undo Capability**: Since the script deletes itself after running, you cannot simply delete it to undo changes. Use the standard AutoCAD `UNDO` command if the results are not as expected.\n- **Rectangular Only**: The script only affects beams with a \"Rectangular\" extrusion profile. Custom profiles (e.g., I-joists, glulam specific shapes) are skipped.\n- **Import Cleanup**: This tool is particularly useful after importing data from other software where studs or plates might have been defined as \"flat\" (e.g., 200mm wide x 45mm high) instead of \"upright\" (45mm wide x 200mm high).\n\n## FAQ\n- **Q: The script ran, but my beams look the same. Why?**\n  - A: The beams may already have the correct orientation (Height > Width), or they might use a non-rectangular profile which the script ignores.\n- **Q: Can I use this on a single beam instead of a whole element?**\n  - A: No, this script requires selecting an entire Element (which acts as a container). All beams within that selected element will be processed."
+      },
+      "tokens_used": 4237,
+      "error": null
+    }
+  }
+}

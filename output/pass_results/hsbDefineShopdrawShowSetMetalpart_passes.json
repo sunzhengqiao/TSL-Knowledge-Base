@@ -1,0 +1,275 @@
+{
+  "filename": "hsbDefineShopdrawShowSetMetalpart.mcr",
+  "status": "completed",
+  "total_tokens": 27753,
+  "processing_time": 233.82643175125122,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3782,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": true,
+          "isMultipageScript": false,
+          "detectionEvidence": "Uses _bOnGenerateShopDrawing flag; handles _kShopDrawEvent and _kShopDrawViewDataShowSet keys; interacts with ShopDrawView and ViewData entities; modifies _Map for shopdraw generation; returns early during generation to skip drawing."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ShopDrawView",
+            "GenBeam",
+            "MetalPartCollectionEnt",
+            "TslInst"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Paper Space (specifically within a ShopDrawing generation context)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3059,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select a set of dummy beams with tools which define the link to the assembly| |<Enter> to select shopdraw views|",
+              "condition": "_bOnInsert",
+              "required": false
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select a set of shopdraw views|",
+              "condition": "_bOnInsert && _Beam.length()<1",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "getPoint",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "nColor",
+            "type": "PropInt",
+            "displayName": "|Color|",
+            "defaultValue": 132,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "ShopDrawViewDataShowSet",
+            "handler": "_kShopDrawViewDataShowSet",
+            "action": "Triggered during shop drawing generation to calculate and set the show set (entities to be displayed) for the selected views based on connected tools and metal parts.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": null,
+            "searchPaths": [],
+            "purpose": "Uses _Map to write debug data to a .dxx file.",
+            "required": false
+          }
+        ]
+      },
+      "tokens_used": 4133,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the visibility of metal parts and connected tools in shop drawings by filtering the 'Show Set' based on linked assembly beams.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Used when generating assembly views to ensure that metal parts (screws, plates) and associated detailing scripts are only visible in the specific views relevant to the assembly they belong to, rather than cluttering the entire drawing."
+        },
+        "parameters": [
+          {
+            "name": "nColor",
+            "technicalDefault": 132,
+            "businessMeaning": "Controls the color of the visual indicators (connecting lines and labels) drawn in Paper Space to show which ShopDrawViews are linked to this configuration.",
+            "validRange": "1 - 255 (AutoCAD Color Index)",
+            "unit": "Index",
+            "affectsOutput": "Changes only the visual appearance of the setup elements in the CAD workspace. Does not affect the generated shop drawing content or the actual visibility of the metal parts in the final output."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Visual Geometry (Polyline & Text)",
+            "description": "Draws graphical indicators (lines and labels) in Paper Space to visualize the connection between the script insertion point and the selected ShopDrawViews.",
+            "appliedTo": "Paper Space"
+          }
+        ]
+      },
+      "tokens_used": 5390,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Start script insertion in Paper Space.",
+          "2. Prompt user to select dummy beams (PrEntity) or press Enter to skip.",
+          "3. [Branch] If dummy beams selected, filter for 'bIsDummy()' and store in internal beam array.",
+          "4. [Branch] If no dummy beams selected (or user pressed Enter), prompt user to select ShopDrawView entities.",
+          "5. Prompt for insertion point (_Pt0).",
+          "6. Validate selection: If both beams and entities arrays are empty, erase instance and exit.",
+          "7. Determine Mode: Mode 0 (ShopDraw Views) or Mode 1 (Dummy Beams).",
+          "8. If Mode 0: Add context menu trigger 'ShopDrawViewDataShowSet'.",
+          "9. If Mode 0: Draw visual links (polylines and text) connecting insertion point to selected views.",
+          "10. If Mode 1: Draw visual markers (diagonal lines) on selected dummy beams and descriptive text.",
+          "11. Wait for Shop Drawing Generation event.",
+          "12. On Event: Retrieve ViewData from Map and identify the 'Define Set' entity (GenBeam).",
+          "13. On Event: Iterate through tools connected to the GenBeam (TslInst and MetalPartCollectionEnt).",
+          "14. On Event: Filter and append valid tools to the Show Set.",
+          "15. On Event: Update Map with new Show Set data for selected views."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User input during insertion regarding dummy beams.",
+            "path1": {
+              "name": "Dummy Beam Mode (Mode 1)",
+              "steps": [
+                "User selects one or more dummy beams.",
+                "Script stores valid dummy beams in _Beam array.",
+                "Mode set to 1.",
+                "Visuals: Draws diagonal lines through dummy beams and labels indicating intersection logic."
+              ]
+            },
+            "path2": {
+              "name": "ShopDraw View Mode (Mode 0)",
+              "steps": [
+                "User presses Enter or selects non-dummy entities at first prompt.",
+                "Script prompts for ShopDrawView selection.",
+                "User selects one or more ShopDrawViews.",
+                "Mode set to 0.",
+                "Visuals: Draws connecting lines from insertion point to view origins.",
+                "Logic: Enables 'ShopDrawViewDataShowSet' trigger to modify visibility during generation."
+              ]
+            }
+          },
+          {
+            "condition": "Type of tool connected to the Define Set GenBeam (during generation).",
+            "path1": {
+              "name": "TSL Instance",
+              "steps": [
+                "Entity identified as TslInst.",
+                "Script checks if it is a clone of itself (scriptName check).",
+                "If not self, appends entity to the Show Set."
+              ]
+            },
+            "path2": {
+              "name": "Metal Part Collection",
+              "steps": [
+                "Entity identified as MetalPartCollectionEnt.",
+                "Script checks if clones of this script are attached to the MPC's beams.",
+                "If yes: Checks geometric intersection with parent beam. Adds to Show Set only if intersecting.",
+                "If no clones: Adds entity to Show Set directly."
+              ]
+            }
+          },
+          {
+            "condition": "Validity of Define Set Entity (during generation).",
+            "path1": {
+              "name": "Valid GenBeam",
+              "steps": [
+                "Define entity is cast successfully to GenBeam.",
+                "Script proceeds to iterate through connected tools."
+              ]
+            },
+            "path2": {
+              "name": "Invalid/Null Entity",
+              "steps": [
+                "Cast fails or entity is invalid.",
+                "Script reports error message 'no define set entity found' or 'define set entity is not a genbeam'.",
+                "Processing stops for this view."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Empty Selection",
+            "errorMessage": "None (Script erases itself silently).",
+            "recovery": "User must re-insert the script and ensure at least one beam or ShopDrawView is selected."
+          },
+          {
+            "check": "GenBeam Define Set",
+            "errorMessage": "Error in [scriptName]: define set entity is not a genbeam.",
+            "recovery": "Ensure the ShopDrawView is associated with a valid GenBeam assembly that serves as the define set."
+          },
+          {
+            "check": "Dummy Beam Filter",
+            "errorMessage": "None (Non-dummy beams are silently ignored during selection).",
+            "recovery": "Select beams that are marked as 'Dummy' (bIsDummy returns true)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Recalculate Shop Drawing Show Set",
+            "how": "Context Menu (Right-click) -> ShopDrawViewDataShowSet, or automatically during Shop Drawing Generation (_kShopDrawEvent).",
+            "effect": "Re-evaluates the connected tools/metal parts for the linked GenBeam and updates the visibility map (_Map) used by the drawing generation process."
+          },
+          {
+            "action": "Change Visual Color",
+            "how": "Properties Palette (OPM) -> Color",
+            "effect": "Changes the color of the connecting lines and text labels drawn in Paper Space. Does not affect generation logic."
+          },
+          {
+            "action": "Move Script",
+            "how": "Grip Edit / Move",
+            "effect": "Moves the label text and the anchor point of the visual connecting lines. It does not break the logical link to the ShopDrawViews."
+          }
+        ]
+      },
+      "tokens_used": 6344,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbDefineShopdrawShowSetMetalpart.mcr\n\n## Overview\nAutomates the visibility of metal parts and connected tools in shop drawings. It filters the 'Show Set' so that only metal parts and detailing scripts associated with specific assembly beams are displayed in the selected views, reducing clutter in the final drawings.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script is intended for layout and drawing generation. |\n| Paper Space | Yes | Must be inserted in the layout environment to link to ShopDrawViews. |\n| Shop Drawing | Yes | Automatically executes during shop drawing generation events. |\n\n## Prerequisites\n- **Required Entities**: ShopDrawViews, GenBeams (Assemblies), Metal Parts, or TSL Instances.\n- **Minimum Beam Count**: 0 (The script allows selection of views directly if no beams are selected).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbDefineShopdrawShowSetMetalpart.mcr`\n\n### Step 2: Select Definition Method\n```\nCommand Line: Select a set of dummy beams with tools which define the link to the assembly | <Enter> to select shopdraw views\nAction: \n    - Option A: Select one or more dummy beams in the drawing that are linked to the tools/metal parts you want to control.\n    - Option B: Press Enter to skip beam selection and directly select views.\n```\n\n### Step 3: Select Views (If Option B was chosen)\n```\nCommand Line: Select a set of shopdraw views\nAction: Click on the ShopDrawView entities (viewports) where you want to apply the visibility filtering.\n```\n\n### Step 4: Place Script\n```\nCommand Line: [Point Location]\nAction: Click in the Paper Space to define the insertion point for the script label.\n```\n*Result: Visual lines and text will appear connecting the script insertion point to the selected views or beams.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Color | Number | 132 | Controls the color of the visual connecting lines and label text drawn in Paper Space (1-255). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| ShopDrawViewDataShowSet | Manually triggers the calculation to update which metal parts and tools are visible in the linked shop drawing views. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script does not use external settings files. It uses internal mapping logic during generation.\n\n## Tips\n- **Visual Verification**: After insertion, check the connecting lines drawn by the script to ensure you have linked the correct views to the correct assemblies.\n- **Mode 1 (Dummy Beams)**: Use this mode if you have specific dummy beams set up to represent different logical groups of metal parts.\n- **Mode 0 (Views)**: Use this mode for general control by selecting the viewports directly.\n- **Updating Visibility**: If you change the model (add/remove metal parts), simply right-click the script and select **ShopDrawViewDataShowSet** to refresh the view settings without re-inserting.\n- **Color Coding**: Use the **Color** property in the Properties Palette to organize multiple scripts in the same layout (e.g., different colors for different wall types).\n\n## FAQ\n- **Q: Why did the script disappear immediately after I placed it?**\n  **A:** You likely pressed Enter without selecting beams, and then pressed Enter again without selecting any ShopDrawViews. The script erases itself if no links are created.\n- **Q: Does the \"Color\" parameter change the color of the metal parts in the final plot?**\n  **A:** No. The Color parameter only changes the color of the visual guide lines in Paper Space to help you organize your drawings.\n- **Q: What happens if the linked GenBeam is deleted?**\n  **A:** The script will report an error \"define set entity is not a genbeam\" during generation and fail to filter that specific view. Ensure the assembly (GenBeam) referenced exists in the model."
+      },
+      "tokens_used": 5045,
+      "error": null
+    }
+  }
+}

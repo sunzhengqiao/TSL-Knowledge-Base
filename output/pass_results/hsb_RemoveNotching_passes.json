@@ -1,0 +1,292 @@
+{
+  "filename": "hsb_RemoveNotching.mcr",
+  "status": "completed",
+  "total_tokens": 24329,
+  "processing_time": 368.4159996509552,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "05.09.2022",
+            "author": "Marsel Nakuci",
+            "changes": "HSB-16424: remove \"hsbT-Connection\" tsls if found"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": [
+          "hsbT-Connection"
+        ]
+      },
+      "tokens_used": 4543,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Interactive selection using PrEntity(Element()) within the _bOnInsert block. Modifies 3D model geometry via bm.stretchStaticTo() and bm.removeToolStatic(). Absence of 'sd_' functions, '_Viewport' references, or '#Type E' declarations."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3377,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Please select Elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2814,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically detects and removes notches (specifically seat cuts and open seat cuts) from selected timber elements if they intersect with other beams within the same element, effectively 'healing' beams that have been notched by neighboring members.",
+          "category": "Automated Repair/Modification",
+          "typicalUseCase": "Used when multiple beams within a single element assembly have been processed separately and contain unwanted notches where they overlap or touch, allowing them to be merged or stretched to form continuous solid lengths without voids."
+        },
+        "parameters": [],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Modified Geometry",
+            "description": "The physical removal of 3D voids (notches) from timber beams. Specifically, it deletes 'SeatCut' and 'OpenSeatCut' machining operations where beams intersect.",
+            "appliedTo": "Selected Elements and their constituent Beams"
+          },
+          {
+            "type": "TSL Instance Removal",
+            "description": "Deletion of associated 'hsbT-Connection' scripts attached to the beams, as these connections are likely invalid or redundant once the notching geometry is removed.",
+            "appliedTo": "Connected TSLs of type 'hsbT-Connection'"
+          },
+          {
+            "type": "Geometry Extension",
+            "description": "Beams are stretched to meet the face of the intersecting beam that was previously causing the notch, effectively filling the void.",
+            "appliedTo": "The 'notching' beam (the beam intersecting the notched beam)"
+          }
+        ]
+      },
+      "tokens_used": 2993,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User executes script command (e.g., TSLCONTENT)",
+          "System checks insertion cycle count to prevent duplicate execution",
+          "User is prompted to select Elements",
+          "User selects Elements and confirms (Enter/Space)",
+          "System validates selection and stores valid Elements",
+          "Script iterates through each selected Element",
+          "Script iterates through each Beam within the Element",
+          "Script searches for and deletes any 'hsbT-Connection' TSL instances attached to the beams",
+          "Script analyzes static tools on the beam to find 'SeatCut' or 'OpenSeatCut' notches",
+          "Script checks if the notch geometry intersects with any other beam in the same Element (using shadow profiles)",
+          "If intersection area is significant (>25mm²), the intersecting beam is stretched to fill the notch",
+          "Script removes the specific notch tool from the beam",
+          "Script instance deletes itself from the drawing"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle Count check",
+            "path1": {
+              "name": "Duplicate Cycle",
+              "steps": [
+                "Erase script instance immediately",
+                "Exit script"
+              ]
+            },
+            "path2": {
+              "name": "First Cycle",
+              "steps": [
+                "Proceed to Selection Prompt"
+              ]
+            }
+          },
+          {
+            "condition": "Element Selection Validation",
+            "path1": {
+              "name": "No Elements Selected",
+              "steps": [
+                "Erase script instance",
+                "Exit script"
+              ]
+            },
+            "path2": {
+              "name": "Elements Selected",
+              "steps": [
+                "Populate internal Element list",
+                "Proceed to Processing Loop"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Count per Element",
+            "path1": {
+              "name": "Element Empty",
+              "steps": [
+                "Skip current Element",
+                "Continue to next Element"
+              ]
+            },
+            "path2": {
+              "name": "Beams Found",
+              "steps": [
+                "Generate profiles and analyze tools"
+              ]
+            }
+          },
+          {
+            "condition": "Tool Subtype Check",
+            "path1": {
+              "name": "Ignore Tool",
+              "steps": [
+                "Tool is not SeatCut or OpenSeatCut",
+                "Continue to next tool"
+              ]
+            },
+            "path2": {
+              "name": "Process Tool",
+              "steps": [
+                "Tool is SeatCut or OpenSeatCut",
+                "Check for intersections with other beams"
+              ]
+            }
+          },
+          {
+            "condition": "Intersection Area Detection",
+            "path1": {
+              "name": "No Significant Intersection",
+              "steps": [
+                "Intersection area <= 25mm²",
+                "Ignore notch (keep it)",
+                "Continue to next tool"
+              ]
+            },
+            "path2": {
+              "name": "Significant Intersection",
+              "steps": [
+                "Intersection area > 25mm²",
+                "Mark 'bNotcherFound' as TRUE",
+                "Stretch intersecting beam to meet the notched beam"
+              ]
+            }
+          },
+          {
+            "condition": "Tool Removal Match",
+            "path1": {
+              "name": "Mismatch",
+              "steps": [
+                "Static tool profile intersection <= 1mm²",
+                "Do not remove tool"
+              ]
+            },
+            "path2": {
+              "name": "Match Found",
+              "steps": [
+                "Static tool profile intersection > 1mm²",
+                "Remove the specific BeamCut tool from the beam"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insertion Cycle Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script automatically erases itself if it detects it is running in a cycle > 1."
+          },
+          {
+            "check": "Selected Entity Type",
+            "errorMessage": "None (Silent)",
+            "recovery": "Only valid Element entities are added to the processing list; invalid selections are ignored."
+          },
+          {
+            "check": "Element Beam Content",
+            "errorMessage": "None (Silent)",
+            "recovery": "Elements containing 0 beams are skipped automatically."
+          },
+          {
+            "check": "Geometric Intersection Threshold",
+            "errorMessage": "None (Silent)",
+            "recovery": "Only notches intersecting with another beam by an area greater than 25mm² (5x5 units) are processed."
+          },
+          {
+            "check": "Cut Removal Precision",
+            "errorMessage": "None (Silent)",
+            "recovery": "Only static cuts matching the analyzed cut profile by an area greater than 1mm² are removed to prevent accidental deletion of nearby operations."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Script Self-Deletion",
+            "how": "Automatic",
+            "effect": "The script instance is erased from the drawing immediately after processing, leaving only the modified beam geometry."
+          },
+          {
+            "action": "Geometry Healing",
+            "how": "Automatic",
+            "effect": "Beams are stretched to fill notches, and 'SeatCut'/'OpenSeatCut' tools are permanently removed from the database."
+          },
+          {
+            "action": "TSL Cleanup",
+            "how": "Automatic",
+            "effect": "Connected 'hsbT-Connection' scripts are reset and erased."
+          }
+        ]
+      },
+      "tokens_used": 6512,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_RemoveNotching\n\n## Overview\nAutomatically detects and removes notches (specifically SeatCut and OpenSeatCut) from selected timber elements where they intersect with other beams within the same element, effectively \"healing\" the geometry by stretching the beams to fill the voids.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D model elements. |\n| Paper Space | No | Not designed for 2D layouts. |\n| Shop Drawing | No | Does not process views or dimensions. |\n\n## Prerequisites\n- **Required Entities**: Elements (containing Beams).\n- **Minimum Beam Count**: 1 (functionality relies on intersections between multiple beams).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse to and select `hsb_RemoveNotching.mcr`.\n\n### Step 2: Select Elements\n```\nCommand Line: Please select Elements\nAction: Select one or more Element entities in the model that contain intersecting beams you wish to heal. Press Enter to confirm.\n```\n\n### Step 3: Automatic Processing\nAction: The script will automatically process the selection, stretching beams, removing the notches, and deleting `hsbT-Connection` scripts. The script instance will then remove itself from the drawing.\n\n## Properties Panel Parameters\nThis script has no editable Properties Panel parameters. All processing is performed automatically based on the geometry selected.\n\n## Right-Click Menu Options\nNone. This script does not add options to the context menu.\n\n## Settings Files\nNone. This script operates independently of external settings files.\n\n## Tips\n- **Same Element Only**: This script only heals intersections between beams that belong to the **same Element**. It will not process intersections between different Elements.\n- **Cleanup**: The script automatically removes any `hsbT-Connection` scripts associated with the processed beams, ensuring your drawing stays clean of invalid connections.\n- **Fire and Forget**: Once you select the elements, the script runs and then deletes itself. You do not need to manually remove the script instance afterwards.\n\n## FAQ\n- **Q: What types of notches are removed?**\n  A: The script specifically targets and removes 'SeatCut' and 'OpenSeatCut' machining operations.\n- **Q: Why did the script disappear after I ran it?**\n  A: This is intended behavior. The script is designed as a single-use utility; it modifies the geometry and then erases its own instance from the drawing.\n- **Q: The script didn't change anything. Why?**\n  A: Ensure the beams are in the same Element and that the notches are specifically 'SeatCut' or 'OpenSeatCut'. The script also checks for a significant intersection area (>25mm²) before acting."
+      },
+      "tokens_used": 4090,
+      "error": null
+    }
+  }
+}

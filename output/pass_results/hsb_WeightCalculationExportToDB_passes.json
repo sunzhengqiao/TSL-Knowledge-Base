@@ -1,0 +1,263 @@
+{
+  "filename": "hsb_WeightCalculationExportToDB.mcr",
+  "status": "completed",
+  "total_tokens": 28251,
+  "processing_time": 172.92325592041016,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "01.07.2010",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "First version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4588,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Uses PrEntity to select Elements during _bOnInsert. Iterates el.sheet() and el.beam() to calculate geometry properties. Adds ElemItem to Element. No SD prefixes, Viewport logic, or _Entity arrays found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing Elements",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3661,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dBmWeight",
+            "type": "PropDouble",
+            "displayName": "Weight for Standard Beams (Kg/m3)",
+            "defaultValue": 450,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "This Factor is the weight(kg) per cubic meter"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3307,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Calculates the total weight of a construction element (wall or floor) by summing the mass of specific sheet materials, specific beam profiles, and a default timber density, then exports this total weight as a data attribute for production reporting.",
+          "category": "Calculation/Data Export",
+          "typicalUseCase": "Determining the precise weight of prefabricated panels for logistics, shipping calculations, or structural load verification."
+        },
+        "parameters": [
+          {
+            "name": "dBmWeight",
+            "technicalDefault": "450",
+            "businessMeaning": "The density (mass per unit volume) of standard timber used for any beam within the element that does not match the specific profile names hardcoded in the script. It acts as a fallback material property.",
+            "validRange": "300 - 800",
+            "unit": "Kg/m³",
+            "affectsOutput": "Modifies the calculated weight of all 'generic' beams in the element. A higher value increases the total weight reported in the exported data attribute."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "A beam's extrusion profile name does not match any entry in the internal list (sBeamProfile)",
+            "effect": "The script ignores the specific linear weight factors and instead calculates the beam's weight using its volume multiplied by the dBmWeight parameter.",
+            "cascade": [
+              "dWeightBmStd",
+              "Total Weight",
+              "PANELWEIGHT"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "ElemItem",
+            "description": "An invisible data object named 'PANELWEIGHT' containing the total calculated weight (in Kg) for the element, designed to be exported to the production database or drawings.",
+            "appliedTo": "Selected Element(s)"
+          }
+        ]
+      },
+      "tokens_used": 5490,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script initialization (Launch)",
+          "Check insert cycle count; abort if > 1",
+          "Show Properties Dialog (showDialogOnce)",
+          "Prompt user to select Elements (PrEntity)",
+          "Check if selection was successful",
+          "Iterate through selected Elements",
+          "Spawn new TSL instance on each Element",
+          "Erase the original installer instance",
+          "Attached Instance: Verify Element link exists",
+          "Attached Instance: Verify Element is valid",
+          "Attached Instance: Remove duplicate instances of this script on the Element",
+          "Attached Instance: Pre-process internal material lists (convert to uppercase)",
+          "Attached Instance: Iterate through Element Sheets",
+          "Attached Instance: Check if Sheet Material matches internal list",
+          "Attached Instance: Iterate through Element Beams",
+          "Attached Instance: Check if Beam Profile matches internal list",
+          "Attached Instance: Calculate Total Weight (combining sheet, specific beam, and standard beam weights)",
+          "Attached Instance: Create ElemItem 'PANELWEIGHT' with calculated data",
+          "Attached Instance: Assign Element to Group 'E'"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User Selection at Command Line",
+            "path1": {
+              "name": "Selection Confirmed",
+              "steps": [
+                "Loop through selected elements",
+                "Create instances",
+                "Proceed to calculation"
+              ]
+            },
+            "path2": {
+              "name": "Selection Cancelled",
+              "steps": [
+                "Instance does nothing",
+                "Erases self",
+                "Workflow terminates"
+              ]
+            }
+          },
+          {
+            "condition": "Sheet Material Name Lookup",
+            "path1": {
+              "name": "Material Name Match Found",
+              "steps": [
+                "Retrieve specific density factor from list",
+                "Calculate weight: Volume * Density"
+              ]
+            },
+            "path2": {
+              "name": "Material Name Not Found",
+              "steps": [
+                "Ignore sheet weight",
+                "Contribution to total is 0"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Extrusion Profile Lookup",
+            "path1": {
+              "name": "Profile Name Match Found",
+              "steps": [
+                "Retrieve specific linear weight factor from list",
+                "Calculate weight: Length * LinearFactor"
+              ]
+            },
+            "path2": {
+              "name": "Profile Name Not Found (Standard Beam)",
+              "steps": [
+                "Calculate volume of beam",
+                "Apply user property dBmWeight (Kg/m3)",
+                "Calculate weight: Volume * dBmWeight"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insertion Cycle Count",
+            "errorMessage": "None (Silent exit)",
+            "recovery": "Script detects if it is running in a loop and erases itself to prevent infinite recursion or redundant calculations."
+          },
+          {
+            "check": "Element Link Availability",
+            "errorMessage": "None (Silent exit)",
+            "recovery": "If the script instance loses its link to the Element (length 0), it automatically erases itself."
+          },
+          {
+            "check": "Element Validity",
+            "errorMessage": "None (Silent exit)",
+            "recovery": "If the referenced Element is invalid or deleted, the script instance erases itself."
+          },
+          {
+            "check": "Duplicate Instances",
+            "errorMessage": "None (Automatic cleanup)",
+            "recovery": "Script scans all attached TSLs on the element; if another instance with the same name exists, it deletes the old one to ensure only one weight calculation exists per element."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Update Standard Beam Density",
+            "how": "OPM (Object Properties Manager)",
+            "effect": "Changing 'Weight for Standard Beams (Kg/m3)' updates the calculation for any beam in the element that does not match the hardcoded specific profile list."
+          },
+          {
+            "action": "Geometry Modification",
+            "how": "Standard hsbCAD Element modification (Add/Remove sheets or beams)",
+            "effect": "Script recalculates total weight automatically when the element regenerates (assuming the TSL is set to recalculate on element change)."
+          },
+          {
+            "action": "Data Export",
+            "how": "Production Database Export / Drawing Lists",
+            "effect": "The 'PANELWEIGHT' attribute is updated with the new value (in Kg) and visible in external data exports."
+          }
+        ]
+      },
+      "tokens_used": 6500,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_WeightCalculationExportToDB.mcr\n\n## Overview\nThis script calculates the total weight of construction elements (walls or floors) by analyzing their specific material compositions and applying a default density for standard timber. It automatically attaches the calculated total weight (in Kg) to the element as a data attribute named \"PANELWEIGHT\" for use in production reports or databases.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be run on Elements in the model. |\n| Paper Space | No | Not applicable for layouts. |\n| Shop Drawing | No | This is a model-level calculation tool. |\n\n## Prerequisites\n- **Required entities**: One or more hsbCAD Elements (e.g., Walls, Floors).\n- **Minimum beam count**: 0 (Elements can be empty or contain any number of beams/sheets).\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_WeightCalculationExportToDB.mcr` from the file dialog.\n\n### Step 2: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the desired Walls or Floors in the 3D model or plan view and press Enter.\n```\n*Note: You can select multiple elements in a single operation.*\n\n### Step 3: Configure Weight Properties\nAfter selection, the script attaches to the elements. Select one of the processed elements and open the **Properties Palette** (Ctrl+1).\n1.  Locate the \"TSL\" or \"Script\" section in the properties.\n2.  Adjust the **Weight for Standard Beams** value if the default timber density does not match your material.\n3.  The element will automatically regenerate to update the weight calculation.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Weight for Standard Beams (Kg/m3) | number | 450 | The density (Kg/m³) used to calculate the weight of any beam that does not match the specific internal profile list (e.g., standard timber studs). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu options are added by this script. |\n\n## Settings Files\nNone.\n\n## Tips\n- **Batch Processing:** You can select numerous elements at once during the insertion prompt; the script will attach to all of them individually.\n- **Automatic Updates:** If you modify the geometry of the element (e.g., add sheets or change beam lengths), the script automatically recalculates the weight when the element regenerates.\n- **Data Access:** The calculated weight is stored in an invisible data attribute named \"PANELWEIGHT\". Ensure your production export lists or data reports are configured to read this attribute to see the values.\n\n## FAQ\n- **Q: How does the script calculate weight for different materials?**\n  A: The script contains an internal list of specific sheet materials and beam profiles. If a match is found, it uses a predefined factor. If no match is found (e.g., custom timber sizes), it calculates weight based on the volume of the beam multiplied by the \"Weight for Standard Beams\" property.\n- **Q: Where can I see the resulting weight?**\n  A: The result is not a visual 3D object. It is written to the element's data. You will see the value when exporting data to production databases (CAM) or if you run a listing/report that includes Element Attributes.\n- **Q: What happens if I run the script on an element twice?**\n  A: The script includes a self-cleaning mechanism that detects and removes duplicate instances of itself on the same element, ensuring only one weight calculation remains active."
+      },
+      "tokens_used": 4705,
+      "error": null
+    }
+  }
+}

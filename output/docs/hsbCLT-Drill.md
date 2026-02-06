@@ -1,116 +1,86 @@
-# hsbCLT-Drill
+# hsbCLT-Drill.mcr
 
-## Description
+## Overview
+Creates customizable vertical or angled drill holes (with optional sinkholes/counterbores) through CLT panels or elements for utilities, fasteners, or connections.
 
-**hsbCLT-Drill** creates a free drill hole in CLT (Cross-Laminated Timber) panels. The drill can be positioned in relation to one of the panel's main faces (Reference Face or Top Face) or to an edge face. This tool supports drilling through multiple panels simultaneously, making it ideal for connection points that span multiple CLT elements.
+## Usage Environment
 
-The drill can be configured with optional sinkholes (countersinks) on both the entry and exit faces, allowing for recessed bolt heads or washers. Bevel and rotation angles can be applied to create angled drill holes for inclined fastener connections.
+| Space | Supported | Notes |
+|-------|-----------|-------|
+| Model Space | Yes | This script operates on 3D model elements. |
+| Paper Space | No | Not applicable for 2D drawings. |
+| Shop Drawing | No | Not applicable for shop drawings. |
 
-## Script Type
+## Prerequisites
+- **Required Entities**: GenBeam (e.g., CLT panels) or Element.
+- **Minimum Beam Count**: 1.
+- **Required Settings**: `hsbCLT-Drill.xml` (Default configurations).
 
-| Property | Value |
-|----------|-------|
-| Type | O (Object) |
-| Beams Required | 0 |
-| Keywords | CLT, Drill, Rule, Free, Bevel, Angle |
-| Version | 2.3 |
+## Usage Steps
 
-## Properties
+### Step 1: Launch Script
+**Command:** `TSLINSERT`
+**Action:** Browse and select `hsbCLT-Drill.mcr`.
 
-### Drill Category
+### Step 2: Select Configuration
+**Dialog:** "Select properties or catalog entry"
+**Action:** Choose a preset (e.g., "Default", "LastInserted") from the list to load initial parameters, or select an option to define settings manually later.
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| **Diameter** | Double | 12 mm | Defines the diameter of the drill hole |
-| **Depth** | Double | 0 mm | Defines the depth of the drill hole. Set to 0 for a complete through-drill |
-| **Face** | String | Reference Face | Defines which face the drill is positioned from. Options: "Reference Face", "Top Face", "Edge" |
+### Step 3: Select Panel
+**Command Line:** `Select beams/elements:`
+**Action:** Click on the CLT panel or timber element where you want to place the drill.
 
-### Alignment Category
+### Step 4: Select Insertion Point
+**Command Line:** `Specify insertion point:`
+**Action:** Click on the face or edge of the selected panel to define the start location of the drill.
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| **Bevel** | Double | 0 | Defines the angle of the drill axis in relation to the selected face. Range: -90 to 90 degrees |
-| **Rotation** | Double | 0 | Defines the rotation of the drill axis perpendicular to the selected face. Range: -90 to 90 degrees |
+### Step 5: Adjust Placement
+**Action:** Once placed, use the **Grips** (blue squares) in the model view to drag the drill location, adjust depth, or change angles. Alternatively, open the **Properties Palette** (Ctrl+1) to modify numerical values.
 
-### Alignment Edge Category
+## Properties Panel Parameters
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| **Axis Offset** | Double | 0 | Defines the axis offset of the insertion point. Only applicable when Face mode is set to "Edge" |
-| **Snap to Axis** | String | No | Defines if the insertion point will snap to the axis with the given axis offset. Options: "No", "Yes" |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| **dDiameter** | Number | 12 mm | The diameter of the main drill hole. |
+| **dDepth** | Number | 0 mm | The depth of the hole. **0** indicates a through-hole (passing completely through the panel). Any other value creates a blind hole. |
+| **sFace** | String | Reference Face | The reference plane for the drill. Options: `Reference Face`, `Top Face`, or `Edge`. |
+| **dBevel** | Number | 0° | The tilt angle of the drill axis relative to the perpendicular of the selected face (-90° to 90°). |
+| **dRotation** | Number | 0° | Rotates the drill axis direction within the plane of the face. |
+| **dAxisOffset** | Number | 0 mm | Distance from the insertion point to the actual drill start axis. Used primarily for edge drilling to clear the material edge. |
+| **sSnapAxis** | String | No | If set to `Yes`, forces the insertion point to snap to the calculated axis defined by the offset. |
+| **dDiameterSinkStart** | Number | 0 mm | Diameter of a counterbore (sinkhole) at the entry side of the drill. |
+| **dDepthSinkStart** | Number | 0 mm | Depth of the counterbore at the entry side. |
+| **dDiameterSinkEnd** | Number | 0 mm | Diameter of a counterbore at the exit side of the drill. |
+| **dDepthSinkEnd** | Number | 0 mm | Depth of the counterbore at the exit side. |
+| **sFormat** | String | @(Radius) | Template string for the text label displayed near the drill (e.g., "D@(Diameter)"). |
+| **dTextHeight** | Number | 0 mm | Height of the label text. **0** uses the CAD text style default. |
 
-### Sinkholes Category
+## Right-Click Menu Options
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| **Diameter Start** | Double | 0 mm | Defines the diameter of the sinkhole (countersink) at the entry face. Must be larger than the main drill diameter to be active |
-| **Depth Start** | Double | 0 mm | Defines the depth of the sinkhole at the entry face. Set to 0 for automatic depth calculation |
-| **Diameter End** | Double | 0 mm | Defines the diameter of the sinkhole at the exit face. Only available for through-drills |
-| **Depth End** | Double | 0 mm | Defines the depth of the sinkhole at the exit face. Only available for through-drills |
+| Menu Item | Description |
+|-----------|-------------|
+| **Flip Side** | Reverses the drill direction relative to the selected face. |
+| **Add/Remove Format** | Opens a command-line list to add or remove tokens (like Radius or Diameter) from the on-screen text label. |
+| **Set Bevel +/- 45°** | Quick shortcuts to set the drill angle to 45 or -45 degrees. |
+| **Add/Remove Panels** | Allows you to modify the selection of panels the drill passes through. |
 
-### Display Category
+## Settings Files
+- **Filename**: `hsbCLT-Drill.xml`
+- **Location**: Company or Install path
+- **Purpose**: Stores default catalog entries and presets for diameters, depths, and standard configurations.
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| **Format** | String | @(Radius) | Defines the format of the description text displayed with the drill. Use @(PropertyName) syntax for dynamic values |
-| **Text Height** | Double | 0 mm | Defines the text height for the display. Set to 0 to use the style default |
+## Tips
+- **Through Holes**: For standard utility penetrations, leave `dDepth` as `0`. This ensures the hole automatically cuts through the entire panel thickness, even if the panel size changes later.
+- **Counterbores**: Use the `dDiameterSinkStart` and `dDepthSinkStart` parameters to create space for bolt heads or washers so they sit flush with or below the panel surface.
+- **Edge Drilling**: If drilling from the edge, use the `dAxisOffset` property to push the drill start point slightly away from the edge to avoid visual clipping or calculation errors at the boundary.
+- **Grip Editing**: You can drag the "Depth" grip (the endpoint handle) in the 3D view to visually set a blind hole depth instead of typing the number.
 
-## Usage Workflow
+## FAQ
+- **Q: How do I create a hole that goes through multiple stacked panels?**
+  **A:** Set `dDepth` to `0` (Through). Select the first panel, and the insertion point. If other panels intersect the drill path, the script will typically cut through them as well or you can add them via the context menu.
+  
+- **Q: Why is my drill not going through the whole panel?**
+  **A:** Check the `dDepth` property in the Properties Palette. It is likely set to a specific value (e.g., 50mm) instead of `0`.
 
-### Inserting a New Drill
-
-1. **Launch the Script**: Access hsbCLT-Drill from the hsbCAD ribbon or command line
-2. **Configure Properties**: A dialog appears where you can set:
-   - Drill diameter and depth
-   - Face mode (Reference Face, Top Face, or Edge)
-   - Bevel and rotation angles if needed
-   - Sinkhole dimensions if required
-3. **Select Panels**: Click on one or more CLT panels that the drill will pass through
-4. **Pick Insertion Point**: Click to place the drill location on the selected panel face
-5. **Set Direction (Optional)**: If a bevel angle is specified without rotation, you will be prompted to pick a direction point to define the drill rotation
-
-### Modifying an Existing Drill
-
-After placement, select the drill instance to modify its properties in the AutoCAD Properties Palette (OPM). Changes to diameter, depth, angles, or sinkhole dimensions will automatically update the drill geometry.
-
-### Face Mode Behavior
-
-- **Reference Face**: Drill enters from the panel's reference (bottom) face
-- **Top Face**: Drill enters from the panel's top face
-- **Edge**: Drill enters from a panel edge, useful for horizontal connections
-
-## Context Menu Commands
-
-Right-click on a placed drill to access these commands:
-
-| Command | Description |
-|---------|-------------|
-| **Flip Side** | Switches the drill entry face between Reference Face and Top Face. Only available when not in Edge mode |
-| **Set Bevel** | Interactively pick a point to define the bevel angle |
-| **Set Rotation** | Interactively pick a point to define the rotation angle |
-| **Set Depth** | Interactively pick a point to define the drill depth |
-| **Add Panels** | Add additional CLT panels to the drill operation |
-| **Remove Panels** | Remove panels from the drill operation (minimum one panel must remain) |
-| **Purge Panels** | Automatically remove panels that no longer intersect with the drill |
-| **Add/Remove Format** | Interactive dialog to configure the display format text by selecting available properties |
-| **Activate Tool Rules** | Enable tool rule matching from settings (matches drill to machine capabilities) |
-| **Disable Tool Rules** | Override tool rule matching to allow any configuration |
-
-## Settings Configuration
-
-The script reads configuration from XML settings files located at:
-- Company path: `[Company]\TSL\Settings\hsbCLT-Drill.xml`
-- Install path: `[Install]\Content\General\TSL\Settings\hsbCLT-Drill.xml`
-
-Settings can define:
-- Display colors and transparency for different face modes
-- Tool definitions with diameter constraints, inclination limits, and maximum lengths
-- Mismatch colors when drill parameters exceed tool capabilities
-
-## Tips for Timber Designers
-
-- **Through-drilling multiple panels**: Select all panels at once during insertion to ensure proper alignment
-- **Angled connections**: Use Bevel for tilting the drill in one direction, and Rotation for tilting perpendicular to that
-- **Edge drilling for horizontal connections**: Switch to Edge mode when connecting panels horizontally
-- **Countersinks**: Set the sinkhole diameter larger than the drill diameter and specify depth, or leave depth at 0 for automatic calculation based on entry angle
-- **Tool rule matching**: If your shop drawing shows a mismatch color, check that your drill parameters match available machine tooling in the settings file
+- **Q: Can I angle the hole?**
+  **A:** Yes. Use the `dBevel` property to tilt the drill up/down, and `dRotation` to swivel it left/right. You can also use the 3D rotation grips on the drill visualization.

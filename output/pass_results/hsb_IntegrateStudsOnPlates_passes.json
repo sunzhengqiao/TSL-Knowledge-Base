@@ -1,0 +1,180 @@
+{
+  "filename": "hsb_IntegrateStudsOnPlates.mcr",
+  "status": "completed",
+  "total_tokens": 29219,
+  "processing_time": 290.3771958351135,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "21.07.2009",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.1",
+            "date": "22.07.2009",
+            "author": "",
+            "changes": "Remove Top and Bottom Plate from the posible beams to strech"
+          },
+          {
+            "version": "1.2",
+            "date": "11.09.2009",
+            "author": "",
+            "changes": "Change the tool on the angle plates to a birdsmouth"
+          },
+          {
+            "version": "1.3",
+            "date": "16.09.2009",
+            "author": "",
+            "changes": "BugFix"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5226,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "PrEntity prompts for selection of Element objects; script iterates through Element.beam() and adds tools (Cut/BeamCut) directly to beam geometry; no usage of sd_, _Viewport, or Paper Space specific entities."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space containing Elements with Top/Bottom Plates and intersecting Studs.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3592,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Please select Elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialogOnce",
+            "trigger": "Insertion (if _kExecuteKey is empty)",
+            "title": null,
+            "dataSource": "Properties Palette",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dDepth1",
+            "type": "PropDouble",
+            "displayName": "Depth inside Plate",
+            "defaultValue": "10",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "Depth that the Studs are going to be cut inside the top and bottom plate"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3439,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically creates joinery between studs and plates by cutting matching notches (or birdsmouths on angled plates) to integrate the studs into the top and bottom plates.",
+          "category": "Framing/Joinery",
+          "typicalUseCase": "When constructing timber frame panels where studs need to be notched into plates for structural stability, air tightness, or specific architectural detailing, rather than simply butting against them."
+        },
+        "parameters": [
+          {
+            "name": "dDepth1",
+            "technicalDefault": "10",
+            "businessMeaning": "Defines the depth of the integration joint for standard flat plates. It represents how far the stud end is set back from the plate face, creating a corresponding notch in the plate. Effectively, it controls the depth of the 'seat' for the stud within the plate.",
+            "validRange": "0 mm to approx. 50% of plate height (typically 10-30mm)",
+            "unit": "mm",
+            "affectsOutput": "For flat plates, increasing this value shortens the stud end cut and deepens the mating notch into the plate. For angled plates (birdsmouths), this parameter is ignored (offset is effectively 0)."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Plate Type Detection (Angled vs. Flat)",
+            "effect": "Determines if the depth parameter is applied to the calculation.",
+            "cascade": [
+              "dDepth1"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Cut",
+            "description": "Saw cut applied to the end of the stud.",
+            "appliedTo": "Studs (identified as Male beams) intersecting the plates."
+          },
+          {
+            "type": "BeamCut",
+            "description": "Mating notch or birdsmouth cut into the body of the plate.",
+            "appliedTo": "Top Plates, Bottom Plates, and Angled Top Plates (identified as Female beams)."
+          }
+        ]
+      },
+      "tokens_used": 4885,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"Script Initialization (Unit mm, Properties, Beam Types list)\",\n    \"Insertion Cycle Check (Terminate silently if insertCycleCount > 1)\",\n    \"Trigger Properties Dialog (if executed manually)\",\n    \"Prompt User to Select Elements (PrEntity)\",\n    \"Check if Elements Selected (Terminate if array is empty)\",\n    \"Loop through Selected Elements\",\n    \"Get Element Coordinate System (Vectors vx, vy, vz)\",\n    \"Classify Beams within Element: 'Female' (Plates) vs 'Male' (Studs/Others)\",\n    \"Loop through each Female Beam (Plate)\",\n    \"Find all Male Beams intersecting the Female Beam (Capsule Filter)\",\n    \"Check Plate Type to set Birdsmouth flag (True for Angled Top Plates, False otherwise)\",\n    \"Loop through each Intersecting Male Beam\",\n    \"Check Beam Geometry (Skip if dimension along wall X > dimension along vertical Z)\",\n    \"Check T-Connection (Skip if valid T-connection does not exist)\",\n    \"Calculate Intersection Point and Cutting Vectors\",\n    \"Conditional Branch: Apply Birdsmouth (Angled) or Notch (Standard) tools\",\n    \"Add Static Cut Tool to Stud (Male)\",\n    \"Add Static BeamCut Tool to Plate (Female)\",\n    \"Erase Script Instance (Cleanup)\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Plate Type (Angled vs Standard)\",\n      \"path1\": {\n        \"name\": \"Angled Top Plate\",\n        \"steps\": [\n          \"Set Birdsmouth flag to TRUE\",\n          \"Create Cut on Stud at exact intersection (0 offset)\",\n          \"Create Birdsmouth BeamCut on Plate\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Standard Top/Bottom Plate\",\n        \"steps\": [\n          \"Set Birdsmouth flag to FALSE\",\n          \"Calculate offset vector based on 'dDepth1' property\",\n          \"Create Cut on Stud at intersection + offset\",\n          \"Create Rectangular Notch BeamCut on Plate at intersection + offset\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Beam Orientation Filter\",\n      \"path1\": {\n        \"name\": \"Horizontal/Invalid Beam\",\n        \"steps\": [\n          \"Check if beam dimension along Wall X-axis is greater than along Vertical Z-axis\",\n          \"Skip processing for this beam\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Vertical Stud Candidate\",\n        \"steps\": [\n          \"Proceed to T-Connection validation\"\n        ]\n      }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"Element Selection\",\n      \"errorMessage\": \"None (Script exits)\",\n      \"recovery\": \"User must re-execute script and select at least one Element.\"\n    },\n    {\n      \"check\": \"Beam Presence in Element\",\n      \"errorMessage\": \"None (Script exits loop)\",\n      \"recovery\": \"Ensure selected Elements contain beams.\"\n    },\n    {\n      \"check\": \"T-Connection Geometry\",\n      \"errorMessage\": \"None (Beam is ignored)\",\n      \"recovery\": \"Ensure Studs intersect Plates correctly with 10mm tolerance.\"\n    }\n  ],\n  \"postInsertionActions\": [\n    {\n      \"action\": \"Modify Integration Depth\",\n      \"how\": \"Undo command and Re-run script with new 'dDepth1' value\",\n"
+      },
+      "tokens_used": 7280,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_IntegrateStudsOnPlates.mcr\n\n## Overview\nThis script automates the creation of joinery between studs and plates. It generates matching notches (or birdsmouths on angled plates) to integrate studs into the top and bottom plates for better structural stability and air tightness.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in the 3D model where elements are located. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | This script modifies the 3D model geometry directly. |\n\n## Prerequisites\n- **Required Entities**: Elements (walls/panels) containing Top Plates, Bottom Plates, and Studs.\n- **Minimum Beam Count**: At least 2 beams per element (1 Plate and 1 Stud).\n- **Required Settings**: None required.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or access via the hsbCAD Menu).\nAction: Browse to and select `hsb_IntegrateStudsOnPlates.mcr`.\n\n### Step 2: Configure Properties\nAction: Before selecting elements, the Properties Palette will appear.\n*   Locate the **Depth inside Plate** (`dDepth1`) parameter.\n*   Enter the desired depth for the notch (e.g., 10mm).\n*   *Note: This setting is ignored for angled top plates (which use a birdsmouth instead).*\n\n### Step 3: Select Elements\n```\nCommand Line: Please select Elements\nAction: Click on the Wall/Panel Elements you wish to process and press Enter.\n```\nAction: The script will process the selection, add the cuts to the studs and plates, and then automatically remove itself from the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Depth inside Plate | Number | 10 mm | Defines how deep the stud sits inside the plate. The stud end is cut back by this amount, and a matching notch is cut into the plate. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script cleans up automatically after running; no right-click context menu is available. |\n\n## Settings Files\n- None.\n\n## Tips\n- **Angled Top Plates**: The script automatically detects if a top plate is angled. It applies a birdsmouth cut instead of a standard notch, and the \"Depth inside Plate\" setting is ignored (set to 0 offset).\n- **Beam Filtering**: The script intelligently filters out horizontal beams (like noggings or blocking) and only processes vertical studs intersecting the plates.\n- **Undo Function**: Since the script deletes itself after execution, use the AutoCAD `Undo` command if you need to change the notch depth and run the script again.\n\n## FAQ\n- **Q: Why did the script disappear after I selected the elements?**\n  - A: This is a \"generator\" script. It performs its job (adding the cut tools) and removes itself to keep your drawing clean. The cuts remain on the beams.\n  \n- **Q: Can I use this to create birdsmouths for rafters?**\n  - A: No, this script is specifically designed for wall framing (Studs integrated into Top/Bottom Plates). It filters specifically for vertical beams.\n\n- **Q: The stud didn't get cut. Why?**\n  - A: Ensure the stud is actually intersecting the plate volume. The script uses a 10mm geometric tolerance to find connections. Also, ensure the stud is vertical; horizontal beams are skipped automatically."
+      },
+      "tokens_used": 4797,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,426 @@
+{
+  "filename": "hsb_Split Walls.mcr",
+  "status": "completed",
+  "total_tokens": 43135,
+  "processing_time": 244.49212861061096,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "10.10.2008",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.1",
+            "date": "12.10.2008",
+            "author": "",
+            "changes": "Complete Split base on Wall Lenght"
+          },
+          {
+            "version": "1.2",
+            "date": "29.10.2008",
+            "author": "",
+            "changes": "changes to Working with openings"
+          },
+          {
+            "version": "1.3",
+            "date": "30.10.2008",
+            "author": "",
+            "changes": "Descriotion Added to each property"
+          },
+          {
+            "version": "1.4",
+            "date": "00.06.2009",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "BugFix when the walls were to small and couldnt find a valid split Point"
+          },
+          {
+            "version": "1.5",
+            "date": "04.04.2011",
+            "author": "",
+            "changes": "Add Generation of the selected and splited walls"
+          },
+          {
+            "version": "1.6",
+            "date": "26.05.2011",
+            "author": "",
+            "changes": "Added restriction to length of string sent to stack and multiple commands sent to stack instead of one. Bugfix Command accepts only 160 odd characters."
+          },
+          {
+            "version": "1.7",
+            "date": "24.01.2012",
+            "author": "",
+            "changes": "Allow to split any wall, not only SF Elements"
+          },
+          {
+            "version": "1.8",
+            "date": "13.06.2012",
+            "author": "",
+            "changes": "Add a property so it will will allow the user to frame or not after spliting"
+          },
+          {
+            "version": "1.9",
+            "date": "23.08.2012",
+            "author": "",
+            "changes": "Fix issue with the minimum size from the wall edge"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7355,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select Element objects in the drawing, casts them to 'Wall', performs 'dbSplit()' on 3D geometry, and accesses 'el.opening()' and 'el.plOutlineWall()'. It modifies the model database directly. No 'sd_' functions, 'Viewport' checks, or '#Type E' definitions found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Wall"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (3D environment)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5496,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Please select the elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dMaxWallLength",
+            "type": "PropDouble",
+            "displayName": "Max. Wall Length",
+            "defaultValue": "d3600mm",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "The Length entered here will be the max length that any wall can be."
+          },
+          {
+            "index": 1,
+            "variable": "dDistanceToWindow",
+            "type": "PropDouble",
+            "displayName": "Min. Distance to Opening",
+            "defaultValue": "d300mm",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "This is the min distance that any wall will split to an opening."
+          },
+          {
+            "index": 2,
+            "variable": "dMinDistanceToWallEdge",
+            "type": "PropDouble",
+            "displayName": "Min. Distance to Wall Edge",
+            "defaultValue": "d300mm",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "This is the min distance that any wall will split to the end of a Wall."
+          },
+          {
+            "index": 0,
+            "variable": "sGenerate",
+            "type": "PropString",
+            "displayName": "Frame walls after split",
+            "defaultValue": "Yes",
+            "inputType": "dropdown",
+            "options": [
+              "No",
+              "Yes"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 8799,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically splits long timber walls into shorter, manufacturable segments while respecting clearances around openings and wall edges to maintain structural integrity.",
+          "category": "Framing",
+          "typicalUseCase": "Used to prepare long wall elements for production by breaking them down into lengths suitable for transport or raw material sizes, ensuring wall joints do not interfere with door/window openings."
+        },
+        "parameters": [
+          {
+            "name": "dMaxWallLength",
+            "technicalDefault": "3600mm",
+            "businessMeaning": "The target maximum length for a single wall panel. The script attempts to split the wall at intervals equal to this length.",
+            "validRange": "2500mm - 6000mm",
+            "unit": "mm",
+            "affectsOutput": "Directly controls the frequency of cuts along the wall. Higher values result in fewer, longer wall elements; lower values produce more elements."
+          },
+          {
+            "name": "dDistanceToWindow",
+            "technicalDefault": "300mm",
+            "businessMeaning": "The minimum safety margin required between a split cut and any opening (windows/doors). It prevents creating a joint too close to the rough opening framing.",
+            "validRange": "100mm - 600mm",
+            "unit": "mm",
+            "affectsOutput": "Acts as a 'no-split zone' around openings. Split points are automatically shifted away from openings to respect this distance, potentially causing wall segments to vary in length."
+          },
+          {
+            "name": "dMinDistanceToWallEdge",
+            "technicalDefault": "300mm",
+            "businessMeaning": "The minimum allowable length for the start or end segment of a wall. It ensures that the split does not create a tiny, unmanageable sliver of wall at the ends.",
+            "validRange": "50mm - 600mm",
+            "unit": "mm",
+            "affectsOutput": "Restricts where the first and last cuts can be placed relative to the original wall endpoints."
+          },
+          {
+            "name": "sGenerate",
+            "technicalDefault": "Yes",
+            "businessMeaning": "Determines if the software should automatically calculate and insert the structural framing (studs/plates) into the newly split walls immediately after the split operation.",
+            "validRange": "Yes/No",
+            "unit": "Enumeration",
+            "affectsOutput": "If 'Yes', the wall elements will contain framing geometry immediately. If 'No', the walls remain as empty panels/shells until manually generated."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dMaxWallLength is reduced",
+            "effect": "The script attempts to make more cuts. However, if the new split point falls within the exclusion zones defined by 'dDistanceToWindow' or 'dMinDistanceToWallEdge', the split will fail or shift to the next valid spot.",
+            "cascade": []
+          },
+          {
+            "trigger": "dDistanceToWindow or dMinDistanceToWallEdge is increased",
+            "effect": "The exclusion zones become larger, reducing the available space for valid split points. This may prevent a wall from being split at exactly 'dMaxWallLength', resulting in longer segments than specified.",
+            "cascade": [
+              "dMaxWallLength"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Element (Wall)",
+            "description": "New wall elements created by splitting the original geometry.",
+            "appliedTo": "Selected Wall entities in the model."
+          },
+          {
+            "type": "Construction/Framing",
+            "description": "Structural members (studs, plates, etc.) generated inside the walls.",
+            "appliedTo": "All newly created wall segments (if sGenerate is Yes)."
+          }
+        ]
+      },
+      "tokens_used": 6520,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Launch script via hsb_Split Walls command",
+          "Verify insertion state (_bOnInsert)",
+          "Check insertionCycleCount to prevent re-execution on same instance",
+          "Prompt user to select Wall elements using PrEntity",
+          "Validate selection: if no elements selected, erase script instance",
+          "Store selected elements in internal _Element array",
+          "Iterate through each selected element",
+          "Establish element coordinate system and vector direction",
+          "Define wall geometry (Start Point, End Point, Outline)",
+          "Identify Openings within the wall element",
+          "Generate 'No Valid Areas' (exclusion zones) around Openings based on dDistanceToWindow",
+          "Generate 'No Valid Areas' at Wall Start/End based on dMinDistanceToWallEdge",
+          "Start splitting loop: Calculate tentative split point at dMaxWallLength",
+          "Check if split point exceeds wall end (Finish Wall condition)",
+          "Validate split point against all 'No Valid Areas'",
+          "[Conditional Branch] Interference Handling: If split point is inside an exclusion zone",
+          "If valid split found: Execute dbSplit() on the wall entity",
+          "Add newly created exclusion zone at the split location for subsequent segments",
+          "Repeat loop until entire wall length is processed or safety limit (30 attempts) reached",
+          "Compile list of all resulting wall elements (elToFrame)",
+          "Construct command strings for Hsb_GenerateConstruction (chunking strings to ~130 chars)",
+          "[Conditional Branch] Check sGenerate property",
+          "If 'Yes': Push generation commands to stack",
+          "Erase script instance"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User Selection during PrEntity",
+            "path1": {
+              "name": "Valid Selection",
+              "steps": [
+                "User selects one or more elements",
+                "Script processes elements",
+                "Script instance is kept in memory briefly to execute logic"
+              ]
+            },
+            "path2": {
+              "name": "Empty Selection / Cancel",
+              "steps": [
+                "User cancels or selects nothing",
+                "Script calls eraseInstance()",
+                "Execution terminates immediately"
+              ]
+            }
+          },
+          {
+            "condition": "Split Point Interference Check",
+            "path1": {
+              "name": "No Interference (Valid Point)",
+              "steps": [
+                "Calculated point is outside all exclusion zones",
+                "Script executes wall.dbSplit(ptSplit)",
+                "Wall is physically split into two elements",
+                "Loop continues for the remainder of the wall"
+              ]
+            },
+            "path2": {
+              "name": "Interference Detected (Inside Exclusion Zone)",
+              "steps": [
+                "Calculated point falls within a 'No Valid Area' (e.g., near opening)",
+                "Script calculates the edge of that exclusion zone",
+                "Sets new split point at that edge (-1mm offset)",
+                "Re-runs validation check for the new point"
+              ]
+            }
+          },
+          {
+            "condition": "Framing Generation (sGenerate property)",
+            "path1": {
+              "name": "Yes (Generate)",
+              "steps": [
+                "String array of wall numbers is built",
+                "Long lists are split into chunks under 130 characters",
+                "Commands 'Hsb_GenerateConstruction <numbers>' are pushed to command stack",
+                "Walls are automatically processed for framing"
+              ]
+            },
+            "path2": {
+              "name": "No (Do not Generate)",
+              "steps": [
+                "Command stack is skipped",
+                "Only the geometry splits remain",
+                "Walls are left as raw panels/shells"
+              ]
+            }
+          },
+          {
+            "condition": "Iterative Safety Limit (nTimes > 30)",
+            "path1": {
+              "name": "Success within limit",
+              "steps": [
+                "Split point found within 30 iterations",
+                "Wall splitting completes successfully"
+              ]
+            },
+            "path2": {
+              "name": "Failure / Limit Reached",
+              "steps": [
+                "Unable to find valid split point after 30 attempts",
+                "Script reports notice: 'No Valid Split Location found...'",
+                "Loop terminates (bFinishWall=TRUE)",
+                "Current wall stops splitting (remainder is left unsplit)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "(None, implicit)",
+            "recovery": "Script erases itself if _Element.length() is 0."
+          },
+          {
+            "check": "Wall Length vs Max Length",
+            "errorMessage": "None explicit in code",
+            "recovery": "If wall is shorter than dMaxWallLength, logic calculates split point beyond end, sets bFinishWall=TRUE, and skips splitting."
+          },
+          {
+            "check": "Split Point Proximity to Openings",
+            "errorMessage": "None explicit to user",
+            "recovery": "Script automatically shifts split point to the edge of the exclusion zone defined by dDistanceToWindow."
+          },
+          {
+            "check": "Split Point Proximity to Wall Edges",
+            "errorMessage": "None explicit to user",
+            "recovery": "Script automatically shifts split point to satisfy dMinDistanceToWallEdge."
+          },
+          {
+            "check": "Excessive Iterations (Infinite Loop prevention)",
+            "errorMessage": "'No Valid Split Location found on wall [Code][Number]' reported to notice log.",
+            "recovery": "Script stops processing the current wall and moves to the next element or finishes. User must adjust parameters (Max Length or Distances) manually and retry."
+          },
+          {
+            "check": "Entity Validity (bIsValid)",
+            "errorMessage": "None",
+            "recovery": "Loop skips any elements that return false for bIsValid()."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Split Parameters",
+            "how": "AutoCAD Properties Palette (OPM)",
+            "effect": "Updating dMaxWallLength, dDistanceToWindow, etc., requires re-running the script on the original wall (or deleting split results and retrying), as the script instance erases itself immediately after execution."
+          },
+          {
+            "action": "Generate Framing (if skipped)",
+            "how": "Manual Command / Context Menu",
+            "effect": "User can manually run 'Hsb_GenerateConstruction' on the resulting wall elements if sGenerate was set to 'No'."
+          },
+          {
+            "action": "Undo",
+            "how": "AutoCAD Undo command",
+            "effect": "Reverts the split operations, restoring the original single wall elements."
+          }
+        ]
+      },
+      "tokens_used": 8513,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_Split Walls\n\n## Overview\nAutomatically splits long timber walls into shorter, manufacturable segments based on a defined maximum length. It ensures structural integrity by maintaining specific clearances around wall openings (windows/doors) and wall edges, and optionally generates the framing for the new segments immediately.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D wall elements. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | Intended for model preparation, not drawing creation. |\n\n## Prerequisites\n- **Required entities**: Wall Elements (Element type).\n- **Minimum beam count**: 1 (At least one wall must be selected).\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `hsb_Split Walls` (or via `TSLINSERT` → select `hsb_Split Walls.mcr`)\n\n### Step 2: Configure Properties (Optional)\nBefore selecting elements, you can adjust the splitting parameters in the **Properties Palette** (if available) or rely on the script's default values.\n\n### Step 3: Select Elements\n```\nCommand Line: Please select the elements\nAction: Click on the wall(s) you wish to split in the 3D model. Press Enter to confirm selection.\n```\n\n### Step 4: Execution\nThe script will process the selected walls, splitting them according to the `Max. Wall Length` while respecting the exclusion zones defined by the `Min. Distance` properties. The script instance will then erase itself automatically.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Max. Wall Length | Number | 3600mm | The target maximum length for a single wall panel. The script will attempt to split walls at intervals equal to this length. |\n| Min. Distance to Opening | Number | 300mm | The minimum safety margin required between a split cut and any opening (windows/doors). The split point will be shifted if it falls within this zone. |\n| Min. Distance to Wall Edge | Number | 300mm | The minimum allowable length for the start or end segment of a wall. Prevents creating tiny wall slivers at the ends. |\n| Frame walls after split | Dropdown | Yes | Determines if the software should automatically calculate and insert structural framing (studs/plates) into the newly split walls immediately. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No context menu options are defined for this script. |\n\n## Settings Files\nNone required.\n\n## Tips\n- **Why isn't the wall splitting exactly at 3600mm?**  \n  The script automatically overrides the `Max. Wall Length` if a calculated split point falls too close to a window, door, or wall end. If you see a segment longer than your maximum, it likely means the standard split point was inside a \"no-split zone\" defined by your `Min. Distance` settings.\n- **Batch Processing**: You can select multiple walls at once during the prompt; the script will process all of them in a single operation.\n- **Undo**: If the results are not as expected, use the standard AutoCAD `Undo` command to revert the splits and adjust your parameters before running the script again.\n\n## FAQ\n- **Q: Can I split walls that are already generated/framed?**\n  A: Yes, but you may need to regenerate the framing afterwards if the geometry changes significantly. It is often best practice to split walls before detailed framing generation.\n- **Q: What happens if a wall is shorter than the `Max. Wall Length`?**\n  A: The script will detect this and skip the wall, leaving it unmodified.\n- **Q: The script reported \"No Valid Split Location found\". What does this mean?**\n  A: This occurs if the exclusion zones (distances to openings and edges) are so large that there is no valid space left to cut the wall. Try reducing the `Min. Distance` values or the `Max. Wall Length`."
+      },
+      "tokens_used": 6452,
+      "error": null
+    }
+  }
+}

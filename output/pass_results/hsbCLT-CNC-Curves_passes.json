@@ -1,0 +1,274 @@
+{
+  "filename": "hsbCLT-CNC-Curves.mcr",
+  "status": "completed",
+  "total_tokens": 41886,
+  "processing_time": 300.23605132102966,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8361,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script operates on MasterPanel entities and adds CNC tools (ElemSaw, ElemMill, ElemMarker) directly to the 3D object via master.addTool(). It uses PrEntity to select Polylines and MasterPanels. No 'sd_' prefix, no '_Viewport' references, and it does not generate 2D views."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "MasterPanel",
+            "EntPLine"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space containing MasterPanels and Polylines/Curves",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6102,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5895,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates CNC machining operations (Saw cuts, Milling contours, or Markings) on CLT MasterPanels based on selected polylines or user-drawn geometry.",
+          "category": "Manufacturing / CNC Preparation",
+          "typicalUseCase": "Applying specific manufacturing details to a CLT panel, such as a rebate cut, a complex pocket, or a scribe line, derived from existing 2D geometry or drawn manually in the model."
+        },
+        "parameters": [
+          {
+            "name": "sToolType",
+            "technicalDefault": "Saw",
+            "businessMeaning": "Specifies the category of the CNC operation to be performed.",
+            "validRange": "Saw, Milling, Marker",
+            "unit": "Enumeration",
+            "affectsOutput": "Determines whether an ElemSaw, ElemMill, or ElemMarker object is created on the panel. Controls if the Depth and Angle parameters are applicable."
+          },
+          {
+            "name": "dDepth",
+            "technicalDefault": "10",
+            "businessMeaning": "The depth of the cut or milling operation relative to the reference face.",
+            "validRange": "0.0mm to Panel Thickness",
+            "unit": "mm",
+            "affectsOutput": "Sets the penetration depth for Saw and Mill tools. A value equal to panel thickness typically implies a through-cut."
+          },
+          {
+            "name": "nToolindex",
+            "technicalDefault": "0",
+            "businessMeaning": "The identifier number in the CNC machine's tool library (magazine position) to be used for this operation.",
+            "validRange": "Integer (Machine specific, e.g., 1-20)",
+            "unit": "Count",
+            "affectsOutput": "Links the geometry to specific G-code tool definitions (e.g., selects specific saw blade diameter or router bit)."
+          },
+          {
+            "name": "dAngle",
+            "technicalDefault": "0",
+            "businessMeaning": "The tilt angle of the saw blade relative to the vertical Z-axis of the panel.",
+            "validRange": "-90° to 90° (excluding ±90)",
+            "unit": "degrees",
+            "affectsOutput": "Bevels the saw cut. Only applicable when Tool Type is 'Saw'. The script enforces this to be less than 90 degrees."
+          },
+          {
+            "name": "sSide",
+            "technicalDefault": "Left",
+            "businessMeaning": "Defines the lateral position of the tool relative to the direction of the polyline path.",
+            "validRange": "Left, Center, Right",
+            "unit": "Enumeration",
+            "affectsOutput": "Offsets the tool geometry to the left, right, or directly centered on the reference curve."
+          },
+          {
+            "name": "sFace",
+            "technicalDefault": "Top",
+            "businessMeaning": "Specifies which side of the MasterPanel the operation is applied to (Top Face vs Bottom Face).",
+            "validRange": "Top, Bottom",
+            "unit": "Enumeration",
+            "affectsOutput": "Calculates the Z-offset for the tool origin. If 'Bottom' is selected, the tool direction is inverted and the depth is calculated from the bottom surface upward."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Tool Type is changed to 'Milling' or 'Marker'",
+            "effect": "The 'Saw Angle' parameter is disabled (set to 0 and read-only), as only Saws typically support variable tilting in this context.",
+            "cascade": [
+              "dAngle"
+            ]
+          },
+          {
+            "trigger": "User selects 'Flip Face' from context menu",
+            "effect": "The 'Alignment' (Face) parameter is toggled (Top <-> Bottom), and the 'Saw Angle' is inverted (multiplied by -1) to maintain geometric orientation relative to the new face.",
+            "cascade": [
+              "sFace",
+              "dAngle"
+            ]
+          },
+          {
+            "trigger": "User changes Alignment (Face) property",
+            "effect": "Recalculates the starting surface Z-coordinate and inverts the projection normal of the polyline to ensure the tool cuts from the correct side.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "ElemSaw",
+            "description": "A linear or polygonal saw cut operation, supporting variable angles and depths.",
+            "appliedTo": "MasterPanel"
+          },
+          {
+            "type": "ElemMill",
+            "description": "A milling or routing operation, typically used for contours or pockets, aligned to the curve.",
+            "appliedTo": "MasterPanel"
+          },
+          {
+            "type": "ElemMarker",
+            "description": "A non-cutting operation used for printing, scribing, or placing labels on the panel surface.",
+            "appliedTo": "MasterPanel"
+          }
+        ]
+      },
+      "tokens_used": 7429,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script (hsbCLT-CNC-Curves)",
+          "Script checks for 'ExecuteKey' (Catalog) usage; if none, Properties Dialog appears",
+          "User adjusts Tool Type, Depth, Side, and Alignment settings in the dialog",
+          "Command Line Prompt: 'Select Polylines & MasterPanels, <Enter> to draw'",
+          "[Decision Point] User selects entities OR presses Enter without selection",
+          "[Path A - Selection] Script filters selection into MasterPanels and Polylines",
+          "[Path B - Draw] User clicks Start Point, then Next Points (Jig preview active)",
+          "[Optional Path B] User types Keywords (Left/Center/Right/Saw/Mill/mArker) during drawing to change settings on the fly",
+          "User confirms geometry (Enter/Space)",
+          "Script verifies spatial overlap: Does the Polyline touch/intersect the MasterPanel?",
+          "If valid, Script clones an instance of itself attached to the MasterPanel",
+          "Original 'host' script instance erases itself",
+          "Attached instance calculates the 3D projection based on Alignment (Top/Bottom)",
+          "Attached instance generates the CNC Tool (ElemSaw, ElemMill, or ElemMarker) and adds it to the MasterPanel"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Entity Selection Method during Insert",
+            "path1": {
+              "name": "Pre-selection Mode",
+              "steps": [
+                "User selects existing Polylines and MasterPanels before or during the prompt",
+                "Script validates selection",
+                "Proceeds directly to Cloning phase"
+              ]
+            },
+            "path2": {
+              "name": "Manual Draw Mode",
+              "steps": [
+                "User presses Enter at the selection prompt",
+                "User picks points interactively in the CAD viewport",
+                "Script creates a temporary PLine from points",
+                "If no MasterPanel was selected, user is prompted to select one",
+                "Proceeds to Cloning phase"
+              ]
+            }
+          },
+          {
+            "condition": "Tool Type Property",
+            "path1": {
+              "name": "Saw",
+              "steps": [
+                "Angle property is enabled/writable",
+                "Validation: Angle must be < 90 degrees",
+                "Creates an ElemSaw object"
+              ]
+            },
+            "path2": {
+              "name": "Milling or Marker",
+              "steps": [
+                "Angle property is forced to 0",
+                "Angle property is set to Read-Only",
+                "Creates an ElemMill or ElemMarker object"
+              ]
+            }
+          },
+          {
+            "condition": "Alignment (Face) Setting",
+            "path1": {
+              "name": "Top Face",
+              "steps": [
+                "Reference Coordinate System uses MasterPanel's standard Z-axis",
+                "Depth calculation starts from Top Surface downwards"
+              ]
+            },
+            "path2": {
+              "name": "Bottom Face",
+              "steps": [
+                "Reference Coordinate System inverts Z-axis (points down)",
+                "Depth calculation starts from Bottom Surface upwards",
+                "Saw Angle is inverted (multiplied by -1) to maintain orientation relative to the face"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Saw Angle limit",
+            "errorMessage": "None (Automatic Correction)",
+            "recovery": "If Tool Type is Saw and Angle >= 90°, the script automatically resets the Angle to 0 and recalculates."
+          },
+          {
+            "check": "Tool Dependencies",
+            "errorMessage": "None (Automatic Enforcement)",
+            "recovery": "If Tool Type is changed to Milling or Marker, the Angle is locked to 0 and made Read-Only."
+          },
+          {
+            "check": "Spatial Intersection",
+            "errorMessage": "Tool not generated",
+            "recovery": "During insertion, the script checks if the Polyline is inside or touching the MasterPanel profile. If not, no tool instance is created for that combination."
+          },
+          {
+            "check": "Entity Integrity",
+            "errorMessage": "Script Erasure",
+            "recovery": "If the linked MasterPanel or Polyline is deleted or invalid, the script instance executes `eraseInstance()` to remove itself."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Tool Properties",
+            "how": "AutoCAD Properties Palette (OPM)",
+            "effect": "Updating Depth, Toolindex, or Side immediately updates the CNC geometry on the panel. Changing Tool Type switches the object class (e.g., Saw to Mill)."
+          },
+          {
+            "action": "Flip Face Orientation",
+            "how": "Right-click Context Menu -> 'Flip Face'",
+            "effect": "Toggles the operation between Top and Bottom face. Inverts the Saw Angle to preserve the cut bevel direction relative to the new face."
+          },
+          {
+            "action": "Edit Geometry",
+            "how": "CAD Grips or PEdit on the source Polyline",
+            "effect": "The CNC tool projection updates automatically to follow the modified polyline path."
+          }
+        ]
+      },
+      "tokens_used": 8491,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-CNC-Curves\n\n## Overview\nGenerates CNC machining operations (saw cuts, milling contours, or markings) on CLT MasterPanels based on existing 2D geometry or polylines drawn manually in the model.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates directly on MasterPanels and 3D geometry. |\n| Paper Space | No | Not applicable. |\n| Shop Drawing | No | This is a 3D model preparation script. |\n\n## Prerequisites\n- **Required Entities**: At least one CLT MasterPanel and one Polyline (EntPLine).\n- **Minimum beam count**: 1 MasterPanel.\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbCLT-CNC-Curves.mcr`\n\n### Step 2: Configure Tool Properties\n```\nDialog: Properties Palette appears upon insertion\nAction: Adjust default settings for the CNC operation (Tool Type, Depth, Side, etc.) before proceeding.\n```\n\n### Step 3: Select Geometry or Draw\n```\nCommand Line: Select Polylines & MasterPanels, <Enter> to draw\nAction: You have two options:\n1. Select existing Polylines and MasterPanels in the model.\n2. Press Enter to draw a new Polyline manually.\n```\n\n### Step 4: Define Geometry (if Drawing)\nIf you chose to draw in Step 3:\n```\nCommand Line: Specify start point:\nAction: Click a point on the screen or on the panel.\n```\n```\nCommand Line: Specify next point:\nAction: Click subsequent points. A preview of the tool will be displayed.\n(Optional) Type keywords to change settings on the fly:\n- \"Left\", \"Right\", or \"Center\" (changes tool alignment)\n- \"Saw\", \"Mill\", or \"mArker\" (changes tool type)\n```\n```\nCommand Line: Specify next point or [Enter/Undo] to finish:\nAction: Press Enter or Space to complete the shape.\n```\n\n### Step 5: Select MasterPanel (if missed)\nIf no MasterPanel was selected in Step 3 or 4:\n```\nCommand Line: Select MasterPanel:\nAction: Click the CLT MasterPanel you wish to apply the machining to.\n```\n\n### Step 6: Completion\nThe script validates that the geometry touches the panel. If successful, the CNC tool is attached to the MasterPanel, and the temporary reference script erases itself.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Tool Type | dropdown | Saw | Determines the operation: Saw (cut), Milling (pocket/contour), or Marker (scribe/print). |\n| Depth | number | 10 | The depth of the cut/mill in mm relative to the reference face. |\n| Tool Index | number | 0 | The tool number in the CNC machine magazine (defines the bit/blade to use). |\n| Angle | number | 0 | The tilt angle of the saw blade (degrees). Only available for \"Saw\" type. |\n| Side | dropdown | Left | The lateral position of the tool relative to the polyline direction (Left, Center, or Right). |\n| Alignment (Face) | dropdown | Top | Which side of the panel the operation applies to (Top or Bottom). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Flip Face | Switches the operation between the Top and Bottom face. Automatically inverts the Saw Angle to maintain the correct bevel direction relative to the new face. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **On-the-fly changes**: While drawing the polyline, you can type \"Right\" or \"Center\" to quickly adjust where the tool places itself relative to your cursor path without opening the properties palette.\n- **Editing later**: You can select the original Polyline and use AutoCAD grips or `PEDIT` to modify its shape. The CNC tool on the panel will update automatically to match the new geometry.\n- **Through cuts**: Setting the **Depth** equal to the panel thickness typically results in a through-cut.\n- **Angle limits**: If you set a saw angle to 90° or higher, the script will automatically reset it to 0 to prevent calculation errors.\n\n## FAQ\n- **Q: Why is the Angle parameter greyed out?**\n  **A:** The Angle parameter is only available for the \"Saw\" tool type. If you are using \"Milling\" or \"Marker\", the angle is locked to 0.\n- **Q: I selected a panel and a line, but nothing happened.**\n  **A:** Ensure that the Polyline physically touches or intersects the MasterPanel geometry. If the line is floating in space away from the panel, the tool cannot be generated.\n- **Q: How do I cut from the bottom face up?**\n  **A:** Change the **Alignment** property to \"Bottom\". Alternatively, run the \"Flip Face\" command from the right-click context menu."
+      },
+      "tokens_used": 5608,
+      "error": null
+    }
+  }
+}

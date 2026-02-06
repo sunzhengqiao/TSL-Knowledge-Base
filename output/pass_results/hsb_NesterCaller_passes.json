@@ -1,0 +1,242 @@
+{
+  "filename": "hsb_NesterCaller.mcr",
+  "status": "completed",
+  "total_tokens": 22180,
+  "processing_time": 172.29019355773926,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2470,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script operates on `Sheet` and `EntPLine` entities selected via `PrEntity` and `getEntPLine`. It performs geometric transformations (`ent.transformBy`) directly on these entities. It lacks Shop Drawing specific indicators such as `sd_` functions, `#Type E` declarations, or `_Viewport` checks."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sheet",
+            "EntPLine"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing Sheet entities to nest and a Polyline (EntPLine) serving as the material boundary.",
+          "requiredSettings": [
+            "Hardware Dongle (checked via _kNRNoDongle)"
+          ]
+        }
+      },
+      "tokens_used": 3285,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select a set of sheets to be nested|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getEntPLine",
+              "promptOriginal": "Prompt text not found in code (implicit)",
+              "condition": "_bOnRecalc && _kExecuteKey == strNestAction",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "pAccept",
+            "type": "PropInt",
+            "displayName": "Accept nester result",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "|Nest in EntPLine|",
+            "handler": "|Nest in EntPLine|",
+            "action": "Prompts selection of an EntPline, nests the selected sheets within it, and transforms the entities if 'Accept nester result' is true.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 2759,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Optimizes the placement of selected sheet elements within a defined material boundary (polyline) to minimize waste and calculate efficient cutting layouts.",
+          "category": "Optimization/Production",
+          "typicalUseCase": "Arranging specific timber panels or sheet goods onto a standard raw material board (e.g., OSB or Plywood) represented by a polyline to prepare for CNC machining or cutting lists."
+        },
+        "parameters": [
+          {
+            "name": "pAccept",
+            "technicalDefault": 0,
+            "businessMeaning": "A safety switch to commit the nesting operation. When set to 0, the script calculates and reports the optimal layout without changing the model. When set to 1, it physically moves the selected sheets into their new nested positions.",
+            "validRange": "0 (Preview/Dry Run), 1 (Apply Layout)",
+            "unit": "Boolean (0/1)",
+            "affectsOutput": "Controls the geometric transformation of the selected 'Sheet' entities. If 0, geometry remains static. If 1, entities are translated and rotated to fit inside the target boundary polyline."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Nesting calculation succeeds (nSuccess == _kNROk)",
+            "effect": "Determines whether the value of pAccept is processed. If the nester fails (e.g., parts don't fit), the pAccept check is bypassed to prevent partial or erroneous movements.",
+            "cascade": [
+              "Sheet Coordinates",
+              "Sheet Orientation"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Sheet (Transformed)",
+            "description": "Existing Sheet entities that are moved and rotated to fit within the selected EntPLine boundary.",
+            "appliedTo": "The specific set of Sheets selected by the user during the script insertion phase."
+          }
+        ]
+      },
+      "tokens_used": 4484,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Inserted: User launches script from catalog or command line.",
+          "Prompt Selection: User selects one or more Sheet entities to be nested.",
+          "Insertion Complete: Script instance created in model with reference to selected Sheets.",
+          "Context Action: User Right-Clicks script instance and selects '|Nest in EntPLine|'.",
+          "Prompt Boundary: User selects an existing EntPLine (Polyline) representing the material stock.",
+          "Nester Configuration: Script configures spacing (2mm), timeout, and nester engine (V4).",
+          "Nesting Execution: Nester engine calculates optimal layout of Sheets within the EntPLine.",
+          "Result Evaluation: System checks if calculation succeeded (_kNROk).",
+          "Commit Decision: Script checks the 'Accept nester result' (pAccept) property.",
+          "Completion: Entities are transformed to new positions (if pAccept=1) or coordinates are reported (if pAccept=0)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Nesting calculation success status",
+            "path1": {
+              "name": "Success (_kNROk)",
+              "steps": [
+                "Report nested results to command line.",
+                "Check 'pAccept' property value.",
+                "If pAccept==1, transform entities; else, report only."
+              ]
+            },
+            "path2": {
+              "name": "Failure (Error)",
+              "steps": [
+                "Display report notice '|Not possible to nest|'.",
+                "If error is _kNRNoDongle, display '|No dongle present|'.",
+                "Halt execution without modifying geometry."
+              ]
+            }
+          },
+          {
+            "condition": "Value of 'Accept nester result' (pAccept) property",
+            "path1": {
+              "name": "Apply (pAccept == 1)",
+              "steps": [
+                "Retrieve target Sheet entities by handle.",
+                "Apply calculated translation and rotation (transformBy).",
+                "Physically move Sheets in Model Space."
+              ]
+            },
+            "path2": {
+              "name": "Preview/Dry Run (pAccept == 0)",
+              "steps": [
+                "Loop through calculated results.",
+                "Report coordinate transformation data to command line.",
+                "Skip entity transformation (Geometry remains unchanged)."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Hardware Dongle Presence",
+            "errorMessage": "|No dongle present|",
+            "recovery": "Ensure the required hsbCAD hardware dongle is connected to the computer."
+          },
+          {
+            "check": "Nesting Feasibility",
+            "errorMessage": "|Not possible to nest|",
+            "recovery": "Verify that the selected Sheets can physically fit within the selected EntPLine boundary, considering the 2mm minimum spacing."
+          },
+          {
+            "check": "EntPline Validity",
+            "errorMessage": "Implicit (Nester fails or loop doesn't execute)",
+            "recovery": "Ensure a valid closed polyline (EntPLine) is selected during the context menu prompt."
+          },
+          {
+            "check": "Sheet Selection",
+            "errorMessage": "None explicit, but empty set results in no action",
+            "recovery": "Select at least one Sheet entity during the initial insertion PrEntity prompt."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify 'Accept nester result' property",
+            "how": "Select script instance and change 'pAccept' value in AutoCAD Properties Palette (OPM)",
+            "effect": "Switches the script behavior between 'Preview' (0) and 'Apply' (1) mode for the next nesting execution."
+          },
+          {
+            "action": "Execute Nesting",
+            "how": "Right-click script instance and select '|Nest in EntPLine|' from the context menu",
+            "effect": "Initiates the nesting calculation based on the currently selected Sheets and prompts for a new boundary polyline."
+          }
+        ]
+      },
+      "tokens_used": 4676,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_NesterCaller.mcr\n\n## Overview\nThis script optimizes the placement of selected sheet elements (e.g., OSB or Plywood panels) within a defined material boundary (polyline) to minimize waste and calculate efficient cutting layouts.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This is the primary operating space. Select Sheet entities and boundary polylines here. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Entities:**\n  - `Sheet`: The timber sheets or panels you want to arrange.\n  - `EntPLine`: A closed polyline representing the raw material board or boundary to nest within.\n- **Hardware:** hsbCAD Hardware Dongle must be connected.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_NesterCaller.mcr`\n\n### Step 2: Select Sheets\n```\nCommand Line: Select a set of sheets to be nested\nAction: Click on the Sheet entities in your model that you wish to nest, then press Enter.\n```\n\n### Step 3: Execute Nesting\n```\nAction: Select the script instance in the model (the TSL icon), right-click, and choose \"Nest in EntPLine\".\n```\n\n### Step 4: Select Material Boundary\n```\nAction: Click on the EntPLine (Polyline) that represents the board size or boundary you want to nest the sheets into.\n```\n\n### Step 5: Review Results\n```\nAction: Check the command line for the calculation results.\n- If successful, it will report coordinates and efficiency.\n- If failed, it may report \"Not possible to nest\" or \"No dongle present\".\n```\n\n### Step 6: Apply Layout (If Satisfied)\n```\nAction: Select the script instance, open the Properties Palette (Ctrl+1), and change \"Accept nester result\" to 1. \nThen right-click the script again and select \"Nest in EntPLine\" to physically move the sheets.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Accept nester result | Number | 0 | **Safety Switch**. <br>0 = Preview Mode (Calculates layout but does not move geometry).<br>1 = Apply Mode (Physically moves and rotates sheets to the nested positions). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Nest in EntPLine | Initiates the nesting calculation. Prompts you to select a polyline boundary, calculates the optimal layout, and applies transformations if the \"Accept nester result\" property is set to 1. |\n\n## Settings Files\n- None specific to this script.\n\n## Tips\n- **Always Preview First:** Leave the \"Accept nester result\" property at `0` initially. This allows you to verify that the parts actually fit inside your boundary before permanently moving them.\n- **Check Spacing:** The script uses a default 2mm spacing between parts. Ensure your boundary accounts for this kerf/space.\n- **Dongle Required:** If the command line returns \"No dongle present\", check your USB security dongle connection.\n\n## FAQ\n- **Q: I ran the script, but my sheets didn't move. Why?**\n  **A:** The \"Accept nester result\" property is likely set to `0` (Preview). Change it to `1` in the Properties Palette and run the nesting command again to move the parts.\n- **Q: It says \"Not possible to nest\".**\n  **A:** The combined area of your selected sheets (plus spacing) is likely larger than the selected EntPLine boundary, or the shapes cannot fit geometrically. Try a larger boundary or fewer sheets.\n- **Q: What does \"No dongle present\" mean?**\n  **A:** The nesting algorithm requires a specific hardware security key (dongle) to function. Ensure it is plugged into your computer."
+      },
+      "tokens_used": 4506,
+      "error": null
+    }
+  }
+}

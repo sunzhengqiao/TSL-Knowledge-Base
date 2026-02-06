@@ -16,10 +16,15 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from config import (
     TSL_DIR, PASS_RESULTS_DIR, DOCS_DIR,
     SAVE_INTERVAL, LOG_FILE, CHECKPOINT_FILE,
-    REQUEST_DELAY, RATE_LIMIT_WAIT, CONCURRENT_SCRIPTS
+    REQUEST_DELAY, RATE_LIMIT_WAIT, CONCURRENT_SCRIPTS,
+    MAX_CODE_CHARS, MAX_CODE_CHARS_UNCOMPRESSED, CHUNK_THRESHOLD,
+    ENABLE_COMPRESSION, COMPRESSION_AGGRESSIVE,
+    MAX_OUTPUT_TOKENS, MAX_OUTPUT_TOKENS_FINAL
 )
 from glm_client import GLMClient, GLMResponse
 from prompts import SYSTEM_PROMPT, format_prompt
+from compressor import TSLCompressor, CompressionStats
+from chunker import TSLChunker, ChunkingResult
 
 
 @dataclass
@@ -44,6 +49,8 @@ class ScriptAnalysis:
     processing_time: float = 0
     status: str = "pending"
     error: Optional[str] = None
+    compression_stats: Optional[Dict[str, Any]] = None
+    chunking_info: Optional[Dict[str, Any]] = None
 
 
 @dataclass
@@ -94,6 +101,10 @@ class TSLProcessor:
         # Lock for thread-safe operations
         self._lock = threading.Lock()
         self._checkpoint_lock = threading.Lock()
+
+        # Initialize compressor and chunker
+        self.compressor = TSLCompressor(aggressive=COMPRESSION_AGGRESSIVE)
+        self.chunker = TSLChunker(max_chunk_size=MAX_CODE_CHARS)
 
         # Load existing checkpoint if available
         self._load_checkpoint()
@@ -154,8 +165,79 @@ class TSLProcessor:
             return match.group(1)
         return content
 
-    def truncate_code(self, code: str, max_chars: int = 15000) -> str:
-        """Truncate code to fit in context window"""
+    def prepare_code(self, code: str, filename: str = "unknown") -> tuple:
+        """
+        Prepare code for processing: compress, then chunk if needed
+
+        Returns:
+            Tuple of (chunks_list, compression_stats, chunking_info)
+            - chunks_list: List of code chunks to process (usually 1, more for large files)
+            - compression_stats: Compression statistics or None
+            - chunking_info: Chunking info or None
+        """
+        original_size = len(code)
+        compression_stats = None
+        chunking_info = None
+        chunks_list = []
+
+        # Step 1: Apply compression if enabled and code is large enough
+        if ENABLE_COMPRESSION and original_size > MAX_CODE_CHARS:
+            code, stats = self.compressor.compress(code)
+            compression_stats = {
+                "original_chars": stats.original_chars,
+                "compressed_chars": stats.compressed_chars,
+                "ratio": stats.ratio,
+                "strategies": stats.strategies_applied
+            }
+            self.log(f"  Compressed: {stats.original_chars:,} -> {stats.compressed_chars:,} chars ({stats.ratio*100:.1f}% reduction)")
+
+        # Step 2: Check if chunking is needed
+        if len(code) > CHUNK_THRESHOLD:
+            result = self.chunker.chunk(code, filename)
+            if result.requires_chunking:
+                chunking_info = {
+                    "total_chunks": result.total_chunks,
+                    "chunk_names": [c.name for c in result.chunks]
+                }
+                self.log(f"  Chunked into {result.total_chunks} parts for multi-chunk processing")
+                # Return all chunks for processing
+                for chunk in result.chunks:
+                    chunk_code = chunk.content
+                    # Truncate individual chunks if still too large
+                    if len(chunk_code) > MAX_CODE_CHARS:
+                        first_part = int(MAX_CODE_CHARS * 0.6)
+                        last_part = MAX_CODE_CHARS - first_part - 200
+                        chunk_code = chunk_code[:first_part] + "\n\n... [CHUNK TRUNCATED] ...\n\n" + chunk_code[-last_part:]
+                    chunks_list.append({
+                        "name": chunk.name,
+                        "content": chunk_code,
+                        "region": chunk.region_name
+                    })
+                return chunks_list, compression_stats, chunking_info
+
+        # No chunking needed - single chunk
+        # Step 3: Final truncation as safety net
+        if len(code) > MAX_CODE_CHARS:
+            self.log(f"  Warning: Code still too large after compression ({len(code):,} chars), truncating...")
+            first_part = int(MAX_CODE_CHARS * 0.6)
+            last_part = MAX_CODE_CHARS - first_part - 200
+            code = code[:first_part] + "\n\n... [CODE TRUNCATED] ...\n\n" + code[-last_part:]
+
+        chunks_list.append({
+            "name": "full",
+            "content": code,
+            "region": None
+        })
+        return chunks_list, compression_stats, chunking_info
+
+    def truncate_code(self, code: str, max_chars: int = None) -> str:
+        """
+        Legacy truncate method - kept for compatibility
+        Use prepare_code() for full compression+chunking pipeline
+        """
+        if max_chars is None:
+            max_chars = MAX_CODE_CHARS
+
         if len(code) <= max_chars:
             return code
         first_part = int(max_chars * 0.6)
@@ -270,7 +352,7 @@ class TSLProcessor:
             response = client.chat(
                 user_message=prompt,
                 system_message=SYSTEM_PROMPT,
-                max_tokens=4096 if pass_number < 6 else 8000,
+                max_tokens=MAX_OUTPUT_TOKENS if pass_number < 6 else MAX_OUTPUT_TOKENS_FINAL,
                 temperature=0.3 if pass_number < 6 else 0.5
             )
 
@@ -312,7 +394,7 @@ class TSLProcessor:
         )
 
     def process_script(self, filepath: Path) -> ScriptAnalysis:
-        """Process a single TSL script through all 6 passes"""
+        """Process a single TSL script through all 6 passes (with multi-chunk support)"""
         filename = filepath.name
         self.log(f"Processing: {filename}")
         start_time = time.time()
@@ -330,29 +412,147 @@ class TSLProcessor:
             return analysis
 
         code = self.extract_code_section(content)
-        code = self.truncate_code(code)
 
-        # Run 6 passes
-        for pass_num in range(1, 7):
-            result = self.run_pass(pass_num, filename, code, analysis.passes)
-            analysis.passes[pass_num] = result
-            analysis.total_tokens += result.tokens_used
+        # Use new compression + chunking pipeline
+        chunks_list, compression_stats, chunking_info = self.prepare_code(code, filename)
+        analysis.compression_stats = compression_stats
+        analysis.chunking_info = chunking_info
 
-            if not result.success:
-                self.log(f"  [WARN] Pass {pass_num} failed: {result.error}")
+        # Process chunks
+        if len(chunks_list) == 1:
+            # Single chunk - standard processing
+            chunk_code = chunks_list[0]["content"]
+            for pass_num in range(1, 7):
+                result = self.run_pass(pass_num, filename, chunk_code, analysis.passes)
+                analysis.passes[pass_num] = result
+                analysis.total_tokens += result.tokens_used
 
-        # Extract final documentation
-        if 6 in analysis.passes and analysis.passes[6].success:
-            analysis.final_doc = analysis.passes[6].data.get("markdown", "")
-            analysis.status = "completed"
+                if not result.success:
+                    self.log(f"  [WARN] Pass {pass_num} failed: {result.error}")
+
+            # Extract final documentation
+            if 6 in analysis.passes and analysis.passes[6].success:
+                analysis.final_doc = analysis.passes[6].data.get("markdown", "")
+                analysis.status = "completed"
+            else:
+                analysis.status = "partial"
         else:
-            analysis.status = "partial"
+            # Multi-chunk processing
+            self.log(f"  Processing {len(chunks_list)} chunks...")
+            chunk_docs = []
+
+            for i, chunk in enumerate(chunks_list):
+                chunk_name = chunk["name"]
+                chunk_code = chunk["content"]
+                self.log(f"  [Chunk {i+1}/{len(chunks_list)}] {chunk_name}")
+
+                chunk_passes = {}
+                for pass_num in range(1, 7):
+                    result = self.run_pass(
+                        pass_num,
+                        f"{filename} (Chunk {i+1}: {chunk_name})",
+                        chunk_code,
+                        chunk_passes
+                    )
+                    chunk_passes[pass_num] = result
+                    analysis.total_tokens += result.tokens_used
+
+                    if not result.success:
+                        self.log(f"    [WARN] Pass {pass_num} failed: {result.error}")
+
+                # Store chunk results
+                analysis.passes[f"chunk_{i+1}"] = chunk_passes
+
+                # Extract chunk documentation
+                if 6 in chunk_passes and chunk_passes[6].success:
+                    chunk_doc = chunk_passes[6].data.get("markdown", "")
+                    if chunk_doc:
+                        chunk_docs.append({
+                            "name": chunk_name,
+                            "doc": chunk_doc
+                        })
+
+            # Merge all chunk documentations
+            if chunk_docs:
+                analysis.final_doc = self._merge_chunk_docs(filename, chunk_docs)
+                analysis.status = "completed"
+            else:
+                analysis.status = "partial"
 
         analysis.processing_time = time.time() - start_time
         self.results[filename] = analysis
 
         self.log(f"  [OK] Completed in {analysis.processing_time:.1f}s, {analysis.total_tokens} tokens")
         return analysis
+
+    def _merge_chunk_docs(self, filename: str, chunk_docs: List[Dict]) -> str:
+        """Merge documentation from multiple chunks into a single document"""
+        if len(chunk_docs) == 1:
+            return chunk_docs[0]["doc"]
+
+        # Parse and merge sections from all chunks
+        merged_sections = {}
+        section_order = []
+
+        for chunk in chunk_docs:
+            doc = chunk["doc"]
+            current_section = None
+            current_content = []
+
+            for line in doc.split('\n'):
+                # Detect section headers (## Header)
+                if line.startswith('## '):
+                    # Save previous section
+                    if current_section:
+                        if current_section not in merged_sections:
+                            merged_sections[current_section] = []
+                            section_order.append(current_section)
+                        merged_sections[current_section].append('\n'.join(current_content))
+
+                    current_section = line
+                    current_content = []
+                elif line.startswith('# ') and not line.startswith('## '):
+                    # Main title - skip duplicates
+                    if "title" not in merged_sections:
+                        merged_sections["title"] = [line]
+                        section_order.insert(0, "title")
+                else:
+                    current_content.append(line)
+
+            # Save last section
+            if current_section:
+                if current_section not in merged_sections:
+                    merged_sections[current_section] = []
+                    section_order.append(current_section)
+                merged_sections[current_section].append('\n'.join(current_content))
+
+        # Build merged document
+        merged_doc = []
+
+        for section in section_order:
+            if section == "title":
+                merged_doc.append(merged_sections[section][0])
+                merged_doc.append("")
+            else:
+                merged_doc.append(section)
+                # Combine content from all chunks, removing duplicates
+                all_content = []
+                seen_lines = set()
+                for content in merged_sections[section]:
+                    for line in content.split('\n'):
+                        line_stripped = line.strip()
+                        # Skip empty lines at boundaries and exact duplicates
+                        if line_stripped and line_stripped not in seen_lines:
+                            all_content.append(line)
+                            if len(line_stripped) > 20:  # Only track substantial lines
+                                seen_lines.add(line_stripped)
+                        elif not line_stripped and all_content and all_content[-1].strip():
+                            all_content.append(line)  # Keep single empty lines
+
+                merged_doc.append('\n'.join(all_content))
+                merged_doc.append("")
+
+        return '\n'.join(merged_doc)
 
     def save_results(self, analysis: ScriptAnalysis):
         """Save analysis results to files"""
@@ -361,20 +561,40 @@ class TSLProcessor:
 
             # Save pass results as JSON
             pass_results_file = PASS_RESULTS_DIR / f"{base_name}_passes.json"
+
+            # Handle both single-chunk and multi-chunk pass data
+            def serialize_passes(passes_dict):
+                result = {}
+                for k, v in passes_dict.items():
+                    if isinstance(v, dict):
+                        # Multi-chunk: v is a dict of {pass_num: PassResult}
+                        result[str(k)] = {
+                            str(pk): {
+                                "success": pv.success,
+                                "data": pv.data,
+                                "tokens_used": pv.tokens_used,
+                                "error": pv.error
+                            }
+                            for pk, pv in v.items()
+                        }
+                    else:
+                        # Single-chunk: v is a PassResult
+                        result[str(k)] = {
+                            "success": v.success,
+                            "data": v.data,
+                            "tokens_used": v.tokens_used,
+                            "error": v.error
+                        }
+                return result
+
             pass_data = {
                 "filename": analysis.filename,
                 "status": analysis.status,
                 "total_tokens": analysis.total_tokens,
                 "processing_time": analysis.processing_time,
-                "passes": {
-                    str(k): {
-                        "success": v.success,
-                        "data": v.data,
-                        "tokens_used": v.tokens_used,
-                        "error": v.error
-                    }
-                    for k, v in analysis.passes.items()
-                }
+                "compression": analysis.compression_stats,
+                "chunking": analysis.chunking_info,
+                "passes": serialize_passes(analysis.passes)
             }
             with open(pass_results_file, "w", encoding="utf-8") as f:
                 json.dump(pass_data, f, indent=2, ensure_ascii=False)

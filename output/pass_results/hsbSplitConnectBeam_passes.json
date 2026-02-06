@@ -1,0 +1,321 @@
+{
+  "filename": "hsbSplitConnectBeam.mcr",
+  "status": "completed",
+  "total_tokens": 42074,
+  "processing_time": 237.0830636024475,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"header\": {\n    \"type\": null,\n    \"numBeamsReq\": null,\n    \"keywords\": [],\n    \"majorVersion\": null,\n"
+      },
+      "tokens_used": 7729,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Explicit use of `_kModelSpace` in `tslNew.dbCreate()` function call. The script manipulates physical `Beam` entities using 3D operations like `dbSplit`, `dbJoin`, and vector math (`vecX`, `vecZ`). No Paper Space constructs (`_Viewport`, `_kPaperSpace`, `Sheet`) or Shop Drawing prefixes (`sd_`, `Multipage`) were found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5077,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "T(\"|Select beam(s)|\")",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrPoint",
+              "promptOriginal": "TN(\"|Select split point|\")",
+              "condition": "_bOnInsert && _Beam.length() == 1",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "PrPoint",
+              "promptOriginal": "TN(\"|Select second point|\")",
+              "condition": "_bOnInsert && _Beam.length() == 1 && !_ZU.isParallelTo(_ZW)",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog (Standard)",
+            "trigger": "Insertion if no Execute Key provided",
+            "title": null,
+            "dataSource": "Internal Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dGap",
+            "type": "PropDouble",
+            "displayName": "T(\"(A) |Gap|\")",
+            "defaultValue": "U(0)",
+            "inputType": "number",
+            "options": [],
+            "category": "T(\"|General|\")",
+            "description": "T(\"|Defines the Gap|\")"
+          },
+          {
+            "index": 1,
+            "variable": "dStaggerOffset",
+            "type": "PropDouble",
+            "displayName": "T(\"(B) |Stagger Offset|\")",
+            "defaultValue": "U(0)",
+            "inputType": "number",
+            "options": [],
+            "category": "T(\"|General|\")",
+            "description": "T(\"|Defines the offset to create a staggered spliiting distribution.|\") + T(\" |Ever second split location will be offseted by the given value.|\")"
+          },
+          {
+            "index": 0,
+            "variable": "sOrientation",
+            "type": "PropString",
+            "displayName": "T(\"(C) |Orientation|\")",
+            "defaultValue": "T(\"|Perpendicular|\")",
+            "inputType": "dropdown",
+            "options": [
+              "T(\"|Perpendicular|\")",
+              "T(\"|Plumb|\")",
+              "T(\"|Horizontal|\")"
+            ],
+            "category": "T(\"|General|\")",
+            "description": "T(\"|Defines the orientation relative to WCS|\")"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "T(\"../|Join beams|\")",
+            "handler": "sTriggerJoin",
+            "action": "Joins the associated beams and erases the tool instance",
+            "alsoTriggeredBy": "TslDoubleClick"
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 8130,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Splits a single beam into two parts or manages the end-cut of two butting beams, creating a gap for splicing or connection plates.",
+          "category": "Framing/Modification",
+          "typicalUseCase": "Creating a butt-joint splice in a long beam, or separating two beams to allow space for a steel connection plate/gusset."
+        },
+        "parameters": [
+          {
+            "name": "dGap",
+            "technicalDefault": "U(0)",
+            "businessMeaning": "The physical clearance or distance between the two ends of the beams. This represents the space required for a steel splice plate, plywood gusset, or expansion joint.",
+            "validRange": "0.0 to 100.0",
+            "unit": "mm",
+            "affectsOutput": "Adjusts the distance between the two beam cut faces. The beams are shortened or stretched to accommodate this gap."
+          },
+          {
+            "name": "dStaggerOffset",
+            "technicalDefault": "U(0)",
+            "businessMeaning": "The distance to offset the cut location for every second beam in a selection. Used to avoid continuous weak lines across a structure (e.g., staggering joints in a row of parallel joists).",
+            "validRange": "0.0 to 2000.0",
+            "unit": "mm",
+            "affectsOutput": "During insertion, shifts the split point for alternating beams along their axis."
+          },
+          {
+            "name": "sOrientation",
+            "technicalDefault": "T(\"|Perpendicular|\")",
+            "businessMeaning": "Defines the angle of the cut face relative to the beam or world coordinates.",
+            "validRange": "Perpendicular, Plumb, Horizontal",
+            "unit": "enum",
+            "affectsOutput": "Determines the rotation of the beam's end face. 'Perpendicular' cuts square to the beam axis; 'Plumb' creates a vertical cut (useful for sloped rafters meeting walls); 'Horizontal' creates a flat cut."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Change to dStaggerOffset",
+            "effect": "If modified while the tool exists, it temporarily shifts the connection point along the beam axis. Note: The script logic often resets this value to 0 after applying the shift in recalculation to act as a relative nudge rather than a permanent property.",
+            "cascade": [
+              "_Pt0 (Connection Point)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Cut (Geometry Modification)",
+            "description": "End cuts applied to the beams to create the joint and gap.",
+            "appliedTo": "The selected Beam entities."
+          },
+          {
+            "type": "TSL Instance (SmartTool)",
+            "description": "A logic instance that remains attached to the beams to maintain the gap and cut relationship during updates.",
+            "appliedTo": "The Model Space coordinate at the connection point."
+          }
+        ]
+      },
+      "tokens_used": 7345,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script execution triggered.",
+          "2. Check for Execute Key (Catalog entry) or show Dialog to set initial properties (Gap, Stagger, Orientation).",
+          "3. Prompt user to select beam(s) via PrEntity.",
+          "4. Evaluate selection:",
+          "   - If 0 beams: Erase instance and exit.",
+          "   - If 1 beam: Proceed to Single Beam Split workflow.",
+          "   - If >1 beams: Search for a second valid, parallel beam.",
+          "5. [Single Beam Path] Prompt user for Split Point (PrPoint).",
+          "6. [Single Beam Path] Conditionally prompt for second point if Construction Plane is not vertical relative to World.",
+          "7. [Single Beam Path] Calculate split location (applying Stagger Offset if applicable).",
+          "8. [Single Beam Path] Split the beam using dbSplit (creating a Gap).",
+          "9. [Single Beam Path] Create a NEW TSL instance attached to the two resulting beam segments.",
+          "10. [Single Beam Path] Erase the original temporary TSL instance and exit.",
+          "11. [Multiple Beams Path] Auto-calculate connection point (_Pt0) between the two detected beams.",
+          "12. [Multiple Beams Path] Instance creation complete; tool attaches to the two beams.",
+          "13. [Recalculation] Validate beam geometry (parallelism, alignment, range).",
+          "14. [Recalculation] If valid: Apply Cuts to beam ends to maintain Gap and Orientation.",
+          "15. [Recalculation] If invalid or 'Join' triggered: Merge beams (dbJoin) and erase instance."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Number of beams selected during insertion",
+            "path1": {
+              "name": "Single Beam (Split Mode)",
+              "steps": [
+                "User selects 1 beam.",
+                "Script prompts for 'Select split point'.",
+                "If UCS is not vertical, prompts for 'Select second point' to define plane.",
+                "Script calculates split location using dGap and dStaggerOffset.",
+                "Beam is split into two separate entities.",
+                "A new TSL instance is generated to link the two new beam ends.",
+                "The current script instance is erased."
+              ]
+            },
+            "path2": {
+              "name": "Multiple Beams (Connect Mode)",
+              "steps": [
+                "User selects 1+ beams.",
+                "Script iterates selection to find a second beam parallel to the first.",
+                "Checks alignment (Y/Z offsets within tolerance).",
+                "If second beam found, instance is created at the midpoint between the closest beam ends.",
+                "If no valid second beam found, defaults to Single Beam (Split Mode)."
+              ]
+            }
+          },
+          {
+            "condition": "Geometry Validation during Recalculation",
+            "path1": {
+              "name": "Valid Connection (Stretch)",
+              "steps": [
+                "Checks: X-axes parallel, no relative tilt, offsets within tolerance.",
+                "Checks: Connection point is reachable by stretching.",
+                "Applies Cut tools to both beams (bm0, bm1) based on Gap and Orientation.",
+                "Draws visual representation (Circle + Line)."
+              ]
+            },
+            "path2": {
+              "name": "Invalid Connection / Join Trigger",
+              "steps": [
+                "Triggered by: Geometry breaking rules OR User clicks 'Join beams' / Double Clicks.",
+                "Executes dbJoin to merge the two beam entities back into one.",
+                "Erases the TSL instance."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam Selection Count",
+            "errorMessage": "Implicit (Tool simply erases)",
+            "recovery": "User must run the command again and select at least one beam."
+          },
+          {
+            "check": "Parallelism",
+            "errorMessage": "None specific, but tool deletes itself",
+            "recovery": "Ensure beams are parallel before tool creation or update."
+          },
+          {
+            "check": "Tilt (Relative Rotation)",
+            "errorMessage": "None specific, but tool deletes itself",
+            "recovery": "Ensure beams are not twisted relative to each other."
+          },
+          {
+            "check": "Connection Point Range",
+            "errorMessage": "None specific, but tool deletes itself",
+            "recovery": "Ensure the tool location/grip remains within the bounds of the beams' combined length."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Gap",
+            "how": "OPM Property (dGap)",
+            "effect": "Increases or decreases the space between the two beam ends by stretching the beams."
+          },
+          {
+            "action": "Change Cut Orientation",
+            "how": "OPM Property (sOrientation)",
+            "effect": "Rotates the cut face of the beams (Perpendicular to beam, Plumb/Vertical, Horizontal)."
+          },
+          {
+            "action": "Stagger Connection",
+            "how": "OPM Property (dStaggerOffset)",
+            "effect": "Temporarily shifts the cut location along the beam axis. The value resets to 0 after application, acting as a one-time nudge."
+          },
+          {
+            "action": "Move Connection Point",
+            "how": "Grip Edit (_Pt0)",
+            "effect": "Drags the split location along the beam axis; beams stretch to follow the grip."
+          },
+          {
+            "action": "Join Beams",
+            "how": "Right-click Context Menu ('../|Join beams|') or Double Click",
+            "effect": "Merges the two beam entities into a single beam and removes the TSL tool."
+          }
+        ]
+      },
+      "tokens_used": 8240,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbSplitConnectBeam.mcr\n\n## Overview\nThis script allows you to split a single beam into two segments or connect two adjacent beams with a specific gap and cut orientation. It is ideal for creating butt-joint splices, making space for steel connection plates, or managing expansion gaps in timber frames.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script operates on 3D beam entities. |\n| Paper Space | No | Not applicable for 2D drawings. |\n| Shop Drawing | No | This is a modeling tool, not a detailing tool. |\n\n## Prerequisites\n- **Required entities**: At least one hsbCAD Beam.\n- **Minimum beam count**: 1 (to split) or 2 (to connect).\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nRun the command `TSLINSERT` and select `hsbSplitConnectBeam.mcr` from the list.\n\n### Step 2: Select Beams\n```\nCommand Line: Select beam(s)\nAction: Click on the beam you wish to split, or select multiple beams to connect them.\n```\n\n### Step 3: Define Split Location (Single Beam Mode)\n*If you selected only one beam, you will be prompted to define the cut location.*\n\n```\nCommand Line: Select split point\nAction: Click a point along the length of the beam where you want the split to occur.\n```\n\n*Note: If your construction plane is not vertical relative to the World Coordinate System (WCS), you may see an additional prompt:*\n\n```\nCommand Line: Select second point\nAction: Click a second point to define the vertical plane for the cut.\n```\n\n*The beam will automatically split into two separate entities, and a new tool instance will be created at the split location.*\n\n### Step 4: Connection Established (Multi-Beam Mode)\n*If you selected two or more beams, the script will automatically search for a second beam that is parallel and aligned with the first one. It will create the connection at the midpoint between the closest ends.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| (A) Gap | Number | 0 | Defines the distance between the two beam ends. Use this to create space for a steel plate or gusset. |\n| (B) Stagger Offset | Number | 0 | Offsets the cut location along the beam axis. This is useful for staggering joints in a row of parallel joists (e.g., every second joint shifts slightly). Note: This value resets to 0 after applying the offset. |\n| (C) Orientation | Dropdown | Perpendicular | Determines the angle of the cut face. <br>• **Perpendicular**: Cuts square to the beam axis.<br>• **Plumb**: Creates a vertical cut (useful for sloped rafters).<br>• **Horizontal**: Creates a flat level cut. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| ../Join beams | Removes the gap/tool and merges the two beam segments back into a single, continuous beam. |\n\n## Settings Files\n- None.\n\n## Tips\n- **Joining Beams Quickly**: You can double-click the tool instance in the model to trigger the \"Join beams\" action instantly.\n- **Moving the Split**: Select the tool instance and drag the grip (the insertion point) along the beam axis to move the split location. The beams will stretch automatically to accommodate the move.\n- **Visualizing the Gap**: After insertion, the tool draws a circle and line to indicate the center of the connection, making it easy to see where the split occurs.\n\n## FAQ\n- **Q: Why did the tool disappear after I selected the beams?**\n  **A**: This usually happens if you selected only one beam but did not provide a valid split point, or if you selected multiple beams but the script could not find a second beam that was parallel and aligned correctly.\n  \n- **Q: Can I use this on non-parallel beams?**\n  **A**: No, the script requires beams to be parallel to create a valid connection. If the beams are not parallel, the tool will delete itself.\n\n- **Q: How do I undo a split?**\n  **A**: Right-click the tool instance and select \"Join beams\", or simply double-click the tool. This will merge the segments and remove the tool."
+      },
+      "tokens_used": 5553,
+      "error": null
+    }
+  }
+}

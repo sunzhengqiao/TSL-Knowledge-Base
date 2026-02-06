@@ -1,0 +1,265 @@
+{
+  "filename": "hsbCLT-AssignPosNum.mcr",
+  "status": "completed",
+  "total_tokens": 26987,
+  "processing_time": 216.93116235733032,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5736,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Interactive selection loop using PrEntity for Sip, ChildPanel, and TslInst entities. Direct manipulation of model entity properties via sip.assignPosnum() and sip.releasePosnum(). Absence of ShopDrawing patterns (sd_, Multipage*, #Type E, _Viewport)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sip",
+            "ChildPanel",
+            "TslInst"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing panels (Sip) or references to panels",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3143,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select panel or panel reference (item, child panel)",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "On Insert (if _kExecuteKey is empty)",
+            "title": "Properties",
+            "dataSource": "OPM Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "nStartNumber",
+            "type": "PropInt",
+            "displayName": "StartNumber",
+            "defaultValue": "1",
+            "inputType": "number",
+            "options": [],
+            "category": "General",
+            "description": "Defines the StartNumber"
+          },
+          {
+            "index": 1,
+            "variable": "sKeepNumber",
+            "type": "PropString",
+            "displayName": "Keep existing number",
+            "defaultValue": "No",
+            "inputType": "dropdown",
+            "options": [
+              "No",
+              "Yes"
+            ],
+            "category": "General",
+            "description": "Specifies whether to keep a potential number."
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5068,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Interactively assigns sequential position numbers to CLT panels or references to panels based on user selection order.",
+          "category": "Data Management",
+          "typicalUseCase": "Renumbering a batch of panels for production labeling or updating shop drawing lists when panel sequence changes."
+        },
+        "parameters": [
+          {
+            "name": "nStartNumber",
+            "technicalDefault": "1",
+            "businessMeaning": "The starting integer for the numbering sequence. This determines the number assigned to the first selected panel in the current session.",
+            "validRange": "1 to 999999 (Positive integers)",
+            "unit": "Count",
+            "affectsOutput": "Sets the Position Number (PosNum) attribute of the first selected panel. Subsequent panels receive incremented values (StartNumber + 1, etc.)."
+          },
+          {
+            "name": "sKeepNumber",
+            "technicalDefault": "No",
+            "businessMeaning": "Determines how to treat panels that already have a position number assigned.",
+            "validRange": "No, Yes",
+            "unit": "Enumeration",
+            "affectsOutput": "If set to 'No', existing numbers are released and overwritten with the new sequence. If set to 'Yes', panels already numbered are skipped and excluded from the new sequence count."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Data Attribute (PosNum)",
+            "description": "Updates the integer identifier (Position Number) associated with the panel entity.",
+            "appliedTo": "Sip (Panels), selected directly or via ChildPanel/TslInst references."
+          }
+        ]
+      },
+      "tokens_used": 3920,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script hsbCLT-AssignPosNum",
+          "[Conditional] Check if insertCycleCount > 1",
+          "[True] Erase script instance and return (Script logic runs only once per insertion)",
+          "[False] Check for Execute Key (_kExecuteKey)",
+          "[Conditional] Execute Key Processing",
+          "[Key Exists] Compare key against catalog entries. If match found, load properties from that catalog; otherwise load from '_LastInserted'. Skip Properties dialog.",
+          "[Key Empty] Show Properties Dialog (OPM) allowing user to set StartNumber and Keep existing number.",
+          "Read 'nStartNumber' and 'sKeepNumber' from properties",
+          "Initialize counters: Set current number to 'nStartNumber' (defaulting to 1 if <= 0)",
+          "Start Selection Loop (While True)",
+          "Prompt user: 'Select panel or panel reference (item, child panel)'",
+          "[Conditional] User Selection",
+          "[User selects entities] Process selection set",
+          "[User presses Enter/Escape/Cancel] Exit selection loop",
+          "Process selected entities loop:",
+          "Check entity type (Sip, ChildPanel, or TslInst)",
+          "[ChildPanel] Resolve to parent Sip entity",
+          "[TslInst] Check for 'Hsb_Item' subMap, resolve to contained Sip entity",
+          "[Sip] Use directly",
+          "[Conditional] 'Keep existing number' Logic",
+          "[Keep Number = Yes AND Panel has PosNum > 0] Skip panel, report 'Panel is already numbered', continue to next entity",
+          "[Keep Number = No OR Panel has PosNum = 0] Add panel to numbering list",
+          "Numbering Application Loop:",
+          "Check if panel was already numbered in this session (prevent duplicates)",
+          "[Conditional] Existing Number Handling",
+          "[Keep Number = No AND Panel has PosNum > 0] Release existing PosNum",
+          "Assign new PosNum to panel (Increment current number)",
+          "Report success: 'Number X assigned to panel'",
+          "Add panel to list of processed entities",
+          "Loop back to Selection Prompt",
+          "Exit Selection Loop",
+          "Erase script instance",
+          "Finish"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Method (_kExecuteKey presence)",
+            "path1": {
+              "name": "Command/Catalog Execution",
+              "steps": [
+                "Detect _kExecuteKey",
+                "Search script catalogs for matching key",
+                "[Match] Load properties from specific catalog",
+                "[No Match] Load properties from '_LastInserted'",
+                "Proceed to numbering"
+              ]
+            },
+            "path2": {
+              "name": "Manual Insertion",
+              "steps": [
+                "Detect empty _kExecuteKey",
+                "Show Properties Dialog (StartNumber, Keep existing number)",
+                "User confirms OK",
+                "Proceed to numbering"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Type Selection",
+            "path1": {
+              "name": "Direct Panel Selection",
+              "steps": [
+                "Select Sip entity",
+                "Proceed to number assignment logic"
+              ]
+            },
+            "path2": {
+              "name": "Reference Resolution",
+              "steps": [
+                "Select ChildPanel or TslInst",
+                "Traverse reference to find parent Sip entity",
+                "Proceed to number assignment logic"
+              ]
+            }
+          },
+          {
+            "condition": "Keep existing number setting",
+            "path1": {
+              "name": "Overwrite Mode (No)",
+              "steps": [
+                "Check panel PosNum",
+                "[>0] Release existing number",
+                "Assign new sequential number"
+              ]
+            },
+            "path2": {
+              "name": "Preserve Mode (Yes)",
+              "steps": [
+                "Check panel PosNum",
+                "[>0] Skip panel (Do not assign new number)",
+                "[=0] Assign new sequential number"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Validity",
+            "errorMessage": "None explicitly shown (Internal logic handles invalid entities via continue)",
+            "recovery": "Script ignores invalid selections automatically. User must select a valid Panel (Sip), ChildPanel, or Item."
+          },
+          {
+            "check": "StartNumber Value",
+            "errorMessage": "None explicitly shown",
+            "recovery": "Script internal logic defaults 'nStartNumber' to 1 if value is <= 0."
+          },
+          {
+            "check": "Unique Selection in Session",
+            "errorMessage": "None explicitly shown",
+            "recovery": "Script checks 'sipsNumbered' array. If a panel is selected twice in the same session, the second attempt is ignored to prevent duplicate assignment."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 4656,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-AssignPosNum\n\n## Overview\nThis script interactively assigns sequential position numbers to CLT panels or panel references. It allows you to control the starting number and decide whether to overwrite existing numbers or preserve them, based on the order you select the panels in the model.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script runs in the 3D model to modify panel attributes. |\n| Paper Space | No | Not designed for layout views. |\n| Shop Drawing | No | Not designed for detailing views. |\n\n## Prerequisites\n- **Required entities**: Panels (Sip), ChildPanels, or TslInst items must exist in the model.\n- **Minimum beam count**: 0\n- **Required settings files**: None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbCLT-AssignPosNum.mcr` from the file browser.\n\n### Step 2: Configure Properties\nAfter selecting the script file, the Properties Palette (OPM) will appear automatically.\n```\nAction: Set the StartNumber and Keep existing number options.\n```\n- **StartNumber**: Enter the integer you want to begin the sequence with (e.g., 1, 100, 500).\n- **Keep existing number**: Choose \"No\" to overwrite all selected panels, or \"Yes\" to skip panels that already have a number.\n\n### Step 3: Select Panels\n```\nCommand Line: Select panel or panel reference (item, child panel)\nAction: Click on a panel in the model.\n```\n- You can click directly on a panel, or select a reference to a panel (such as a child panel or an item instance).\n\n### Step 4: Continue Selection Loop\nThe script will assign the current number to the selected panel and increment the counter.\n```\nCommand Line: Select panel or panel reference (item, child panel)\nAction: Continue clicking panels to assign the next number in the sequence.\n```\n\n### Step 5: Finish\n```\nAction: Press Enter or Escape on the keyboard.\n```\nThe script instance will erase itself automatically, leaving the numbered panels in the model.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| StartNumber | number | 1 | The number assigned to the first panel you select. Subsequent panels receive +1, +2, etc. |\n| Keep existing number | dropdown | No | Determines how to treat panels that already have a position number. <br>**No**: Overwrites existing numbers with the new sequence.<br>**Yes**: Skips panels that are already numbered and only assigns numbers to unnumbered panels. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script runs immediately upon insertion and does not add persistent right-click menu options to entities. |\n\n## Settings Files\n- **Filename**: None required\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Reference Selection**: You can select panels that are grouped inside assemblies or references. The script will find the parent panel automatically.\n- **Preventing Duplicates**: If you accidentally select the same panel twice in one session, the script will ignore the second selection to prevent duplicate numbering.\n- **Batch Renumbering**: Use the \"Keep existing number = No\" setting to completely renumber a specific batch of panels starting from a specific index (e.g., starting a new phase at 100).\n\n## FAQ\n- **Q: Can I use this to number just one panel?**\n  - A: Yes. Select the panel and press Enter immediately to assign just the start number.\n- **Q: What happens if I select a panel that already has number 10, but my StartNumber is 1?**\n  - A: It depends on the \"Keep existing number\" setting. If \"No\", the panel loses the 10 and gets assigned 1. If \"Yes\", the panel keeps 10, and your StartNumber (1) is assigned to the next unnumbered panel you select.\n- **Q: Why did the script disappear after I pressed Enter?**\n  - A: This is a single-use utility script. It automatically erases itself after the numbering task is complete to keep your drawing clean."
+      },
+      "tokens_used": 4464,
+      "error": null
+    }
+  }
+}

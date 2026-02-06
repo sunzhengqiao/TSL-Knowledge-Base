@@ -1,0 +1,352 @@
+{
+  "filename": "Simpson StrongTie BS.mcr",
+  "status": "completed",
+  "total_tokens": 57484,
+  "processing_time": 352.25618076324463,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10778,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses GenBeam entities, operates on 3D geometry (points, vectors), and adds hardware components (HardWrComp). It calculates positions based on beam intersections and generates 3D bodies (Body bd). There are no references to sd_*, Multipage, #Type E, or Viewport entities typical of ShopDrawing/Paper Space scripts. The insert instruction 'Select 2 beams' implies direct model interaction."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space with two intersecting or perpendicular beams",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7149,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 11497,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Inserts and configures Simpson Strong-Tie face-mount timber hangers (BSN, BSI, BSIL, BSD, BSDIL) at beam intersections.",
+          "category": "Hardware",
+          "typicalUseCase": "Connecting a supported beam (male) into a supporting beam (female) using specific Simpson Strong-Tie standard products."
+        },
+        "parameters": [
+          {
+            "name": "sArticlesRaw[]",
+            "technicalDefault": "Array of strings (e.g., 'BSN40/99-B')",
+            "businessMeaning": "The catalog of supported Simpson Strong-Tie part numbers. The script searches this list to find a hanger that fits the beam dimensions.",
+            "validRange": "Predefined list of manufacturer SKUs",
+            "unit": "string",
+            "affectsOutput": "Determines the specific geometry generated, the material thickness, and the nail/bolt quantities added to the BOM."
+          },
+          {
+            "name": "dAs[] (Widths)",
+            "technicalDefault": "Array of doubles (e.g., U(40))",
+            "businessMeaning": "The width of the hanger (face width), corresponding to the width of the supported (male) beam.",
+            "validRange": "40mm - 150mm (dependent on SKU)",
+            "unit": "mm",
+            "affectsOutput": "Used to find the best-fitting hanger for the selected male beam width."
+          },
+          {
+            "name": "d Bs[] (Heights)",
+            "technicalDefault": "Array of doubles (e.g., U(99))",
+            "businessMeaning": "The height of the hanger, corresponding to the height of the supported (male) beam.",
+            "validRange": "90mm - 235mm (dependent on SKU)",
+            "unit": "mm",
+            "affectsOutput": "Used to find the best-fitting hanger for the selected male beam height."
+          },
+          {
+            "name": "nFullHTs[] / nPartHTs[] / nFullNTs[] / nPartNTs[]",
+            "technicalDefault": "Arrays of integers",
+            "businessMeaning": "Fastener quantities. 'HT' refers to nails into the header (male beam) top flange, 'NT' to nails into the header bottom flange or nailer. 'Full' vs 'Part' allows for reduced nailing patterns.",
+            "validRange": "4 - 30 nails per connection",
+            "unit": "count",
+            "affectsOutput": "Directly controls the quantity of the 'CNA 4x60' nail sub-components added to the hardware list."
+          },
+          {
+            "name": "bFlushMounted",
+            "technicalDefault": "false",
+            "businessMeaning": "Determines if the hanger sits flush with the bottom of the supporting beam (standard) or is adjusted for other configurations.",
+            "validRange": "true / false",
+            "unit": "boolean",
+            "affectsOutput": "Adjusts the vertical Z-position of the 3D hanger body."
+          },
+          {
+            "name": "nMarking",
+            "technicalDefault": "0",
+            "businessMeaning": "Controls the visual marking style on the beam to indicate hanger placement.",
+            "validRange": "0=None, 1..8=Line styles, 9=Text label",
+            "unit": "integer",
+            "affectsOutput": "Adds Mark entities to the beam and generates DimRequests for shop drawings if > 0."
+          },
+          {
+            "name": "sMarkingPosNum",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Custom text to be used as the marking label instead of the default position number.",
+            "validRange": "String",
+            "unit": "string",
+            "affectsOutput": "Overrides the text content of the Mark entity."
+          },
+          {
+            "name": "bMarkIncludeMalePosNum",
+            "technicalDefault": "false",
+            "businessMeaning": "Appends the male beam's position number to the marking text.",
+            "validRange": "true / false",
+            "unit": "boolean",
+            "affectsOutput": "Modifies the string content of the Mark entity (e.g., 'FEM/MAL')."
+          },
+          {
+            "name": "bPurgeHardware",
+            "technicalDefault": "false",
+            "businessMeaning": "Forces the removal of all hardware components generated by this script instance before regenerating.",
+            "validRange": "true / false",
+            "unit": "boolean",
+            "affectsOutput": "Clears the hardware list to prevent duplicates or incorrect leftovers."
+          },
+          {
+            "name": "nPartFull",
+            "technicalDefault": "0",
+            "businessMeaning": "Switches between a full nailing schedule or a reduced (partial) nailing schedule.",
+            "validRange": "0 = Full Nailing, 1 = Partial Nailing",
+            "unit": "integer",
+            "affectsOutput": "Selects between nFullHTs/NTs and nPartHTs/NTs arrays for BOM calculations."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Beam Dimensions (Width/Height) change",
+            "effect": "Script re-evaluates lookup tables to find the matching Simpson Strong-Tie SKU.",
+            "cascade": [
+              "sArticlesRaw",
+              "dAs",
+              "dBs",
+              "nFullHTs",
+              "3D Geometry"
+            ]
+          },
+          {
+            "trigger": "nPartFull changes (0 to 1)",
+            "effect": "Switches nail count source from 'Full' arrays to 'Part' arrays.",
+            "cascade": [
+              "Hardware Component Quantity (Nails)"
+            ]
+          },
+          {
+            "trigger": "nMarking is set to > 0",
+            "effect": "Creates Mark entities and publishes DimRequest maps to _Map.",
+            "cascade": [
+              "Mark Entity",
+              "DimRequest Map"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Body (Visual Representation)",
+            "description": "A 3D solid body representing the steel hanger geometry.",
+            "appliedTo": "Model Space (at beam intersection)."
+          },
+          {
+            "type": "HardWrComp (Hardware)",
+            "description": "Two components: 1. The Main Hanger (e.g., BSN40/99), 2. Nails (CNA 4x60).",
+            "appliedTo": "Linked to the female beam or Element group."
+          },
+          {
+            "type": "Mark",
+            "description": "Lines or text indicating the placement of the hanger on the beam surface.",
+            "appliedTo": "The Female Beam (bm1)."
+          },
+          {
+            "type": "DimRequest",
+            "description": "Data structure instructing the Shop Drawing module how to dimension the hanger.",
+            "appliedTo": "_Map (Internal Property Map)."
+          }
+        ]
+      },
+      "tokens_used": 10426,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Launch Script (Insert)",
+          "Prompt User to Select 2 Beams (Select 2 beams)",
+          "Assign Beam 1 (Female/Supporting) to bm1 and Beam 2 (Male/Supported) to bm0",
+          "Determine Coordinate System (Pt0) and Beam Dimensions (Height/Width)",
+          "Search 'sArticlesRaw' arrays for hanger fitting Male Beam dimensions (dAs/dBs)",
+          "[Conditional] Validate Selection: Check if beams are perpendicularly connected",
+          "[Conditional] Validate Selection: Check for Intersection with other entities (bHasIntersection)",
+          "Calculate 3D Geometry for Hanger Body (bd) based on selected catalog dimensions",
+          "Generate Hardware List (HardWrComp): 1x Main Hanger + N quantity of CNA 4x60 Nails",
+          "Create Mark Entity and DimRequest (if nMarking > 0)",
+          "Assign Script Instance to Element or Beam Group (nAssignTo logic)",
+          "Draw Body and Finish"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script execution state",
+            "path1": {
+              "name": "Insert Mode (_bOnInsert == true)",
+              "steps": [
+                "Prompt user to select beams interactively",
+                "Validate perpendicular connection immediately",
+                "Auto-correct Z-Alignment if not upright"
+              ]
+            },
+            "path2": {
+              "name": "Recalc/Update Mode (_bOnRecalc == true)",
+              "steps": [
+                "Retrieve beam references from stored instance data",
+                "Re-evaluate geometry based on property changes",
+                "Process context menu triggers (e.g., Assign To)"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Intersection Check (bHasIntersection)",
+            "path1": {
+              "name": "Intersection Found",
+              "steps": [
+                "Report Error Message to log",
+                "Delete Instance (eraseInstance)",
+                "Stop Execution"
+              ]
+            },
+            "path2": {
+              "name": "No Intersection",
+              "steps": [
+                "Proceed with Geometry Generation",
+                "Assign Hardware and Marking"
+              ]
+            }
+          },
+          {
+            "condition": "Nailing Schedule (nPartFull property)",
+            "path1": {
+              "name": "Full Nailing (nPartFull == 0)",
+              "steps": [
+                "Use nFullHTs and nFullNTs arrays",
+                "Calculate higher quantity of Nails (CNA 4x60)"
+              ]
+            },
+            "path2": {
+              "name": "Partial Nailing (nPartFull == 1)",
+              "steps": [
+                "Use nPartHTs and nPartNTs arrays",
+                "Calculate reduced quantity of Nails"
+              ]
+            }
+          },
+          {
+            "condition": "Assignment Toggle (Context Menu Trigger)",
+            "path1": {
+              "name": "Assign to Male (bm0)",
+              "steps": [
+                "Set nAssignTo = 0",
+                "Assign instance to bm0's Element or Group",
+                "Update Map key"
+              ]
+            },
+            "path2": {
+              "name": "Assign to Female (bm1)",
+              "steps": [
+                "Set nAssignTo = 1 (Default)",
+                "Assign instance to bm1's Element or Group",
+                "Update Map key"
+              ]
+            }
+          },
+          {
+            "condition": "Marking Property (nMarking)",
+            "path1": {
+              "name": "Marking Enabled (nMarking > 0)",
+              "steps": [
+                "Create Mark line entity on Female Beam",
+                "Publish DimRequest to _Map for Shop Drawings"
+              ]
+            },
+            "path2": {
+              "name": "Marking Disabled (nMarking == 0)",
+              "steps": [
+                "Remove DimRequest from _Map",
+                "Skip Mark creation"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Perpendicular Connection",
+            "errorMessage": "The script is only applicable to beams with a perpendicular connection plane.",
+            "recovery": "User must select two beams that intersect at approximately 90 degrees."
+          },
+          {
+            "check": "Beam Dimensions Fit",
+            "errorMessage": "User will be informed about invalid section if the attempt to attach a BSx to the selected beams fails.",
+            "recovery": "User must ensure the male beam width/height matches one of the available Simpson Strong-Tie catalog sizes (defined in arrays)."
+          },
+          {
+            "check": "Geometric Intersection",
+            "errorMessage": "Intersects with other item [PosNum]. Tool will deleted.",
+            "recovery": "User must ensure the hanger placement does not clash with other tools or geometry. Script automatically self-destructs."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Hanger Size",
+            "how": "OPM Properties (Catalog/Part Number selection)",
+            "effect": "Script re-runs lookup; changes 3D Body size and Hardware SKU."
+          },
+          {
+            "action": "Switch Nailing Pattern",
+            "how": "OPM Property 'nPartFull'",
+            "effect": "Updates the quantity of 'CNA 4x60' nails in the BOM (Hardware list)."
+          },
+          {
+            "action": "Toggle Assignment",
+            "how": "Right-click Context Menu -> 'Assign to [Beam/Element]'",
+            "effect": "Moves the script instance grouping from the supporting beam to the supported beam (or vice versa)."
+          },
+          {
+            "action": "Adjust Marking",
+            "how": "OPM Properties 'nMarking', 'sMarkingPosNum'",
+            "effect": "Changes visual markup on the beam (lines/text) and updates dimension map for drawings."
+          },
+          {
+            "action": "Purge Hardware",
+            "how": "OPM Property 'bPurgeHardware'",
+            "effect": "Forces removal of associated hardware components on next recalculation."
+          }
+        ]
+      },
+      "tokens_used": 11101,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Simpson StrongTie BS.mcr\n\n## Overview\nInserts and configures Simpson Strong-Tie face-mount timber hangers (BSN, BSI, BSIL, BSD, BSDIL) to connect two perpendicular timber beams in the model. It automatically selects the correct hanger size based on the supported beam dimensions and adds the necessary hardware and nails to the Bill of Materials (BOM).\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Interaction with 3D beams is required. |\n| Paper Space | No | Not applicable. |\n| Shop Drawing | No | Marks are generated in the model; dimension requests are sent to the map. |\n\n## Prerequisites\n- **Required Entities**: Two `GenBeam` entities or Element groups.\n- **Minimum Beam Count**: 2 beams.\n- **Geometry**: Beams must intersect or touch at approximately 90 degrees (perpendicular).\n- **Dimensions**: The supported (male) beam width and height must match a standard Simpson Strong-Tie size defined in the internal catalog (e.g., 40mm width x 99mm height).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `Simpson StrongTie BS.mcr`\n\n### Step 2: Select Beams\n```\nCommand Line: Select 2 beams\nAction: Click on the Supporting Beam (Female/Carrier) first, then click the Supported Beam (Male).\n```\n*Note: The script will verify that the beams are perpendicular. If the connection is valid, it will automatically generate the hanger.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Flush Mounted | Boolean | false | If set to true, adjusts the hanger vertical position to sit flush with the bottom of the supporting beam. |\n| Nailing Schedule | Integer | 0 | Determines the nailing pattern. <br>0 = Full Nailing (Standard)<br>1 = Partial Nailing (Reduced) |\n| Marking Style | Integer | 0 | Sets the visual marking style on the beam.<br>0 = None<br>1-8 = Various Line Styles<br>9 = Text Label |\n| Marking Text | String | \"\" | Custom text string to use for the marking label (if Marking Style is 9). |\n| Include Male PosNum | Boolean | false | If true, appends the supported (male) beam's position number to the marking text (e.g., \"FEM/MAL\"). |\n| Purge Hardware | Boolean | false | If set to true, the script will delete all associated hardware components on the next update/calculation. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Assign to Supported Beam | Changes the assignment of the script instance to the male beam. Useful for organizing the BOM or if the hierarchy of the connection changes. |\n| Assign to Supporting Beam | Changes the assignment of the script instance to the female beam (default behavior). |\n\n## Settings Files\n- **Filename**: None (Internal Catalog)\n- **Location**: N/A\n- **Purpose**: This script uses internal arrays (`sArticlesRaw`, `dAs`, `dBs`) to store the Simpson Strong-Tie catalog data. No external XML settings file is required.\n\n## Tips\n- **Auto-Sizing**: You do not need to manually type the part number (e.g., BSN40/99). The script automatically looks up the correct part number based on the width and height of the supported (male) beam.\n- **BOM Accuracy**: To update the nail count in your reports, simply change the **Nailing Schedule** property from \"Full\" (0) to \"Partial\" (1) and regenerate.\n- **Clash Detection**: The script checks for intersections with other items. If it detects a clash, it will automatically delete itself to prevent model errors. Check your log for the message \"Intersects with other item\" if the tool disappears.\n- **Visual Marking**: Enable **Marking Style** (set to 1-9) to draw lines or text on the beam face, which helps CNC operators or assembly teams identify where to install the hardware.\n\n## FAQ\n- **Q: Why did the script disappear after I inserted it?**\n  A: The script likely detected a geometric intersection with another tool or entity, or the beams were not perpendicular. Check the command line history or log for an error message.\n  \n- **Q: Can I use this for non-standard beam sizes?**\n  A: No. The script relies on a lookup table of standard Simpson Strong-Tie dimensions. If your beam size does not match a catalog entry (e.g., width 42mm), the script will fail to find a valid hanger.\n\n- **Q: How do I change the hanger from a BSN to a BSD type?**\n  A: The script logic selects the series based on the internal catalog mapping. Generally, you must ensure your beam dimensions match the specific series required (BSN vs BSD). If the dimensions overlap, you may need to modify the script code to prioritize one series over the other."
+      },
+      "tokens_used": 6533,
+      "error": null
+    }
+  }
+}

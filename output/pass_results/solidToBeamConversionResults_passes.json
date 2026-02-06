@@ -1,0 +1,232 @@
+{
+  "filename": "solidToBeamConversionResults.mcr",
+  "status": "completed",
+  "total_tokens": 21956,
+  "processing_time": 221.1346230506897,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "16aug19",
+            "author": "dmytro.vakulenko@hsbcad.com",
+            "changes": "First version of a script, carrier of solid to beam conversion results"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3521,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No 'sd_' or 'Multipage' prefix in filename. No '#Type E' macro or '_Entity[]' arrays present. No '_Viewport' or '_kPaperSpace' logic found. Uses Display dp(-1) to draw text and PlaneProfiles at the insertion point (_Pt0), consistent with Model Space visualization."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Script Instance"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2868,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "Visualize original body",
+            "handler": "sTriggerVisualizeOriginalBody",
+            "action": "Retrieves the original body from the internal map and draws its profiles in green.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Visualize bad faces",
+            "handler": "sTriggerVisualizeBadFaces",
+            "action": "Retrieves the detected bad faces from the internal map and draws them in red.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 3241,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A diagnostic visualization tool used after a failed solid-to-beam conversion, allowing the user to inspect the original solid geometry and identify specific faces that caused conversion errors.",
+          "category": "Import/Conversion/Diagnostics",
+          "typicalUseCase": "When an architectural 3D solid is imported into hsbCAD but fails to generate a valid timber beam, this script highlights the 'bad faces' that the engine could not process, guiding the user on where to modify the geometry."
+        },
+        "parameters": [
+          {
+            "name": "sTriggerVisualizeOriginalBody",
+            "technicalDefault": "N/A (Context Menu Trigger)",
+            "businessMeaning": "A command to display the full geometry of the imported solid before conversion attempts. This helps the user verify the input data matches their expectations.",
+            "validRange": "Activated via Right-Click Context Menu",
+            "unit": "N/A",
+            "affectsOutput": "Overlays the original solid body in Green color on the screen, allowing visual comparison with current model elements."
+          },
+          {
+            "name": "sTriggerVisualizeBadFaces",
+            "technicalDefault": "N/A (Context Menu Trigger)",
+            "businessMeaning": "A command to highlight specific surfaces of the solid that the conversion engine identified as invalid or 'unrecognizable' (e.g., non-planar faces, complex curvature).",
+            "validRange": "Activated via Right-Click Context Menu",
+            "unit": "N/A",
+            "affectsOutput": "Overlays the problematic faces in Red color, pinpointing exactly where the geometry needs to be split or repaired."
+          },
+          {
+            "name": "dTxtH",
+            "technicalDefault": "U(30)",
+            "businessMeaning": "The height of the warning text label ('Bad faces!') placed at the script's insertion point.",
+            "validRange": "10mm - 100mm",
+            "unit": "mm",
+            "affectsOutput": "Controls the visual scale/readability of the status text in the model view."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Script Instance Existence",
+            "effect": "Requires the '_Map' object named 'source' to be populated with 'bodyOriginal' or 'BadFace' data by a prior conversion process.",
+            "cascade": [
+              "sTriggerVisualizeOriginalBody",
+              "sTriggerVisualizeBadFaces"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Visual Graphics (Text & Wireframe)",
+            "description": "Draws a text label 'Bad faces!' and optionally draws the wireframes of the original body or the specific error faces depending on user interaction.",
+            "appliedTo": "Model Space (Display Layer -1)"
+          }
+        ]
+      },
+      "tokens_used": 3786,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script instance insertion or load triggered in Model Space.",
+          "Debug mode initialization: Checks project special strings and hsbTSLDebugController map.",
+          "Data retrieval: Accesses internal Map object named 'source'.",
+          "Validation: Checks map for 'bodyOriginal' and 'BadFace' entries.",
+          "Display initialization: Prepares Display object (-1) and sets text height.",
+          "Trigger registration: Adds context menu items for visualization.",
+          "Standard execution: Draws 'Bad faces!' text at insertion point if no specific command is active."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User executes 'Visualize original body' via Context Menu",
+            "path1": {
+              "name": "Visualization Triggered",
+              "steps": [
+                "Script detects _kExecuteKey matches 'Visualize original body'.",
+                "Sets Display color to Green (index 3).",
+                "Retrieves original body profiles from mapSource.",
+                "Iterates and draws all profiles of the original solid.",
+                "Script execution terminates immediately (return)."
+              ]
+            }
+          },
+          {
+            "condition": "User executes 'Visualize bad faces' via Context Menu",
+            "path2": {
+              "name": "Error Visualization Triggered",
+              "steps": [
+                "Script detects _kExecuteKey matches 'Visualize bad faces'.",
+                "Sets Display color to Red (index 1).",
+                "Iterates through all keys in mapSource.",
+                "Identifies keys matching 'BadFace'.",
+                "Draws the specific bad face profiles.",
+                "Script execution terminates immediately (return)."
+              ]
+            }
+          },
+          {
+            "condition": "No Context Menu Command Active",
+            "path3": {
+              "name": "Standard Status Display",
+              "steps": [
+                "Sets Display color to Red (index 1).",
+                "Draws static text 'Bad faces!' at coordinate _Pt0."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Existence of 'source' MapObject in the script instance.",
+            "errorMessage": "No explicit error dialog, but 'Bad faces are not detected' is reported to the log if map is missing or empty.",
+            "recovery": "Ensure the script is run as part of a solid-to-beam conversion workflow that generates the 'source' map with 'BadFace' data."
+          },
+          {
+            "check": "Data Types in Map ('bodyOriginal' vs 'BadFace').",
+            "errorMessage": "Script logic assumes specific types; retrieval fails silently or throws an internal error if type mismatch occurs.",
+            "recovery": "Ensure the generating process writes correct data types to the map keys."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Visualize Original Geometry",
+            "how": "Right-Click Context Menu -> Visualize original body",
+            "effect": "Overlays the original imported solid geometry in Green wireframe over the current view."
+          },
+          {
+            "action": "Visualize Conversion Errors",
+            "how": "Right-Click Context Menu -> Visualize bad faces",
+            "effect": "Overlays only the problematic faces that failed conversion in Red wireframe."
+          },
+          {
+            "action": "Reset View to Standard Status",
+            "how": "Context Menu -> Recalculate (standard)",
+            "effect": "Clears temporary wireframes and reverts to showing the 'Bad faces!' text label at the insertion point."
+          }
+        ]
+      },
+      "tokens_used": 3843,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# solidToBeamConversionResults.mcr\n\n## Overview\nThis script serves as a diagnostic visualization tool used after a failed Solid-to-Beam conversion. It allows you to inspect the original imported 3D solid and specifically highlights the \"bad faces\" that the engine could not process, helping you identify where geometry needs to be modified.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be inserted or generated in Model Space. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required Entities**: A script instance of this file.\n- **Data Context**: This script relies on an internal data map (usually generated by a previous conversion process) containing the `bodyOriginal` and `BadFace` data. If run manually without this context, it may only display the status text.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `solidToBeamConversionResults.mcr`\n\n### Step 2: Identify Status\n```\nResult: The script inserts at the selected point.\nDisplay: A text label \"Bad faces!\" appears in Red at the insertion point, indicating conversion errors are present at this location.\n```\n\n### Step 3: Diagnose Geometry\nUse the Right-Click Context Menu (detailed below) to toggle visualizations of the original body or the specific error faces.\n\n## Properties Panel Parameters\nThere are no user-editable properties exposed in the Properties Palette for this script.\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Visualize original body** | Draws the full wireframe of the original imported solid in **Green**. Use this to verify the overall geometry shape matches your expectations. |\n| **Visualize bad faces** | Draws only the specific faces that caused the conversion to fail in **Red**. Use this to pinpoint exactly which surfaces are non-planar or too complex for the timber beam engine. |\n| **Recalculate** | Resets the view to the standard status display (the \"Bad faces!\" text). |\n\n## Settings Files\nNo specific settings files are required for this script.\n\n## Tips\n- **Color Coding**: Remember that **Green** represents the valid/total original geometry, while **Red** represents the specific problematic areas you need to fix.\n- **Workflow Integration**: This script is typically auto-generated by other import tools. If inserting it manually, ensure it is placed at the exact location of the failed solid to access the correct data map.\n\n## FAQ\n- **Q: I inserted the script but don't see any geometry, only text.**\n  - A: This script requires internal data (`Map`) to be present from a prior conversion process. If that data is missing (e.g., you inserted the script in a blank drawing), the geometry cannot be displayed.\n- **Q: How do I fix the \"Bad faces\"?**\n  - A: Use the \"Visualize bad faces\" option to see them in red. You will likely need to go back to your original CAD software (e.g., AutoCAD, Revit) and simplify or split those specific surfaces so they are planar before re-importing.\n- **Q: How do I get rid of the green/red wireframes?**\n  - A: Right-click the script and select **Recalculate**. This will clear the wireframes and revert the display to the text label."
+      },
+      "tokens_used": 4697,
+      "error": null
+    }
+  }
+}

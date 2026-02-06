@@ -1,0 +1,281 @@
+{
+  "filename": "hsb_SipWidth.mcr",
+  "status": "completed",
+  "total_tokens": 25617,
+  "processing_time": 217.23585176467896,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5118,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": true,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly prompts for a viewport using getViewport() and retrieves the Element via vp.element(). It processes ElementWall and Sip data to draw annotations, which is standard behavior for Shop Drawing or Paper Space detailing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall",
+            "Viewport"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Paper Space (Layout with a Viewport showing an ElementWall)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1724,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6063,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Annotates SIP (Structural Insulated Panel) wall construction data in Paper Space, displaying the total panel width and material layer breakdown (e.g., OSB and Insulation thickness) based on a selected wall viewport.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Used during the detailing phase to label the specific makeup of SIP walls directly on production drawings, ensuring the correct build-up is visible for manufacturing or client approval."
+        },
+        "parameters": [
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "_DimStyles",
+            "businessMeaning": "Selects the specific dimension style (text font, size, arrowheads) to be used for the annotation text.",
+            "validRange": "Any dimension style name existing in the current CAD drawing",
+            "unit": "String",
+            "affectsOutput": "Changes the visual appearance (font, height) of the SIP labels."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "-1",
+            "businessMeaning": "Defines the display color of the annotation text. -1 represents the default 'ByBlock' color.",
+            "validRange": "0-255 (AutoCAD Color Index), or -1 for ByBlock",
+            "unit": "Color Index",
+            "affectsOutput": "Visually changes the color of the drawn text."
+          },
+          {
+            "name": "dOffset",
+            "technicalDefault": "U(100)",
+            "businessMeaning": "The vertical distance (spacing) between the main SIP label and the individual component labels below it.",
+            "validRange": "5mm to 100mm (depends on text height and drawing scale)",
+            "unit": "mm",
+            "affectsOutput": "Determines how far apart the lines of component text are stacked."
+          },
+          {
+            "name": "strShowSipWidth",
+            "technicalDefault": "Yes",
+            "businessMeaning": "Flag to toggle the visibility of the total SIP width dimension label.",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "If 'Yes', displays the total SIP thickness (e.g., 'SIP 225'). If 'No', hides this line."
+          },
+          {
+            "name": "strShowSipComponents",
+            "technicalDefault": "No",
+            "businessMeaning": "Flag to toggle the visibility of the internal material layers (e.g., 'OSB - 12', 'Insulation - 200').",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "If 'Yes', loops through SIP style components to draw material details. If 'No', only the width is shown."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "strShowSipComponents is set to 'Yes'",
+            "effect": "Activates the logic that iterates through material layers and renders text below the main label.",
+            "cascade": [
+              "dOffset"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Text Entity (Paper Space)",
+            "description": "Annotation text displaying the structural makeup of the wall.",
+            "appliedTo": "Paper Space Layout (Referencing an ElementWall through a Viewport)."
+          }
+        ]
+      },
+      "tokens_used": 3066,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched (Insert command or Recalculation)",
+          "Check if _bOnInsert (Initial Insertion Phase)",
+          "[Insertion Cycle] Verify insertCycleCount <= 1",
+          "[Insertion Cycle] Check if executed via ExecuteKey (Catalog)",
+          "[Insertion Cycle] Prompt user to pick an insertion point (_Pt0) in Paper Space",
+          "[Insertion Cycle] Prompt user to select a Viewport",
+          "[Insertion Cycle] Store Viewport in _Viewport[0] and terminate",
+          "[Execution Phase] Retrieve Viewport from _Viewport[0]",
+          "Validate Viewport element is valid",
+          "Retrieve Element from Viewport and cast to ElementWall",
+          "Validate ElementWall is valid",
+          "Calculate transformation Matrix (Model Space to Paper Space) using Viewport CoordSys",
+          "Retrieve Sip data from ElementWall",
+          "Retrieve SipStyle and SipComponents (Name and Thickness)",
+          "Construct base string: 'SIP ' + Total Thickness",
+          "Initialize Display object with specified Color and DimStyle",
+          "Check Property 'Show Sip Width'",
+          "[Width Branch] Draw main SIP text at _Pt0",
+          "Check Property 'Show Sip Components'",
+          "[Components Branch] Loop through component array",
+          "[Components Branch] Calculate offset position (_Pt0 - offset distance)",
+          "[Components Branch] Draw component text (Material - Thickness)",
+          "Finish"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Initial Insertion vs Recalculation",
+            "path1": {
+              "name": "Initial Insertion",
+              "steps": [
+                "Check insertCycleCount",
+                "Prompt for Point",
+                "Prompt for Viewport",
+                "Exit script"
+              ]
+            },
+            "path2": {
+              "name": "Recalculation / Update",
+              "steps": [
+                "Read properties from OPM/Catalog",
+                "Access stored Viewport/Point",
+                "Process geometry and draw"
+              ]
+            }
+          },
+          {
+            "condition": "SIP Data Existence",
+            "path1": {
+              "name": "SIPs Found",
+              "steps": [
+                "Extract Style and Components",
+                "Populate arrays with names/thickness",
+                "Set main string to 'SIP [Thickness]'"
+              ]
+            },
+            "path2": {
+              "name": "No SIPs Found",
+              "steps": [
+                "Clear component arrays",
+                "Set main string to empty",
+                "Result: No text drawn unless logic allows empty strings (unlikely)"
+              ]
+            }
+          },
+          {
+            "condition": "Display Option: Show Sip Width",
+            "path1": {
+              "name": "Yes",
+              "steps": [
+                "Execute dp.draw() with main SIP string",
+                "Render text at _Pt0"
+              ]
+            },
+            "path2": {
+              "name": "No",
+              "steps": [
+                "Skip main label drawing"
+              ]
+            }
+          },
+          {
+            "condition": "Display Option: Show Sip Components",
+            "path1": {
+              "name": "Yes",
+              "steps": [
+                "Iterate through sName/dThick arrays",
+                "Calculate Y-offset based on index and dOffset",
+                "Draw each component line"
+              ]
+            },
+            "path2": {
+              "name": "No",
+              "steps": [
+                "Skip component loop",
+                "No component lines drawn"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "insertCycleCount > 1",
+            "errorMessage": "(None visible to user)",
+            "recovery": "Script self-erases (eraseInstance()) and exits to prevent duplicate instances during the same insert command."
+          },
+          {
+            "check": "Viewport validity (vp.element().bIsValid())",
+            "errorMessage": "(None visible to user)",
+            "recovery": "Script returns immediately without drawing anything."
+          },
+          {
+            "check": "Element cast validity (ElementWall el = (ElementWall) elm)",
+            "errorMessage": "(None visible to user)",
+            "recovery": "Script executes eraseInstance() and exits if the element in the viewport is not a valid Wall."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Text Properties",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changing 'sDimStyle', 'nColor', or 'dOffset' and triggering a recalc updates the font, color, or spacing of the text."
+          },
+          {
+            "action": "Toggle Visibility",
+            "how": "Properties Palette (OPM) - 'Show Sip Width' or 'Show Sip Components'",
+            "effect": "Toggling 'Yes'/'No' triggers a recalc to show or hide the specific text lines."
+          },
+          {
+            "action": "Move Annotation",
+            "how": "Grip Edit (Move _Pt0)",
+            "effect": "Moving the insertion point shifts the entire annotation group to the new location."
+          },
+          {
+            "action": "Re-associate Viewport",
+            "how": "Script context menu (implied, though specific code not visible, standard TSL behavior allows re-selecting inputs if scripted, or erase/insert)",
+            "effect": "If the underlying wall changes, a recalc updates the dimensions/text content automatically based on the new ElementWall data."
+          }
+        ]
+      },
+      "tokens_used": 4594,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SipWidth.mcr\n\n## Overview\nThis script annotates SIP (Structural Insulated Panel) wall details directly in Paper Space layouts. It automatically retrieves the total panel width and optionally lists the internal material layers (such as OSB and Insulation thickness) based on a selected wall viewport.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script is intended for detailing views only. |\n| Paper Space | Yes | Script must be inserted onto a Layout tab. |\n| Shop Drawing | Yes | Designed for creating production drawings and detailing views. |\n\n## Prerequisites\n- A Layout (Paper Space) tab must be active.\n- A **Viewport** must exist that displays an `ElementWall` with valid SIP data assigned.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_SipWidth.mcr` from the list.\n\n### Step 2: Pick Insertion Point\n```\nCommand Line: Give insertion point:\nAction: Click anywhere in the Paper Space layout where you want the SIP label to appear.\n```\n\n### Step 3: Select Viewport\n```\nCommand Line: Select viewport:\nAction: Click on the viewport frame that displays the Wall you wish to annotate.\n```\n*Once selected, the script will generate the text label and finish.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sDimStyle | String | _DimStyles | Selects the dimension style (controlling font, text height, and arrow style) for the annotation. |\n| nColor | Integer | -1 (ByBlock) | Determines the color of the text. Set to -1 to use the ByBlock color, or enter a specific AutoCAD Color Index (0-255). |\n| dOffset | Double | 100 mm | The vertical distance between the main SIP label and the individual component labels listed below it. |\n| strShowSipWidth | Yes/No | Yes | Toggles the visibility of the total SIP width text (e.g., \"SIP 225\"). |\n| strShowSipComponents | Yes/No | No | If set to \"Yes\", displays the breakdown of material layers (e.g., \"OSB - 12\", \"Insulation - 200\") below the main label. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Update | Recalculates the label text if the wall geometry or properties have changed. |\n| Erase | Removes the script instance and the associated text from the drawing. |\n| Properties | Opens the Properties Palette to modify text style, color, or visibility settings. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose:**\n\n## Tips\n- **Toggle Component Details**: By default, only the total width is shown. Use the Properties Palette (`Ctrl+1`) to change `strShowSipComponents` to \"Yes\" if you need to show the specific layer build-up for manufacturing.\n- **Adjusting Spacing**: If the component text overlaps the main label or looks too sparse, increase the `dOffset` value to push the component lines further down.\n- **Moving Labels**: You can drag the script using its insertion grip to reposition the entire annotation group without needing to re-insert it.\n\n## FAQ\n- **Q: I ran the script, but no text appeared. Why?**\n- **A: Ensure the viewport you selected contains a valid `ElementWall` that has SIP properties assigned to it. If the wall is a generic timber wall without SIP data, the script will not generate text.\n  \n- **Q: How do I change the text height?**\n- **A: You cannot change the height directly in the script properties. Instead, change the `sDimStyle` property to a different Dimension Style that uses your desired text height.\n\n- **Q: Can I use this on multiple viewports on the same layout?**\n- **A: Yes. Simply run the script again and select a different insertion point and viewport for each annotation required."
+      },
+      "tokens_used": 5052,
+      "error": null
+    }
+  }
+}

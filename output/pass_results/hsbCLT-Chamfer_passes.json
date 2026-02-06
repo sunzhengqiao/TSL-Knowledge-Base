@@ -1,0 +1,309 @@
+{
+  "filename": "hsbCLT-Chamfer.mcr",
+  "status": "completed",
+  "total_tokens": 50487,
+  "processing_time": 281.0009562969208,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9577,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses PrEntity to select Sip (panels) and performs 3D solid operations using BeamCut and SolidSubtract. It adds PropellerSurfaceTool for CNC machining via sip.addTool(). There is no usage of sd_*, #Type E, _Viewport, or Paper Space drawing entities."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sip"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "Catalog entry (optional, used if _kExecuteKey is set)"
+          ]
+        }
+      },
+      "tokens_used": 6911,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"showDialog\",\n        \"promptOriginal\": \"Select properties or catalog entry and press OK\",\n        \"condition\": \"_bOnInsert && !_kExecuteKey\",\n        \"required\": false\n      },\n      {\n        \"step\": 2,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"Select panel(s)\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      },\n      {\n        \"step\": 3,\n        \"function\":"
+      },
+      "tokens_used": 10279,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates 45-degree chamfers (bevels) on the edges of CLT or SIP panels, supporting outer contours, inner openings, and custom paths for CNC manufacturing.",
+          "category": "Machining/ShopDrawing",
+          "typicalUseCase": "Applying a standard handling bevel (e.g., 10mm x 10mm) to all exposed edges of a floor panel, or beveling the edges of window cutouts to allow for flashing or plastering stops."
+        },
+        "parameters": [
+          {
+            "name": "sMode",
+            "technicalDefault": "Contour",
+            "businessMeaning": "Determines the selection method for defining where the chamfer is applied. It controls whether the tool targets the outer perimeter, inner openings (windows/doors), CNC feed direction, or user-defined custom geometry.",
+            "validRange": "N/A (Dropdown selection)",
+            "unit": "Selection Mode",
+            "affectsOutput": "Changes the logic for detecting panel edges. 'Contour' bevels the outside, 'Openings' bevels the inside of holes, 'Polyline/Path' allows custom placement."
+          },
+          {
+            "name": "sAlignment",
+            "technicalDefault": "Reference Side",
+            "businessMeaning": "Specifies the vertical origin of the chamfer relative to the panel face. It determines if the bevel starts from the top face, bottom face, or is calculated from both sides (often resulting in a full edge break).",
+            "validRange": "N/A (Dropdown selection)",
+            "unit": "Face Side",
+            "affectsOutput": "Offsets the chamfer geometry vertically along the panel thickness (Z-axis) and determines the CNC milling side (Left/Right) for curved edges."
+          },
+          {
+            "name": "dChamfer",
+            "technicalDefault": "4.0",
+            "businessMeaning": "The width of the chamfer along the face, which also corresponds to the depth of the cut into the material. Creates a 45-degree angle where the width equals the depth.",
+            "validRange": "2.0 to 100.0",
+            "unit": "mm",
+            "affectsOutput": "Scales the size of the `BeamCut` box and the offset distance for `PropellerSurface` tools. Larger values remove more material."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sMode is set to 'Openings'",
+            "effect": "Requires user interaction to pick specific points inside openings or press Enter to select all.",
+            "cascade": [
+              "User Prompts (PrPoint)"
+            ]
+          },
+          {
+            "trigger": "sMode is set to 'Polyline' or 'Path'",
+            "effect": "Requires user selection of existing entities ('Polyline') or graphical point input ('Path').",
+            "cascade": [
+              "User Prompts (PrEntity / PrPoint)"
+            ]
+          },
+          {
+            "trigger": "dChamfer is increased",
+            "effect": "The linear cut depth increases. If the value exceeds half the panel thickness (depending on alignment), the cut might penetrate through the entire element or intersect adjacent cuts.",
+            "cascade": [
+              "BeamCut dimensions",
+              "SolidSubtract volume"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "BeamCut",
+            "description": "A parametric rectangular cut applied to linear segments. Since dY and dZ are equal, this creates a 45-degree bevel on straight edges.",
+            "appliedTo": "Selected Sip (Panels)"
+          },
+          {
+            "type": "SolidSubtract",
+            "description": "Boolean subtraction used to clean up concave corners where linear chamfers meet, ensuring a sharp internal corner.",
+            "appliedTo": "Selected Sip (Panels)"
+          },
+          {
+            "type": "PropellerSurfaceTool",
+            "description": "CNC milling instruction for arced (curved) segments. It creates a lofted surface between the original edge and an offset curve to machine the chamfer along curves.",
+            "appliedTo": "Selected Sip (Panels)"
+          }
+        ]
+      },
+      "tokens_used": 9110,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script (insertion or double-click)",
+          "Check if _bOnInsert is true",
+          "If true: Prevent duplicate insertion (insertCycleCount > 1 check)",
+          "Determine execution source: Check _kExecuteKey",
+          "Branch A (Command Key): Load properties from Catalog entry matching the key",
+          "Branch B (Standard): Display Properties Dialog",
+          "User selects one or multiple Sip (panels) via PrEntity",
+          "Validate selection: Ensure at least one valid Sip is selected",
+          "Calculate global coordinate system based on the first selected panel",
+          "Extract geometry: Envelope contours and Openings from all selected panels",
+          "Read 'sMode' property to determine selection type",
+          "Branch based on sMode:",
+          "  (0) Contour / (2) Contour & Openings: Create visual preview of outer contours",
+          "  (1) Openings / (2) Contour & Openings: Prompt user to pick points inside openings (PrPoint)",
+          "  (3) Feed Direction: Calculate CNC feed vectors and generate preview lines on panel edges",
+          "  (4) Polyline: Prompt user to select existing polylines (PrEntity)",
+          "  (5) Path: Prompt user to pick start and next points on panel rings (getPoint)",
+          "Generate Chamfer Geometry:",
+          "  Iterate through all selected Sip entities",
+          "  For each segment (linear): Calculate vector math for 45-degree cut based on Alignment",
+          "  Create BeamCut entity for linear segments",
+          "  Handle Corner Cleanup: Detect inner corners and add SolidSubtract to remove material overflow",
+          "  For arcs: Create PropellerSurfaceTool for CNC milling (lofted surface between edge and offset)",
+          "Finalize and script instance ends"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Source (Insertion phase)",
+            "path1": {
+              "name": "Command/Key Execution",
+              "steps": [
+                "Script runs with _kExecuteKey set",
+                "Search Catalog for matching key name",
+                "Load properties from Catalog entry",
+                "Skip 'showDialog()'"
+              ]
+            },
+            "path2": {
+              "name": "Standard Insertion",
+              "steps": [
+                "Execute 'showDialog()' to show properties palette",
+                "User confirms/adjusts settings",
+                "Script proceeds to selection"
+              ]
+            }
+          },
+          {
+            "condition": "Selection Mode (sMode)",
+            "path1": {
+              "name": "Contour (Outer)",
+              "steps": [
+                "Extract plEnvelope() from panels",
+                "Generate EntPLine preview on outer edges"
+              ]
+            },
+            "path2": {
+              "name": "Openings (Inner)",
+              "steps": [
+                "Prompt 'Pick point in opening'",
+                "User picks points or presses Enter (for all)",
+                "Generate EntPLine preview on selected openings"
+              ]
+            },
+            "path3": {
+              "name": "Feed Direction (CNC)",
+              "steps": [
+                "Read 'vecRefFeed' from CncData map (if exists)",
+                "Calculate projection rectangles on panel edges",
+                "Generate EntPLine preview along feed direction"
+              ]
+            },
+            "path4": {
+              "name": "Polyline (Existing Geometry)",
+              "steps": [
+                "Prompt 'Select polyline(s)'",
+                "User selects existing drawing entities"
+              ]
+            },
+            "path5": {
+              "name": "Path (User Defined)",
+              "steps": [
+                "Calculate all valid rings (contours + openings)",
+                "Prompt 'Pick start point'",
+                "Prompt 'Select next point'",
+                "Generate path based on picked points"
+              ]
+            }
+          },
+          {
+            "condition": "Panel Validation",
+            "path1": {
+              "name": "Valid Selection",
+              "steps": [
+                "Sip entity is valid and not dummy",
+                "Add to internal list (_Sip, _GenBeam)",
+                "Proceed to geometry generation"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Selection / Cancel",
+              "steps": [
+                "No panels selected",
+                "Execute 'eraseInstance()'",
+                "Script terminates"
+              ]
+            }
+          },
+          {
+            "condition": "Geometry Processing (Linear vs Arc)",
+            "path1": {
+              "name": "Linear Segments",
+              "steps": [
+                "Calculate BeamCut box (45 deg)",
+                "Apply Boolean subtract to panel",
+                "Check concave corners (vecXPrev vs vecXCurrent)",
+                "Add SolidSubtract for corner cleanup"
+              ]
+            },
+            "path2": {
+              "name": "Arced Segments",
+              "steps": [
+                "Calculate offset geometry (shrink profile)",
+                "Create PropellerSurface (loft)",
+                "Determine MillSide (Left/Right) based on Alignment and Face",
+                "Add PropellerSurfaceTool to Sip"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Duplicate Insertion",
+            "errorMessage": "N/A (Silent)",
+            "recovery": "Script automatically erases itself if insertCycleCount > 1"
+          },
+          {
+            "check": "Panel Selection Count",
+            "errorMessage": "N/A (Silent failure)",
+            "recovery": "If _GenBeam.length < 1, script calls eraseInstance() and returns."
+          },
+          {
+            "check": "Point-in-Opening (Mode 1/2)",
+            "errorMessage": "N/A (Loop continues)",
+            "recovery": "If picked point is not in an opening, no selection occurs; loop continues until Enter is pressed."
+          },
+          {
+            "check": "Path Start Point (Mode 5)",
+            "errorMessage": "Unexpected error",
+            "recovery": "If start point does not snap to a ring, script reports error and erases instance."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Toggle Polyline Visibility",
+            "how": "Context Menu / Custom Command 'TSL_ShowChamferPolyline' / 'TSL_HideChamferPolyline'",
+            "effect": "Executes script with _kExecuteKey to toggle the visibility of the defining polylines/jigs."
+          },
+          {
+            "action": "Update Parameters",
+            "how": "Properties Palette (OPM) - Double Click or Right-Click Properties",
+            "effect": "Changing sMode, sAlignment, or dChamfer triggers a recalc. The script regenerates all cuts and tools based on new values."
+          },
+          {
+            "action": "Modify Geometry",
+            "how": "Grip Edit (if path mode used)",
+            "effect": "Moving the path points updates the location of the chamfer cuts."
+          }
+        ]
+      },
+      "tokens_used": 8558,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-Chamfer.mcr\n\n## Overview\nThis script applies 45-degree chamfers (bevels) to the edges of CLT or SIP panels. It supports outer contours, inner openings, and custom geometric paths, automatically generating the necessary 3D cuts and CNC milling data for both straight and curved edges.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This is the primary environment for selecting panels and generating 3D geometry. |\n| Paper Space | No | The script operates on 3D entities and does not generate 2D shop drawings directly. |\n| Shop Drawing | No | While it creates CNC data, it is not a drawing layout script. |\n\n## Prerequisites\n- **Required Entities**: At least one Sip (Panel) entity.\n- **Minimum Beam Count**: 1.\n- **Required Settings**: None strictly required; however, Catalog entries can be used to preset chamfer dimensions if the script is executed via a specific command key.\n\n## Usage Steps\n\n### Step 1: Launch Script\n```\nCommand: TSLINSERT\nAction: Select hsbCLT-Chamfer.mcr from the file list.\n```\n\n### Step 2: Configure Properties\n```\nInterface: Properties Dialog\nAction: Adjust the settings for the chamfer (Mode, Alignment, Size) or select a Catalog entry. Press OK to confirm.\n```\n\n### Step 3: Select Panels\n```\nCommand Line: Select panel(s)\nAction: Click on one or more Sip (CLT/SIP) panels in the model. Press Enter to finish selection.\n```\n*(Note: If no panels are selected, the script will automatically close.)*\n\n### Step 4: Define Chamfer Location\nThe next prompt depends on the **Mode** selected in Step 2:\n\n*   **If Mode is \"Contour\" or \"Contour & Openings\"**: The script automatically processes the outer edges (and holes if selected). No further input is usually required unless specific openings need to be picked.\n*   **If Mode is \"Openings\"**:\n    ```\n    Command Line: Pick point in opening\n    Action: Click inside a specific window/door opening. Repeat for multiple openings, or press Enter to select all openings automatically.\n    ```\n*   **If Mode is \"Polyline\"**:\n    ```\n    Command Line: Select polyline(s)\n    Action: Select existing 2D polyline entities in the drawing that define the chamfer path.\n    ```\n*   **If Mode is \"Path\"**:\n    ```\n    Command Line: Pick start point\n    Action: Click a point on the edge of the panel to start the custom chamfer path.\n    Command Line: Select next point\n    Action: Click subsequent points to define the path. Press Enter to finish.\n    ```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **sMode** | Dropdown | Contour | Determines where the chamfer is applied. Options: Contour (outer edge), Openings (inner holes), Contour & Openings, Feed Direction (CNC path), Polyline (from existing entity), or Path (user drawn). |\n| **sAlignment** | Dropdown | Reference Side | Sets the vertical origin of the bevel. Options include Top, Bottom, or Reference Side, determining which face the cut is measured from. |\n| **dChamfer** | Number | 4.0 | The width of the chamfer along the face (in mm). Since the cut is 45 degrees, this is also the depth of the cut. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **TSL_ShowChamferPolyline** | Displays the preview polylines used to generate the chamfer geometry. Useful for verifying the path. |\n| **TSL_HideChamferPolyline** | Hides the preview polylines to clean up the model view. |\n| **Erase Instance** | Removes the script instance. Note: The generated cuts (BeamCuts) on the panels will remain as part of the panel geometry. |\n| **Update** | Recalculates the chamfer based on the current properties and panel geometry. |\n\n## Settings Files\n- **Filename**: N/A (Uses Catalog Entries)\n- **Location**: hsbCAD Catalog\n- **Purpose**: If a specific command key is used during insertion, the script loads predefined dimensions (chamfer size, alignment) from a catalog entry, allowing for standardized chamfers without manual parameter entry.\n\n## Tips\n- **Corner Cleanup**: The script automatically detects inner corners and performs a boolean subtraction (`SolidSubtract`) to ensure sharp corners where linear chamfers meet.\n- **Curved Edges**: For panels with curved edges, the script generates `PropellerSurface` tools. This ensures the CNC machine creates a smooth lofted surface rather than a straight approximation.\n- **Visual Verification**: Use the \"Show Chamfer Polyline\" context menu option to see exactly where the script intends to cut before manufacturing.\n- **Full Panel Break**: To bevel all edges of a panel, set the Mode to \"Contour & Openings\" and ensure the Chamfer size does not exceed half the panel thickness.\n\n## FAQ\n- **Q: The script disappeared after I ran it. Did it fail?**\n  **A:** If no panels were selected or the selection was cancelled, the script automatically erases itself to prevent empty instances. Select a valid panel and try again.\n- **Q: Can I use this to bevel both the top and bottom edges separately?**\n  **A:** Yes. You can insert the script twice on the same panel: once with Alignment set to \"Top\" and once set to \"Bottom\".\n- **Q: What happens if my chamfer size is too big?**\n  **A:** If `dChamfer` is larger than half the panel thickness (relative to the alignment), the cut may penetrate completely through the material or intersect with other cuts. Always verify the size against the panel thickness."
+      },
+      "tokens_used": 6052,
+      "error": null
+    }
+  }
+}

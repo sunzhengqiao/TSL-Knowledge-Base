@@ -1,0 +1,427 @@
+{
+  "filename": "hsb_SplitBattens.mcr",
+  "status": "completed",
+  "total_tokens": 46328,
+  "processing_time": 303.36239409446716,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7064,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select an Element and manipulates 3D manufacturing data using Element.genBeam(), Beam.dbSplit(), and Beam.addToolStatic(). No paper space (_Viewport) or shop drawing (sd_*) API calls are present. The script modifies the physical construction model rather than generating 2D drawings."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Must be inserted onto an Element (Wall/Roof)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6313,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select one, or more elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "DynamicDialog",
+            "trigger": "On Insert (via showDialogOnce)",
+            "title": null,
+            "dataSource": "Script Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sLocation",
+            "type": "PropString",
+            "displayName": "|Distribution location|",
+            "defaultValue": "|Top left|",
+            "inputType": "dropdown",
+            "options": [
+              "|Top left|",
+              "|Top Right|",
+              "|Bottom left|",
+              "|Bottom right|"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "nZones",
+            "type": "PropInt",
+            "displayName": "Zone to Redistribute the Battens",
+            "defaultValue": 1,
+            "inputType": "dropdown",
+            "options": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "dMaximumLength",
+            "type": "PropDouble",
+            "displayName": "Maximum batten length",
+            "defaultValue": 4800,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "dMinimumLength",
+            "type": "PropDouble",
+            "displayName": "Minimum batten length",
+            "defaultValue": 100,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 2,
+            "variable": "dTrimWasteLength",
+            "type": "PropDouble",
+            "displayName": "Trim waste length by",
+            "defaultValue": 4,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sFilterMaterial",
+            "type": "PropString",
+            "displayName": "|Filter Material|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 2,
+            "variable": "sCutType",
+            "type": "PropString",
+            "displayName": "|Cut orientation|",
+            "defaultValue": "|Angled cut|",
+            "inputType": "dropdown",
+            "options": [
+              "|Angled cut|",
+              "|Straight cut|"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 7098,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Splits long battens within a wall or roof element into optimized lengths based on stock size, aligning cuts with structural studs while minimizing waste through staggering.",
+          "category": "Framing/Optimization",
+          "typicalUseCase": "Used when installing sheeting battens or furring strips on a wall or roof to ensure they fit within available transport/stock lengths (e.g., 4800mm), are fastened at studs, and joints are staggered between rows for structural stability."
+        },
+        "parameters": [
+          {
+            "name": "sLocation",
+            "technicalDefault": "|Top left|",
+            "businessMeaning": "The starting corner for the distribution sequence. This determines the direction in which batten rows are processed and where the 'waste' from the previous row is utilized.",
+            "validRange": "Top left, Top Right, Bottom left, Bottom right",
+            "unit": "Option",
+            "affectsOutput": "Determines the staggering pattern of the cuts across the element."
+          },
+          {
+            "name": "nZones",
+            "technicalDefault": 1,
+            "businessMeaning": "The specific construction layer or zone within the element that contains the battens to be processed.",
+            "validRange": "1 to 10 (based on element generation setup)",
+            "unit": "Index",
+            "affectsOutput": "Filters which beams are selected for splitting; beams in other zones are ignored."
+          },
+          {
+            "name": "dMaximumLength",
+            "technicalDefault": 4800,
+            "businessMeaning": "The maximum usable length of the raw material (stock length). The script tries to cut battens so they do not exceed this length.",
+            "validRange": "2400 - 6000 (common timber lengths)",
+            "unit": "mm",
+            "affectsOutput": "Primary driver for where split points are generated along the batten."
+          },
+          {
+            "name": "dMinimumLength",
+            "technicalDefault": 100,
+            "businessMeaning": "The shortest acceptable length for a cut piece. If a remaining piece is shorter than this, the script moves the cut point back to ensure the last piece meets this minimum length.",
+            "validRange": "50 - 300",
+            "unit": "mm",
+            "affectsOutput": "Prevents creation of tiny unusable offcuts; adjusts split points dynamically."
+          },
+          {
+            "name": "dTrimWasteLength",
+            "technicalDefault": 4,
+            "businessMeaning": "A small length deducted from the 'carry-over' waste when moving to a new row. Accounts for saw kerf or cutting margin to ensure the next piece fits cleanly.",
+            "validRange": "0 - 10",
+            "unit": "mm",
+            "affectsOutput": "Reduces the effective length of the starting offcut in the next row slightly."
+          },
+          {
+            "name": "sFilterMaterial",
+            "technicalDefault": "",
+            "businessMeaning": "A filter to process only beams with specific material names (e.g., 'C24', 'OSB'). Allows ignoring other beams in the same zone.",
+            "validRange": "Any material name string (semicolon separated for multiple)",
+            "unit": "String",
+            "affectsOutput": "Determines which beams within the selected zone are valid candidates for splitting."
+          },
+          {
+            "name": "sCutType",
+            "technicalDefault": "|Angled cut|",
+            "businessMeaning": "The geometric profile of the cut end of the batten. Angled cuts (45 deg) can facilitate water runoff or overlapping; straight cuts are standard butt joints.",
+            "validRange": "Angled cut, Straight cut",
+            "unit": "Option",
+            "affectsOutput": "Modifies the machining (Cut plane) applied at the split location."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dMinimumLength > dMaximumLength",
+            "effect": "Logic error potential; script may fail to split effectively as no valid length exists between min and max.",
+            "cascade": []
+          },
+          {
+            "trigger": "sLocation Change",
+            "effect": "Changes the sort order of rows and beams, thereby altering the staggering of split points.",
+            "cascade": [
+              "Split point locations"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Split Beam",
+            "description": "The original long batten is replaced by multiple shorter beam entities.",
+            "appliedTo": "Selected GenBeams in the specified Zone and Material"
+          },
+          {
+            "type": "Saw Cut",
+            "description": "Machining operation applied at the split point. Can be a 90-degree straight cut or an angled cut relative to the batten axis.",
+            "appliedTo": "Ends of the split Beam segments"
+          }
+        ]
+      },
+      "tokens_used": 9073,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch Command: User executes hsb_SplitBattens",
+          "2. Property Dialog: Dialog displays configuration options (Location, Zone, Lengths, Material, Cut Type)",
+          "3. Entity Selection: Prompt 'Select one, or more elements' appears on command line",
+          "4. Instance Spawning: For each selected Element, a new script instance is created and attached to that element",
+          "5. Data Extraction: Script retrieves all GenBeams from the element and identifies structural studs (perpendicular beams)",
+          "6. Beam Filtering: Filters battens by Zone index and Material name",
+          "7. Sorting & Grouping: Battens are sorted vertically and horizontally based on 'Distribution location' setting and grouped into rows",
+          "8. Split Calculation: Iterates through batten rows to calculate split points based on Max/Min length, Stud alignment, and Staggering rules",
+          "9. Execution: Performs beam.dbSplit() at calculated points and applies Saw Cut machining (Angled or Straight)",
+          "10. Cleanup: The script instance erases itself, leaving only the modified beams in the model"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle Check",
+            "path1": {
+              "name": "Cycle > 1",
+              "steps": [
+                "Erase current instance",
+                "Stop script execution"
+              ]
+            },
+            "path2": {
+              "name": "First Cycle",
+              "steps": [
+                "Show Dialog (if _kExecuteKey is empty)",
+                "Prompt for Element selection",
+                "Spawn new instances",
+                "Erase current instance"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Length vs Max Length",
+            "path1": {
+              "name": "Length <= Max",
+              "steps": [
+                "Skip split for this beam",
+                "Update remaining length counter for next row"
+              ]
+            },
+            "path2": {
+              "name": "Length > Max",
+              "steps": [
+                "Enter split calculation loop",
+                "Calculate raw split point",
+                "Search for nearest stud alignment"
+              ]
+            }
+          },
+          {
+            "condition": "Stud Alignment Check",
+            "path1": {
+              "name": "Near Stud Found",
+              "steps": [
+                "Snap split point to Stud center",
+                "Validate resulting start piece length"
+              ]
+            },
+            "path2": {
+              "name": "No Stud Found",
+              "steps": [
+                "Use calculated geometric split point"
+              ]
+            }
+          },
+          {
+            "condition": "Staggering Check (Previous Row)",
+            "path1": {
+              "name": "Aligned with Previous Row",
+              "steps": [
+                "Move split point to the next available Stud",
+                "Break vertical alignment line"
+              ]
+            },
+            "path2": {
+              "name": "Not Aligned",
+              "steps": [
+                "Keep current split point"
+              ]
+            }
+          },
+          {
+            "condition": "End Piece Minimum Length Check",
+            "path1": {
+              "name": "Piece < Minimum Length",
+              "steps": [
+                "Shift split point backwards",
+                "Re-calculate to ensure end piece meets minimum"
+              ]
+            },
+            "path2": {
+              "name": "Piece >= Minimum Length",
+              "steps": [
+                "Confirm split point",
+                "Apply Split and Cut"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "None (Script exits silently)",
+            "recovery": "User must run command again and select a valid Wall or Roof Element."
+          },
+          {
+            "check": "Minimum Length vs Maximum Length",
+            "errorMessage": "None (Logic error risk)",
+            "recovery": "User must ensure 'Minimum batten length' property is strictly less than 'Maximum batten length'."
+          },
+          {
+            "check": "Zone Availability",
+            "errorMessage": "None (No output)",
+            "recovery": "User must ensure the selected Element actually has generated beams in the specified Zone index."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Batten Geometry",
+            "how": "Script Instance Auto-Deletes (No OPM)",
+            "effect": "The original long battens are permanently replaced by split segments with saw cuts. Changes are baked into the model."
+          },
+          {
+            "action": "Re-run Script",
+            "how": "Execute command again on same element",
+            "effect": "WARNING: Re-running on already split beams may cause unintended further splits or errors as the original geometry no longer exists."
+          },
+          {
+            "action": "Manual Edit",
+            "how": "Standard hsbCAD Beam Edit tools",
+            "effect": "Users can manually adjust beam lengths or machining after the script has run."
+          }
+        ]
+      },
+      "tokens_used": 10657,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SplitBattens.mcr\n\n## Overview\nThis script automatically splits long battens (e.g., sheathing or furring strips) within a wall or roof element into optimized lengths. It aligns cut locations with structural studs for fastening and staggers joints between rows to ensure structural stability.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be inserted onto a Wall or Roof Element in the 3D model. |\n| Paper Space | No | Not applicable for 2D drawings. |\n| Shop Drawing | No | Modifies the physical model, not drawing layouts. |\n\n## Prerequisites\n- **Required Entities**: A Wall or Roof Element containing generated beams (GenBeams) acting as battens.\n- **Minimum Beam Count**: At least one batten beam in the specified Zone.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_SplitBattens.mcr`\n*Alternatively, type the assigned command alias if configured.*\n\n### Step 2: Configure Settings\nA dialog will appear automatically upon first launch.\n**Action**: Adjust the settings for Distribution location, Zone, Maximum/Minimum lengths, and Cut type. Click OK to confirm.\n\n### Step 3: Select Element\n```\nCommand Line: Select one, or more elements\nAction: Click on the Wall or Roof element(s) containing the battens you wish to split.\n```\n\n### Step 4: Execution\nThe script will automatically process the selected elements, split the battens, and then delete its own instance. No further user input is required.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Distribution location | dropdown | \\|Top left\\| | Determines the starting corner and direction for staggering rows (e.g., Top left, Top Right). |\n| Zone to Redistribute the Battens | dropdown | 1 | The construction layer index (1-10) containing the battens to be processed. |\n| Maximum batten length | number | 4800 | The maximum stock length (in mm) allowed for a single batten piece. |\n| Minimum batten length | number | 100 | The shortest allowable length (in mm) for a cut piece; prevents tiny offcuts. |\n| Trim waste length by | number | 4 | Deduction (in mm) applied to the carry-over waste to account for saw kerf or cutting margin. |\n| Filter Material | text | | Filters beams by material name (e.g., \"C24\"). Leave empty to process all materials in the zone. |\n| Cut orientation | dropdown | \\|Angled cut\\| | Determines the cut profile: \"Angled cut\" or \"Straight cut\". |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | The script instance deletes itself immediately after execution. No right-click context menu options are available. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Re-running Risks**: Since this script permanently modifies the geometry and deletes itself, running it a second time on the same element may cause errors or unintended double splits. Use with caution.\n- **Filtering**: If you have structural studs in the same zone as battens, use the **Filter Material** property to ensure only battens are split.\n- **Stud Alignment**: Ensure your wall/roof has generated structural studs perpendicular to the battens; the script uses these studs to determine optimal cut locations.\n\n## FAQ\n- **Q: Why did nothing happen when I ran the script?**\n- **A**: Check that the **Zone to Redistribute** parameter matches the actual zone where your battens are generated. Also, verify that the battens are longer than the **Maximum batten length** setting.\n- **Q: Can I undo the changes?**\n- **A**: Yes, you can use the standard AutoCAD `UNDO` command to revert the changes, provided you have not exceeded your undo history limit.\n- **Q: How do I change the cut angle?**\n- **A**: Modify the **Cut orientation** property in the Properties Palette before running the script."
+      },
+      "tokens_used": 6123,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,359 @@
+{
+  "filename": "hsbPropellerTool.mcr",
+  "status": "completed",
+  "total_tokens": 45741,
+  "processing_time": 896.2171533107758,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 1,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "16apr2020",
+            "author": "david.delombaerde@hsbcad.com",
+            "changes": "Tool selection from XML equal to hsbCLT_FreeProfile. Issue export to BVX: direction of tool has been fixed.\n\t\t\t\t\t\t\t\t\t\t\t\t   Mirror action added to tsl so that propellertool can be mirrored to the opposite side."
+          },
+          {
+            "version": "1.0",
+            "date": "05dec2017",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "initial, derived from hsbCLT-PropellerTool 1.1"
+          }
+        ],
+        "settingsFiles": [
+          "hsbCLT-FreeProfile.xml"
+        ],
+        "dependencies": []
+      },
+      "tokens_used": 9142,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script creates PropellerSurfaceTool objects on beams using beam.addTool(). Explicitly passes _kModelSpace to tslNew.dbCreate(). Prompts user to select GenBeam and EntPLine entities which are 3D model elements. No ShopDrawing (#Type E) or Paper Space (_Viewport) specific logic detected."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "PLine"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": [
+            "hsbCLT-FreeProfile.xml"
+          ]
+        }
+      },
+      "tokens_used": 6901,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getBeam",
+              "promptOriginal": "|Select beam|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select 1 (defining polyline) or 2 polylines (defining + bevel polyline).|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "Called via showDialog() during insertion if no command key is provided.",
+            "title": null,
+            "dataSource": "OPM Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sToolName",
+            "type": "PropString",
+            "displayName": "|Tool|",
+            "defaultValue": "First item from XML Tool list",
+            "inputType": "dropdown",
+            "options": "Populated dynamically from hsbCLT-FreeProfile.xml",
+            "category": "|Tool|",
+            "description": "Dynamic description including Diameter and Length, e.g., 'Defines the CNC Tool, Ø 10/50'"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "|Mirror to opposite side|",
+            "handler": "|Mirror to opposite side|",
+            "action": "Mirrors the PropellerTool to the opposite side of the beam by projecting the defining and bevel polylines.",
+            "alsoTriggeredBy": "TslDoubleClick"
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "hsbCLT-FreeProfile.xml",
+            "searchPaths": [
+              "_kPathHsbCompany\\TSL\\Settings",
+              "_kPathHsbInstall\\Content\\General\\TSL\\Settings"
+            ],
+            "purpose": "Provides tool definitions including Name, Diameter, Length, and CNC Mode index.",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 7021,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates a complex 'propeller' surface machining (a 3D sweep/mill) on a beam, defined by projecting polylines onto the beam surface to specify the start and end geometry.",
+          "category": "Machining / CNC",
+          "typicalUseCase": "Creating variable depth grooves, angled housings for purlins, or helical transitions on beams where standard linear or planar tools are insufficient."
+        },
+        "parameters": [
+          {
+            "name": "sToolName",
+            "technicalDefault": "First item found in hsbCLT-FreeProfile.xml",
+            "businessMeaning": "Selects the specific CNC cutter (router bit) from the company tool catalog. The tool's diameter determines the width of the machined surface, and its length determines the maximum cutting depth.",
+            "validRange": "Constrained to the list of tools defined in 'hsbCLT-FreeProfile.xml'. Physically limited to tools installed in the CNC machine (typically 6mm to 40mm diameter).",
+            "unit": "String (Selection)",
+            "affectsOutput": "Changes the physical dimensions of the machined groove in the 3D model and the specific tool number called in the CNC export (BVX/PTX)."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User changes 'sToolName' selection",
+            "effect": "Updates the internal variables for Diameter, Length, and CNC Mode index based on the XML mapping.",
+            "cascade": [
+              "dDiameter",
+              "dLength",
+              "nCncMode"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "PropellerSurfaceTool",
+            "description": "A 3D milling operation that creates a transition surface between two profiles (defined by the selected polylines). It effectively sweeps the selected tool diameter along a path interpolated between the two polyline definitions.",
+            "appliedTo": "The single GenBeam selected during insertion."
+          }
+        ]
+      },
+      "tokens_used": 7936,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch",
+          "Load Settings (hsbCLT-FreeProfile.xml) from Company or Install path",
+          "Check Execute Key (Catalog/Command)",
+          "Show Dynamic Dialog (OPM Properties) if no key provided",
+          "User Prompt: Select Beam (getBeam)",
+          "User Prompt: Select 1 or 2 Polylines (PrEntity)",
+          "Filter Entities (Valid GenBeam and EntPLine, ignore closed PLines)",
+          "Validate PLine Count (must be at least 1)",
+          "Determine Defining vs Bevel PLine (Based on Area)",
+          "Normalize PLine Direction (Ensure Start/End alignment)",
+          "Project Defining PLine to nearest Beam Surface",
+          "Project Bevel PLine (To perpendicular face if single input, else to beam surface)",
+          "Validate Default Side (Volume Check on creation: _bOnDbCreated)",
+          "Generate PropellerSurfaceTool (Apply to Beam)",
+          "Generate Display Graphics (Lines and Direction Markers)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Input Source (Execute Key)",
+            "path1": {
+              "name": "Catalog/Command Key",
+              "steps": [
+                "Apply preset properties from catalog",
+                "Skip Dialog"
+              ]
+            },
+            "path2": {
+              "name": "Manual Insert",
+              "steps": [
+                "Show Dialog",
+                "User selects Tool"
+              ]
+            }
+          },
+          {
+            "condition": "Number of Selected Polylines",
+            "path1": {
+              "name": "Single PLine",
+              "steps": [
+                "Duplicate PLine for Bevel definition",
+                "Project Bevel PLine to perpendicular face of beam"
+              ]
+            },
+            "path2": {
+              "name": "Two Polylines",
+              "steps": [
+                "Assign largest as Defining",
+                "Assign smallest as Bevel",
+                "Project both to beam surface"
+              ]
+            }
+          },
+          {
+            "condition": "PLine Direction Alignment",
+            "path1": {
+              "name": "Dot Product < 0 (Opposite)",
+              "steps": [
+                "Reverse Bevel PLine to match Defining PLine"
+              ]
+            },
+            "path2": {
+              "name": "Dot Product > 0 (Same)",
+              "steps": [
+                "Keep PLine orientation"
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Trigger (Mirror/Double Click)",
+            "path1": {
+              "name": "Mirror Executed",
+              "steps": [
+                "Project PLines to opposite side of beam",
+                "Create new PLine entities in ModelSpace",
+                "Create new TSL Instance with new PLines",
+                "Erase current Instance",
+                "Set Loop count to 2"
+              ]
+            },
+            "path2": {
+              "name": "Standard Recalc",
+              "steps": [
+                "Skip Mirror Logic"
+              ]
+            }
+          },
+          {
+            "condition": "Initial Volume Check (bOnDbCreated)",
+            "path1": {
+              "name": "Incorrect Side Detected",
+              "steps": [
+                "Calculate tool on both sides",
+                "Compare volumes",
+                "Set 'flip' flag in Map if opposite side removes more material",
+                "Trigger Recalc"
+              ]
+            },
+            "path2": {
+              "name": "Correct Side Detected",
+              "steps": [
+                "Proceed with current tool side (Left/Right)"
+              ]
+            }
+          },
+          {
+            "condition": "Flip Flag (Map)",
+            "path1": {
+              "name": "Flip is True",
+              "steps": [
+                "Swap Left/Right sides array",
+                "Apply tool to opposite side"
+              ]
+            },
+            "path2": {
+              "name": "Flip is False",
+              "steps": [
+                "Apply tool to default side"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam Selection",
+            "errorMessage": "Invalid reference. Tool will be deleted",
+            "recovery": "Script erases itself. User must re-insert and select a valid GenBeam."
+          },
+          {
+            "check": "PLine Selection",
+            "errorMessage": "Invalid reference. Tool will be deleted",
+            "recovery": "Script erases itself if < 1 valid open polyline found."
+          },
+          {
+            "check": "Closed Polylines",
+            "errorMessage": "Closed polylines are not supported.",
+            "recovery": "Script reports message and ignores the specific closed polyline."
+          },
+          {
+            "check": "Tool Definition",
+            "errorMessage": "Tool definition not found, changed to [Default Tool Name]",
+            "recovery": "Script resets to first item in XML list and reports message."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change CNC Tool",
+            "how": "OPM Properties (Tool dropdown)",
+            "effect": "Updates tool diameter, length, and CNC mode. Triggers recalculation of the tool geometry."
+          },
+          {
+            "action": "Mirror to Opposite Side",
+            "how": "Right-click Context Menu -> |Mirror to opposite side|",
+            "effect": "Projects the definition to the other side of the beam, creates new geometry/entities, and replaces the script instance."
+          },
+          {
+            "action": "Double Click",
+            "how": "Double Click entity",
+            "effect": "Triggers the Mirror logic (same as context menu)."
+          },
+          {
+            "action": "Modify Input Geometry",
+            "how": "Grip edit or Move the original PLine entities",
+            "effect": "Script is dependent on entities; modification triggers automatic recalculation to update the tool path."
+          }
+        ]
+      },
+      "tokens_used": 8944,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbPropellerTool.mcr\n\n## Overview\nThis script creates a complex \"propeller\" surface machining (3D sweep/mill) on a timber beam. It uses projected polylines to define the start and end geometry of the cut, allowing for variable depth grooves or angled housings.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be used in the 3D model. |\n| Paper Space | No | Not supported for 2D layouts. |\n| Shop Drawing | No | Not applicable for shop drawing details. |\n\n## Prerequisites\n- **Required Entities**: One GenBeam and at least one EntPLine (Polyline).\n- **Minimum Beam Count**: 1\n- **Required Settings**: `hsbCLT-FreeProfile.xml` (Must be present in Company or Install settings path).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbPropellerTool.mcr`\n\n### Step 2: Select Tool\n```\nCommand Line: [Dialog appears]\nAction: A dialog displays a list of available CNC tools. Select the desired tool (e.g., \"Ø 10/50\") from the dropdown list.\n```\n\n### Step 3: Select Beam\n```\nCommand Line: Select beam\nAction: Click on the beam (GenBeam) where you want to apply the propeller machining.\n```\n\n### Step 4: Select Polylines\n```\nCommand Line: Select 1 (defining polyline) or 2 polylines (defining + bevel polyline).\nAction: Click the polyline(s) that define the shape of the cut.\n- Option A: Select 1 polyline. The script will project this to the beam surface and try to find a perpendicular face for the bevel.\n- Option B: Select 2 polylines. The script identifies the larger area as the defining profile and the smaller as the bevel profile.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Tool | dropdown | First item from XML list | Selects the CNC cutter from the catalog. The description updates dynamically to show Diameter and Length (e.g., \"Defines the CNC Tool, Ø 10/50\"). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Mirror to opposite side | Projects the tool definition to the opposite side of the beam and recreates the tool. |\n\n## Settings Files\n- **Filename**: `hsbCLT-FreeProfile.xml`\n- **Location**: \n  - `_kPathHsbCompany\\TSL\\Settings`\n  - `_kPathHsbInstall\\Content\\General\\TSL\\Settings`\n- **Purpose**: Provides the list of available CNC tools, including their Name, Diameter, Length, and CNC Mode index.\n\n## Tips\n- **Polyline Direction**: The script automatically aligns the direction of two selected polylines. You do not need to manually ensure they point the same way.\n- **Closed Polylines**: This tool does not support closed polylines. Ensure your defining lines are open segments.\n- **Volume Check**: Upon insertion, the script automatically calculates which side of the beam removes more material to ensure the cut is applied to the correct face.\n- **Double-Click**: Double-clicking the tool in the model triggers the \"Mirror to opposite side\" function.\n- **Updates**: If you modify the original polylines used to create the tool, the tool will automatically update to reflect the new geometry.\n\n## FAQ\n- **Q: What happens if I select a closed polyline?**\n  - A: The script will report a message saying closed polylines are not supported and will ignore that selection.\n- **Q: How do I change the cutter size after insertion?**\n  - A: Select the tool, open the Properties (OPM) palette, and choose a different tool from the \"Tool\" dropdown list.\n- **Q: The tool disappeared after I moved my beam. Why?**\n  - A: If the beam reference is lost or the linking polylines are deleted/invalid, the script will self-delete to prevent errors. Re-insert the tool and select the valid entities.\n- **Q: Can I use this for a straight groove?**\n  - A: Yes, but standard linear milling tools may be more efficient. This tool is best for transitions where the start and end profiles differ."
+      },
+      "tokens_used": 5797,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,266 @@
+{
+  "filename": "sdMS_ModelTitleblock.mcr",
+  "status": "completed",
+  "total_tokens": 35316,
+  "processing_time": 286.7603898048401,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"header\": {\n    \"type\": \"\",\n    \"numBeamsReq\": 0,\n    \"keywords\": [],\n    \"majorVersion\": 1,\n    \"minorVersion\": 1,\n    \"dxaOut\": 0,\n    \"implInsert"
+      },
+      "tokens_used": 6740,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": true,
+          "isMultipageScript": true,
+          "detectionEvidence": "Script filename starts with 'sdMS_'. Explicitly prompts for and validates an entity of type 'HSBCAD_MULTIPAGE' using getEntity() and typeDxfName(). Retrieves 'mpShopdrawData' and 'ViewData' associated with shopdrawings. Remarks indicate interaction with the 'block definition of the multipage'."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "HSBCAD_MULTIPAGE",
+            "Block reference containing 'sd_PropertySetDisplay' instances",
+            "sd_ViewDataExporter instance (within multipage block)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing a Multipage entity",
+          "requiredSettings": [
+            "Block definition containing 'sd_PropertySetDisplay' scripts set to 'Model Title Block' mode",
+            "Multipage block must include 'sd_ViewDataExporter'"
+          ]
+        }
+      },
+      "tokens_used": 5391,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getEntity",
+              "promptOriginal": "|Select multipage|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sBlock",
+            "type": "PropString",
+            "displayName": "|Block|",
+            "defaultValue": "_BlockNames",
+            "inputType": "text",
+            "options": [],
+            "category": "|General|",
+            "description": "|Defines the Block|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6919,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Displays dynamic project properties in the model title block by linking a multipage shop drawing entity to a specific block containing property placeholders.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Used to update and display metadata (such as project number, date, or scale) on a title block located in the model space without needing to regenerate the entire shop drawing multipage."
+        },
+        "parameters": [
+          {
+            "name": "sBlock",
+            "technicalDefault": "_BlockNames",
+            "businessMeaning": "The name of the block definition that serves as the container for the title block text and property placeholders. This block must contain instances of 'sd_PropertySetDisplay' configured for 'Model Title Block' mode.",
+            "validRange": "Existing Block Name within the drawing",
+            "unit": "String",
+            "affectsOutput": "Determines which block definition is searched for text display entities. If invalid or missing placeholders, the script generates a warning and erases itself. The position and content of the title block depend entirely on the geometry and configuration within this block."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects a different multipage entity via getEntity",
+            "effect": "The script retrieves new 'mpShopdrawData' and 'ViewData' from the selected multipage, which updates the map of defining entities passed to the property displays.",
+            "cascade": [
+              "sBlock"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Text Elements / Annotations",
+            "description": "Dynamic text strings derived from 'sd_PropertySetDisplay' instances found within the specified block. These texts represent properties of the defining entities of the selected multipage.",
+            "appliedTo": "Model Space at the insertion point corresponding to the selected multipage."
+          }
+        ]
+      },
+      "tokens_used": 4045,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script starts insertion cycle (_bOnInsert).",
+          "2. Check if insertCycleCount > 1. If yes, erase instance and exit.",
+          "3. Check for an ExecuteKey (_kExecuteKey) in the command line arguments.",
+          "4. If key exists, search for a matching catalog entry; if not found, fall back to '_LastInserted' or showDialog().",
+          "5. Prompt user via command line: Select a multipage entity (getEntity).",
+          "6. Validate the selected entity: Must be valid and of type 'HSBCAD_MULTIPAGE'.",
+          "7. If invalid, erase instance immediately.",
+          "8. If valid, append entity to _Entity array and force a recalculation loop (return).",
+          "9. [Recalculation Phase] Verify _Entity contains the multipage. Set dependency on it.",
+          "10. Extract 'mpShopdrawData' and 'ViewData' maps from the multipage entity.",
+          "11. Retrieve the defining entities (beams/elements) associated with the multipage views.",
+          "12. Load the Block definition specified by the 'sBlock' property.",
+          "13. Iterate through all TSL instances found inside the loaded Block definition.",
+          "14. Filter instances: Look for 'sd_PropertySetDisplay'.",
+          "15. Check 'DisplayMode': Must be set to 'Model Title Block' (Index 1).",
+          "16. For valid instances: Call the script using MapIO to generate text properties based on the defining entities.",
+          "17. Calculate transformation: Align block text position to the multipage origin.",
+          "18. Draw the resulting text strings in Model Space.",
+          "19. Final Check: If no text was drawn (nCnt < 1), report warning and erase instance."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Catalog Entry / Execution Key",
+            "path1": {
+              "name": "ExecuteKey Provided",
+              "steps": [
+                "Script receives _kExecuteKey",
+                "Searches list of catalog names for matching key",
+                "If found: setPropValuesFromCatalog(sKey)",
+                "If not found: setPropValuesFromCatalog(_LastInserted)"
+              ]
+            },
+            "path2": {
+              "name": "Manual Insertion (No Key)",
+              "steps": [
+                "ExecuteKey is empty",
+                "Trigger showDialog()",
+                "User manually confirms properties in dialog"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Selection Validation",
+            "path1": {
+              "name": "Valid Multipage",
+              "steps": [
+                "getEntity returns a valid entity",
+                "entity.typeDxfName() equals 'HSBCAD_MULTIPAGE'",
+                "Entity stored in _Entity array",
+                "Script proceeds to calculation phase"
+              ]
+            },
+            "path2": {
+              "name": "Invalid/No Selection",
+              "steps": [
+                "getEntity returns invalid entity or wrong type",
+                "eraseInstance() is called",
+                "Script terminates immediately"
+              ]
+            }
+          },
+          {
+            "condition": "Display Mode Check (sd_PropertySetDisplay)",
+            "path1": {
+              "name": "Model Title Block Mode",
+              "steps": [
+                "Read 'DisplayMode' property from the block TSL",
+                "Value is 1 ('Model Title Block')",
+                "Script processes the instance and draws the text"
+              ]
+            },
+            "path2": {
+              "name": "Multipage Mode or Invalid",
+              "steps": [
+                "Value is 0 ('Multipage') or property not found",
+                "Script executes 'continue' statement",
+                "Instance is ignored/skipped"
+              ]
+            }
+          },
+          {
+            "condition": "Post-Draw Validation (nCnt)",
+            "path1": {
+              "name": "Success (Elements Drawn)",
+              "steps": [
+                "Variable nCnt is > 0",
+                "Instance remains in drawing",
+                "Text is displayed in Model Space"
+              ]
+            },
+            "path2": {
+              "name": "Failure (No Elements)",
+              "steps": [
+                "Variable nCnt is 0",
+                "Report warning: No references found in defining block",
+                "If not in Debug mode: eraseInstance()"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Selected Entity Type",
+            "errorMessage": "could not get multipage.",
+            "recovery": "User must run the command again and select a valid HSBCAD_MULTIPAGE entity."
+          },
+          {
+            "check": "Display Mode Value",
+            "errorMessage": "the requested value could not be found. Please edit block definition...",
+            "recovery": "User must edit the block definition to ensure sd_PropertySetDisplay instances have valid property settings."
+          },
+          {
+            "check": "Placeholders in Block",
+            "errorMessage": "No references of PropertySetDisplay placeholders are found in the defining block [BlockName].",
+            "recovery": "Verify the 'Block' property name matches an existing block containing sd_PropertySetDisplay instances set to 'Model Title Block' mode."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Source Block",
+            "how": "OPM (Object Properties Palette)",
+            "effect": "Updating the 'Block' property string causes the script to scan a different block definition for placeholders on the next recalculation."
+          },
+          {
+            "action": "Update Multipage",
+            "how": "Modify the referenced Multipage or its defining elements",
+            "effect": "Because setDependencyOnEntity is used, the script detects changes to the multipage or its defining entities and automatically refreshes the title block data and position."
+          },
+          {
+            "action": "Edit Block Geometry",
+            "how": "Standard CAD Block Edit command (BEDIT)",
+            "effect": "Changing the location or properties of sd_PropertySetDisplay instances within the referenced block updates the title block layout upon the next regeneration of the script."
+          }
+        ]
+      },
+      "tokens_used": 7021,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# sdMS_ModelTitleblock.mcr\n\n## Overview\nThis script creates a dynamic title block in Model Space that displays project information (such as scale, date, or project number) linked to a specific Multipage Shop Drawing. It reads property placeholders from a user-defined block definition to generate the layout automatically.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script is intended for use in Model Space. |\n| Paper Space | No | Not supported for Paper Space usage. |\n| Shop Drawing | Yes | Extracts data from `HSBCAD_MULTIPAGE` entities. |\n\n## Prerequisites\n- **Required Entities**: A `HSBCAD_MULTIPAGE` entity must exist in the drawing.\n- **Block Definition**: A Block must exist containing `sd_PropertySetDisplay` instances configured for **Model Title Block** mode.\n- **Minimum Beam Count**: 0 (This script is annotation-based).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or via hsbCAD menu) → Select `sdMS_ModelTitleblock.mcr`\n\n### Step 2: Select Multipage\n```\nCommand Line: Select multipage\nAction: Click on the desired HSBCAD_MULTIPAGE entity in the drawing.\n```\n*Note: If you select an invalid entity or nothing, the script will display a warning and cancel the insertion.*\n\n### Step 3: Verify Placement\nThe script will automatically generate the title block at the origin of the selected multipage. It reads the settings from the block defined in the properties panel to determine which text to display.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Block | text | _BlockNames | The name of the block definition that serves as the title block template. This block must contain `sd_PropertySetDisplay` scripts set to \"Model Title Block\" mode. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| (Standard) | No specific custom menu items are added by this script. Standard recalculation options apply. |\n\n## Settings Files\n- **None**: This script does not rely on external settings files.\n\n## Tips\n- **Update Data**: If you modify the shop drawing or the elements within it, the title block will update automatically to reflect changes (e.g., updated dates or dimensions).\n- **Custom Layout**: To change the look of your title block, do not edit the script instance directly. Instead, use the AutoCAD `BEDIT` command to modify the block definition specified in the \"Block\" property.\n- **Placement**: Ensure the `sd_PropertySetDisplay` scripts inside your title block are set to **DisplayMode: Model Title Block**. If they are set to \"Multipage\" mode, this script will ignore them.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I selected the multipage?**\n  A: The script will erase itself if the Block specified in the properties does not exist, or if that block does not contain any `sd_PropertySetDisplay` instances set to \"Model Title Block\" mode. Check your block definition and property settings.\n\n- **Q: Can I move the title block after inserting it?**\n  A: Yes, you can move the script instance using standard AutoCAD move commands. However, the content is generated relative to the block definition's geometry.\n\n- **Q: How do I change which project properties are shown?**\n  A: You need to edit the Block Definition (e.g., using `BEDIT`). Inside the block, select the `sd_PropertySetDisplay` instances and change their property mappings via the Properties Palette."
+      },
+      "tokens_used": 5200,
+      "error": null
+    }
+  }
+}

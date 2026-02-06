@@ -1,0 +1,308 @@
+{
+  "filename": "hsbCullenAWS.mcr",
+  "status": "completed",
+  "total_tokens": 49685,
+  "processing_time": 355.5174627304077,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9188,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly uses _kModelSpace in the getTslsByName function (Entity ents[] = Group().collectEntities(true, TslInst(), _kModelSpace);). It interacts with GenBeam and ElementWall entities, which are core 3D model entities. There are no references to sd_* prefixes, Viewport entities, or #Type E structures associated with Paper Space or Shop Drawings."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "ElementWall"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "Catalog or properties defining 'Cullen Acoustic Wall Strap' geometry",
+            "Valid ElementWall structure with horizontal beams (top plates)"
+          ]
+        }
+      },
+      "tokens_used": 5587,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9929,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the insertion and distribution of Cullen Acoustic Wall Straps (metal brackets) to reduce impact noise transmission between timber elements.",
+          "category": "Hardware/Acoustic Insulation",
+          "typicalUseCase": "Used when detailing separating walls or floating floors to place acoustic straps between top plates or sole plates to break structural sound paths."
+        },
+        "parameters": [
+          {
+            "name": "sProductCode",
+            "technicalDefault": "",
+            "businessMeaning": "Selects the specific Cullen product model (e.g., AWS 25, AWS 50) which defines the geometry and the cavity width the strap is designed to bridge.",
+            "validRange": "Manufacturer specific list (e.g., 'AWS 25', 'AWS 50')",
+            "unit": "String",
+            "affectsOutput": "Changes the 3D size of the strap body and the spacing requirements (dCavity) between beams."
+          },
+          {
+            "name": "dCavity",
+            "technicalDefault": "",
+            "businessMeaning": "The gap width that the acoustic strap is designed to span (derived from Product Code).",
+            "validRange": "0mm - 200mm",
+            "unit": "mm",
+            "affectsOutput": "Determines the width of the strap geometry and valid placement between parallel elements."
+          },
+          {
+            "name": "dOffsetBottom",
+            "technicalDefault": "0",
+            "businessMeaning": "The distance from the start of the wall/beam selection to the center of the first acoustic strap.",
+            "validRange": "0mm to Wall Length",
+            "unit": "mm",
+            "affectsOutput": "Shifts the entire row of distribution along the start point."
+          },
+          {
+            "name": "dOffsetTop",
+            "technicalDefault": "0",
+            "businessMeaning": "The distance from the end of the wall/beam selection to the center of the last acoustic strap.",
+            "validRange": "0mm to Wall Length",
+            "unit": "mm",
+            "affectsOutput": "Shifts the distribution away from the end point."
+          },
+          {
+            "name": "dOffsetBetween",
+            "technicalDefault": "0",
+            "businessMeaning": "Controls the frequency of placement. Positive value = fixed center-to-center distance (mm). Negative value = fixed number of straps to distribute evenly.",
+            "validRange": "-50 (Count) to 1200 (Spacing)",
+            "unit": "mm (or count if negative)",
+            "affectsOutput": "Determines how many straps are generated and the spacing between them."
+          },
+          {
+            "name": "sDistribution",
+            "technicalDefault": "",
+            "businessMeaning": "Defines the calculation logic for spacing: 'Fixed' uses exact spacing (dOffsetBetween), 'Even' divides the remaining space evenly between the start/end offsets.",
+            "validRange": "Fixed / Even",
+            "unit": "Enum",
+            "affectsOutput": "Alters the calculated center points of the straps between the start and end points."
+          },
+          {
+            "name": "nGroupAssignment",
+            "technicalDefault": "0",
+            "businessMeaning": "Controls how the script instance is organized in the CAD model tree (assigned to the Element group or a specific Layer).",
+            "validRange": "0 (Element Group), 1 (Layer)",
+            "unit": "Index",
+            "affectsOutput": "Affects layer properties and logical grouping in the model browser, not geometry."
+          },
+          {
+            "name": "dDistanceX",
+            "technicalDefault": "0",
+            "businessMeaning": "Spacing in the longitudinal direction (along the wall) when using a grid distribution pattern.",
+            "validRange": "300mm - 600mm",
+            "unit": "mm",
+            "affectsOutput": "Spacing of straps along the wall length."
+          },
+          {
+            "name": "dDistanceY",
+            "technicalDefault": "0",
+            "businessMeaning": "Spacing in the transverse direction (across the wall depth or height) when using a grid distribution pattern.",
+            "validRange": "300mm - 600mm",
+            "unit": "mm",
+            "affectsOutput": "Spacing of straps across the wall section."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sProductCode changes",
+            "effect": "Updates the internal dCavity value and physical dimensions of the strap.",
+            "cascade": [
+              "dCavity"
+            ]
+          },
+          {
+            "trigger": "dOffsetBetween < 0",
+            "effect": "Switches logic from 'Spacing by distance' to 'Spacing by count'.",
+            "cascade": [
+              "sDistribution"
+            ]
+          },
+          {
+            "trigger": "nInsertionMode == 1",
+            "effect": "Ignores manual GenBeam selection and calculates distribution based on ElementWall top plates.",
+            "cascade": [
+              "dOffsetBottom",
+              "dOffsetTop",
+              "dOffsetBetween"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Body",
+            "description": "3D solid representation of the Acoustic Wall Strap (Metal bracket).",
+            "appliedTo": "Between selected GenBeams or on top plates of ElementWall."
+          },
+          {
+            "type": "HardWrComp",
+            "description": "BOM entries for 'Acoustic Wall Strap' (Qty 1) and 'Square Twist Nails' (Qty 6).",
+            "appliedTo": "Linked to the parent GenBeam or ElementWall."
+          }
+        ]
+      },
+      "tokens_used": 8984,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Insertion/Recalc triggered",
+          "2. Script checks Insertion Mode property (nInsertionMode)",
+          "3. [Conditional] Branch A: nInsertionMode == 0 (Two GenBeams)",
+          "   - Prompts user to select 2 GenBeams satisfying cavity width (dCavity)",
+          "   - Validates beams are parallel and spacing matches product requirements",
+          "   - Defines distribution segment based on beam intersections/lengths",
+          "4. [Conditional] Branch B: nInsertionMode == 1 (Single ElementWall)",
+          "   - Retrieves ElementWall from _Element array",
+          "   - Validates ElementWall exists and contains horizontal beams (top plates)",
+          "   - Executes calcDistributionPp to find the effective top plate profile",
+          "5. Calculate Distribution Points",
+          "   - Applies offsets (dOffsetBottom, dOffsetTop)",
+          "   - Determines spacing based on dOffsetBetween and sDistribution",
+          "   - Validates total distribution distance is sufficient",
+          "6. Generate Output",
+          "   - Executes drawBody to create 3D solid straps at calculated points",
+          "   - Creates HardWrComp entries (Straps + Nails)",
+          "   - Assigns instance to Layer or Element Group based on nGroupAssignment",
+          "7. Script execution completes"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "nInsertionMode property value",
+            "path1": {
+              "name": "Two GenBeams (Mode 0)",
+              "steps": [
+                "User selects first GenBeam",
+                "User selects second GenBeam",
+                "Script validates cavity between beams",
+                "Script calculates distribution along the common length"
+              ]
+            },
+            "path2": {
+              "name": "ElementWall Top Plate (Mode 1)",
+              "steps": [
+                "Script identifies target ElementWall",
+                "Script identifies horizontal beams (top plates) within wall",
+                "Script calculates shadow profile of top plates",
+                "Script calculates distribution along wall X-axis"
+              ]
+            }
+          },
+          {
+            "condition": "dOffsetBetween value (Distribution Logic)",
+            "path1": {
+              "name": "Fixed Spacing (> 0)",
+              "steps": [
+                "Calculates modular distance (dOffsetBetween + PartLength)",
+                "Places straps at fixed center-to-center intervals"
+              ]
+            },
+            "path2": {
+              "name": "Fixed Count (< 0)",
+              "steps": [
+                "Converts negative value to number of parts (e.g., -5 = 5 straps)",
+                "Divides available space evenly to determine spacing"
+              ]
+            },
+            "path3": {
+              "name": "Even Distribution (sDistribution == 'Even' && > 0)",
+              "steps": [
+                "Calculates max number of straps that fit in available space",
+                "Divides remaining space evenly between straps"
+              ]
+            }
+          },
+          {
+            "condition": "nGroupAssignment property value",
+            "path1": {
+              "name": "Assign to Element Group (0)",
+              "steps": [
+                "Calls assignToElementGroup",
+                "Straps move with the wall in model hierarchy"
+              ]
+            },
+            "path2": {
+              "name": "Assign to Layer (1)",
+              "steps": [
+                "Calls assignToLayer('0')",
+                "Straps assigned to default layer independent of wall grouping"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Valid ElementWall in Mode 1",
+            "errorMessage": "No valid ElementWall found",
+            "recovery": "User must select a valid wall or ensure script is attached to a wall."
+          },
+          {
+            "check": "Horizontal Beams in Wall",
+            "errorMessage": "No horizontal beams found at wall / No beam found at wall",
+            "recovery": "User must add top plates or sole plates to the ElementWall."
+          },
+          {
+            "check": "Distribution Space (dDistTot >= 0)",
+            "errorMessage": "no distribution possible",
+            "recovery": "Increase wall length, reduce offsets (dOffsetBottom/Top), or reduce the number of straps (if dOffsetBetween is negative)."
+          },
+          {
+            "check": "Product Code Selection",
+            "errorMessage": "(Implied) Invalid geometry generation",
+            "recovery": "Select a valid Product Code from the list to define dCavity."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Product Code",
+            "how": "Properties Palette (OPM)",
+            "effect": "Updates dCavity value and regenerates strap geometry width."
+          },
+          {
+            "action": "Adjust Offsets and Spacing",
+            "how": "Properties Palette (OPM)",
+            "effect": "Recalculates distribution points; adds or removes straps along the wall."
+          },
+          {
+            "action": "Toggle Group Assignment",
+            "how": "Properties Palette (OPM) or Context Menu",
+            "effect": "Switches the TSL instance between being grouped with the Element (0) or assigned to a specific Layer (1)."
+          }
+        ]
+      },
+      "tokens_used": 9804,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCullenAWS.mcr\n\n## Overview\nThis script automates the insertion and distribution of Cullen Acoustic Wall Straps (metal brackets) to reduce impact noise transmission between timber elements. It is typically used to place acoustic straps between top plates or sole plates in separating walls or floating floors to break structural sound paths.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates only in 3D Model Space. |\n| Paper Space | No | Not designed for 2D detailing or drawings. |\n| Shop Drawing | No | Does not generate shop drawing views. |\n\n## Prerequisites\n- **Required Entities**: \n  - **Mode 0**: Two GenBeams (e.g., parallel top plates).\n  - **Mode 1**: A single ElementWall containing horizontal beams (top/sole plates).\n- **Minimum Beam Count**: 1 ElementWall or 2 GenBeams.\n- **Required Settings**: A catalog or configuration defining the geometry for 'Cullen Acoustic Wall Strap' products (e.g., AWS 25, AWS 50).\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the command line.\n2.  Browse and select `hsbCullenAWS.mcr`.\n3.  Press **Enter** to insert the script into the drawing.\n\n### Step 2: Select Insertion Mode\nThe script behavior depends on the `nInsertionMode` property (default usually set to 0 or 1). Check the Properties Palette (Ctrl+1) to verify or change this mode before selecting entities.\n\n*   **If Mode 0 (Two GenBeams)**:\n    1.  **Command Line**: `Select GenBeam 1`\n    2.  **Action**: Click on the first timber beam (e.g., a top plate).\n    3.  **Command Line**: `Select GenBeam 2`\n    4.  **Action**: Click on the second parallel timber beam. The script will validate the gap (cavity) matches the product settings.\n\n*   **If Mode 1 (Single ElementWall)**:\n    1.  **Command Line**: `Select ElementWall`\n    2.  **Action**: Click on the target wall element. The script will automatically detect horizontal beams (top plates) within the wall.\n\n### Step 3: Configure Distribution\nOnce placed, select the script instance and open the **Properties Palette**.\n1.  Select a **Product Code** (e.g., AWS 25) to define the strap size.\n2.  Adjust **dOffsetBottom** (start) and **dOffsetTop** (end) to define the layout area.\n3.  Set **dOffsetBetween**:\n    -   Positive value (e.g., `600`): Fixed spacing in mm.\n    -   Negative value (e.g., `-5`): Fixed quantity (5 straps) distributed evenly.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **sProductCode** | String/List | \"\" | Selects the specific Cullen model (e.g., AWS 25, AWS 50). This defines the geometry and the cavity width required. |\n| **dCavity** | Number (mm) | \"\" | The gap width the strap is designed to span. Usually updated automatically when Product Code changes. |\n| **nInsertionMode** | Integer | 0 | **0**: Select two GenBeams manually. **1**: Use ElementWall top plates. |\n| **dOffsetBottom** | Number (mm) | 0 | Distance from the start of the selection to the center of the first strap. |\n| **dOffsetTop** | Number (mm) | 0 | Distance from the end of the selection to the center of the last strap. |\n| **dOffsetBetween** | Number (mm) | 0 | **Positive**: Fixed center-to-center distance. **Negative**: Number of straps to distribute evenly (e.g., -5 for 5 straps). |\n| **sDistribution** | Enum | Fixed | **Fixed**: Uses exact spacing from `dOffsetBetween`. **Even**: Divides remaining space evenly between start/end offsets. |\n| **nGroupAssignment** | Integer | 0 | **0**: Assign straps to the Element Group. **1**: Assign straps to a specific Layer independent of the wall. |\n| **dDistanceX** | Number (mm) | 0 | Spacing in the longitudinal direction (along the wall) if using a grid pattern. |\n| **dDistanceY** | Number (mm) | 0 | Spacing in the transverse direction (across the wall) if using a grid pattern. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Recalculate** | Refreshes the script based on current property values or wall geometry changes. |\n| **Assign to Element Group** | Changes `nGroupAssignment` to 0, grouping the straps with the parent wall in the model tree. |\n| **Assign to Layer** | Changes `nGroupAssignment` to 1, placing the straps on the default layer. |\n\n## Settings Files\n- **Filename**: Catalog configuration (often defined in company standards or specific `.catalog` files).\n- **Location**: hsbCAD company or installation path.\n- **Purpose**: Contains the geometric definitions and valid cavity widths for different \"Cullen Acoustic Wall Strap\" product codes.\n\n## Tips\n- **Fixed Quantity**: To place exactly 10 straps between two points, set `dOffsetBetween` to `-10` and ensure the `sDistribution` allows for the space.\n- **Wall Mode**: Using Mode 1 (ElementWall) is faster for framing updates. If you modify the top plates in the wall, the straps will automatically update to the new profile upon recalculation.\n- **Validation**: If the script reports \"no distribution possible\", reduce the `dOffsetBottom` and `dOffsetTop` values, as the available space between them is too small for the specified spacing or quantity.\n\n## FAQ\n- **Q: Why does the script say \"No horizontal beams found\"?**\n  **A**: You are likely in Mode 1 (ElementWall), but the selected wall does not have any beams defined as \"horizontal\" (e.g., top plates). Ensure your wall has valid top plates.\n  \n- **Q: How do I change the size of the metal strap?**\n  **A**: Change the `sProductCode` in the Properties Palette. The `dCavity` and physical 3D body will update to match the new product.\n\n- **Q: My straps are not appearing.**\n  **A**: Check the `dCavity` width. If the gap between your selected beams does not match the product's required cavity, the script may prevent generation. Also, ensure `dOffsetBottom` and `dOffsetTop` are not larger than the wall length."
+      },
+      "tokens_used": 6193,
+      "error": null
+    }
+  }
+}

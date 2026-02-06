@@ -1,0 +1,238 @@
+{
+  "filename": "hsbMetalPart-T-Connection.mcr",
+  "status": "completed",
+  "total_tokens": 27677,
+  "processing_time": 336.57573413848877,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2761,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses `PrEntity` prompts to select `Beam` and `MassGroup` entities for construction. It validates 3D geometry (EcsMarker orientation relative to Beam vector) and uses `TslInst.dbCreate` to link components. No ShopDrawing prefixes (sd_), `_Viewport` logic, or Paper Space specific drawing commands are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "MassGroup",
+            "EcsMarker"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space (construction context)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3486,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6420,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates a logical T-connection between a main (female) beam and intersecting (male) beams using a specified metal hardware part (MassGroup).",
+          "category": "Hardware / Connection",
+          "typicalUseCase": "When securing joists, purlins, or studs (male beams) onto a main girder or ledger (female beam) using steel plates, brackets, or gussets."
+        },
+        "parameters": [
+          {
+            "name": "sSide",
+            "technicalDefault": "\"|No|\"",
+            "businessMeaning": "Determines whether the intersecting (male) beams should be automatically shortened or lengthened ('stretched') to align perfectly with the connection point defined by the metal part.",
+            "validRange": "\"|No|\", \"|Yes|\"",
+            "unit": "Enumeration",
+            "affectsOutput": "If set to Yes, the endpoints of the male beams will be modified to accommodate the geometry of the connection (e.g., cutting back to allow space for a plate). If No, beams retain their current length."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of Metalpart (MassGroup)",
+            "effect": "The script validates that the selected metal part contains a valid EcsMarker with a specific orientation relative to the Male Beam.",
+            "cascade": [
+              "_Pt0"
+            ]
+          },
+          {
+            "trigger": "Orientation of EcsMarker inside MetalPart",
+            "effect": "If the EcsMarker X-axis is perpendicular to the Male Beam X-axis, the script fails and erases the instance.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "TslInst (Script Instance)",
+            "description": "A smart object linking the male beams, female beam, and metal part together to manage the connection logic.",
+            "appliedTo": "ModelSpace (Logical linkage between selected GenBeams and MassGroup)"
+          },
+          {
+            "type": "Display Representation",
+            "description": "A visual representation (icon/glyph) drawn at the origin of the EcsMarker found within the metal part.",
+            "appliedTo": "Metal Part Location"
+          }
+        ]
+      },
+      "tokens_used": 4385,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script starts via Insert command or Catalog",
+          "Check cycle count: If > 1, erase instance and exit",
+          "Determine input mode: Show 'Dialog' if _kExecuteKey is empty, otherwise load properties from 'Catalog'",
+          "Prompt user to select Male Beam(s)",
+          "Validate Male Beam selection: If empty, erase instance and exit",
+          "Prompt user to select Female Beam",
+          "Prompt user to select Metalpart(s) (MassGroups)",
+          "Iterate through selected Metalparts to find a valid EcsMarker",
+          "Validate EcsMarker orientation: Check if Marker X-axis is NOT perpendicular to Male Beam X-axis",
+          "If valid Marker found: Link Female Beam, Male Beams, and Metalparts into a new TSL instance",
+          "Erase the temporary insertion instance",
+          "[Post-Insertion] Recalculate instance: Re-identify beams and validate EcsMarker orientation",
+          "[Post-Insertion] Update Origin Point (_Pt0) to match valid EcsMarker location",
+          "[Post-Insertion] Draw visual representation at new origin"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Source",
+            "path1": {
+              "name": "Manual Input",
+              "steps": [
+                "Execute via command",
+                "Show Dialog",
+                "User confirms settings"
+              ]
+            },
+            "path2": {
+              "name": "Catalog Input",
+              "steps": [
+                "Execute via Catalog/Drag-and-Drop",
+                "Load preset properties",
+                "Skip Dialog"
+              ]
+            }
+          },
+          {
+            "condition": "Male Beam Selection",
+            "path1": {
+              "name": "Selection Successful",
+              "steps": [
+                "Store Male Beams",
+                "Proceed to Female Beam selection"
+              ]
+            },
+            "path2": {
+              "name": "Selection Empty/Cancelled",
+              "steps": [
+                "Erase Instance",
+                "Exit Script"
+              ]
+            }
+          },
+          {
+            "condition": "EcsMarker Validation",
+            "path1": {
+              "name": "Valid Marker Found",
+              "steps": [
+                "Identify Origin Point",
+                "Create TSL Instance linking entities",
+                "Complete Insertion"
+              ]
+            },
+            "path2": {
+              "name": "No Valid Marker (Perpendicular or Missing)",
+              "steps": [
+                "Skip Creation (during insert)",
+                "Erase Instance (during recalculation)",
+                "Exit"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Male Beam Selection Count",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Select at least one beam when prompted."
+          },
+          {
+            "check": "EcsMarker Presence in Metalpart",
+            "errorMessage": "None (Silent failure/Instance deletion)",
+            "recovery": "Ensure the selected MassGroup contains an EcsMarker entity."
+          },
+          {
+            "check": "EcsMarker Orientation",
+            "errorMessage": "None (Silent failure/Instance deletion)",
+            "recovery": "Ensure the EcsMarker's X-axis is not perpendicular (90 degrees) to the Male Beam's X-axis."
+          },
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Script logic)",
+            "recovery": "N/A (Internal check to prevent duplicate executions)"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify 'Stretch Male Beam' Property",
+            "how": "Properties Palette (OPM)",
+            "effect": "Updates the sSide property. (Note: The script body defines this property, but the specific modification logic for the beam geometry is not visible in the provided snippet, though the parameter suggests it toggles auto-shortening/stretching)."
+          },
+          {
+            "action": "Move/Rotate Connected Beams",
+            "how": "CAD Grips/Move Command",
+            "effect": "The script recalculates. If the Male Beam moves, the EcsMarker is re-validated against the new vector. The display representation updates."
+          },
+          {
+            "action": "Move/Rotate Metalpart",
+            "how": "CAD Grips/Move Command",
+            "effect": "The script recalculates. The EcsMarker location (_Pt0) is updated to the marker's new position."
+          },
+          {
+            "action": "Invalidate Connection",
+            "how": "Rotating Metalpart 90 degrees",
+            "effect": "If the EcsMarker becomes perpendicular to the Male Beam, the script detects the invalid state, erases itself, and removes the connection."
+          }
+        ]
+      },
+      "tokens_used": 5823,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbMetalPart-T-Connection.mcr\n\n## Overview\nThis script creates a logical T-connection between a main (female) beam and intersecting (male) beams using a specific metal hardware part (MassGroup). It validates the orientation of the metal part and optionally adjusts the length of the intersecting beams to fit the connection.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Used for constructing assemblies in the 3D model. |\n| Paper Space | No | Not designed for layout views or detailing. |\n| Shop Drawing | No | Not a drawing generation script. |\n\n## Prerequisites\n- **Required Entities**:\n  - **Female Beam**: The main girder or ledger beam.\n  - **Male Beam(s)**: One or more intersecting beams (e.g., joists, purlins).\n  - **Metal Part**: A MassGroup (hardware component) containing an **EcsMarker**.\n- **Minimum Beam Count**: 2 (1 female, 1 male).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command**: `TSLINSERT` (or select the script from the hsbCAD Catalog)\n**Action**: Select `hsbMetalPart-T-Connection.mcr` from the file dialog or catalog list.\n\n### Step 2: Select Male Beams\n```\nCommand Line: Select male beams\nAction: Click on the intersecting beams (e.g., joists) that connect into the main beam. Press Enter to confirm selection.\n```\n*Note: If no beams are selected, the script will exit and create nothing.*\n\n### Step 3: Select Female Beam\n```\nCommand Line: Select female beam\nAction: Click on the main girder or ledger beam that the male beams connect to.\n```\n\n### Step 4: Select Metal Part\n```\nCommand Line: Select metalpart(s)\nAction: Click on the steel plate, bracket, or gusset (MassGroup) to be used for the connection.\n```\n\n### Step 5: Automatic Validation\nThe script automatically checks the selected metal part for a valid EcsMarker.\n- **Success**: The script instance is created at the marker location.\n- **Failure**: If the metal part's marker is perpendicular to the male beams, the script erases itself immediately.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sSide | Enumeration | \\|No\\| | Determines if the male (intersecting) beams are automatically shortened or lengthened to fit the connection geometry. <br> - **\\|No\\|**: Beams retain their current length.<br> - **\\|Yes\\|**: Beams are adjusted to fit the connection. |\n\n## Right-Click Menu Options\nThe script relies on standard hsbCAD behaviors and Properties Palette modifications. No specific custom context menu items were detected in the source analysis. Standard options like *Update* or *Delete* apply.\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **EcsMarker Orientation**: Ensure the `EcsMarker` inside your metal part catalog is aligned correctly. Its X-axis must run parallel to the male beam direction, not perpendicular. If it is perpendicular, the script will delete the connection to prevent errors.\n- **Visual Feedback**: The script draws a small icon/glyph at the origin of the `EcsMarker` on the metal part to indicate a successful connection.\n- **Auto-Trimming**: To automatically cut back the joists to accommodate the steel plate, select the connection in the model and change the `sSide` property to `|Yes|` in the Properties Palette.\n\n## FAQ\n- **Q: Why did the connection disappear immediately after I placed it?**\n  - **A**: The script likely detected an invalid `EcsMarker` orientation. Ensure the X-axis of the marker inside the metal part is not perpendicular to the male beams.\n- **Q: Can I use multiple male beams?**\n  - **A**: Yes, you can select multiple intersecting beams during the \"Select male beams\" prompt to connect them all to the same female beam and metal part.\n- **Q: How do I change the plate size after insertion?**\n  - **A**: Use standard AutoCAD grips or commands to move/replace the metal part. The script will recalculate on the next update cycle. Ensure the new part also has a valid EcsMarker."
+      },
+      "tokens_used": 4802,
+      "error": null
+    }
+  }
+}

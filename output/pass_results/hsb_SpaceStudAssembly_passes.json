@@ -1,0 +1,270 @@
+{
+  "filename": "hsb_SpaceStudAssembly.mcr",
+  "status": "completed",
+  "total_tokens": 29234,
+  "processing_time": 273.4500195980072,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6098,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script manipulates 3D entities (GenBeam, Sheet, TslInst) and changes their properties (beamCode, subLabel). It calls assignToElementGroup and exportToDxi, which are characteristic of Element/Model processing. It uses Display for drawing symbols but lacks ShopDrawing specific API calls (sd_*) or viewport references."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Beam",
+            "Sheet",
+            "TslInst"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Element context or Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4158,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2811,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Aggregates a selection of structural members (studs, sheets, plates) into a single logical 'Space Stud' or 'Group' subassembly, generating a unique production name and modifying beam codes for manufacturing export.",
+          "category": "Framing/DataManagement",
+          "typicalUseCase": "Used by a detailer to group a space stud frame (including blocking and nail plates) into a single production unit so it receives a unified label and manufacturing data in CNC exports."
+        },
+        "parameters": [
+          {
+            "name": "Type",
+            "technicalDefault": "Empty String",
+            "businessMeaning": "Defines the logic for the assembly. If set to 'Group', original beam codes are kept. Otherwise, beams are treated as Space Studs and their codes are prefixed with 'SS'.",
+            "validRange": "\"Group\" or \"\" (Space Stud)",
+            "unit": "String",
+            "affectsOutput": "Determines if beam codes are renamed to 'SS...' and which Map key ('SpaceStudAssembly' vs 'GroupAssembly') stores the data."
+          },
+          {
+            "name": "Width",
+            "technicalDefault": "Read from _Map (if exists)",
+            "businessMeaning": "The material width (thickness) of the assembly members, recorded for export data.",
+            "validRange": "Standard timber widths (e.g., 35mm - 200mm)",
+            "unit": "mm",
+            "affectsOutput": "Updates the internal Map and is exported to DXA/CNC data. Does not modify geometry."
+          },
+          {
+            "name": "Height",
+            "technicalDefault": "Read from _Map (if exists)",
+            "businessMeaning": "The material height (depth) of the assembly members, recorded for export data.",
+            "validRange": "Standard timber heights (e.g., 70mm - 300mm)",
+            "unit": "mm",
+            "affectsOutput": "Updates the internal Map and is exported to DXA/CNC data. Does not modify geometry."
+          },
+          {
+            "name": "Length",
+            "technicalDefault": "Calculated from longest beam",
+            "businessMeaning": "The overall length of the assembly, determined by the longest solid beam in the group.",
+            "validRange": "Dynamic, based on geometry",
+            "unit": "mm",
+            "affectsOutput": "Updated in the Map and exported to DXA. Used to generate the SubAssemblyName."
+          },
+          {
+            "name": "NumberOfBeams",
+            "technicalDefault": "Count of _Beam entities",
+            "businessMeaning": "Tracks how many beams are currently in the assembly to detect structural changes.",
+            "validRange": "Integer > 0",
+            "unit": "Count",
+            "affectsOutput": "If the count changes (e.g., a beam is deleted), the script instance erases itself."
+          },
+          {
+            "name": "SubAssemblyName",
+            "technicalDefault": "Generated string (Length-Angle-...)",
+            "businessMeaning": "A unique identifier composed of member lengths and cut angles, used to group identical assemblies in production.",
+            "validRange": "System Generated String",
+            "unit": "String",
+            "affectsOutput": "Sets the instance CompareKey and exports to DXA. Influences how the assembly is listed in production reports."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Geometry of connected beams changes (Length/Cuts)",
+            "effect": "Regenerates the 'SubAssemblyName' and updates the 'Length' parameter.",
+            "cascade": [
+              "SubAssemblyName",
+              "Length",
+              "CompareKey"
+            ]
+          },
+          {
+            "trigger": "Entity Count changes",
+            "effect": "Triggers instance deletion if the stored 'NumberOfBeams' does not match current beam count.",
+            "cascade": [
+              "Script Instance"
+            ]
+          },
+          {
+            "trigger": "Type = 'Group'",
+            "effect": "Suppresses beam code renaming and changes the export Map key to 'GroupAssembly'.",
+            "cascade": [
+              "BeamCode",
+              "GroupAssembly"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "RenamedBeams",
+            "description": "Modifies the beam code of selected members to 'SS...' (Space Stud) and sets the SubLabel to the script instance position number.",
+            "appliedTo": "All GenBeams included in the script instance."
+          },
+          {
+            "type": "DXADataExport",
+            "description": "Exports handles for Beams, Blocking, and Plates, along with Width/Height/Length dimensions to the production database.",
+            "appliedTo": "Manufacturing/Production environment."
+          },
+          {
+            "type": "VisualSymbol",
+            "description": "Draws a small cross indicator at the insertion point (_Pt0) to show the assembly center/origin.",
+            "appliedTo": "ModelSpace."
+          }
+        ]
+      },
+      "tokens_used": 4592,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch",
+          "Coordinate System Initialization: Align script local axes (_XE, _YE, _ZE) to match the primary beam (_GenBeam[0] or _Beam0).",
+          "Structural Validation: Check if the number of beams connected to the instance matches the stored 'NumberOfBeams' in _Map.",
+          "[Conditional Branch] Self-Erase: If beam count mismatch detected, erase instance and stop execution.",
+          "Entity Extraction: Iterate through _Map to extract and categorize stored entities into _Sheet, _Beam, _Entity, and _GenBeam arrays. Clear processed entries from _Map.",
+          "Parameter Retrieval: Read Width, Height, Length, and Type properties from _Map (fallback to defaults if missing).",
+          "Beam Processing Loop: Iterate through all _GenBeam entities.",
+          "[Conditional Branch] Beam Code Update: If Type != 'Group', rename beam codes to 'SS...' and set sub-labels to instance position number.",
+          "Geometry Analysis: Calculate solid lengths and cut angles (CutN, CutP) for each beam to determine the overall assembly length and create a unique 'SubAssemblyName' string.",
+          "Entity Processing Loop: Iterate through _Entity (TslInst) to calculate distances from the reference point and append to 'SubAssemblyName'.",
+          "Data Persistence: Update 'Length' in _Map and set the script CompareKey and SubAssemblyName.",
+          "[Conditional Branch] Export Key: If Type == 'Group', export 'GroupAssembly'; otherwise export 'SpaceStudAssembly'.",
+          "DXA Export: Export handles for beams, blocking, plates, and dimensions (Width, Height, Length).",
+          "Visualization: Draw a cross symbol at the insertion point (_Pt0) to indicate assembly location.",
+          "State Update: Store the current beam count in 'NumberOfBeams' for future validation checks."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Beam Count Mismatch",
+            "path1": {
+              "name": "Valid State",
+              "steps": [
+                "Continue to Entity Extraction"
+              ]
+            },
+            "path2": {
+              "name": "Invalid State (Deleted/Addition)",
+              "steps": [
+                "Execute eraseInstance()",
+                "Terminate script immediately"
+              ]
+            }
+          },
+          {
+            "condition": "Assembly Type ('Type' property)",
+            "path1": {
+              "name": "Group Mode (Type == 'Group')",
+              "steps": [
+                "Preserve original beam codes",
+                "Export data under 'GroupAssembly' key"
+              ]
+            },
+            "path2": {
+              "name": "Space Stud Mode (Type != 'Group')",
+              "steps": [
+                "Prefix beam codes with 'SS'",
+                "Set beam SubLabel to instance PosNum",
+                "Export data under 'SpaceStudAssembly' key"
+              ]
+            }
+          },
+          {
+            "condition": "Cut Angles Existence (First Beam)",
+            "path1": {
+              "name": "Cuts Present",
+              "steps": [
+                "Append CutN and CutP angle strings to SubAssemblyName"
+              ]
+            },
+            "path2": {
+              "name": "No Cuts",
+              "steps": [
+                "Skip angle appending in SubAssemblyName"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Presence of connected Beams/Entities",
+            "errorMessage": "(Implicit/Silent) Script fails to find valid geometry or erases self if count mismatches.",
+            "recovery": "User must re-insert the script or ensure the original entities are not deleted."
+          },
+          {
+            "check": "Consistency of 'NumberOfBeams'",
+            "errorMessage": "(Implicit/Silent) Instance erasure.",
+            "recovery": "Restore deleted entities or re-run the script insertion process to group the remaining entities."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Assembly Properties",
+            "how": "OPM (Object Properties Palette)",
+            "effect": "Changing 'Width', 'Height', or 'Type' updates the internal _Map and the next script execution will use these values for DXA export and beam naming logic."
+          },
+          {
+            "action": "Modify Geometry",
+            "how": "Grip Edit / Standard CAD commands on Beams",
+            "effect": "Changing beam lengths or cuts triggers a script recalc. This updates 'Length', regenerates 'SubAssemblyName', and updates the CompareKey (potentially grouping the assembly differently in production lists)."
+          },
+          {
+            "action": "Delete Assembly Member",
+            "how": "Delete command on a Beam",
+            "effect": "Triggers the 'Beam Count Mismatch' validation on next recalc, causing the script instance to erase itself (fail-safe to avoid invalid data)."
+          }
+        ]
+      },
+      "tokens_used": 5419,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SpaceStudAssembly.mcr\n\n## Overview\nThis script aggregates a selection of structural members (studs, sheets, and plates) into a single logical \"Space Stud\" or \"Group\" subassembly. It automatically generates a unique production name and modifies beam codes to ensure correct data export for manufacturing and CNC processes.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script must be inserted in the 3D model where the structural members exist. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | This is a model-level script for pre-production. |\n\n## Prerequisites\n- **Required Entities**: At least one GenBeam (Beam), optionally Sheets or TslInst entities to be included in the assembly.\n- **Minimum Beam Count**: 1\n- **Required Settings**: None required (script handles defaults internally).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_SpaceStudAssembly.mcr`\n\n### Step 2: Insertion\n```\nCommand Line: [Insertion point usually implied or clicks to locate the assembly]\nAction: Click to place the script instance near or on the primary beam of the desired assembly.\n```\n*Note: The script automatically aligns its coordinate system to the primary beam it detects or is attached to, and gathers connected entities into the group.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Type | String | Empty String (Space Stud) | **Space Stud (Empty)**: Prefixes beam codes with 'SS' and sets sub-labels. **Group**: Preserves original beam codes and groups data differently. |\n| Width | Number | Read from Material | The material width (thickness) of the assembly members. Used for export data. |\n| Height | Number | Read from Material | The material height (depth) of the assembly members. Used for export data. |\n| Length | Number | Auto-Calculated | The overall length of the assembly, determined by the longest beam. Updates automatically if geometry changes. |\n| SubAssemblyName | String | Auto-Generated | A unique identifier (e.g., \"Length-Angle\") used to group identical assemblies in production lists. Read-only. |\n\n## Right-Click Menu Options\nThis script does not add specific custom options to the right-click context menu. Use the Properties palette to modify parameters.\n\n## Settings Files\nNo external settings files are used by this script.\n\n## Tips\n- **Switching Modes**: Use the **Type** property in the Properties palette. Select \"Group\" if you want to keep original beam naming (e.g., for standard walls), or leave it blank (Space Stud) to enforce \"SS\" naming for specialized assemblies.\n- **Geometry Updates**: If you stretch or modify the beams in the assembly, the script will automatically recalculate the **Length** and **SubAssemblyName**. This ensures your production lists always reflect the current geometry.\n- **Automatic Deletion**: If you delete a beam that belongs to this assembly, the script instance will erase itself on the next update/calculation to prevent data corruption.\n\n## FAQ\n- **Q: Why did my script instance disappear?**\n  **A**: This usually happens if a beam within the assembly was deleted. The script validates the number of beams; if the count changes, it erases itself. Re-insert the script on the remaining geometry.\n- **Q: How do I change the material size in the export data?**\n  **A**: Select the script instance, open the Properties (OPM), and manually adjust the **Width** or **Height** parameters. These values are exported to the production database.\n- **Q: What is the difference between \"Space Stud\" and \"Group\" modes?**\n  **A**: In \"Space Stud\" mode, the script renames your beams to start with \"SS\" (e.g., SS-01). In \"Group\" mode, your original beam names are preserved. Choose \"Group\" if you want to organize existing frames without renaming them."
+      },
+      "tokens_used": 6156,
+      "error": null
+    }
+  }
+}

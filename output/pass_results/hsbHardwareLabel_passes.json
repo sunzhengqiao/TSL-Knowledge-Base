@@ -1,0 +1,179 @@
+{
+  "filename": "hsbHardwareLabel.mcr",
+  "status": "completed",
+  "total_tokens": 40930,
+  "processing_time": 398.5293221473694,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7810,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly creates instances in '_kModelSpace' via dbCreate. No PaperSpace or ShopDrawing patterns found (no sd_ prefix, no _Viewport usage). The script targets GenBeam and ToolEnt entities to label hardware properties directly in the 3D model."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "ToolEnt",
+            "FastenerAssemblyEnt"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D Environment)",
+          "requiredSettings": [
+            "Hardware definitions attached to tools",
+            "Fastener Assembly catalogs (if used)"
+          ]
+        }
+      },
+      "tokens_used": 5388,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8522,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8102,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch Script: User executes hsbHardwareLabel.mcr via catalog or command line.",
+          "2. Configuration Dialog: Properties palette (or dialog) opens allowing user to toggle visibility of specific hardware fields (Name, Article No, Description, etc.) and set visual style (Color, Height, DimStyle).",
+          "3. Entity Selection: Prompt 'Select entities with attached hardware' appears on command line.",
+          "4. Selection Filtering: Script iterates through selected entities. If a GenBeam is selected, it searches for connected tools. If a ToolEnt is selected, it validates it directly.",
+          "5. Hardware Validation: Script checks if identified ToolEnts have hardware components or are Fastener Assemblies. Invalid entities are ignored.",
+          "6. Duplicate Prevention: Script scans existing TSL instances in the drawing to ensure the selected hardware is not already labeled.",
+          "7. Instance Generation: For each valid hardware entity found, a new TSL instance is created at the tool's origin (or assembly coordinate system).",
+          "8. Cleanup: The initial 'seed' instance is erased, leaving only the generated labels.",
+          "9. Rendering: Each instance generates text strings in Model Space based on the linked hardware properties and user configuration."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Type of Selected Entity during Insert",
+            "path1": {
+              "name": "GenBeam Selected",
+              "steps": [
+                "Script casts entity to GenBeam.",
+                "Queries connected tools via eToolsConnected().",
+                "Iterates through tools to find valid ToolEnts."
+              ]
+            },
+            "path2": {
+              "name": "ToolEnt Selected",
+              "steps": [
+                "Script casts entity directly to ToolEnt.",
+                "Validates if ToolEnt is a hardware carrier."
+              ]
+            }
+          },
+          {
+            "condition": "Hardware Type during Rendering",
+            "path1": {
+              "name": "TslInst (Sub-Component)",
+              "steps": [
+                "Retrieves modelDescription and materialDescription.",
+                "Formats text based on selected props."
+              ]
+            },
+            "path2": {
+              "name": "FastenerAssemblyEnt",
+              "steps": [
+                "Retrieves FastenerAssemblyDef.",
+                "Aggregates Main, Head, and Tail components.",
+                "Groups components by Article Number to calculate total quantities.",
+                "Displays detailed fastener data (Diameter, Length, Grade, etc.)."
+              ]
+            },
+            "path3": {
+              "name": "Standard Hardware (HardWrComp)",
+              "steps": [
+                "Iterates through hardWrComps array.",
+                "Displays properties for each individual component."
+              ]
+            }
+          },
+          {
+            "condition": "Insertion Point Calculation",
+            "path1": {
+              "name": "Standard ToolEnt",
+              "steps": [
+                "Uses tent.ptOrg() as insertion point."
+              ]
+            },
+            "path2": {
+              "name": "FastenerAssemblyEnt",
+              "steps": [
+                "Uses fae.coordSys().ptOrg() as insertion point."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Validity",
+            "errorMessage": "None (Implicit failure)",
+            "recovery": "Script silently ignores entities that are not GenBeam or ToolEnt."
+          },
+          {
+            "check": "Hardware Existence",
+            "errorMessage": "None (Implicit failure)",
+            "recovery": "Script ignores ToolEnts where hardWrComps().length() is 0 and is not a FastenerAssemblyEnt."
+          },
+          {
+            "check": "Duplicate Labels",
+            "errorMessage": "[EntityType] already labled.",
+            "recovery": "Script skips creating a new label for this specific hardware entity to prevent overlap."
+          },
+          {
+            "check": "Linked Entity Existence (Post-Insert)",
+            "errorMessage": "None",
+            "recovery": "If the linked hardware is deleted, _Entity.length() becomes 0, triggering eraseInstance() to remove the label."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Visible Fields",
+            "how": "Properties Palette (OPM)",
+            "effect": "Toggles the visibility and order of specific data points (Name, Article Nr, Qty, etc.) in the label text. Requires recalculation (typically automatic)."
+          },
+          {
+            "action": "Adjust Visual Style",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changes Color, Text Height, or Dimension Style used for the label."
+          },
+          {
+            "action": "Move Label",
+            "how": "Grip Edit (Move)",
+            "effect": "Relocates the text block relative to the hardware origin."
+          }
+        ]
+      },
+      "tokens_used": 6768,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbHardwareLabel.mcr\n\n## Overview\nThis script automatically generates text labels in Model Space for hardware components (such as screws, bolts, and fittings) attached to beams or tools. It extracts specific data from hardware definitions and fastener assemblies to create clear, on-model labeling of construction details.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script creates labels directly on the 3D model. |\n| Paper Space | No | This script does not function in Layout tabs. |\n| Shop Drawing | No | This is for model labeling only, not 2D drawing views. |\n\n## Prerequisites\n- **Required Entities**: `GenBeam` (timber beams) with connected tools or `ToolEnt` (individual tools) with valid hardware definitions.\n- **Minimum Beams**: 0 (You can label standalone tools or tools attached to beams).\n- **Required Settings**:\n  - Hardware catalogs must be loaded and assigned to the tools.\n  - Fastener Assembly catalogs (if using fastener assemblies) must be available.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the command line.\n2. Browse the catalog and select `hsbHardwareLabel.mcr`.\n\n### Step 2: Configure Label Settings (Optional)\n1. Before inserting, look at the **Properties Palette** (usually on the right side).\n2. Adjust settings like **Text Height**, **Color**, or toggle which fields (Name, Article No, etc.) you want to display.\n\n### Step 3: Insert and Select Entities\n1. Click in the Model Space to set the initial insertion point (this is temporary).\n2. The command line will prompt: `Select entities with attached hardware`.\n3. Select your beams or specific tools in the 3D model and press **Enter**.\n\n### Step 4: Automatic Generation\n1. The script scans your selection.\n2. It identifies valid hardware and creates a label instance at the origin of each tool or assembly.\n3. The temporary initial instance is automatically removed.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Text Height | Double | 100.0 | The height of the generated text label. |\n| Color | Integer | BYLAYER | The color index for the text. |\n| DimStyle | String | Standard | The dimension style applied to the text. |\n| Show Name | Boolean | True | Toggle visibility of the Hardware Name. |\n| Show Article No | Boolean | True | Toggle visibility of the Article Number. |\n| Show Description | Boolean | True | Toggle visibility of the Description. |\n| Show Quantity | Boolean | True | Toggle visibility of the Quantity (Total count). |\n| Show Diameter | Boolean | False | Toggle visibility of the Diameter (for fasteners). |\n| Show Length | Boolean | False | Toggle visibility of the Length (for fasteners). |\n| Show Material | Boolean | False | Toggle visibility of the Material/Grade. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Updates the label text if the hardware properties have been modified or if the label position needs updating. |\n\n## Settings Files\n- **Filename**: Hardware and Fastener Catalogs (varies by project).\n- **Location**: Defined in your hsbCAD configuration (Company or Install path).\n- **Purpose**: Provides the text data (Article numbers, descriptions, sizes) that populates the labels.\n\n## Tips\n- **Selection Efficiency**: You can select a beam that has multiple different tools attached; the script will find and label all valid hardware on that beam automatically.\n- **Fastener Assemblies**: If you label a Fastener Assembly, the script intelligently groups identical components (e.g., grouping all screws of the same size) and displays the total quantity required for that assembly.\n- **Moving Labels**: If a label is placed in a difficult spot, simply select the label instance and use the **Move** grip or command to reposition it. It will remain linked to the hardware.\n- **Duplicate Prevention**: The script checks if a label already exists for a specific piece of hardware. It will not create a second label for the same item, preventing clutter.\n\n## FAQ\n- **Q: I selected a beam, but no label appeared.**\n  - A: Ensure the beam actually has tools connected to it, and that those tools have valid hardware definitions assigned in their properties.\n- **Q: Can I label just one screw out of a group?**\n  - A: The script labels the Tool/Assembly entity. To label individual components, you would need to select the specific sub-component if it exists as a separate entity, otherwise, it labels the whole assembly.\n- **Q: The text is too small to read.**\n  - A: Select the label instance, open the **Properties Palette**, and increase the **Text Height** value. The label will update automatically."
+      },
+      "tokens_used": 4340,
+      "error": null
+    }
+  }
+}

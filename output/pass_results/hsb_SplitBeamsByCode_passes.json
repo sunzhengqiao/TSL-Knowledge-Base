@@ -1,0 +1,223 @@
+{
+  "filename": "hsb_SplitBeamsByCode.mcr",
+  "status": "completed",
+  "total_tokens": 26541,
+  "processing_time": 178.4094958305359,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 0,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "01.08.2014",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4430,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script utilizes PrEntity to select Element objects and stores them in the _Element array. It performs database modifications (dbSplit, dbErase) on Beam objects within the construction elements. It uses geometric calculations on Beam bodies (envelopeBody, realBody, shadowProfile). There are no ShopDrawing specific function calls (sd_*), no usage of _Viewport, and no interaction with drawing sheets."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3987,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 3200,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically splits specific beams within selected elements based on intersections with other beams identified by their codes, creating gaps or coping for crossing members.",
+          "category": "Framing",
+          "typicalUseCase": "Used to cut studs or joists where they intersect with blocking or bracing members, ensuring proper fit-up for structural connections without manual editing."
+        },
+        "parameters": [
+          {
+            "name": "sFilterBlocking",
+            "technicalDefault": "",
+            "businessMeaning": "The list of Beam Codes that define which beams should be split (the 'targets'). These are the members that need to be cut to accommodate others.",
+            "validRange": "String list of valid Beam Codes in the model (e.g., 'STUD;JOIST'). Empty implies usage of sFilterIntersection logic.",
+            "unit": "String",
+            "affectsOutput": "Determines which beams are physically modified by the split operation."
+          },
+          {
+            "name": "sFilterIntersection",
+            "technicalDefault": "",
+            "businessMeaning": "The list of Beam Codes that define which beams cause the split (the 'obstacles' or 'blockers'). The script calculates intersection points based on these beams.",
+            "validRange": "String list of valid Beam Codes in the model (e.g., 'BLOCK;NAILER').",
+            "unit": "String",
+            "affectsOutput": "Defines the geometry/location of the split. Also used as an exclusion list if sFilterBlocking is empty."
+          },
+          {
+            "name": "dGR",
+            "technicalDefault": "0 (Derived Code)",
+            "businessMeaning": "An offset distance derived from the width of the intersecting beam. It effectively creates a gap or overlap equal to half the width of the intersecting member on each side of the split line.",
+            "validRange": "Dynamic, based on the width (dW) of the intersecting beam.",
+            "unit": "mm",
+            "affectsOutput": "Controls the length of the beam segment removed at the intersection point. If 0, beams are merely cut; if >0, a gap is created."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sFilterBlocking is Empty String",
+            "effect": "The script treats all beams as targets EXCEPT those matching sFilterIntersection.",
+            "cascade": [
+              "sFilterIntersection"
+            ]
+          },
+          {
+            "trigger": "sFilterBlocking has values",
+            "effect": "Only specific beams are cut, using sFilterIntersection beams to determine cut locations.",
+            "cascade": [
+              "sFilterIntersection"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Split Beams",
+            "description": "The original target beams are modified (split) into shorter segments. If a resulting segment is excessively long (>25m), it is erased to prevent errors.",
+            "appliedTo": "Beams within the selected Elements whose Beam Codes match sFilterBlocking (or all beams if that is empty)."
+          }
+        ]
+      },
+      "tokens_used": 3913,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution triggered",
+          "Check execution context (_bOnInsert)",
+          "Display Property Dialog (showDialogOnce) if inserting",
+          "Prompt user to select Elements (PrEntity)",
+          "Parse user input strings (sFilterBlocking, sFilterIntersection) into code arrays",
+          "Loop through each selected Element",
+          "Retrieve all Beams within the Element",
+          "Classify Beams into 'To Split' list and 'Blocking' list based on Beam Codes",
+          "Determine Gap Ratio (dGR) based on the width of the Blocking Beams",
+          "Iterate through Beams designated for splitting",
+          "Calculate geometric intersections with Blocking Beams",
+          "Perform Split operation (dbSplit) at intersection points",
+          "Check lengths of resulting beam segments",
+          "Erase any segments exceeding 25m in length",
+          "Erase script instance from model"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Beam Classification (Determining targets)",
+            "path1": {
+              "name": "Explicit Filtering",
+              "steps": [
+                "Check if sFilterBlocking is not empty",
+                "Beam matches code in sFilterBlocking list",
+                "Add beam to 'To Split' list"
+              ]
+            },
+            "path2": {
+              "name": "Implicit Filtering (Invert)",
+              "steps": [
+                "Check if sFilterBlocking is empty",
+                "Beam code does NOT match codes in sFilterIntersection",
+                "Add beam to 'To Split' list"
+              ]
+            }
+          },
+          {
+            "condition": "Split Geometry Handling",
+            "path1": {
+              "name": "Update to New Segment",
+              "steps": [
+                "Compare length of split result (bmRes) to original (bmS)",
+                "If bmRes is longer",
+                "Update reference variables to bmRes",
+                "Continue processing remaining points on this new segment"
+              ]
+            },
+            "path2": {
+              "name": "Retain Original Segment",
+              "steps": [
+                "Compare length of split result (bmRes) to original (bmS)",
+                "If bmS is longer or equal",
+                "Retain reference variables for bmS",
+                "Discard bmRes"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Selection",
+            "errorMessage": "None (Silent)",
+            "recovery": "If _Element.length() == 0, the script erases itself immediately."
+          },
+          {
+            "check": "Element Contents",
+            "errorMessage": "None (Silent)",
+            "recovery": "If an Element contains 0 beams, the script skips that element."
+          },
+          {
+            "check": "Resultant Segment Length",
+            "errorMessage": "None (Silent)",
+            "recovery": "Any beam segment resulting from a split with a length > 25m (25000mm) is automatically erased (dbErase) to prevent geometry errors."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Script Self-Removal",
+            "how": "Automatic via eraseInstance()",
+            "effect": "The TSL instance is deleted from the drawing immediately after processing. The changes to the beams (splits) remain in the model as standard database entities."
+          }
+        ]
+      },
+      "tokens_used": 6533,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SplitBeamsByCode.mcr\n\n## Overview\nAutomatically splits specific beams within selected construction elements based on intersections with other beams identified by their codes. This tool is typically used to cut studs or joists where they intersect with blocking or bracing members, ensuring proper fit-up for structural connections.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script interacts with 3D construction elements and beam geometry. |\n| Paper Space | No | Script is designed for model manipulation only. |\n| Shop Drawing | No | Does not interact with 2D views or layouts. |\n\n## Prerequisites\n- **Required Entities:** Construction Elements containing Beams.\n- **Minimum Beam Count:** 0 (Script handles empty elements gracefully).\n- **Required Settings:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_SplitBeamsByCode.mcr`\n\n### Step 2: Configure Properties\n```\nCommand Line: Properties Palette (Ctrl+1)\nAction: Define the filtering logic for the split operation.\n```\n- **sFilterBlocking:** Enter the Beam Codes for the beams you want to *cut* (e.g., `STUD;JOIST`). Leave empty to cut *all* beams except those defined in the Intersection filter.\n- **sFilterIntersection:** Enter the Beam Codes for the beams causing the cut (e.g., `BLOCK;NAILER`).\n\n### Step 3: Select Elements\n```\nCommand Line: Select Elements\nAction: Click on the construction elements containing the beams you wish to process.\n```\nPress **Enter** to confirm selection.\n\n### Step 4: Processing\nThe script will automatically calculate intersections, split the target beams, and create gaps where necessary. The script instance will delete itself from the model once finished.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sFilterBlocking | String | (Empty) | **Target Codes.** List of beam codes to be split. Separate multiple codes with a semicolon. If left empty, the script splits all beams *except* those matching the Intersection codes. |\n| sFilterIntersection | String | (Empty) | **Obstacle Codes.** List of beam codes that act as the \"cutter.\" The script calculates split points where the target beams intersect with these beams. |\n| dGR | Double | 0 (Derived) | **Gap Ratio.** Defines the offset distance for the gap based on the width of the intersecting beam. Usually left to 0 to allow automatic geometric calculation. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| *None* | This is a \"Run Once\" script. It performs the operation and immediately deletes itself from the drawing. No context menu options are available after execution. |\n\n## Settings Files\n- **Filename:** None\n- **Location:** N/A\n- **Purpose:** N/A\n\n## Tips\n- **Inverted Filtering:** If you want to cut every beam in a wall *except* for the top and bottom plates, leave `sFilterBlocking` empty and enter the plate codes (e.g., `PLATE`) into `sFilterIntersection`.\n- **Clean Up:** The script automatically removes any resulting beam segments longer than 25 meters to prevent geometry errors.\n- **Verification:** Since the script erases itself after running, use the AutoCAD `List` command or select the beams to verify that the splits have occurred as expected.\n\n## FAQ\n- **Q: Why did the script disappear after I selected the elements?**\n  A: This is normal behavior. The script is designed to run once and then remove itself from the model, leaving only the modified beams behind.\n- **Q: Nothing happened when I ran the script.**\n  A: Check that the Beam Codes in your properties exactly match the codes assigned to your beams in the model. Ensure there are actual physical intersections between the \"Target\" beams and the \"Obstacle\" beams.\n- **Q: Can I undo the changes?**\n  A: Yes, use the standard AutoCAD `Undo` command immediately after running the script."
+      },
+      "tokens_used": 4478,
+      "error": null
+    }
+  }
+}

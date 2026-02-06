@@ -1,0 +1,382 @@
+{
+  "filename": "hsbViewHatching.mcr",
+  "status": "completed",
+  "total_tokens": 51794,
+  "processing_time": 272.4654276371002,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9526,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "Both",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": true,
+          "isMultipageScript": true,
+          "detectionEvidence": "The script explicitly checks for `bInBlockSpace` to detect Paper Space. Version 2.53 adds 'Multipage model support'. Version 2.86 mentions splitting hatching and level/depth TSL for 'sections in model'. The code handles viewports (`getViewport`), section references, and interaction with `_kDrawFilled` and `PlaneProfile` drawing operations suitable for 2D views. It references 'sdv' (ShopDrawing View) in comments (e.g., 'write mapX in entcollector for sdv')."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element",
+            "Wall",
+            "Maselement",
+            "Collection",
+            "FastenerEntities"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Must be run within a context where sections or viewports are defined (Model Space sections or Paper Space Layouts).",
+          "requiredSettings": [
+            "hsbViewHatching.xml",
+            "Painter configuration files",
+            "Hatch patterns loaded in AutoCAD"
+          ]
+        }
+      },
+      "tokens_used": 6054,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10332,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the generation of 2D hatching patterns for timber sections and manufacturing views, handling material representations, insulation, and cross-sections based on 'Painter' or material mapping rules.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Generating section hatches for production drawings (layouts), detailing wall cross-sections with insulation patterns, or applying specific textures/fills to timber elements based on material definitions."
+        },
+        "parameters": [
+          {
+            "name": "sPattern",
+            "technicalDefault": "\"ANSI31\"",
+            "businessMeaning": "The visual fill pattern name (e.g., ANSI31, SOLID, INSULATION) used to represent the material cross-section in the drawing.",
+            "validRange": "Any string matching a loaded AutoCAD hatch pattern",
+            "unit": "String",
+            "affectsOutput": "Changes the geometric appearance of the hatch in 2D views (Layout/Model)."
+          },
+          {
+            "name": "dScale",
+            "technicalDefault": "10.0",
+            "businessMeaning": "The base density or size of the hatch pattern lines.",
+            "validRange": "0.1 to 1000+",
+            "unit": "Unitless (multiplier)",
+            "affectsOutput": "Makes the hatch pattern appear denser (lower value) or sparser (higher value)."
+          },
+          {
+            "name": "dScaleMin",
+            "technicalDefault": "25",
+            "businessMeaning": "The minimum allowed hatch scale to prevent the pattern from becoming an unreadable solid blob at small scales.",
+            "validRange": "1 to 100",
+            "unit": "Unitless",
+            "affectsOutput": "Constrains the dynamic scaling calculation to ensure legibility."
+          },
+          {
+            "name": "bStatic",
+            "technicalDefault": "0 (Dynamic)",
+            "businessMeaning": "Determines if the hatch scale is fixed (Static) or adjusts automatically based on the view scale/viewport size (Dynamic).",
+            "validRange": "0 (Dynamic) or 1 (Static)",
+            "unit": "Boolean",
+            "affectsOutput": "If Dynamic, hatch density remains consistent visually across different drawing scales. If Static, hatch density changes relative to the drawing scale."
+          },
+          {
+            "name": "dAngle",
+            "technicalDefault": "0.0",
+            "businessMeaning": "The rotation angle of the hatch pattern relative to the entity or coordinate system.",
+            "validRange": "0 to 360",
+            "unit": "Degrees",
+            "affectsOutput": "Rotates the hatch lines (e.g., 45 degrees for standard concrete cuts)."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "1 (Red)",
+            "businessMeaning": "The display color of the hatch lines.",
+            "validRange": "0-255 (ACI Index), or RGB values",
+            "unit": "Color Index",
+            "affectsOutput": "Changes the color of the hatch pattern."
+          },
+          {
+            "name": "nTransparency",
+            "technicalDefault": "0 (Opaque)",
+            "businessMeaning": "The transparency level of the hatch pattern, allowing underlying lines or entities to show through.",
+            "validRange": "0 to 100",
+            "unit": "Percentage",
+            "affectsOutput": "Hatch becomes ghost-like or see-through at higher values."
+          },
+          {
+            "name": "nSolidHatch",
+            "technicalDefault": "0 (Off)",
+            "businessMeaning": "Flag to enable a solid background fill behind the pattern hatch.",
+            "validRange": "0 (Off) or 1 (On)",
+            "unit": "Boolean",
+            "affectsOutput": "Adds a solid color layer underneath the pattern lines."
+          },
+          {
+            "name": "nSolidColor",
+            "technicalDefault": "0 (ByBlock)",
+            "businessMeaning": "The color of the solid background fill (if enabled).",
+            "validRange": "0-255 (ACI Index)",
+            "unit": "Color Index",
+            "affectsOutput": "Changes the background color of the hatched area."
+          },
+          {
+            "name": "nSolidTransparency",
+            "technicalDefault": "0",
+            "businessMeaning": "Transparency specifically for the solid background fill.",
+            "validRange": "0 to 100",
+            "unit": "Percentage",
+            "affectsOutput": "Fades the solid background fill."
+          },
+          {
+            "name": "bContour",
+            "technicalDefault": "0 (Off)",
+            "businessMeaning": "Flag to draw a thick outline (polyline border) around the hatched area.",
+            "validRange": "0 (Off) or 1 (On)",
+            "unit": "Boolean",
+            "affectsOutput": "Draws a colored boundary around the hatch."
+          },
+          {
+            "name": "dContourThickness",
+            "technicalDefault": "0.0",
+            "businessMeaning": "The width of the outline contour.",
+            "validRange": "0.1 to 10.0 mm (drawing units)",
+            "unit": "mm",
+            "affectsOutput": "Thickens or thins the outline border."
+          },
+          {
+            "name": "nColorContour",
+            "technicalDefault": "0 (ByBlock)",
+            "businessMeaning": "The color of the outline contour.",
+            "validRange": "0-255 (ACI Index)",
+            "unit": "Color Index",
+            "affectsOutput": "Changes the color of the boundary line."
+          },
+          {
+            "name": "mapHatchDefault / Painter",
+            "technicalDefault": "Read from XML",
+            "businessMeaning": "Mapping configuration that links 'Painter' styles or Material names to specific hatch settings (Pattern, Angle, Scale).",
+            "validRange": "N/A (Configuration)",
+            "unit": "N/A",
+            "affectsOutput": "Determines which hatch parameters are applied to which timber elements."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "bStatic is set to 0 (Dynamic)",
+            "effect": "Calculates scale based on viewport size and global scale, constrained by dScaleMin.",
+            "cascade": [
+              "dScale",
+              "dScaleMin",
+              "dGlobalScaling"
+            ]
+          },
+          {
+            "trigger": "nSolidHatch is set to 1",
+            "effect": "Enables usage of nSolidColor and nSolidTransparency.",
+            "cascade": [
+              "nSolidColor",
+              "nSolidTransparency"
+            ]
+          },
+          {
+            "trigger": "bContour is set to 1",
+            "effect": "Enables usage of dContourThickness and nColorContour.",
+            "cascade": [
+              "dContourThickness",
+              "nColorContour"
+            ]
+          },
+          {
+            "trigger": "dGlobalTransparency is > 0",
+            "effect": "Modifies the effective transparency of both the pattern hatch and solid hatch.",
+            "cascade": [
+              "nTransparency",
+              "nSolidTransparency"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Hatch",
+            "description": "2D pattern fill applied to the cross-section of beams, walls, or elements in a view.",
+            "appliedTo": "GenBeam, Element, Wall, Maselement, Collection, FastenerEntities (within viewports or sections)."
+          },
+          {
+            "type": "PLine/Contour",
+            "description": "Optional thick outline border around the hatched area.",
+            "appliedTo": "The perimeter of the intersected entity in the current view."
+          },
+          {
+            "type": "Solid Fill",
+            "description": "Optional background color fill behind the hatch pattern.",
+            "appliedTo": "The interior of the intersected entity."
+          }
+        ]
+      },
+      "tokens_used": 9275,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Initialization: Load XML configuration and detect execution context (Insert vs. Recalc).",
+          "2. Context Detection: Determine if running in Paper/Block Space (viewports) or Model Space (sections).",
+          "3. Entity Acquisition (Insert Only): Prompt user to select entities (Beams, Walls, Collections) or Viewports.",
+          "4. Mapping Resolution: Determine hatch settings based on 'mapSetting' (Painter vs Material) or user input.",
+          "5. Geometry Calculation: Intersect entity bodies with the current view plane/clipping volume to generate 2D PlaneProfiles.",
+          "6. Z-Order Processing: For transparent hatching, subtract overlapping profiles to handle visual depth (back-to-front drawing).",
+          "7. Parameter Calculation: Resolve final Scale (Dynamic vs Static), Color (Entity/Layer/Fixed), and Transparency (Global override).",
+          "8. Rendering: Draw the Solid Background (if enabled), the Hatch Pattern, and the Contour Outline (if enabled).",
+          "9. Cleanup: Store used hatch data in TSL Map for Legends/SDV usage."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Scale Mode (bStatic property)",
+            "path1": {
+              "name": "Dynamic Mode",
+              "steps": [
+                "Calculate minimum width of the cut profile.",
+                "Calculate scale = (MinWidth / ViewportScale) * dScale.",
+                "Clamp result to dScaleMin.",
+                "Multiply by Global Scaling factor."
+              ]
+            },
+            "path2": {
+              "name": "Static Mode",
+              "steps": [
+                "Use dScale property directly.",
+                "Clamp result to dScaleMin.",
+                "Multiply by Global Scaling factor."
+              ]
+            }
+          },
+          {
+            "condition": "Global Transparency (dGlobalTransparency)",
+            "path1": {
+              "name": "Disabled (<= 0)",
+              "steps": [
+                "Force hatch and solid transparency to 0 (Opaque)."
+              ]
+            },
+            "path2": {
+              "name": "Factor (0 - 1)",
+              "steps": [
+                "Multiply entity transparency by global factor."
+              ]
+            },
+            "path3": {
+              "name": "Additive (1 - 100)",
+              "steps": [
+                "Calculate additive blend: nTransparency + (GlobalFactor * (100 - nTransparency) / 99).",
+                "Clamp max to 100."
+              ]
+            }
+          },
+          {
+            "condition": "Color Properties",
+            "path1": {
+              "name": "Fixed Color (>= 1)",
+              "steps": [
+                "Use specified ACI Color Index."
+              ]
+            },
+            "path2": {
+              "name": "Variable (< 1)",
+              "steps": [
+                "If value is -2, get color from Entity Instance (_ThisInst.color()).",
+                "If value < -2, normalize to -2 (By Entity)."
+              ]
+            }
+          },
+          {
+            "condition": "Geometry Space",
+            "path1": {
+              "name": "Block/Paper Space",
+              "steps": [
+                "Use ppPreviewShape derived from viewport clipping.",
+                "Draw using DisplayPipe (dp)."
+              ]
+            },
+            "path2": {
+              "name": "Model Space",
+              "steps": [
+                "Intersect Body with Section Plane.",
+                "Handle insulation snake shapes if enabled.",
+                "Draw using DisplayPipe (dp)."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Hatch Pattern Availability",
+            "errorMessage": "None (Silent fallback)",
+            "recovery": "If the named pattern is not found in `_HatchPatterns`, the script defaults to the first pattern in the list."
+          },
+          {
+            "check": "Scale Minimum",
+            "errorMessage": "None (Silent clamp)",
+            "recovery": "If calculated scale (Dynamic or Static) is less than `dScaleMin`, it is automatically set to `dScaleMin`."
+          },
+          {
+            "check": "Body Intersection Failure",
+            "errorMessage": "None (Automatic fallback)",
+            "recovery": "If TSL body intersection fails, the script falls back to calculating geometry based on `PlaneProfile` intersection (Version 2.10+)."
+          },
+          {
+            "check": "Empty Profile Area",
+            "errorMessage": "None",
+            "recovery": "Profiles with area < epsilon (pow(10, -14) approx) are skipped during drawing loops to prevent errors."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Hatch",
+            "how": "Right-click context menu 'Modify hatch' or OPM Property Palette.",
+            "effect": "Opens dialogs to change Pattern, Angle, Scale, Transparency, or toggle Solid/Contour settings."
+          },
+          {
+            "action": "Add Hatch",
+            "how": "Right-click context menu 'Add hatch'.",
+            "effect": "Allows applying the TSL to new entities or viewports using a jig interface."
+          },
+          {
+            "action": "Delete Hatch",
+            "how": "Right-click context menu 'delete hatch'.",
+            "effect": "Removes the TSL instance and cleans up related level/depth instances."
+          },
+          {
+            "action": "Move/Stretch",
+            "how": "Grip edit of the TSL insertion point or section lines.",
+            "effect": "Updates the intersection geometry. The script specifically captures movement to ensure section depth grip points are preserved."
+          },
+          {
+            "action": "Import/Export Settings",
+            "how": "Context menu commands.",
+            "effect": "Migrates or saves hatch mapping configurations (XML) to/from the installation directory."
+          }
+        ]
+      },
+      "tokens_used": 10237,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbViewHatching.mcr\n\n## Overview\nAutomates the application of 2D hatching patterns to timber sections and manufacturing views in both Model and Paper Space. It manages material representations, insulation patterns, and cross-section hatching based on mapping rules or specific user overrides.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Supports model sections and dynamic views. |\n| Paper Space | Yes | Supports viewports within layouts. |\n| Shop Drawing | Yes | Designed for production drawings and detailing. |\n\n## Prerequisites\n- **Required Entities**: GenBeam, Element, Wall, Maselement, Collection, or FastenerEntities.\n- **Minimum Beam Count**: 0 (Can operate on single entities or groups).\n- **Required Settings**:\n  - `hsbViewHatching.xml` (Configuration file for mapping).\n  - Hatch patterns must be loaded in the current AutoCAD drawing (e.g., ANSI31, SOLID).\n  - Painter configuration (if using Painter-based mapping).\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the command line or open the hsbCAD TSL Browser.\n2.  Select `hsbViewHatching.mcr` from the list.\n\n### Step 2: Select Viewport or Entities\n```\nCommand Line: Select Viewport / Entities:\nAction: Click on a Viewport frame in Paper Space OR select timber elements (Beams/Walls) in Model Space.\n```\n*Note: The script detects the current space automatically. In Paper Space, it typically applies to the contents of the selected viewport. In Model Space, it applies to the selected geometry.*\n\n### Step 3: Configuration\nThe script will automatically apply hatching based on the default properties or the XML mapping rules.\n*   To modify the appearance, select the inserted TSL instance and open the **Properties Palette** (Ctrl+1).\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **sPattern** | String | ANSI31 | The name of the hatch pattern (e.g., ANSI31, SOLID, INSULAT). Must match a loaded pattern in AutoCAD. |\n| **dScale** | Double | 10.0 | The base scale factor for the hatch pattern. |\n| **dScaleMin** | Double | 25.0 | The minimum allowed scale to prevent the pattern from becoming a solid blob. The calculated scale will never go below this value. |\n| **bStatic** | Integer | 0 | **Scaling Mode**: 0 = Dynamic (Adjusts to viewport size), 1 = Static (Fixed scale). |\n| **dAngle** | Double | 0.0 | Rotation angle of the hatch pattern in degrees. |\n| **nColor** | Integer | 1 | **Hatch Color**: Enter 0-255 for ACI colors. Enter -2 to use the Entity's own color. |\n| **nTransparency** | Integer | 0 | Transparency percentage (0 = Opaque, 100 = Fully Transparent). |\n| **nSolidHatch** | Integer | 0 | **Background Fill**: 1 = Enable solid background fill, 0 = Pattern only. |\n| **nSolidColor** | Integer | 0 | Color of the solid background fill (if enabled). 0 = ByBlock. |\n| **nSolidTransparency** | Integer | 0 | Transparency percentage specifically for the solid background fill. |\n| **bContour** | Integer | 0 | **Outline Border**: 1 = Draw a thick outline around the hatched area, 0 = No outline. |\n| **dContourThickness** | Double | 0.0 | Width of the outline border (in mm). |\n| **nColorContour** | Integer | 0 | Color of the outline border. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Modify hatch** | Re-opens the input dialog or focuses the Properties Palette to allow changing Pattern, Scale, and visual settings. |\n| **Add hatch** | Allows you to apply the hatching script to additional entities or viewports using a selection jig. |\n| **Delete hatch** | Removes the TSL instance and cleans up any generated hatching geometry. |\n| **Import Settings** | Imports hatch configuration mappings from an external XML file. |\n| **Export Settings** | Exports the current hatch configuration mappings to an XML file. |\n\n## Settings Files\n- **Filename**: `hsbViewHatching.xml`\n- **Location**: hsbCAD Company or Installation directory.\n- **Purpose**: Defines how \"Painter\" styles or Material names are mapped to specific hatch settings (Pattern, Angle, Color). This allows automatic hatching based on the timber material or wall style without manual input for every element.\n\n## Tips\n- **Dynamic Scaling**: Keep `bStatic` set to 0 (Dynamic) for production drawings. This ensures that if you zoom in or out of a viewport, or change the view scale, the hatching density remains visually consistent.\n- **Entity Colors**: Setting `nColor` to -2 is a quick way to make the hatch color match the 3D element color, ensuring visual consistency between 3D views and 2D sections.\n- **Solid Fills**: Use `nSolidHatch` with a background color and high transparency to create a \"tinted\" effect for elements like glass or specific insulation zones.\n- **Performance**: On very large layouts, using solid hatches (`SOLID` pattern) is generally faster to render than complex patterns at very small scales.\n\n## FAQ\n- **Q: Why does my hatch look like a solid block even though I selected a pattern?**\n  - **A**: Your `dScale` might be too small for the current view scale, or it is being clamped by `dScaleMin`. Try increasing the `dScale` value or adjusting `dScaleMin`.\n- **Q: How do I apply different hatch patterns to different walls automatically?**\n  - **A**: Use the **Painter** tool in hsbCAD to assign different styles to your walls, and configure the `hsbViewHatching.xml` file to map those Painter names to specific hatch patterns.\n- **Q: Can I use this in a model space section view?**\n  - **A**: Yes, the script supports multipage models and standard model space sections. It will detect the section plane and apply the hatch to the cut geometry."
+      },
+      "tokens_used": 6370,
+      "error": null
+    }
+  }
+}

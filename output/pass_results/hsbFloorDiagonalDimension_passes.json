@@ -1,0 +1,262 @@
+{
+  "filename": "hsbFloorDiagonalDimension.mcr",
+  "status": "completed",
+  "total_tokens": 43789,
+  "processing_time": 358.59843254089355,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8630,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script selects ElementWall entities using PrEntity and stores them in _Entity. It performs geometric calculations on GenBeam envelopeBody and realBody to create PlaneProfiles. It draws Dim objects in the model coordinate system. There are no references to Viewport, _kPaperSpace, or ShopDrawing specific APIs (sd_*)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall"
+          ],
+          "minimumBeams": 4,
+          "requiredSpace": "Model Space containing at least two intersecting walls for each of the two corners being dimensioned.",
+          "requiredSettings": [
+            "DimStyles defined in the drawing"
+          ]
+        }
+      },
+      "tokens_used": 6107,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select walls of first corner|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select walls of second corner|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sDimStyle",
+            "type": "PropString",
+            "displayName": "|DimStyle|",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": "_DimStyles (System Variable)",
+            "category": "|General|",
+            "description": "|Defines the DimStyles|"
+          },
+          {
+            "index": 1,
+            "variable": "sDimension",
+            "type": "PropString",
+            "displayName": "|Dimension|",
+            "defaultValue": "|Inner|",
+            "inputType": "dropdown",
+            "options": [
+              "|Inner|",
+              "|Outer|"
+            ],
+            "category": "|General|",
+            "description": "|Defines the Dimension|"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "|Swap dimension side|",
+            "handler": "_kExecuteKey",
+            "action": "Swaps the 'Dimension' property between 'Inner' and 'Outer' and recalculates.",
+            "alsoTriggeredBy": "Double-click"
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 8880,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically generates a diagonal dimension line in model space between two user-selected wall corners, intelligently selecting intersection points based on wall geometry.",
+          "category": "Annotation",
+          "typicalUseCase": "Used during floor plan layout to verify the diagonal distance (brace length or sheet size) between two corners defined by multiple intersecting walls."
+        },
+        "parameters": [
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Selects the specific visual style (arrow type, text height, units, etc.) for the dimension line from the drawing's standards.",
+            "validRange": "Any string matching an existing DimStyle in the current AutoCAD drawing.",
+            "unit": "N/A (String)",
+            "affectsOutput": "Controls the visual representation (color, layer, text size, arrowheads) of the dimension object without changing the measured value."
+          },
+          {
+            "name": "sDimension",
+            "technicalDefault": "\"Inner\"",
+            "businessMeaning": "Defines whether the diagonal measurement is taken from the interior faces (Inner) or the exterior faces (Outer) of the intersecting walls.",
+            "validRange": "Inner, Outer",
+            "unit": "N/A (Selection)",
+            "affectsOutput": "Switches the calculation logic to pick dimension points on either the interior or exterior shell of the wall assembly, changing the measured length significantly depending on wall thickness."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Context Menu or Double-Click (Swap dimension side)",
+            "effect": "Swaps the value of 'sDimension' property.",
+            "cascade": [
+              "sDimension"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Dim (Dimension Object)",
+            "description": "A single diagonal dimension line drawn in the model coordinate system, updating automatically if wall geometry changes.",
+            "appliedTo": "Model Space (referencing the selected ElementWall entities)"
+          }
+        ]
+      },
+      "tokens_used": 6108,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User executes script command",
+          "[Conditional] If _kExecuteKey is present, load properties from catalog; else showDialog() for user to configure DimStyle and Dimension (Inner/Outer)",
+          "User confirms properties selection",
+          "Prompt: Select walls of first corner (Entity Selection)",
+          "Prompt: Select walls of second corner (Entity Selection)",
+          "Script stores Entity references in _Map and returns",
+          "Script re-enters execution cycle",
+          "Script validates entity counts and geometry types (ElementWall)",
+          "Script calculates PlaneProfiles for all intersections of selected walls at both corners",
+          "Script calculates the centroid (midpoint) of the intersection clusters for Corner 1 and Corner 2",
+          "Script iterates through intersection profiles to identify the specific profile that is furthest from the *opposite* corner's centroid",
+          "[Conditional] Determine measurement points based on 'Dimension' property (Inner or Outer)",
+          "Script generates Dim entity between the calculated points and assigns the specified DimStyle"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "sDimension Property Value",
+            "path1": {
+              "name": "Inner Dimension",
+              "steps": [
+                "Calculate point 'ptInside' on the intersection profile using the wall normal vectors (minimum dot product)",
+                "Find the intersection profile where 'ptInside' is furthest from the opposing corner's centroid",
+                "Draw dimension line to these 'Inside' points"
+              ]
+            },
+            "path2": {
+              "name": "Outer Dimension",
+              "steps": [
+                "Calculate point 'ptOutside' on the intersection profile using the wall normal vectors (maximum dot product)",
+                "Find the intersection profile where 'ptOutside' is furthest from the opposing corner's centroid",
+                "Draw dimension line to these 'Outside' points"
+              ]
+            }
+          },
+          {
+            "condition": "Insertion Execution Method",
+            "path1": {
+              "name": "Catalog/Preset Execution",
+              "steps": [
+                "Trigger via _kExecuteKey (Catalog name)",
+                "Set property values from catalog automatically",
+                "Proceed to entity selection prompts"
+              ]
+            },
+            "path2": {
+              "name": "Standard Execution",
+              "steps": [
+                "Trigger via standard command",
+                "Display Properties Dialog",
+                "User manually selects DimStyle and Dimension options",
+                "Proceed to entity selection prompts"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Valid ElementWall count in Corner 1",
+            "errorMessage": "at least 2 walls needed for a corner connection",
+            "recovery": "Script instance is erased; user must restart script and select at least two walls for the first corner."
+          },
+          {
+            "check": "Valid ElementWall count in Corner 2",
+            "errorMessage": "at least 2 walls needed for a corner connection",
+            "recovery": "Script instance is erased; user must restart script and select at least two walls for the second corner."
+          },
+          {
+            "check": "Integrity of stored entity array",
+            "errorMessage": "unexpected",
+            "recovery": "Script instance is erased; indicates data corruption or conflict in the drawing database."
+          },
+          {
+            "check": "Intersection Area of Wall Couples",
+            "errorMessage": "unexpected error, no intersection for corner X",
+            "recovery": "Script instance is erased; user must verify that selected walls actually intersect in plan view."
+          },
+          {
+            "check": "Distinctness of Corners",
+            "errorMessage": "same elements selected for corner 1 and corner 2",
+            "recovery": "Script instance is erased; user must select two distinct sets of walls."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Swap dimension side",
+            "how": "Right-click context menu -> 'Swap dimension side' OR Double-click the instance",
+            "effect": "Toggles the 'Dimension' property between 'Inner' and 'Outer', triggers a recalculation to update the dimension points and length."
+          },
+          {
+            "action": "Modify Dimension Style",
+            "how": "AutoCAD Properties Palette (OPM) -> DimStyle dropdown",
+            "effect": "Updates the visual appearance (text height, arrowheads, layer) of the dimension object."
+          },
+          {
+            "action": "Modify Dimension Type",
+            "how": "AutoCAD Properties Palette (OPM) -> Dimension dropdown",
+            "effect": "Switches the measurement logic between 'Inner' and 'Outer' wall shells."
+          }
+        ]
+      },
+      "tokens_used": 9341,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbFloorDiagonalDimension.mcr\n\n## Overview\nAutomatically generates a diagonal dimension line in Model Space between two user-selected wall corners. It intelligently calculates measurement points based on wall geometry, allowing you to measure the distance between either the inner or outer shells of the intersecting walls.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script creates dimension entities in the 3D model. |\n| Paper Space | No | This script does not function in Layout tabs. |\n| Shop Drawing | No | This script is intended for model layout, not manufacturing drawings. |\n\n## Prerequisites\n- **Required Entities:** ElementWall entities.\n- **Minimum Wall Count:** 4 total (at least 2 walls must form the first corner, and at least 2 walls must form the second corner).\n- **Required Settings:** DimStyles must be defined in the current drawing.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or `tsl`)\n\nAction: Browse the script list and select `hsbFloorDiagonalDimension.mcr`.\n\n### Step 2: Configure Properties (Optional)\nIf the script is not run from a predefined catalog, a dialog may appear, or you can set properties in the Properties Palette before insertion.\n\nAction:\n- Select the desired **DimStyle** from the dropdown list.\n- Select the **Dimension** type (Inner or Outer).\n- Click OK to proceed.\n\n### Step 3: Select First Corner Walls\n```\nCommand Line: Select walls of first corner\nAction: Click on at least two walls that intersect to form the first corner.\n```\n*Note: The script uses these walls to calculate the exact intersection point.*\n\n### Step 4: Select Second Corner Walls\n```\nCommand Line: Select walls of second corner\nAction: Click on at least two walls that intersect to form the second corner.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| DimStyle | Dropdown | *Empty* | Selects the visual style (text height, arrowheads, units, layer) for the dimension line from the available styles in the drawing. |\n| Dimension | Dropdown | Inner | Defines whether the measurement is taken from the interior faces (**Inner**) or the exterior faces (**Outer**) of the wall assembly. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Swap dimension side | Instantly toggles the 'Dimension' property between 'Inner' and 'Outer' and recalculates the length. (Also triggered by double-clicking the instance). |\n\n## Settings Files\nNo specific settings files are required for this script. It relies on standard AutoCAD DimStyles defined in the current drawing.\n\n## Tips\n- **Verification:** Use this script to quickly verify the diagonal distance (e.g., for sheet material sizing or bracing length) between two complex wall corners.\n- **Editing:** You can easily switch between measuring the inside or outside of the walls by simply double-clicking the dimension instance in the model.\n- **Selection:** Ensure the walls you select actually touch or intersect in the plan view; otherwise, the script will fail to calculate the intersection.\n- **Geometry:** The script is smart enough to handle T-junctions or corners where more than two walls meet, calculating the centroid of the intersection cluster to find the \"true\" corner point.\n\n## FAQ\n- **Q: Why did the script disappear after I selected the walls?**\n  - A: The script requires at least two intersecting walls to define a valid corner. If you selected only one wall, or if the selected walls do not physically intersect, the script will erase itself. You must restart and select valid intersecting walls.\n- **Q: Can I use this for ceilings or roofs?**\n  - A: This script is designed for ElementWall entities in floor plans. It may not work correctly on other element types like beams or slabs unless they are treated as walls by the system.\n- **Q: How do I change the arrow style of the dimension?**\n  - A: Change the `DimStyle` property in the Properties Palette to a style that has your preferred arrow settings, or modify the DimStyle in the AutoCAD Dimension Style Manager."
+      },
+      "tokens_used": 4723,
+      "error": null
+    }
+  }
+}

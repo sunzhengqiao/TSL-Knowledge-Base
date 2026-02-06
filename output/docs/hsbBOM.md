@@ -1,193 +1,89 @@
-# hsbBOM - Bill of Materials
+# hsbBOM.mcr
 
-## Description
+## Overview
+This script generates Bills of Materials (BOM) tables and places Position Number (PosNum) labels on structural elements. It automates the creation of production lists and material take-offs for timber framing projects in Modelspace, Paperspace, or Shopdrawings.
 
-The **hsbBOM** script generates a Bill of Materials (BOM) table that lists beams, sheets (panels), and TSL components in your timber construction project. It works across three different drawing spaces: Model Space, Paper Space, and Shop Drawing Multipage. The BOM displays position numbers, quantities, dimensions, materials, and other attributes in a customizable table format.
+## Usage Environment
+| Space | Supported | Notes |
+|-------|-----------|-------|
+| Model Space | Yes | Processes selected entities or the entire project depending on interaction. |
+| Paper Space | Yes | Requires selection of an `hsbViewport` to filter visible elements. |
+| Shop Drawing | Yes | Supports multipage blocks; requires viewport selection within the detail. |
 
-This tool is essential for creating material schedules and part lists for timber elements, walls, roofs, and floor assemblies.
+## Prerequisites
+- **Required Entities**: GenBeams, Sheets, or TSL instances (connectors/scripts) must exist in the drawing.
+- **Viewport**: An `hsbViewport` is required when running the script in Paperspace or Shopdraw space.
+- **Selection**: In Modelspace, you must have entities to select.
 
-## Script Type
+## Usage Steps
 
-- **Type**: O (Object)
-- **Beams Required**: 0
-- **Version**: 6.12
+### Step 1: Launch Script
+**Command**: `TSLINSERT` (or via the hsbCAD Toolbar/Catalog).
+**Action**: Browse and select `hsbBOM.mcr` from the list and confirm insertion.
 
-## Workflow
+### Step 2: Select Entities or Viewport
+The script prompts differ based on your current CAD space:
 
-### Model Space Insertion
+*   **In Modelspace:**
+    ```
+    Command Line: Select entities:
+    Action: Click on the Beams, Sheets, or TSLs you want to include. Press Enter to finish selection.
+    ```
 
-1. Run the script and a dialog will appear with configuration options
-2. Click a point in Model Space to set the insertion location
-3. Select the entities (beams, sheets, TSL components) you want to include in the BOM
-4. The BOM table is generated at the selected point
+*   **In Paperspace or Shopdraw:**
+    ```
+    Command Line: Select hsbViewport:
+    Action: Click on the viewport frame that defines the view you want to create a BOM for.
+    ```
 
-### Paper Space Insertion
+### Step 3: Place BOM Table
+```
+Command Line: Insertion point:
+Action: Click in the drawing to position the top-left corner of the BOM table/list.
+```
 
-1. Run the script in Paper Space
-2. Select an hsbViewport that displays your element
-3. Pick an insertion point in Paper Space
-4. The BOM automatically extracts all beams and sheets from the viewport
+### Step 4: Adjust Properties (Optional)
+**Action**: Select the inserted BOM object (usually represented by an insertion point grip). Open the **Properties Palette** (Ctrl+1) to toggle labels, change filters, or modify sorting.
 
-### Shop Drawing Multipage Insertion
+## Properties Panel Parameters
 
-1. Edit the block of your multipage
-2. Run the script
-3. Select an hsbViewport (ShopDrawView)
-4. Pick an insertion point in the block drawing
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| **Drawing space** | Integer | 0 | Sets the working context: 0=Model, 1=Paper, 2=Shopdraw. Read-only after insert. |
+| **nShowPosNumBm** | Integer | 1 | Controls labels on Beams. 0=None, 1=PosNum, 2=Name, 3=PosNum+Name, 4=Only in BOM, 5=PosNum+Size. |
+| **nShowPosNumSh** | Integer | 1 | Controls labels on Sheets/Panels. 0=None, 1=PosNum, 2=Name, 3=PosNum+Name, 4=Only in BOM. |
+| **nShowPosNumTSL** | Integer | 1 | Controls labels on Connectors/TSLs. 0=None, 1=PosNum, 2=Name, 3=PosNum+Name, 4=Only in BOM, 5=PosNum+Size. |
+| **nPosNumAlignment** | Integer | 1 | Label orientation. 0=Horizontal (World X), 1=Aligned to Entity, 2=Outside Entity (prevents overlap). |
+| **bShowCompAngles** | Boolean | 0 | If 1, shows complementary saw angles (90 - cut angle) in the BOM. |
+| **sFilterMaterial** | String | "" | Filters BOM by material type (e.g., "C24;GL24h"). Leave empty to include all. |
+| **sFilterTsl** | String | "" | Filters BOM by TSL/Connector names (e.g., "Screw;Plate"). Leave empty for all. |
+| **nSortCol** | Integer | 0 | Determines which column the BOM table is sorted by (index number). |
+| **bShowLogPosNum** | Boolean | 0 | If 1, uses Blockbau/Log house specific numbering format (Label + Sublabel + Layer). |
+| **nColor** | Integer | 38 | Sets the CAD color index for the text labels. |
+| **nHideDisplay** | Integer | 0 | Filters visibility based on Zone Index. Used to show/hide elements from specific construction phases. |
 
-## Properties
+## Right-Click Menu Options
 
-### General Settings
+| Menu Item | Description |
+|-----------|-------------|
+| **Add Entity to BOM** | Allows you to select new entities and append them to the existing BOM table without deleting and re-running the script. |
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Drawing space | String | model space | Determines the working space (Model Space, Paper Space, or Shopdraw Multipage). Read-only after insertion. |
-| Zone selection | String | BOM of complete Element | Controls which zones to include: complete element, current zone + frame, current zone only, or multiple zones |
-| Multiple Zones | String | (empty) | Specify zone indices (-5 to +5) separated by semicolons. Only active when "BOM of multiple zones" is selected |
-| Display BOM | String | Yes | Whether to display the BOM table (always Yes in Model Space) |
-| Sort column | String | Pos | Column used to sort the BOM entries |
-| Sort mode | String | Ascending | Sort order (Ascending or Descending) |
-
-### Position Number Display
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Show PosNum Beams | String | Show PosNum | Controls beam numbering display: Do not show, Show PosNum, Show Size, Show PosNum and Size, Show Log PosNum, Show only in BOM, Show PosNum and Length, Show Length |
-| Show PosNum Sheets | String | Show PosNum | Controls sheet numbering display: Do not show, Show PosNum, Show Size, Show PosNum and Size, Show only in BOM, Show Material and Size |
-| Show PosNum TSL's | String | Show PosNum | Controls TSL numbering display: Do not show, Show PosNum, Show Name, Show PosNum and Name, Show only in BOM |
-| PosNum Background | String | Nothing | Background treatment for position numbers: Nothing, Show Box, Hide Beams, Hide Sheets, Hide TSLs, or combinations |
-| Color Background | Integer | 254 | Color index for position number background box |
-| PosNum Alignment | String | Parallel X-World | Alignment of position numbers: Parallel to World X-axis, or parallel to object axis (inside or outside) |
-
-### Column Width Settings
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Width Pos | Double | 100 mm | Width of Position column |
-| Width Name | Double | 150 mm | Width of Name column |
-| Width Pcs | Double | 100 mm | Width of Pieces/Quantity column |
-| Width Length | Double | 100 mm | Width of Length column |
-| Width Width | Double | 100 mm | Width of Width column |
-| Width Height | Double | 100 mm | Width of Height column |
-| Width Material | Double | 100 mm | Width of Material column |
-| Width Grade | Double | 100 mm | Width of Grade column |
-| Width Info | Double | 100 mm | Width of Information column |
-| Width Weight | Double | 100 mm | Width of Weight column |
-| Width Profile | Double | 100 mm | Width of Profile column |
-| Width Label | Double | 100 mm | Width of Label column |
-| Width Sublabel | Double | 100 mm | Width of Sublabel column |
-| Width Type | Double | 100 mm | Width of Type column |
-| Width Angle1 | Double | 100 mm | Width of Angle 1 column |
-| Width Angle2 | Double | 100 mm | Width of Angle 2 column |
-| Width Angle1C | Double | 100 mm | Width of Complementary Angle 1 column |
-| Width Angle2C | Double | 100 mm | Width of Complementary Angle 2 column |
-| Width NetArea | Double | 100 mm | Width of Net Area column (sheets only) |
-| Width Volume | Double | 100 mm | Width of Volume column (sheets only) |
-
-### Column Order Settings
-
-Each column has a corresponding "Column No." property (integers 0-20) that determines the display order. Set to 0 to hide a column.
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Column No. Pos | Integer | 1 | Display order of Position column |
-| Column No. Name | Integer | 2 | Display order of Name column |
-| Column No. Pcs | Integer | 3 | Display order of Quantity column |
-| Column No. Length | Integer | 4 | Display order of Length column |
-| Column No. Width | Integer | 5 | Display order of Width column |
-| Column No. Height | Integer | 6 | Display order of Height column |
-| Column No. Material | Integer | 7 | Display order of Material column |
-| Column No. Grade | Integer | 8 | Display order of Grade column |
-| Column No. Info | Integer | 9 | Display order of Information column |
-| Column No. Weight | Integer | 10 | Display order of Weight column |
-| Column No. Profile | Integer | 11 | Display order of Profile column |
-| Column No. Label | Integer | 12 | Display order of Label column |
-| Column No. Sublabel | Integer | 13 | Display order of Sublabel column |
-| Column No. Type | Integer | 14 | Display order of Type column |
-| Column No. Angle1 | Integer | 15 | Display order of Angle 1 column |
-| Column No. Angle2 | Integer | 16 | Display order of Angle 2 column |
-| Column No. Angle1C | Integer | 17 | Display order of Complementary Angle 1 column |
-| Column No. Angle2C | Integer | 18 | Display order of Complementary Angle 2 column |
-| Column No. NetArea | Integer | 19 | Display order of Net Area column |
-| Column No. Volume | Integer | 0 | Display order of Volume column (0 = hidden) |
-
-### Text and Display Settings
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Dimstyle | String | (current) | Dimension style for BOM text |
-| Scale | Double | 1 | Scale factor for the BOM table |
-| character size | Double | 17 mm | Text height for BOM entries |
-| Unit | String | mm | Unit for length values (mm, cm, m, inch, feet) |
-| Decimals | Integer | 0 | Number of decimal places for dimensions |
-| Unit Area | String | mm2 | Unit for area values (sheets only) |
-| Decimals Area | Integer | 0 | Number of decimal places for area values |
-| Color | Integer | 171 | Color index for BOM table |
-| Dimstyle PosNum | String | (current) | Dimension style for position numbers |
-| Color TSL PosNum | Integer | 143 | Color index for TSL position numbers |
-
-### Filter Settings
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Filter TSL | String | (empty) | Filter TSL components by name. Separate multiple entries with semicolons |
-| Filter Material | String | (empty) | Include only items matching these materials. Separate multiple entries with semicolons |
-| Filter Label | String | (empty) | Include only items matching this label |
-| Exclude Material | String | (empty) | Exclude items with these materials. Separate multiple entries with semicolons |
-
-### Advanced Settings
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Offset Factor | Double | 3 | Multiplier for position number offset from entities |
-| Switch to Complementary Angle | String | No | Display complementary cutting angles instead of standard angles |
-| Use solid size | String | No | Use solid (actual) dimensions instead of nominal beam sizes |
-
-## Context Commands
-
-| Command | Description |
-|---------|-------------|
-| Add Entity | (Model Space only) Add additional entities (beams, sheets, or TSL components) to an existing BOM after it has been placed |
-
-## BOM Columns Reference
-
-The BOM can display the following data columns for each component:
-
-| Column | Applies To | Description |
-|--------|------------|-------------|
-| Pos | All | Position number of the component |
-| Name | All | Component name |
-| Pcs | All | Quantity of identical components |
-| Length | Beams | Solid length of the beam |
-| Width | Beams, Sheets | Width dimension |
-| Height | Beams, Sheets | Height/thickness dimension |
-| Material | All | Material designation |
-| Grade | Beams | Timber grade |
-| Info | All | Additional information field |
-| Weight | All | Component weight |
-| Profile | Beams | Profile name (for profiled beams) |
-| Label | All | Label designation |
-| Sublabel | All | Sublabel designation |
-| Type | All | Component type |
-| Angle1 | Beams | Cutting angle at negative end |
-| Angle2 | Beams | Cutting angle at positive end |
-| Angle1C | Beams | Complementary cutting angle at negative end |
-| Angle2C | Beams | Complementary cutting angle at positive end |
-| NetArea | Sheets | Net surface area after cuts |
-| Volume | Sheets | Volume of sheet material |
+## Settings Files
+- **Data Source**: TSLBOM map data (internal/exported data).
+- **Purpose**: Provides the logic for naming and dimensioning TSL components if they are not explicitly defined in the script.
 
 ## Tips
+- **Use "Outside Entity" Alignment**: If your drawing is dense, set `nPosNumAlignment` to **2**. This pushes the labels outside the timber width so they don't cover your geometry.
+- **Table Only Mode**: If you only need a list and don't want text cluttering the drawing views, set the `nShowPosNum` options to **4** (Only in BOM).
+- **Material Filtering**: You can type multiple materials in `sFilterMaterial` separated by semicolons (e.g., `C24;Kerto-S`) to generate a list for just specific grades.
+- **Moving the Table**: Click the BOM insertion point to activate the grip and drag the table to a new location.
 
-- **Hiding Columns**: Set a column's "Column No." property to 0 to hide it from the BOM
-- **Reordering Columns**: Change the "Column No." values to rearrange column order
-- **TSL Components**: The BOM supports TSL scripts that publish data to a map called "TSLBOM". Subpart listings are possible if supplied by the referenced TSL
-- **Automatic Numbering**: If beams do not have position numbers assigned, they will be automatically numbered when added to the BOM
-- **Multiple Zones**: When working with Paper Space viewports, you can select specific zones to include in the BOM using the "Multiple Zones" property with zone indices from -5 to +5
-- **Performance**: The script uses envelope bodies instead of real bodies for better performance in complex models
-
-## Notes
-
-- The "Drawing space" property becomes read-only after insertion
-- In Model Space, the "Display BOM" option is always enabled and read-only
-- Zone selection options are only available in Paper Space and Shop Drawing modes
-- Cutting angles (Angle1, Angle2, etc.) represent the straight cut angles at beam ends
+## FAQ
+- **Q: Why are some of my beams missing from the list?**
+  **A**: Check the `sFilterMaterial` or `sFilterTsl` properties. You may have a filter active that excludes certain materials or connector types. Also check `nHideDisplay` (Zone Filter).
+- **Q: Can I update the list if I change beam sizes?**
+  **A**: Yes. Select the BOM insertion point and right-click. If the list doesn't update automatically, use the `hsbRefresh` command or delete and re-insert the script.
+- **Q: What is the difference between "PosNum" and "Name"?**
+  **A**: "PosNum" is the unique assembly mark assigned by hsbCAD numbering rules. "Name" is the generic name of the element (e.g., "Rafter" or "Stud").
+- **Q: How do I list hardware separately?**
+  **A**: Use the `sFilterTsl` property to type the name of your hardware script (e.g., "Screw"), or create separate BOM scripts for structure and hardware.

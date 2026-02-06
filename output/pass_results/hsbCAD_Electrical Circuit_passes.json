@@ -1,0 +1,280 @@
+{
+  "filename": "hsbCAD_Electrical Circuit.mcr",
+  "status": "completed",
+  "total_tokens": 34392,
+  "processing_time": 235.46521306037903,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 1,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "Adds an electrical circuit to an element.",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "September 2005",
+            "author": "DRT",
+            "changes": ""
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6444,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses `getElement('Element')` and `assignToElementGroup(el, TRUE, 8, 'Z')`, which are characteristics of 3D model scripts attached to elements. It performs geometric calculations on 3D beams (`LineBeamIntersect`, `filterBeamsPerpendicularSort`) and draws representations using `Display` objects in the model. It adds an `ElemItem` to the element for export data. There is no usage of `sd_` functions, `_Viewport`, or `#Type E` which indicate Shop Drawing or Paper Space environments."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "The script must be inserted into an hsbCAD Element in the model.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5080,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getElement",
+              "promptOriginal": "Element",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dHeight",
+            "type": "PropDouble",
+            "displayName": "Circuit Height",
+            "defaultValue": 1500,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "sName",
+            "type": "PropString",
+            "displayName": "Circuit Name",
+            "defaultValue": "Circuit",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sTrim",
+            "type": "PropString",
+            "displayName": "Trim",
+            "defaultValue": "None",
+            "inputType": "dropdown",
+            "options": [
+              "Left",
+              "Right",
+              "Both",
+              "None"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 2,
+            "variable": "sColour",
+            "type": "PropString",
+            "displayName": "Colour",
+            "defaultValue": "Green",
+            "inputType": "dropdown",
+            "options": [
+              "Red",
+              "Yellow",
+              "Green",
+              "Cyan",
+              "Blue",
+              "Magenta"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6918,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {},
+      "tokens_used": 4673,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script from hsbCAD palette or command line.",
+          "Prompt user to select an Element (Wall/Floor).",
+          "Display Properties Dialog (Height, Name, Trim, Colour).",
+          "[Validation] Check if an element was selected. If not, report error and erase instance.",
+          "Calculate potential circuit path along Element X-axis at specified Height.",
+          "[Validation] Check for horizontal beams (plates/bracing) intersecting the circuit path. If found, report error and erase instance.",
+          "Analyze Element Beams: Identify Top/Bottom plates and filter vertical studs.",
+          "Filter vertical studs to find only those spanning the bottom plate length.",
+          "Calculate default Start and End points of the circuit based on outermost studs.",
+          "Search Element for attached TSL instances named 'hsbCAD_Electrical Fixture'.",
+          "[Conditional] Filter fixtures where the property 'Circuit' matches the script's 'sName'.",
+          "[Conditional] Adjust Start/End points based on 'Trim' property ('Left', 'Right', 'Both', 'None') relative to fixture positions.",
+          "Loop through valid vertical studs and drill holes where the circuit line intersects.",
+          "Draw the final circuit line in 3D with the specified Colour.",
+          "Add 'ELECTRICALCIRCUIT' data to Element for DXA export."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Element Selection Validation",
+            "path1": {
+              "name": "Valid Element",
+              "steps": [
+                "Proceed to Beam Collision Check",
+                "Assign Element to local variable",
+                "Process Geometry"
+              ]
+            },
+            "path2": {
+              "name": "No Element Selected",
+              "steps": [
+                "Report message 'Element must be selected.'",
+                "Execute eraseInstance()",
+                "Terminate Script"
+              ]
+            }
+          },
+          {
+            "condition": "Horizontal Beam Collision Check",
+            "path1": {
+              "name": "Path is Clear",
+              "steps": [
+                "Continue to geometry analysis",
+                "Identify Top and Bottom plates"
+              ]
+            },
+            "path2": {
+              "name": "Obstruction Found",
+              "steps": [
+                "Report message 'Beam in the way of circuit path'",
+                "Execute eraseInstance()",
+                "Terminate Script"
+              ]
+            }
+          },
+          {
+            "condition": "Trim Logic (based on 'sTrim' property and fixture locations)",
+            "path1": {
+              "name": "Trim None",
+              "steps": [
+                "Use calculated full span between outermost studs",
+                "Ignore fixture positions for Start/End points"
+              ]
+            },
+            "path2": {
+              "name": "Trim Left",
+              "steps": [
+                "If fixtures found matching Circuit Name",
+                "Move Start point to the minimum fixture X position"
+              ]
+            },
+            "path3": {
+              "name": "Trim Right",
+              "steps": [
+                "If fixtures found matching Circuit Name",
+                "Move End point to the maximum fixture X position"
+              ]
+            },
+            "path4": {
+              "name": "Trim Both",
+              "steps": [
+                "If fixtures found matching Circuit Name",
+                "Move Start point to min fixture position",
+                "Move End point to max fixture position"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "Element must be selected.",
+            "recovery": "Select a valid hsbCAD Element and re-run the script."
+          },
+          {
+            "check": "Path Obstruction (Horizontal Beams)",
+            "errorMessage": "Beam in the way of circuit path",
+            "recovery": "Check the Element for horizontal members (e.g. nogs/bracing) at the specified 'Circuit Height' and remove them or change the Circuit Height."
+          },
+          {
+            "check": "Beam Availability",
+            "errorMessage": "None explicit, but script returns silently if _Beam.length()==0.",
+            "recovery": "Ensure the Element contains construction beams (studs/plates)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Circuit Properties",
+            "how": "OPM (Object Properties Palette)",
+            "effect": "Changing 'Circuit Height', 'Circuit Name', 'Trim', or 'Colour' triggers a recalculation of the geometry, hole positions, and visual style."
+          },
+          {
+            "action": "Edit Geometry",
+            "how": "Grip edit or move the Element/Beams",
+            "effect": "The script runs automatically to update the circuit line and stud holes to match the new beam positions."
+          },
+          {
+            "action": "Manage Fixtures",
+            "how": "Insert or move 'hsbCAD_Electrical Fixture' instances",
+            "effect": "If the Fixture 'Circuit' property matches this script's 'Circuit Name', the circuit line automatically trims to the new fixture positions."
+          }
+        ]
+      },
+      "tokens_used": 6419,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Electrical Circuit\n\n## Overview\nThis script adds an electrical circuit representation to an hsbCAD Element (Wall or Floor). It automatically drills holes through vertical studs at a specified height and draws a visual circuit line which can be trimmed automatically based on the location of electrical fixtures.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script must be attached to a 3D Element. |\n| Paper Space | No | This script does not generate 2D shop drawings. |\n| Shop Drawing | No | This script does not process layout views. |\n\n## Prerequisites\n- **Required Entities**: An existing hsbCAD Element (e.g., a timber frame wall).\n- **Minimum Beam Count**: The Element must contain vertical studs and top/bottom plates.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbCAD_Electrical Circuit.mcr`\n\n### Step 2: Select Element\n```\nCommand Line: Element\nAction: Click on the desired Wall or Floor element in the 3D model.\n```\n*Note: If no element is selected, the script will display an error \"Element must be selected.\" and terminate.*\n\n### Step 3: Configure Properties\nOnce inserted, the script runs with default settings. To customize the circuit, select the script instance and open the **Properties Palette** (Ctrl+1). Adjust parameters such as Height, Name, Color, and Trim options. The model updates automatically when properties change.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Circuit Height | Number | 1500 | The vertical height (in current document units) where the circuit runs through the wall. |\n| Circuit Name | Text | Circuit | A unique identifier used to link this circuit to specific electrical fixtures. |\n| Trim | Dropdown | None | Determines how the circuit line reacts to fixtures. <br>Options: <br>• **None**: Full span between outer studs.<br>• **Left**: Trims to the first fixture on the left.<br>• **Right**: Trims to the first fixture on the right.<br>• **Both**: Trims between the furthest left and right fixtures. |\n| Colour | Dropdown | Green | The visual color of the circuit line in the model. <br>Options: Red, Yellow, Green, Cyan, Blue, Magenta. |\n\n## Right-Click Menu Options\nThis script does not add specific items to the right-click context menu. Use the Properties Palette to modify parameters.\n\n## Settings Files\nNo external settings files (XML) are required for this script.\n\n## Tips\n- **Avoid Obstructions**: Ensure there are no horizontal beams (e.g., noggings, bracing) at the exact `Circuit Height`. If a beam blocks the path, the script will report \"Beam in the way of circuit path\" and delete itself.\n- **Color Coding**: Use different colors and names (e.g., \"Lights\" vs. \"Sockets\") to distinguish between multiple circuit types in the same wall.\n- **Automatic Trimming**: To use the auto-trim feature, ensure you have placed `hsbCAD_Electrical Fixture` instances in the wall and set their \"Circuit\" property to match the `Circuit Name` defined in this script.\n\n## FAQ\n- **Q: Why did the script disappear after I selected the element?**\n  - A: The script likely detected a collision. Check the command line history for the error \"Beam in the way of circuit path\". You must remove the horizontal member blocking the path or adjust the `Circuit Height`.\n\n- **Q: The holes are drilled, but the line goes all the way through the wall ignoring my lights.**\n  - A: Check your `Circuit Name` property. It must match exactly with the `Circuit` property assigned to your electrical fixtures. Additionally, ensure the `Trim` property is not set to \"None\".\n\n- **Q: Can I use this on curved walls?**\n  - A: This script is designed for standard elements with vertical studs. It relies on linear calculations along the Element's X-axis. Highly curved geometry may produce unexpected results."
+      },
+      "tokens_used": 4858,
+      "error": null
+    }
+  }
+}

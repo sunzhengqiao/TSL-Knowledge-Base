@@ -1,0 +1,248 @@
+{
+  "filename": "hsb_SetWallConstructionDirectives.mcr",
+  "status": "completed",
+  "total_tokens": 20879,
+  "processing_time": 146.56736660003662,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.01",
+            "date": "21.07.2009",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.2",
+            "date": "30.06.2010",
+            "author": "",
+            "changes": "Allow it to run from the wall details on generation"
+          },
+          {
+            "version": "1.3",
+            "date": "01.07.2010",
+            "author": "",
+            "changes": "Assign _KLog to set BeamType Name"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3823,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select ElementWall and casts them to Wall objects. It modifies 3D properties using Wall.setBaseHeight(). It calls eraseInstance() at the end, indicating it is a utility command script that modifies model data rather than generating drawings. No 'sd_' prefixes, Viewport, or Sheet handling code found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall",
+            "Wall"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing Wall elements",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2723,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Please select Elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dBaseHeight",
+            "type": "PropDouble",
+            "displayName": "Base Height",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "Set the base height of the selected elements"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2197,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A utility tool used to modify the vertical positioning (Base Height) of multiple selected wall elements simultaneously within the 3D model.",
+          "category": "Utility/Framing",
+          "typicalUseCase": "Adjusting the elevation of multiple walls to sit on a specific floor level or foundation plate after the initial structural layout is generated."
+        },
+        "parameters": [
+          {
+            "name": "dBaseHeight",
+            "technicalDefault": 0,
+            "businessMeaning": "The absolute Z-coordinate (elevation) representing the bottom surface of the selected walls. This determines at what height the wall structure starts vertically.",
+            "validRange": "-1000 to 50000 (Project dependent elevations)",
+            "unit": "mm",
+            "affectsOutput": "Moves the bottom of the selected wall elements to the specified elevation, shifting the entire wall assembly vertically in the model without changing the wall's height."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Modified Element",
+            "description": "Updates the vertical positioning data of existing wall elements in the model database.",
+            "appliedTo": "Selected ElementWall entities"
+          }
+        ]
+      },
+      "tokens_used": 3142,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution begins (_bOnInsert).",
+          "Check insertCycleCount(). If greater than 1, script erases itself and exits.",
+          "Check _kExecuteKey. If empty, display property dialog to configure dBaseHeight.",
+          "Prompt user 'Please select Elements' filtering for ElementWall entities.",
+          "User confirms selection (ssE.go()).",
+          "Store selected entities in the _Element array.",
+          "Check if _Element array is empty. If yes, script erases itself and exits.",
+          "Loop through each entity in the _Element array.",
+          "Attempt to cast entity to Wall object.",
+          "Check if Wall object is valid.",
+          "Call setBaseHeight(dBaseHeight) on the valid Wall object.",
+          "Script finishes loop, calls eraseInstance(), and terminates."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert cycle count check (insertCycleCount()>1)",
+            "path1": {
+              "name": "Recursive Call / Duplicate Insert",
+              "steps": [
+                "Detect cycle count > 1",
+                "Execute eraseInstance()",
+                "Return immediately"
+              ]
+            },
+            "path2": {
+              "name": "Initial Execution",
+              "steps": [
+                "Detect cycle count is 1",
+                "Proceed to Execution Key check"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Selection Result (ssE.go())",
+            "path1": {
+              "name": "No Selection / Cancel",
+              "steps": [
+                "User makes no selection or cancels",
+                "_Element array length remains 0",
+                "Script detects empty array",
+                "Execute eraseInstance()",
+                "Exit"
+              ]
+            },
+            "path2": {
+              "name": "Valid Selection",
+              "steps": [
+                "User selects one or more ElementWall entities",
+                "Populate _Element array",
+                "Proceed to modification loop"
+              ]
+            }
+          },
+          {
+            "condition": "Wall Validity (wl.bIsValid())",
+            "path1": {
+              "name": "Invalid Entity",
+              "steps": [
+                "Cast to Wall fails or is invalid",
+                "Execute 'continue' statement",
+                "Skip to next element in array"
+              ]
+            },
+            "path2": {
+              "name": "Valid Wall",
+              "steps": [
+                "Cast to Wall is successful",
+                "Execute wl.setBaseHeight(dBaseHeight)",
+                "Continue loop"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Script prevents re-entry; user does not need to recover, script just closes."
+          },
+          {
+            "check": "Entity Array Count (_Element.length())",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "User must re-run the command and ensure at least one wall is selected before proceeding."
+          },
+          {
+            "check": "Entity Type (ElementWall)",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "If non-wall elements are selected, they are ignored in the loop. User must select valid Wall objects to affect change."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "The script calls eraseInstance() immediately after execution. It does not remain in the model to be edited via grips, OPM, or context menu re-calculations. The changes made to the Base Height of the walls are permanent until modified by another tool."
+          }
+        ]
+      },
+      "tokens_used": 4477,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SetWallConstructionDirectives.mcr\n\n## Overview\nThis utility script modifies the vertical positioning (Base Height) of multiple selected wall elements simultaneously within the 3D model. It is typically used to adjust the elevation of walls to a specific floor level or foundation plate after the initial structural layout is generated.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D wall elements. |\n| Paper Space | No | Not designed for 2D drawing views. |\n| Shop Drawing | No | Not intended for manufacturing output generation. |\n\n## Prerequisites\n- **Required entities**: Existing Wall elements (`ElementWall`) in the model.\n- **Minimum beam count**: 1 (at least one wall must be selected).\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or assign to a toolbar button) → Select `hsb_SetWallConstructionDirectives.mcr`\n\n### Step 2: Configure Base Height\n```\nCommand Line: (Property Palette or Dialog appears)\nAction: Before selecting elements, locate the \"Base Height\" property in the Properties Palette (or dialog). Enter the desired elevation value (Z-coordinate) for the bottom of the walls.\n```\n\n### Step 3: Select Wall Elements\n```\nCommand Line: Please select Elements\nAction: Click on the wall elements you wish to modify. You can select multiple walls at once.\n```\n\n### Step 4: Confirm Selection\n```\nCommand Line: (Press Enter to confirm)\nAction: Press Enter or Right-click to confirm your selection. The script will update the base height of the selected walls and then close automatically.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Base Height | number | 0 | The absolute Z-coordinate (elevation) for the bottom surface of the selected walls. This determines the vertical starting point of the wall structure. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script executes as a one-time command and erases itself immediately after use. It does not remain in the model for right-click context menu options. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Batch Processing**: You can select as many walls as needed in a single operation to align them all to the same elevation level.\n- **Unit Awareness**: Ensure your `Base Height` value is entered in the current project units (typically millimeters).\n- **Shift vs. Resize**: This tool moves the entire wall assembly up or down. It does not change the physical height of the wall (e.g., a 3000mm wall moved 100mm up is still 3000mm tall, just starting higher).\n- **Integration**: This script can also be triggered from wall details during generation to automate height settings based on specific wall types.\n\n## FAQ\n- **Q: I ran the script but nothing happened.**\n  A: Make sure you actually selected Wall entities before pressing Enter. If you select nothing, the script exits silently.\n- **Q: Can I use this to raise the roof?**\n  A: No, this script only affects Wall elements (`ElementWall`). It will ignore beams or other roof components.\n- **Q: Does this work on walls in a group?**\n  A: Yes, you can select grouped walls; the script will attempt to apply the new base height to any valid wall entities found in your selection."
+      },
+      "tokens_used": 4517,
+      "error": null
+    }
+  }
+}

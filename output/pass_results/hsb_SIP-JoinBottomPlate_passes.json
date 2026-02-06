@@ -1,0 +1,265 @@
+{
+  "filename": "hsb_SIP-JoinBottomPlate.mcr",
+  "status": "completed",
+  "total_tokens": 19098,
+  "processing_time": 143.26894545555115,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4215,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script manipulates 3D Element and Beam objects using dbJoin() method without ShopDrawing (sd_) prefixes or Viewport references."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space containing a valid Element with beams of type _kPanelBottomPlate or _kPanelPressureTreatedPlate",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2740,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\\nSelect Element",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowNotice",
+            "trigger": "Error in joining bottom plates",
+            "title": null,
+            "dataSource": "System generated error message",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          },
+          {
+            "type": "ShowNotice",
+            "trigger": "Error in joining soleplates",
+            "title": null,
+            "dataSource": "System generated error message",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2247,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Joins multiple bottom plate and pressure-treated soleplate beams within a selected SIP panel into single continuous beams.",
+          "category": "Automation/Framing",
+          "typicalUseCase": "Used after generating or importing a SIP panel where bottom plates or soleplates are created as separate segments but need to be treated as single manufacturing items for cutting or labeling."
+        },
+        "parameters": [],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "JoinedBeam",
+            "description": "A single continuous beam resulting from the database join operation of multiple collinear beam segments.",
+            "appliedTo": "Beams of type '_kPanelBottomPlate' or '_kPanelPressureTreatedPlate' within the selected Element."
+          }
+        ]
+      },
+      "tokens_used": 1954,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script launched, executing Insert phase.",
+          "2. Command line prompts user to 'Select Element'.",
+          "3. User selects a SIP panel (Element).",
+          "4. Script instance is created and attached to the Element.",
+          "5. Script executes post-insertion logic immediately.",
+          "6. Script retrieves all beams from the selected Element.",
+          "7. Checks if Element contains any beams. If empty, script self-deletes.",
+          "8. Filters beams into two lists: '_kPanelBottomPlate' and '_kPanelPressureTreatedPlate'.",
+          "9. If both lists are empty, script self-deletes.",
+          "10. 'Join Bottom Plates' Loop: While count < 100 and list length > 1, join index 1 into index 0, remove index 1.",
+          "11. If loop hits 100 iterations, display 'Safety Limit reached' error for Bottom Plates.",
+          "12. 'Join Soleplates' Loop: While count < 100 and list length > 1, join index 1 into index 0, remove index 1.",
+          "13. If loop hits 100 iterations, display 'Safety Limit reached' error for Soleplates.",
+          "14. Script erases its instance from the drawing.",
+          "15. Script finishes, leaving behind modified joined beams."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User interaction at command line prompt",
+            "path1": {
+              "name": "User Cancels or Enters Null",
+              "steps": [
+                "Selection returns empty or failed state",
+                "Script terminates without attaching instance"
+              ]
+            },
+            "path2": {
+              "name": "User Selects Element",
+              "steps": [
+                "Element object retrieved",
+                "Instance appended to _Element list",
+                "Post-insertion logic executes"
+              ]
+            }
+          },
+          {
+            "condition": "Element Beam Population",
+            "path1": {
+              "name": "No Beams Found",
+              "steps": [
+                "Beam array length is 0",
+                "EraseInstance() called",
+                "Script terminates"
+              ]
+            },
+            "path2": {
+              "name": "Beams Found",
+              "steps": [
+                "Proceed to beam type filtering"
+              ]
+            }
+          },
+          {
+            "condition": "Valid Beam Types Detected",
+            "path1": {
+              "name": "No Bottom Plates or Soleplates",
+              "steps": [
+                "Both filtered lists have length 0",
+                "EraseInstance() called",
+                "Script terminates"
+              ]
+            },
+            "path2": {
+              "name": "Valid Beams Present",
+              "steps": [
+                "At least one list has length > 0",
+                "Proceed to Joining Logic"
+              ]
+            }
+          },
+          {
+            "condition": "Quantity of beams to join (Per Type)",
+            "path1": {
+              "name": "0 or 1 Beam",
+              "steps": [
+                "While condition (length > 1) fails immediately",
+                "Skip join loop",
+                "Proceed to next section"
+              ]
+            },
+            "path2": {
+              "name": "2 or More Beams",
+              "steps": [
+                "Enter While loop",
+                "Execute dbJoin() to merge segments",
+                "Increment safety counter",
+                "Repeat until 1 beam remains or counter hits 100"
+              ]
+            }
+          },
+          {
+            "condition": "Safety Counter vs Beam Count",
+            "path1": {
+              "name": "Safety Limit Reached (100 iterations)",
+              "steps": [
+                "Loop terminates",
+                "ReportNotice() displayed: 'Error in joining... Safety Limit reached'",
+                "Continue to next loop or end"
+              ]
+            },
+            "path2": {
+              "name": "Join Successful",
+              "steps": [
+                "List length reduces to 1 before limit",
+                "No error message",
+                "Loop ends naturally"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "None (Silent exit)",
+            "recovery": "User must re-run the command and select a valid Element."
+          },
+          {
+            "check": "Element contains geometry",
+            "errorMessage": "None (Silent exit via eraseInstance)",
+            "recovery": "User must verify the selected Element is not empty and contains beams."
+          },
+          {
+            "check": "Beam Types match script requirements",
+            "errorMessage": "None (Silent exit via eraseInstance)",
+            "recovery": "User must ensure Element contains beams of type '_kPanelBottomPlate' or '_kPanelPressureTreatedPlate'."
+          },
+          {
+            "check": "Join Geometry Validity",
+            "errorMessage": "ReportNotice: 'Error in joining bottom plates/soleplates on panel [Number] Safety Limit reached'",
+            "recovery": "User must check for non-collinear beams, large gaps between segments, or corrupt data preventing a successful join."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 3872,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SIP-JoinBottomPlate.mcr\n\n## Overview\nThis script automatically joins separate bottom plate and pressure-treated soleplate segments within a selected SIP panel into single continuous beams. It runs once and then removes itself to clean up the drawing.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D Element and Beam objects. |\n| Paper Space | No | Not applicable to layouts. |\n| Shop Drawing | No | This script does not generate 2D views or annotations. |\n\n## Prerequisites\n- **Required Entities**: An Element (representing a SIP panel) containing beams.\n- **Beam Types**: The Element must contain beams designated as \"Bottom Plates\" (`_kPanelBottomPlate`) or \"Pressure Treated Soleplates\" (`_kPanelPressureTreatedPlate`).\n- **Geometry**: Beams must be collinear and touching or overlapping to be joined successfully.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command**: `TSLINSERT`\n**Action**: Browse to the file `hsb_SIP-JoinBottomPlate.mcr`, select it, and click **Open**.\n\n### Step 2: Select Element\n```\nCommand Line: Select Element\nAction: Click on the desired SIP panel in the model.\n```\n**Result**:\n- The script scans the selected panel.\n- If valid bottom plates or soleplates are found, they are merged into single beams.\n- The script instance automatically deletes itself.\n- If the panel is empty or contains no valid beam types, the script exits silently.\n\n## Properties Panel Parameters\n\nThis script does not expose any parameters to the Properties Panel (OPM).\n\n## Right-Click Menu Options\n\nThis script does not add any options to the Right-Click context menu.\n\n## Settings Files\n\nThis script does not require external settings files.\n\n## Tips\n- **Single-Use Script**: This script is designed to run only once upon insertion. You do not need to manually delete it from the element.\n- **Visual Check**: After running, verify that the bottom plates are now represented by single beams spanning the full length of the wall.\n- **Safety Limit**: The script has a safety limit of 100 join operations per plate type. If you receive an error message \"Safety Limit reached,\" check for gaps between beams or misalignments that might prevent the join operation.\n\n## FAQ\n- **Q: What happens if I select a panel that has already been processed?**\n  A: The script will find no segments to join (since they are already single beams) and will simply delete itself, leaving the panel unchanged.\n- **Q: Why did the script disappear after I selected the element?**\n  A: This is intended behavior. The script performs its task and removes its instance automatically to keep the drawing clean.\n- **Q: I received an error message about joining soleplates. What should I do?**\n  A: This indicates a geometry issue preventing the join (e.g., beams are not collinear or are too far apart). Check the soleplate geometry in the selected panel and try again."
+      },
+      "tokens_used": 4070,
+      "error": null
+    }
+  }
+}

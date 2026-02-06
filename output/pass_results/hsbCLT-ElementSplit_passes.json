@@ -1,0 +1,262 @@
+{
+  "filename": "hsbCLT-ElementSplit.mcr",
+  "status": "completed",
+  "total_tokens": 27559,
+  "processing_time": 590.1851329803467,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "22Jan16",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3695,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script interacts directly with Element and GenBeam entities (el.genBeam(), Sip.dbSplit), modifying the 3D model structure. No usage of sd_*, Multipage*, _Viewport, or _Entity[] arrays. Logic triggers on _bOnDbCreated and _bOnElementConstructed which are model events. Visuals are drawn using Display dpPlan for on-screen feedback in the model, not 2D drawing generation."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall",
+            "Sip"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing a Wall Element (ElementWall) composed of SIP/CLT layers.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2310,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getElement",
+              "promptOriginal": "",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "_bOnInsert",
+            "title": null,
+            "dataSource": "Script Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dGap",
+            "type": "PropDouble",
+            "displayName": "Gap",
+            "defaultValue": "0",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "Defines the gap of the joint"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5948,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Splits a wall element (composed of CLT or SIP panels) into two separate segments at a specific user-defined location along the wall's length.",
+          "category": "Geometry/Element Editing",
+          "typicalUseCase": "Used to break down large prefabricated wall panels into smaller, transportable sections, or to insert a joint/gap at a specific location for structural or architectural requirements."
+        },
+        "parameters": [
+          {
+            "name": "dGap",
+            "technicalDefault": "0",
+            "businessMeaning": "The clearance distance (tolerance) created between the two resulting wall segments after the split.",
+            "validRange": "0 mm to 100 mm (Typically 0-20 mm for connection tolerances)",
+            "unit": "mm",
+            "affectsOutput": "Controls the physical separation of the split elements. A value of 0 results in a butt joint where panels touch; a positive value moves the panels apart to accommodate connection materials, sealants, or construction tolerances."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Modified Element / Split Geometry",
+            "description": "The script splits the database entities (Sips/GenBeams) of the selected wall element, physically dividing the original single element into two distinct entities within the model.",
+            "appliedTo": "The selected ElementWall and its constituent CLT/SIP layers."
+          }
+        ]
+      },
+      "tokens_used": 4561,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch script (Command: HSB_PANELTSLSPLITLOCATION or insert)",
+          "2. Check insertCycleCount: Abort if > 1 to prevent duplicates",
+          "3. Determine Input Method: Check if a Catalog Key is provided",
+          "4. [If No Catalog] Show Property Dialog to configure Gap",
+          "5. [If Catalog] Load property values from Catalog Key",
+          "6. Prompt user to select a Wall Element (ElementWall)",
+          "7. Prompt user to select a Point (_Pt0) defining the split location",
+          "8. End Insertion Phase",
+          "9. [Recalculation] Validate: Ensure exactly one ElementWall is selected",
+          "10. [Recalculation] Extract Element geometry (Coordinate system, Outline, Width)",
+          "11. [Recalculation] Calculate wall height (from property or outline points)",
+          "12. [Recalculation] Snap input point (_Pt0) to the closest point on the wall axis",
+          "13. [Recalculation] Filter Element entities: Collect all Sip/GenBeam layers",
+          "14. [Recalculation] Check if Sips exist: Set 'bShow' flag",
+          "15. [Recalculation] If '_bOnDbCreated': Set TSL instance color and execution loops",
+          "16. [Recalculation] [Visuals] If no Sips found (bShow=true): Draw split location symbol",
+          "17. [Recalculation] [Execution] If '_bOnDbCreated' or '_bOnElementConstructed': Iterate through Sips",
+          "18. [Recalculation] Check intersection between Sip envelope and split plane",
+          "19. [Recalculation] Split the first intersecting Sip using 'dbSplit' with defined 'dGap'",
+          "20. [Recalculation] Break loop (Stop after splitting first panel)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Catalog Key usage on Insert",
+            "path1": {
+              "name": "Manual Insert",
+              "steps": [
+                "Show Dialog (ShowDialog)",
+                "User enters 'Gap' value manually",
+                "User selects Element and Point"
+              ]
+            },
+            "path2": {
+              "name": "Catalog Insert",
+              "steps": [
+                "Set PropValuesFromCatalog(_kExecuteKey)",
+                "User selects Element and Point"
+              ]
+            }
+          },
+          {
+            "condition": "Element Type Validation",
+            "path1": {
+              "name": "Valid Element",
+              "steps": [
+                "Proceed to geometry extraction",
+                "Perform split logic"
+              ]
+            },
+            "path2": {
+              "name": "Invalid/No Element",
+              "steps": [
+                "Report Error Message",
+                "Erase Script Instance",
+                "Stop Execution"
+              ]
+            }
+          },
+          {
+            "condition": "Existence of Sip Panels",
+            "path1": {
+              "name": "Panels Found",
+              "steps": [
+                "Skip Plan Symbol drawing",
+                "Proceed to Split Logic"
+              ]
+            },
+            "path2": {
+              "name": "No Panels Found",
+              "steps": [
+                "Draw Plan Symbol (Visualization only)",
+                "Skip Split Logic"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Check insertCycleCount > 1",
+            "errorMessage": "None (Silent erase)",
+            "recovery": "Script automatically erases duplicate instance"
+          },
+          {
+            "check": "Check if _Element array is empty or not of type ElementWall",
+            "errorMessage": "ScriptName could not find reference to element.",
+            "recovery": "User must select a valid Wall Element before inserting or ensure the script links to a valid wall"
+          },
+          {
+            "check": "Check Wall Width (dZ)",
+            "errorMessage": "None",
+            "recovery": "Script automatically calculates width from outline points if property value is <= 0"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Split Gap",
+            "how": "OPM (Object Properties Palette)",
+            "effect": "Updating 'dGap' triggers recalculation, potentially modifying the split gap width if the element reconstructs. Note: Since the script splits the database entity, changing this may result in geometry reconstruction attempts."
+          },
+          {
+            "action": "Move/Transform Instance",
+            "how": "CAD Move/Transform Commands",
+            "effect": "The script performs a null transform (`_ThisInst.transformBy(Vector3d(0,0,0))`) during the first execution loop if visualization is active, likely to ensure correct coordinate system mapping. User moving the TSL instance manually might shift the split location reference."
+          }
+        ]
+      },
+      "tokens_used": 6460,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-ElementSplit\n\n## Overview\nThis script splits a selected wall element (composed of CLT or SIP panels) into two separate segments at a user-defined location along its length. It allows for the creation of a gap (clearance) between the resulting segments to accommodate connections or tolerances.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script interacts directly with 3D wall elements. |\n| Paper Space | No | Not designed for 2D drawing generation. |\n| Shop Drawing | No | Not a shop drawing script. |\n\n## Prerequisites\n- **Required Entities**: An existing Wall Element (ElementWall) composed of Sip/GenBeam layers (e.g., CLT or SIP panels).\n- **Minimum Beam Count**: 1\n- **Required Settings**: None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbCLT-ElementSplit.mcr` from the list, or use the assigned custom command/button.\n\n### Step 2: Configure Gap (if not using a Catalog)\n```\nDialog: TSL Properties\nAction: Enter the desired Gap value (in mm) between the split elements. Click OK to proceed.\n```\n*(Note: If the script is inserted via a Catalog Key, this step may be skipped, and the gap will be preset.)*\n\n### Step 3: Select Wall Element\n```\nCommand Line: Select Element\nAction: Click on the Wall Element in the model that you wish to split.\n```\n\n### Step 4: Define Split Location\n```\nCommand Line: Select point\nAction: Click near the wall to define the location where the split should occur. The point will automatically snap to the wall's axis.\n```\n\n### Step 5: Completion\nThe script will process the geometry and split the wall into two distinct elements. If the split cannot be performed (e.g., no panels found), a symbol may be drawn, but the physical split will not occur.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Gap | Number | 0 | Defines the clearance distance (tolerance) created between the two resulting wall segments after the split. Enter 0 for a butt joint. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu items are defined for this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Snapping**: You do not need to click exactly on the wall line; the script calculates the closest point on the wall axis to your click.\n- **Gap Usage**: Use the `Gap` property when you need space for connection plates, sealants, or construction tolerances.\n- **Validation**: Ensure you select a valid Wall Element. If you select a beam or other object, the script will abort with an error message and erase itself.\n\n## FAQ\n- Q: What happens if I get the error \"ScriptName could not find reference to element\"?\n  A: This means the object you selected is not a recognized Wall Element (ElementWall). Ensure you are selecting a wall generated in hsbCAD and click to retry.\n- Q: Can I undo the split?\n  A: Yes, use the standard AutoCAD `UNDO` command to revert the split operation.\n- Q: Why did my wall not split physically?\n  A: The script requires the wall to have Sip or GenBeam layers (CLT/SIP panels). If the wall consists only of basic lines or has no internal structure detected, the split may only draw a visual symbol."
+      },
+      "tokens_used": 4585,
+      "error": null
+    }
+  }
+}

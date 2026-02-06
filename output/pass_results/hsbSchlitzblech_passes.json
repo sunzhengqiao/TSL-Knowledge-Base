@@ -1,0 +1,416 @@
+{
+  "filename": "hsbSchlitzblech.mcr",
+  "status": "completed",
+  "total_tokens": 44560,
+  "processing_time": 287.27146649360657,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8453,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses _kModelSpace explicitly in tslNew.dbCreate calls. It generates 3D geometry (Body, Drill) and interacts with GenBeams in the model. No #Type E, sd_*, or _Viewport references found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam (Main joist and secondary beams)",
+            "TslInst (Child script 'hsbDrillPattern')",
+            "EntPLine (Optional for additional contour)"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": [
+            "The script 'hsbDrillPattern' must be present in the current drawing",
+            "A catalog entry named '|_LastInserted|' is required"
+          ]
+        }
+      },
+      "tokens_used": 4847,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getBeam",
+              "promptOriginal": "|Select main joist|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select secondary Beam(s)|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "PrEntity",
+              "promptOriginal": "|Select Pattern(s)|",
+              "condition": "_bOnRecalc && _kExecuteKey == '|Add Drill Pattern|'",
+              "required": false
+            },
+            {
+              "step": 4,
+              "function": "PrEntity",
+              "promptOriginal": "|Select Polyline(s)| |<Enter> to pick points|",
+              "condition": "_bOnRecalc && _kExecuteKey == '|Add Contour|'",
+              "required": false
+            },
+            {
+              "step": 5,
+              "function": "getPoint",
+              "promptOriginal": "|Pick first point|",
+              "condition": "_bOnRecalc && _kExecuteKey == '|Add Contour|' && (no entities selected)",
+              "required": false
+            },
+            {
+              "step": 6,
+              "function": "PrPoint",
+              "promptOriginal": "\n|pick next vertex, <Enter> to close contour|",
+              "condition": "while(1) loop inside _bOnRecalc && _kExecuteKey == '|Add Contour|'",
+              "required": false
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "Insertion",
+            "title": null,
+            "dataSource": "Internal TSL Dialog (hsbSchlitzblech)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          },
+          {
+            "type": "showDialog",
+            "trigger": "Insertion (after beam selection)",
+            "title": null,
+            "dataSource": "External TSL Dialog (hsbDrillPattern)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dThickness",
+            "type": "PropDouble",
+            "displayName": "|Thickness Steelplate| (t)",
+            "defaultValue": "U(6)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "|Specifies the thickness of the steelplate.|"
+          },
+          {
+            "index": 1,
+            "variable": "dExtraDiam",
+            "type": "PropDouble",
+            "displayName": "|Additional Diameter Drills| (E)",
+            "defaultValue": "U(2)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "|The increment of the drill diameter in the metalpart in relation to the fastener diameter.|"
+          },
+          {
+            "index": 2,
+            "variable": "dYSlot",
+            "type": "PropDouble",
+            "displayName": "|Slot Width| (T)",
+            "defaultValue": "U(8)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "|Specifies the width of the slot.|"
+          },
+          {
+            "index": 3,
+            "variable": "dZOffset",
+            "type": "PropDouble",
+            "displayName": "|Z-Offset from Axis| (dZ)",
+            "defaultValue": "U(0)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "|The translation in Z-Direction from the axis of the beam.|"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "|Add Drill Pattern|",
+            "handler": "_kExecuteKey == '|Add Drill Pattern|'",
+            "action": "Opens selection to add existing drill pattern instances to the metalplate.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Add Contour|",
+            "handler": "_kExecuteKey == '|Add Contour|'",
+            "action": "Opens selection to add polylines or draw new points to define additional plate contour.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 7041,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates a custom steel connection plate (slotted gusset plate) that sits between a main joist and connecting beams, driven by drill patterns and optional user contours.",
+          "category": "Hardware/Connection",
+          "typicalUseCase": "Used to create fabricated steel plates for T- or cross-junctions in timber framing, specifically where a plate with slots is required to connect multiple joists to a main carrier."
+        },
+        "parameters": [
+          {
+            "name": "dThickness",
+            "technicalDefault": "U(6)",
+            "businessMeaning": "The material thickness of the steel plate.",
+            "validRange": "3 mm to 30 mm",
+            "unit": "mm",
+            "affectsOutput": "Extrudes the 2D profile of the plate along the Z-axis of the coordinate system. Thicker plates increase the physical body size but do not change the plate outline or hole positions."
+          },
+          {
+            "name": "dExtraDiam",
+            "technicalDefault": "U(2)",
+            "businessMeaning": "The clearance (oversize) added to the drill holes relative to the fastener diameter defined in the drill patterns.",
+            "validRange": "0 mm to 5 mm",
+            "unit": "mm",
+            "affectsOutput": "Enlarges the diameter of the holes drilled into the steel plate. Does not affect the size of the slots or the plate outline."
+          },
+          {
+            "name": "dYSlot",
+            "technicalDefault": "U(8)",
+            "businessMeaning": "The width of the slot cut into the timber beams. Note: This property appears unused in the plate generation logic within the provided code (it seems to influence the child drill pattern or is a legacy parameter), but conceptually it defines the slot width.",
+            "validRange": "4 mm to 20 mm (depending on bolt size)",
+            "unit": "mm",
+            "affectsOutput": "Likely affects the geometry of the `Slot` tool added to the timber beams (`bmTsl[0].addTool(slot)`), ensuring the beam is cut to accommodate the plate movement or thickness."
+          },
+          {
+            "name": "dZOffset",
+            "technicalDefault": "U(0)",
+            "businessMeaning": "The vertical offset of the steel plate relative to the axis of the main beam.",
+            "validRange": "-100 mm to 200 mm",
+            "unit": "mm",
+            "affectsOutput": "Shifts the entire plate body and the drill holes up or down along the beam's height (Z-axis). It also adjusts the position of the slots cut into the secondary beams."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing dZOffset",
+            "effect": "Moves the plate body, drill locations, and the vertical position of the slots cut into the connected beams.",
+            "cascade": [
+              "Body position",
+              "Drill locations",
+              "Slot positions on secondary beams"
+            ]
+          },
+          {
+            "trigger": "Changing dExtraDiam",
+            "effect": "Increases the diameter of the Drill tools applied to the plate body. Does not affect beam machining (slots).",
+            "cascade": [
+              "Drill diameter on plate"
+            ]
+          },
+          {
+            "trigger": "Changing dThickness",
+            "effect": "Changes the extrusion height of the plate Body. Does not affect 2D layout or hole patterns.",
+            "cascade": [
+              "Plate Body size"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Body",
+            "description": "A 3D solid representation of the steel plate. The shape is a union of rectangles derived from the drill patterns and any manually added polylines (contours).",
+            "appliedTo": "Model Space (Generated at the insertion point)"
+          },
+          {
+            "type": "Drill",
+            "description": "Cylindrical holes through the plate body at positions defined by the child 'hsbDrillPattern' instances. The diameter is the pattern diameter plus dExtraDiam.",
+            "appliedTo": "The generated Steel Plate Body"
+          },
+          {
+            "type": "Slot",
+            "description": "Rectangular cuts applied to the secondary connecting beams. The script calculates the extent of the plate and creates slots to allow the plate to pass through or sit flush against the beam.",
+            "appliedTo": "Secondary connecting Beams (selected after the main joist)"
+          }
+        ]
+      },
+      "tokens_used": 7610,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch script command (hsbSchlitzblech)",
+          "2. Display main Properties Dialog (Thickness, Extra Diameter, etc.)",
+          "3. Prompt user to select Main Joist (GenBeam)",
+          "4. Prompt user to select Secondary Beam(s) (GenBeam set)",
+          "5. Validate selection (Check if total beams >= 2)",
+          "6. Swap array indices (First secondary becomes index 0, Main joist becomes index 1)",
+          "7. Create temporary instance of child script 'hsbDrillPattern' linked to the first secondary beam",
+          "8. Display Drill Pattern Dialog to configure default settings",
+          "9. Save Drill Pattern settings to catalog '|_LastInserted|'",
+          "10. Delete temporary Drill Pattern instance",
+          "11. [System] Database Created Event: Instantiate 'hsbDrillPattern' for all selected beams using saved settings",
+          "12. Calculate Plate Geometry: Merge rectangles from patterns and additional contours",
+          "13. Generate 3D Body: Extrude merged profile by Thickness",
+          "14. Apply Machining: Drill holes in plate, cut slots in beams",
+          "15. Finalize and draw in Model Space"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Total number of selected beams < 2",
+            "path1": {
+              "name": "Valid Selection",
+              "steps": [
+                "Proceed to create temporary drill pattern instance",
+                "Open child script dialog"
+              ]
+            },
+            "path2": {
+              "name": "Insufficient Selection",
+              "steps": [
+                "Display no explicit error message (silent fail)",
+                "Erase the script instance",
+                "Stop execution"
+              ]
+            }
+          },
+          {
+            "condition": "Creation of temporary 'hsbDrillPattern' instance fails (Invalid or missing script)",
+            "path1": {
+              "name": "Script Valid",
+              "steps": [
+                "Open dialog",
+                "Save properties",
+                "Continue insertion"
+              ]
+            },
+            "path2": {
+              "name": "Script Invalid",
+              "steps": [
+                "Report Notice explaining missing 'hsbDrillPattern'",
+                "Erase the script instance",
+                "Stop execution"
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Trigger: 'Add Contour' is executed",
+            "path1": {
+              "name": "Entities Selected",
+              "steps": [
+                "User selects Polylines",
+                "Validate uniqueness",
+                "Append to _Entity list"
+              ]
+            },
+            "path2": {
+              "name": "No Entities Selected (User hits Enter)",
+              "steps": [
+                "Enter Point Picking Loop",
+                "Prompt for first point",
+                "Loop: Prompt for next vertex / Enter to close",
+                "Create new EntPLine from points",
+                "Assign to Main Beam group",
+                "Append to _Entity list"
+              ]
+            }
+          },
+          {
+            "condition": "Processing individual Drill Pattern for Plate Shape",
+            "path1": {
+              "name": "Pattern belongs to Main Joist (_Beam[1])",
+              "steps": [
+                "Create simple Rectangle profile",
+                "Do not stretch polygon beyond beam"
+              ]
+            },
+            "path2": {
+              "name": "Pattern belongs to Secondary Beam",
+              "steps": [
+                "Create Polygon profile",
+                "Intersect vertices with Main Joist surface/centerline",
+                "Extend shape to bridge connection"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam array length (_Beam) must be at least 2",
+            "errorMessage": "(None - Silent failure)",
+            "recovery": "User must re-run the script and ensure they select a main joist and at least one connecting beam."
+          },
+          {
+            "check": "Child script 'hsbDrillPattern' must exist in drawing",
+            "errorMessage": "Report Notice: 'The creation of a drill pattern instance has failed. Please ensure that the drill pattern tsl is present...'",
+            "recovery": "User must load the 'hsbDrillPattern' script into the drawing and retry."
+          },
+          {
+            "check": "Presence of at least one valid Drill Pattern instance (_Entity) during recalculation",
+            "errorMessage": "Report Message: 'No drill Pattern found. Tool will be deleted.'",
+            "recovery": "Script erases itself. User must ensure patterns are not manually deleted or check child script integrity."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Plate Dimensions",
+            "how": "OPM Properties Palette (AutoCAD Properties)",
+            "effect": "Changing 'dThickness' re-extrudes the body. Changing 'dZOffset' moves the plate vertically."
+          },
+          {
+            "action": "Modify Hole Sizes",
+            "how": "OPM Properties Palette (dExtraDiam)",
+            "effect": "Re-calculates drill diameters in the plate (Pattern Diameter + dExtraDiam)."
+          },
+          {
+            "action": "Add additional Drill Patterns",
+            "how": "Right-click Context Menu -> 'Add Drill Pattern'",
+            "effect": "User selects existing TslInst patterns; they are added to the plate profile and drilled."
+          },
+          {
+            "action": "Add Custom Contour",
+            "how": "Right-click Context Menu -> 'Add Contour'",
+            "effect": "User selects existing Polylines or draws new points. The resulting shape is merged into the steel plate profile."
+          }
+        ]
+      },
+      "tokens_used": 10282,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbSchlitzblech.mcr\n\n## Overview\nGenerates a custom steel connection plate (slotted gusset plate) that sits between a main joist and connecting beams. It automates the creation of the 3D plate body, drill holes, and slots in the timber based on selected drill patterns and user-defined contours.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script generates 3D bodies and machining in the model. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | This is a model generation script. |\n\n## Prerequisites\n- **Required Entities**: \n  - At least two GenBeams (one main joist and one or more secondary beams).\n  - The child script `hsbDrillPattern` must be loaded in the drawing.\n- **Minimum Beam Count**: 2 (1 Main + 1 Secondary).\n- **Required Settings**: \n  - A catalog entry named `|_LastInserted|` must exist in your hsbCAD environment.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbSchlitzblech.mcr`\n\n### Step 2: Select Main Joist\n```\nCommand Line: Select main joist\nAction: Click on the primary timber beam that will hold the steel plate.\n```\n\n### Step 3: Select Secondary Beams\n```\nCommand Line: Select secondary Beam(s)\nAction: Click on all connecting beams that intersect the main joist. Press Enter to finish selection.\n```\n\n### Step 4: Configure Drill Pattern\n```\nAction: The script automatically launches the 'hsbDrillPattern' dialog.\nAction: Adjust the hole settings (diameter, spacing, etc.) for the connection and click OK.\n```\n*Note: The steel plate is now generated based on these patterns.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Thickness Steelplate** (t) | Number | 6 mm | Specifies the material thickness of the steel plate. |\n| **Additional Diameter Drills** (E) | Number | 2 mm | The clearance added to the drill holes (Drill Diameter = Fastener Diameter + E). |\n| **Slot Width** (T) | Number | 8 mm | Defines the width of the slot cut into the timber beams. |\n| **Z-Offset from Axis** (dZ) | Number | 0 mm | Moves the plate vertically (up or down) relative to the beam axis. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Add Drill Pattern** | Allows you to select existing drill pattern instances in the model to be included in this plate. |\n| **Add Contour** | Adds custom shape to the plate. You can select existing polylines or manually draw points to define a new contour for the steel plate. |\n\n## Settings Files\n- **Catalog Entry**: `|_LastInserted|`\n- **Purpose**: Stores the default settings used when creating temporary drill pattern instances during insertion.\n\n## Tips\n- **Adjusting Vertical Position**: Use the **Z-Offset** property in the Properties Palette to move the plate up or down after insertion without deleting it.\n- **Custom Shapes**: If the default rectangular plate isn't sufficient, use the **Add Contour** right-click option. You can pick existing polylines or draw points to create complex plate shapes (e.g., notched plates).\n- **Hole Sizes**: To change hole sizes without re-inserting, modify the **Additional Diameter Drills** property. This adds clearance to the existing hole patterns.\n- **Troubleshooting**: If the script disappears immediately after insertion, ensure the `hsbDrillPattern` script is loaded in the drawing.\n\n## FAQ\n- **Q: Why did the script delete itself after I selected the beams?**\n  - A: This usually happens if the required child script `hsbDrillPattern` is missing or if the catalog entry `|_LastInserted|` cannot be found. Ensure these are available in your project.\n- **Q: Can I add more holes after the plate is created?**\n  - A: Yes. Use the **Add Drill Pattern** option in the right-click context menu to select additional existing patterns.\n- **Q: How do I make the plate wider or taller?**\n  - A: The plate size is driven by the drill patterns and contours. You can add a contour via the right-click menu to extend the plate boundaries, or adjust the drill pattern settings."
+      },
+      "tokens_used": 6327,
+      "error": null
+    }
+  }
+}

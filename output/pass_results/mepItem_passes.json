@@ -1,0 +1,251 @@
+{
+  "filename": "mepItem.mcr",
+  "status": "completed",
+  "total_tokens": 37298,
+  "processing_time": 275.78132367134094,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7730,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No ShopDrawing specific patterns (sd_*, Multipage*, #Type E + _Entity[], _Viewport) found. The script reads map data (_Map) to generate geometry (Body) and display representation in the model. Comments explicitly mention creation during model import in ACA."
+        },
+        "prerequisites": {
+          "requiredEntities": [],
+          "minimumBeams": 0,
+          "requiredSpace": "This script is designed to be instantiated automatically by the 'Revit MEP Converter' extension during model import. It expects specific map entries (mepdata, source\\CoordSys, source\\CsgItems) populated by the import process.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4093,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "detailLevel",
+            "type": "PropString",
+            "displayName": "Detail level",
+            "defaultValue": "High detail",
+            "inputType": "dropdown",
+            "options": [
+              "High detail",
+              "Medium detail",
+              "Low detail"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "visualStyle",
+            "type": "PropString",
+            "displayName": "Visual style invalid body",
+            "defaultValue": "Solid",
+            "inputType": "dropdown",
+            "options": [
+              "Wireframe",
+              "Shell",
+              "Solid"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6369,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Visualizes imported MEP (Mechanical, Electrical, Plumbing) items from Revit or IFC sources to allow for clash detection and spatial coordination within the timber model.",
+          "category": "ClashDetection/Representation",
+          "typicalUseCase": "Automatically executed during model import to display HVAC ducts, pipes, and equipment in relation to timber beams and walls."
+        },
+        "parameters": [
+          {
+            "name": "detailLevel",
+            "technicalDefault": "High detail",
+            "businessMeaning": "Controls the complexity of the 3D geometry generated for the MEP item. It balances visual accuracy against model performance.",
+            "validRange": "High detail, Medium detail, Low detail",
+            "unit": "Selection List",
+            "affectsOutput": "Determines geometry generation: 'High detail' attempts to render the exact imported solid body; 'Medium detail' approximates geometry using parametric tubes or rectangular extrusions along centerlines; 'Low detail' renders only the centerline polylines."
+          },
+          {
+            "name": "visualStyle",
+            "technicalDefault": "Solid",
+            "businessMeaning": "Defines the fallback visualization method used when the script cannot generate a valid 3D solid body from the imported source data.",
+            "validRange": "Wireframe, Shell, Solid",
+            "unit": "Selection List",
+            "affectsOutput": "Alters the display of the 'High detail' fallback geometry: renders as line edges (Wireframe), hollow surfaces (Shell), or opaque filled faces (Solid)."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "detailLevel is set to 'High detail' AND the imported source data cannot form a valid 3D Body",
+            "effect": "The script switches to a fallback mode where it draws the object's faces using the selected visualStyle.",
+            "cascade": [
+              "visualStyle"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Visual Representation (Body/PLine)",
+            "description": "Creates a 3D solid, simplified extruded shapes, or lines to represent the foreign MEP object within the hsbCAD environment.",
+            "appliedTo": "N/A (Standalone instance)"
+          }
+        ]
+      },
+      "tokens_used": 6735,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution triggered (Insert or Recalc)",
+          "Check '_bOnDbCreated' flag",
+          "[True] Load 'executeKey' and 'catalog' from 'mepdata' map",
+          "[True] Check if insertion point is at World Origin ('_Pt0 == _PtW')",
+          "[True] Read coordinate system ('PtOrg', vecX/Y/Z) from 'source\\\\CoordSys' and update script position",
+          "Initialize Display object",
+          "Check 'detailLevel' property",
+          "Branch: Attempt High Detail Visualization",
+          "- Try to get Body from 'mepdata\\\\SimpleBody'",
+          "- [Fail] Try to get Body from 'source\\\\SimpleBody' (IFC)",
+          "- [Fail] Try to construct Body from 'source\\\\CsgItems' (Cylinders/Quaders)",
+          "- [Fail] Try to draw Face Loops from 'source\\\\SimpleBody' using 'visualStyle'",
+          "- [Fail] Try to draw Face Loops from 'mepdata\\\\SimpleBody' using 'visualStyle'",
+          "Branch: Attempt Medium/Low Detail (or Fallback)",
+          "- Retrieve centerline data from 'mepdata\\\\solidlines[]'",
+          "- [Medium/High Fail] Construct extruded Tubes/Rectangles along centerlines",
+          "- [Low/Medium Fail] Draw centerlines as Polylines",
+          "Final Fallback: If no geometry visualized, draw text 'MEP' at origin",
+          "Generate Dimension Request map using Connector data from 'MepData'"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Initial creation event",
+            "path1": {
+              "name": "New Instance",
+              "steps": [
+                "Read executeKey",
+                "Read catalog",
+                "Update Position/Orientation from Map"
+              ]
+            },
+            "path2": {
+              "name": "Existing Instance (Update)",
+              "steps": [
+                "Skip initialization",
+                "Proceed to visualization"
+              ]
+            }
+          },
+          {
+            "condition": "Detail Level Property",
+            "path1": {
+              "name": "High Detail",
+              "steps": [
+                "Attempt to render imported 3D Solids",
+                "If solids fail, attempt CSG construction",
+                "If CSG fails, render Planar Faces (Wireframe/Shell/Solid)",
+                "If all fail, fallback to Centerline logic (Medium/Low)"
+              ]
+            },
+            "path2": {
+              "name": "Medium Detail",
+              "steps": [
+                "Read centerlines",
+                "Construct parametric geometry (Tubes/Rectangles) along centerlines"
+              ]
+            },
+            "path3": {
+              "name": "Low Detail",
+              "steps": [
+                "Read centerlines",
+                "Draw Polylines only"
+              ]
+            }
+          },
+          {
+            "condition": "Solid Line Attributes (Centerline Geometry)",
+            "path1": {
+              "name": "Circular Duct/Pipe",
+              "steps": [
+                "Check 'Radius' > 0",
+                "Create PLine circle",
+                "Extrude along centerline"
+              ]
+            },
+            "path2": {
+              "name": "Rectangular Duct",
+              "steps": [
+                "Check 'Width' > 0 and 'Height' > 0",
+                "Create PLine rectangle",
+                "Extrude along centerline"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Availability of Map Data ('mepdata', 'source\\\\CoordSys')",
+            "errorMessage": "None (Script is designed to handle missing data gracefully)",
+            "recovery": "Falls back to text representation 'MEP' if geometry data is missing."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Detail Level",
+            "how": "OPM (Properties Palette) - 'Detail level' dropdown",
+            "effect": "Swaps visualization between Exact Solids, Parametric Approximations, and Centerlines."
+          },
+          {
+            "action": "Change Visual Style (Fallback)",
+            "how": "OPM (Properties Palette) - 'Visual style invalid body' dropdown",
+            "effect": "Changes how face loops are rendered when High Detail solids cannot be generated (Wireframe, Shell, Solid)."
+          },
+          {
+            "action": "Move Script",
+            "how": "Grip Edit (Drag _Pt0)",
+            "effect": "Moves the entire MEP representation relative to the model."
+          }
+        ]
+      },
+      "tokens_used": 7965,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# mepItem.mcr\n\n## Overview\nThis script visualizes MEP (Mechanical, Electrical, Plumbing) items imported from Revit or IFC sources. It is primarily used for clash detection and spatial coordination within the hsbCAD timber model by displaying HVAC ducts, pipes, and equipment.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This is where the script generates 3D geometry for the imported items. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Process**: This script is designed to be instantiated automatically by the **Revit MEP Converter** extension during the model import process.\n- **Required Data**: The script expects specific internal map data (`mepdata`, `CoordSys`) provided by the import process to generate the correct geometry and position.\n\n## Usage Steps\n\n### Step 1: Automatic Launch\n- **Process**: Run the \"Revit MEP Converter\" to import model data.\n- **Action**: The script will automatically insert instances for every detected MEP item found in the source file.\n\n### Step 2: Adjust Appearance (Properties)\n- **Process**: Select an imported MEP item in the model.\n- **Action**: Open the **Properties Palette** (Ctrl+1) to adjust how the object is displayed.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Detail level | Dropdown | High detail | Controls the complexity of the 3D geometry. **High detail** attempts to render the exact imported solid. **Medium detail** simplifies shapes to tubes or boxes along centerlines. **Low detail** renders only centerlines. |\n| Visual style invalid body | Dropdown | Solid | Defines how the object looks if the exact solid cannot be generated (Fallback mode). Options are **Solid**, **Shell** (hollow surfaces), or **Wireframe** (lines only). |\n\n## Right-Click Menu Options\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu options are defined for this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script operates on map data generated by the import process and does not require external XML settings files.\n\n## Tips\n- **Performance Optimization**: If your model becomes sluggish after importing a large number of MEP items, select them all and change the **Detail level** property to \"Medium detail\" or \"Low detail\". This replaces complex solids with simpler geometry.\n- **Missing Geometry**: If an imported item only displays as the text \"MEP\", it means the import data did not contain sufficient geometric information (centerlines or bodies) for the script to visualize.\n\n## FAQ\n- **Q: Can I insert this script manually?**\n  **A:** While technically possible via `TSLINSERT`, manual insertion will not produce useful geometry because the script relies on map data generated during the import process to define the shape and size of the MEP object.\n\n- **Q: Why do some ducts look like simple boxes instead of complex shapes?**\n  **A:** The **Detail level** is likely set to \"Medium detail.\" Change the property to \"High detail\" to attempt to display the exact original geometry. If it remains a box, the original complex data may not have been available in the import.\n\n- **Q: What happens if the imported solid is invalid?**\n  **A:** The script attempts to repair or redraw it. Depending on your **Visual style invalid body** setting, it will draw the faces as a solid, a hollow shell, or a wireframe."
+      },
+      "tokens_used": 4406,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,205 @@
+{
+  "filename": "hsb_LockBeams.mcr",
+  "status": "completed",
+  "total_tokens": 13751,
+  "processing_time": 167.8459026813507,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2664,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses PrEntity to select entities and processes them as GenBeam objects. It modifies GenBeam properties (setPanhand, setColor) and accesses their associated Element. There are no references to sd_*, Viewport, or _Entity[] which are indicative of Paper Space or Shop Drawing environments. The script operates directly on model entities and self-terminates (eraseInstance)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1191,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select a set of entities|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 1672,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A utility script that visually locks or marks a selection of timber beams by assigning them a specific color and synchronizing their pan data to their element properties.",
+          "category": "Utility",
+          "typicalUseCase": "Used by a detailer to mark a specific set of beams (e.g., those that are finalized or checked) to distinguish them from other active design elements in the model."
+        },
+        "parameters": [
+          {
+            "name": "ssE (Selection Set)",
+            "technicalDefault": "Entity()",
+            "businessMeaning": "The group of timber beams selected by the user to be marked as 'locked'.",
+            "validRange": "1 to N (any number of valid GenBeams)",
+            "unit": "count",
+            "affectsOutput": "Determines exactly which beams in the model have their color changed to index 233 and have their Pan properties updated."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Visual Attribute",
+            "description": "Changes the color of the selected GenBeams to color index 233 and synchronizes their pan data with the associated Element.",
+            "appliedTo": "GenBeams selected during the PrEntity command."
+          }
+        ]
+      },
+      "tokens_used": 1735,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched via command or menu",
+          "Check if running in insert mode (_bOnInsert)",
+          "Verify insertCycleCount is not greater than 1",
+          "Prompt user to select a set of entities (PrEntity)",
+          "User completes selection (go)",
+          "Iterate through selected entities",
+          "Cast entity to GenBeam and validate validity",
+          "Store valid GenBeams in global _GenBeam array",
+          "Terminate script instance (return)",
+          "TSL reloads script for second cycle execution",
+          "Iterate through global _GenBeam array",
+          "Retrieve associated Element for each GenBeam",
+          "Set GenBeam pan data (setPanhand) to match Element",
+          "Set GenBeam color to index 233",
+          "Erase script instance",
+          "Script execution finished"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Check (insertCycleCount > 1)",
+            "path1": {
+              "name": "Cycle 1 (Selection Phase)",
+              "steps": [
+                "Execute PrEntity prompt",
+                "Process selection set",
+                "Store beams in _GenBeam",
+                "Return to trigger recalc"
+              ]
+            },
+            "path2": {
+              "name": "Cycle 2 (Execution Phase)",
+              "steps": [
+                "Loop through stored _GenBeam",
+                "Update attributes (Panhand, Color)",
+                "Erase instance"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Type Validity (gbm.bIsValid())",
+            "path1": {
+              "name": "Valid GenBeam",
+              "steps": [
+                "Add entity to _GenBeam array"
+              ]
+            },
+            "path2": {
+              "name": "Invalid/Non-GenBeam Entity",
+              "steps": [
+                "Skip entity"
+              ]
+            }
+          },
+          {
+            "condition": "User Selection (PrEntity.go())",
+            "path1": {
+              "name": "Selection Made",
+              "steps": [
+                "Retrieve set from PrEntity",
+                "Process list"
+              ]
+            },
+            "path2": {
+              "name": "Selection Cancelled",
+              "steps": [
+                "Ent array remains empty",
+                "Loop skipped",
+                "Script effectively does nothing",
+                "Erases instance"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Is the selected entity a valid GenBeam?",
+            "errorMessage": "None (Silent fail)",
+            "recovery": "Non-GenBeam entities are silently ignored during the iteration loop."
+          },
+          {
+            "check": "Is this the first execution cycle?",
+            "errorMessage": "None",
+            "recovery": "If cycle count > 1, the script self-erases immediately to prevent recursion errors."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 2650,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_LockBeams.mcr\n\n## Overview\nThis script visually marks a selection of timber beams as \"locked\" or finalized by changing their color to a specific index and synchronizing their pan data with their associated elements. It is useful for distinguishing completed design work from active modifications.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D model elements. |\n| Paper Space | No | Not designed for layout or detailing views. |\n| Shop Drawing | No | Not intended for manufacturing drawings. |\n\n## Prerequisites\n- **Required Entities**: GenBeam (Timber beams) must exist in the model.\n- **Minimum Beam Count**: 1 (You must select at least one valid beam for the script to take effect).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse and select the file `hsb_LockBeams.mcr`.\n\n### Step 2: Select Beams\nCommand Line: `Select a set of entities`\nAction: Click on the timber beams (GenBeams) you wish to lock or mark. You can select multiple beams. Once your selection is complete, press `Enter` or right-click and select \"Go\".\n\n### Step 3: Processing\nAction: The script will automatically process the selected beams. It will change their color to Index 233 and update their properties. The script instance will then remove itself from the drawing automatically.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not create a persistent instance or expose properties to the Properties Palette. It runs once and terminates. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | No custom context menu options are added by this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Color Visibility**: Ensure your AutoCAD visual style or layer settings allow you to see the specific \"By Object\" color, otherwise the change to Color Index 233 might not be visible.\n- **Validation**: If you select non-beam entities (like lines or text), the script will ignore them and only process valid timber beams.\n- **Workflow**: This is a \"fire and forget\" tool. Once you select the beams, the script applies the changes and closes immediately; you do not need to manually delete the script instance.\n\n## FAQ\n- **Q: What color index is used?**\n  A: The script sets the selected beams to Color Index 233.\n- **Q: I selected beams but nothing happened.**\n  A: Ensure you selected valid `GenBeam` entities and not other objects. Also, check if your layer colors are overriding entity colors.\n- **Q: Can I undo this action?**\n  A: Yes, you can use the standard AutoCAD `UNDO` command to revert the color and property changes if needed."
+      },
+      "tokens_used": 3839,
+      "error": null
+    }
+  }
+}

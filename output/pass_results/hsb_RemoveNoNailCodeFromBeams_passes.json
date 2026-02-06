@@ -1,0 +1,265 @@
+{
+  "filename": "hsb_RemoveNoNailCodeFromBeams.mcr",
+  "status": "completed",
+  "total_tokens": 22074,
+  "processing_time": 379.58569073677063,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "19.09.2013",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2907,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Uses PrEntity to select ElementWallSF in the model space. Directly manipulates Beam properties (setBeamCode) on 3D objects retrieved via el.beam(). Erases itself (eraseInstance) after execution, typical of one-time command scripts. No sd_ prefixes, _Sheet usage, or #Type E constructs found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3116,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select one or More Elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3772,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically sets the 'Nailing Code' (Position 9 in the beam code) to 'YES' for all vertical studs within selected wall elements, ensuring they are marked for nailing.",
+          "category": "Framing",
+          "typicalUseCase": "Used during the design phase to ensure specific vertical members in a wall assembly are identified as requiring nailing hardware or processing, likely for nail plates or sheathing attachment schedules."
+        },
+        "parameters": [
+          {
+            "name": "ssE",
+            "technicalDefault": "User Selection (ElementWallSF)",
+            "businessMeaning": "The selection set of wall elements to be processed.",
+            "validRange": "1 or more existing Wall Elements",
+            "unit": "Count",
+            "affectsOutput": "Determines the scope of the script; only vertical beams within these selected walls will have their codes updated."
+          },
+          {
+            "name": "sNewBeamCode (Position 8/9)",
+            "technicalDefault": "YES",
+            "businessMeaning": "The specific flag in the beam coding system (Standard hsbCAD Beam Code position 9) that dictates whether a nailing process is required.",
+            "validRange": "YES (Fixed)",
+            "unit": "String",
+            "affectsOutput": "Updates the beam's processing code. This likely triggers downstream checks for nail plates, connector hardware, or export filters for manufacturing data."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects Elements via ssE",
+            "effect": "Script iterates through vertical beams within those elements and forces specific string tokens in the beam code.",
+            "cascade": [
+              "bm.beamCode()",
+              "bm.material()",
+              "bm.grade()",
+              "bm.information()",
+              "bm.name()"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "BeamCode Property Update",
+            "description": "Modifies the alphanumeric BeamCode string of vertical studs/walls by setting the 9th token to 'YES'.",
+            "appliedTo": "Vertical Beams (Studs) found within the selected Wall Elements."
+          }
+        ]
+      },
+      "tokens_used": 2842,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Launch: User executes script or instance is inserted.",
+          "2. Cycle Check: Script verifies if insertCycleCount > 1 to prevent re-runs.",
+          "3. User Prompt: 'PrEntity' dialog prompts user to select one or more Wall Elements (ElementWallSF).",
+          "4. Storage: Selected elements are stored in the internal _Element array.",
+          "5. Validation: Script checks if any elements were selected and if they are valid.",
+          "6. Element Loop: Script iterates through each selected Wall Element.",
+          "7. Geometry Retrieval: Retrieves Coordinate System and all beams associated with the current element.",
+          "8. Filtering: Filters beam array to isolate beams perpendicular to the wall's X-axis (Vertical Studs).",
+          "9. Beam Loop: Iterates through filtered vertical beams.",
+          "10. Code Parsing: Tokenizes the existing beam code (up to 13 tokens).",
+          "11. Code Reconstruction: Builds new string; forces Token 8 (Nailing Code) to 'YES' and populates empty tokens with properties (Material, Grade, Info, Name).",
+          "12. Update: Applies the newly constructed beam code to the beam entity.",
+          "13. Completion: Script instance erases itself (self-destructs) after processing all elements."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count",
+            "path1": {
+              "name": "Re-run Detected",
+              "steps": [
+                "Check insertCycleCount > 1",
+                "Execute eraseInstance()",
+                "Exit script immediately"
+              ]
+            },
+            "path2": {
+              "name": "First Run",
+              "steps": [
+                "Check insertCycleCount == 1",
+                "Proceed to Selection Prompt"
+              ]
+            }
+          },
+          {
+            "condition": "User Selection Input",
+            "path1": {
+              "name": "Valid Selection",
+              "steps": [
+                "User selects Elements and confirms",
+                "Elements appended to _Element array",
+                "Proceed to processing logic"
+              ]
+            },
+            "path2": {
+              "name": "Empty/Invalid Selection",
+              "steps": [
+                "User cancels or selects nothing",
+                "Logic checks _Element.length() == 0",
+                "Execute eraseInstance()",
+                "Exit"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Code Token Status",
+            "path1": {
+              "name": "Existing Token",
+              "steps": [
+                "Token exists at current index",
+                "If index is 8 (Nailing Code), overwrite with 'YES'",
+                "Otherwise, append existing token"
+              ]
+            },
+            "path2": {
+              "name": "Empty Token",
+              "steps": [
+                "Token is empty string",
+                "Check specific indices for defaults (1=Mat, 9=Grade, 10=Info, 11=Name)",
+                "Retrieve value from beam properties",
+                "If index is 8, append 'YES'",
+                "Append value or nothing"
+              ]
+            }
+          },
+          {
+            "condition": "Vertical Beams Found",
+            "path1": {
+              "name": "Beams Present",
+              "steps": [
+                "bmVertical.length > 0",
+                "Iterate through beams",
+                "Update beam codes"
+              ]
+            },
+            "path2": {
+              "name": "No Beams",
+              "steps": [
+                "bmVertical.length == 0",
+                "Execute 'continue' statement",
+                "Skip to next Element"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Validity",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script calls eraseInstance() and terminates if el.bIsValid() returns false."
+          },
+          {
+            "check": "Selection Set Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script checks if _Element.length() is 0 immediately after insertion. If 0, it erases itself."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Script Self-Destruction",
+            "how": "Automatic Internal Logic",
+            "effect": "The script instance removes itself from the drawing immediately after updating the beam properties. No user interaction is required or possible after the update."
+          },
+          {
+            "action": "Manual Beam Property Edit",
+            "how": "AutoCAD Properties Palette",
+            "effect": "User can manually change the updated BeamCode or any other properties of the modified beams, as the script instance is gone."
+          }
+        ]
+      },
+      "tokens_used": 5310,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_RemoveNoNailCodeFromBeams.mcr\n\n## Overview\nThis script automatically sets the \"Nailing Code\" (Beam Code position 9) to \"YES\" for all vertical studs within selected wall elements. It is used to ensure specific vertical members are marked for nailing hardware or sheathing attachment schedules.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in the model where wall elements exist. |\n| Paper Space | No | Not applicable. |\n| Shop Drawing | No | This script works on 3D model elements, not 2D drawings. |\n\n## Prerequisites\n- **Required entities**: Wall Elements (`ElementWallSF`) containing vertical beams/studs.\n- **Minimum beam count**: 0 (The script processes any vertical beams found within the selected elements).\n- **Required settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_RemoveNoNailCodeFromBeams.mcr`\n\n### Step 2: Select Wall Elements\n```\nCommand Line: Select one or More Elements\nAction: Click on the desired Wall Elements in the drawing and press Enter to confirm.\n```\n*Note: The script will automatically process all vertical beams within the selected elements and then delete itself.*\n\n## Properties Panel Parameters\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not use persistent properties. It executes immediately upon insertion and does not remain in the drawing. |\n\n## Right-Click Menu Options\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | This script does not add options to the right-click context menu. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Automatic Cleanup**: The script instance is designed to erase itself immediately after processing. Do not be alarmed if it disappears from the drawing; this is normal behavior.\n- **Vertical Only**: This tool specifically targets beams that are perpendicular to the wall's local X-axis (typically vertical studs). Horizontal plates or other members within the wall will not be modified.\n- **Verification**: After running the script, you can verify the changes by selecting a stud and checking the Beam Code property in the Properties Palette (ensure the 9th segment/token is set to \"YES\").\n\n## FAQ\n- **Q: Why did the script disappear after I selected the elements?**\n  **A:** This is a \"command\" script designed for one-time use. It automatically removes itself from the drawing after completing its task to keep your project clean.\n  \n- **Q: Does this work on single beams or only walls?**\n  **A:** The prompt asks you to select Elements (`ElementWallSF`). You must select the main wall assembly, not individual beams, for the script to function correctly.\n\n- **Q: Will this overwrite my existing beam codes?**\n  **A:** It will specifically overwrite the Nailing Code position (Position 9) to \"YES\". Other parts of the beam code (Material, Grade, etc.) are preserved or filled in if empty."
+      },
+      "tokens_used": 4127,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,280 @@
+{
+  "filename": "hsb_SIP-HeaderConfiguration.mcr",
+  "status": "completed",
+  "total_tokens": 29475,
+  "processing_time": 173.7596709728241,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "28.08.2012",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5321,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select ElementWall(). Iterates through _Element array to manipulate 3D structural components (Beam, Sip, Opening). No usage of _Viewport, Sheet entities, or 'sd_' prefixes."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall",
+            "Beam",
+            "Sip",
+            "Opening"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "hsbCAD Model Space containing wall elements with SIPs, beams, and openings.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4074,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select one or More Elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4217,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically configures the framing around openings in SIP (Structural Insulated Panel) walls by resizing trimmer/king studs to the SIP thickness and splitting top/bottom plates to accommodate them.",
+          "category": "Framing/Automation",
+          "typicalUseCase": "Used during the detailing phase of SIP construction to ensure studs adjacent to window/door openings provide full nailing surface (matching SIP thickness) and to automatically resolve the joinery between these studs and the wall plates."
+        },
+        "parameters": [
+          {
+            "name": "Element Selection (ssE)",
+            "technicalDefault": "null",
+            "businessMeaning": "The wall elements containing the SIP structure and openings that require header configuration.",
+            "validRange": "Any valid ElementWall entity in the current model that contains Beams and Sip entities.",
+            "unit": "Entity",
+            "affectsOutput": "Determines the scope of the script. Only beams (studs/plates) belonging to the selected wall elements are analyzed and modified."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Beam Modification (Width)",
+            "description": "Sets the width (thickness) of trimmer and king studs to match the full thickness of the SIP panel.",
+            "appliedTo": "Beams of type _kTrimmerStud, _kPanelKingStud, _kPanelTrimmerStud located adjacent to wall openings."
+          },
+          {
+            "type": "Static Cut",
+            "description": "Adds cuts to the modified studs to clear intersecting top and bottom plates.",
+            "appliedTo": "Trimmer and king studs adjacent to wall openings."
+          },
+          {
+            "type": "Beam Split (Topology)",
+            "description": "Splits top and bottom plates at the boundaries of the configured stud groups.",
+            "appliedTo": "Beams of type _kSFTopPlate, _kSFTopPlate, _kSFBottomPlate, _kPanelBottomPlate."
+          }
+        ]
+      },
+      "tokens_used": 5618,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Insertion / Execution Triggered",
+          "2. Check if insertCycleCount > 1",
+          "3. [Conditional] Erase duplicate instance if cycle > 1 (returns)",
+          "4. Prompt user to select one or more ElementWall entities (PrEntity)",
+          "5. Append selected elements to _Element array",
+          "6. Exit Insertion Phase (returns)",
+          "7. [Post-Insertion] Iterate through each selected Element",
+          "8. [Validation] Skip Element if invalid, or if it contains 0 Beams or 0 Sips",
+          "9. Extract Wall Coordinate System (Origin, X, Y, Z vectors) and SIP Thickness",
+          "10. Categorize Wall Beams into groups: TrimKing, BottomPlate, TopPlate based on type properties",
+          "11. Iterate through all Openings found in the Element",
+          "12. Calculate Opening Center Point and project it to the SIP center plane",
+          "13. Identify adjacent studs on the left side of the opening using ray intersection (-vx direction)",
+          "14. Group identified studs into a continuous 'bank' based on proximity",
+          "15. [Conditional] Check if Stud Bank contains more than 1 stud",
+          "16. Iterate through each stud in the bank (excluding the last one)",
+          "17. Update Stud Width (D in Z) to match full SIP Thickness",
+          "18. Check for T-connection with Top Plate",
+          "19. [Conditional] If Top Plate intersection exists: Calculate Split Points and add Static Cut to stud",
+          "20. Check for T-connection with Bottom Plate",
+          "21. [Conditional] If Bottom Plate intersection exists: Calculate Split Points and add Static Cut to stud",
+          "22. [Conditional] If Top Plate intersections found: Identify intersecting Top Plate beams and Split them at calculated points",
+          "23. [Conditional] If Bottom Plate intersections found: Identify intersecting Bottom Plate beams and Split them at calculated points",
+          "24. Repeat opening processing for remaining openings/elements",
+          "25. Erase Script Instance (return)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle Check",
+            "path1": {
+              "name": "Subsequent Cycle",
+              "steps": [
+                "Erase Instance",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "First Cycle",
+              "steps": [
+                "Execute Selection Prompt",
+                "Process Elements"
+              ]
+            }
+          },
+          {
+            "condition": "Element Content Validation (bmAll.length or spAll.length == 0)",
+            "path1": {
+              "name": "Invalid/Empty Element",
+              "steps": [
+                "Skip to next Element in loop"
+              ]
+            },
+            "path2": {
+              "name": "Valid Element",
+              "steps": [
+                "Calculate Thickness",
+                "Categorize Beams",
+                "Process Openings"
+              ]
+            }
+          },
+          {
+            "condition": "Number of studs in Left Bank (bmLeft.length > 1)",
+            "path1": {
+              "name": "Single Stud",
+              "steps": [
+                "Skip modification logic for this bank"
+              ]
+            },
+            "path2": {
+              "name": "Stud Bank (>=2 studs)",
+              "steps": [
+                "Resize studs",
+                "Detect Plate intersections",
+                "Apply Cuts",
+                "Split Plates"
+              ]
+            }
+          },
+          {
+            "condition": "Top Plate Intersection (bmIntersectTop.length > 0)",
+            "path1": {
+              "name": "No Intersection",
+              "steps": [
+                "Continue to Bottom Plate check"
+              ]
+            },
+            "path2": {
+              "name": "Intersection Found",
+              "steps": [
+                "Record Split Points",
+                "Apply Static Cut to Stud"
+              ]
+            }
+          },
+          {
+            "condition": "Top Plate Split Flag (nTL == false)",
+            "path1": {
+              "name": "No Top Plate Splits Required",
+              "steps": [
+                "Skip Top Plate splitting loop"
+              ]
+            },
+            "path2": {
+              "name": "Splits Required",
+              "steps": [
+                "Identify beams crossing split zone",
+                "Split beams based on direction"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Validity (el.bIsValid())",
+            "errorMessage": "None (Silent Skip)",
+            "recovery": "Ensure valid wall elements are selected."
+          },
+          {
+            "check": "Existence of Beams and SIPs in Element",
+            "errorMessage": "None (Silent Skip)",
+            "recovery": "Select wall elements that contain both structural beams and SIP panels."
+          },
+          {
+            "check": "Beam Classification",
+            "errorMessage": "None (Implicit)",
+            "recovery": "Ensure wall elements utilize standard hsbCAD beam naming conventions (_kTrimmerStud, _kSFTopPlate, etc.)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Geometry Modification",
+            "how": "Script Execution (Manual Trigger)",
+            "effect": "Updates stud widths and modifies plate topology. No persistent instance remains for interactive editing via grips/properties after execution."
+          },
+          {
+            "action": "Recalculation",
+            "how": "Right-click Recalculate / Context Menu",
+            "effect": "Re-runs the script logic based on the original selection, re-applying the stud resizing and plate splitting logic."
+          }
+        ]
+      },
+      "tokens_used": 5559,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SIP-HeaderConfiguration.mcr\n\n## Overview\nThis script automatically configures the framing around openings in SIP (Structural Insulated Panel) walls. It resizes trimmer and king studs to match the full thickness of the SIP panel and splits top/bottom plates to accommodate the modified studs.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D wall elements. |\n| Paper Space | No | Not applicable for 2D layouts or sheet views. |\n| Shop Drawing | No | Does not generate views or dimensions. |\n\n## Prerequisites\n- **Required Entities**: `ElementWall` containing `Beam`, `Sip`, and `Opening` entities.\n- **Minimum Beams**: The selected wall element must contain beams (studs/plates) and SIPs to be processed.\n- **Required Settings**: None.\n- **Wall Setup**: Walls must use standard hsbCAD beam naming conventions (e.g., `_kTrimmerStud`, `_kSFTopPlate`) for correct identification.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or via a custom toolbar icon mapped to this script) → Select `hsb_SIP-HeaderConfiguration.mcr`.\n\n### Step 2: Select Wall Elements\n```\nCommand Line: Select one or More Elements\nAction: Click on the wall elements (ElementWall) that contain the openings you wish to configure. Press Enter to confirm selection.\n```\n\n### Step 3: Execution\n- The script will automatically analyze the selected elements.\n- It identifies openings and the adjacent stud banks (specifically groups of 2 or more studs on the left side of an opening).\n- It resizes the studs to the SIP thickness and splits the top/bottom plates.\n- The script instance will erase itself automatically after processing.\n\n## Properties Panel Parameters\nThis script does not expose any user-editable properties in the AutoCAD Properties Palette. All logic is based on the geometry of the selected elements.\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Re-runs the configuration logic on the originally selected elements. Use this if the wall geometry changes or if you need to re-apply the framing adjustments. |\n\n## Settings Files\nNone required.\n\n## Tips\n- **Stud Banks**: The script specifically looks for \"banks\" of studs (groups of 2 or more) adjacent to openings. Single isolated studs may not be processed.\n- **Plate Splitting**: The script automatically splits top and bottom plates where they intersect the resized studs. Ensure your wall cleanup routine accounts for these split entities.\n- **Non-Destructive Warning**: This script modifies beam widths and splits beam topology. It is recommended to run this on a copy of the design or verify the results before generating production drawings.\n\n## FAQ\n- **Q: Why were some studs not resized?**\n  **A:** The script logic specifically targets continuous groups of 2 or more studs on the left side of an opening. Single trimmer/king studs or studs on the right side may be skipped depending on the specific wall logic.\n- **Q: Can I undo the changes?**\n  **A:** Yes, use the standard AutoCAD `UNDO` command immediately after running the script if the results are not as expected.\n- **Q: Does this work on standard timber framing or only SIPs?**\n  **A:** This script is designed specifically for SIP walls (`Sip` entities) as it calculates stud width based on the SIP panel thickness."
+      },
+      "tokens_used": 4686,
+      "error": null
+    }
+  }
+}

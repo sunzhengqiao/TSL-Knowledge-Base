@@ -1,0 +1,358 @@
+{
+  "filename": "SimpsonStrongTieEL.mcr",
+  "status": "completed",
+  "total_tokens": 54799,
+  "processing_time": 399.0647747516632,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9792,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses standard Model Space entities and operations: 'Beam' selection, 'Cut' creation, 'Body' generation, 'addTool' to modify beam geometry, and 'HardWrComp' for hardware lists. No 'sd_' prefix, 'Multipage' class, or '_Viewport' interaction is present. It explicitly checks '_Beam.length()' and manipulates 3D coordinates."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7488,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10493,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Inserts a Simpson Strong-Tie EL top connector (BMF Topverbinder) to join two beams, generating the 3D metal plate, required timber millings/cuts, and hardware list entries.",
+          "category": "Hardware",
+          "typicalUseCase": "Connecting a joist (male beam) perpendicular to a main beam (female beam) using a specific aluminum bracket (EL30-EL100)."
+        },
+        "parameters": [
+          {
+            "name": "sType",
+            "technicalDefault": "EL30",
+            "businessMeaning": "Selects the specific size/model of the Simpson Strong-Tie connector (EL30, EL40, EL60, EL80, EL100).",
+            "validRange": "EL30, EL40, EL60, EL80, EL100",
+            "unit": "Model",
+            "affectsOutput": "Determines the width of the metal plate, the depth of timber cuts, and the quantity of screws required (derived from lookup arrays)."
+          },
+          {
+            "name": "sConType",
+            "technicalDefault": "Milled in female beam",
+            "businessMeaning": "Specifies the installation method: whether the connector is recessed (milled) into the female or male beam, mounted with a visible gap, or attached to non-timber elements (Concrete, Steel, Element).",
+            "validRange": "Milled in female beam, Milled in male beam, visible gap, concrete, Steel, Element, L-bearing",
+            "unit": "Enumeration",
+            "affectsOutput": "Switches the logic for generating 'Cut' or 'BeamCut' operations on the beams. Determines if the metal plate is physically embedded or surface-mounted."
+          },
+          {
+            "name": "sTopMilling",
+            "technicalDefault": "No",
+            "businessMeaning": "Enables or disables a horizontal slot/milling on the top face of the male beam to house the connector's top flange.",
+            "validRange": "Yes, No",
+            "unit": "Boolean",
+            "affectsOutput": "Toggles the creation of a slot on the male beam."
+          },
+          {
+            "name": "dOffsetV",
+            "technicalDefault": "0",
+            "businessMeaning": "Vertical offset (Z-axis relative to female beam) to shift the connector up or down, typically used for alignment or to account for uneven timber surfaces.",
+            "validRange": "-50mm to 50mm",
+            "unit": "mm",
+            "affectsOutput": "Translates the position of the metal plate and associated cuts vertically."
+          },
+          {
+            "name": "dOffsetH",
+            "technicalDefault": "0",
+            "businessMeaning": "Horizontal offset along the female beam's axis (X-axis) to move the connector away from the intersection point.",
+            "validRange": "-200mm to 200mm",
+            "unit": "mm",
+            "affectsOutput": "Slides the connector and cuts along the length of the female beam."
+          },
+          {
+            "name": "dAddWidth",
+            "technicalDefault": "2",
+            "businessMeaning": "Additional clearance added to the width of the milling/cutout in the timber to ensure easy assembly.",
+            "validRange": "0mm to 5mm",
+            "unit": "mm",
+            "affectsOutput": "Expands the width of the Cut/BeamCut geometry."
+          },
+          {
+            "name": "dAddWidth2",
+            "technicalDefault": "2",
+            "businessMeaning": "Additional width clearance specifically applied to the female beam cutout.",
+            "validRange": "0mm to 5mm",
+            "unit": "mm",
+            "affectsOutput": "Expands the width of the cut in the female beam (bm1)."
+          },
+          {
+            "name": "dAddLength",
+            "technicalDefault": "10",
+            "businessMeaning": "Additional length clearance added to the milling in the male beam (along its axis).",
+            "validRange": "0mm to 20mm",
+            "unit": "mm",
+            "affectsOutput": "Lengthens the slot cut into the male beam."
+          },
+          {
+            "name": "dAddDepth",
+            "technicalDefault": "10",
+            "businessMeaning": "Additional depth clearance added to the milling height in the female beam.",
+            "validRange": "0mm to 20mm",
+            "unit": "mm",
+            "affectsOutput": "Deepens the pocket milled into the female beam."
+          },
+          {
+            "name": "sHWType / sHWModel / dHWLength / dHWDiam",
+            "technicalDefault": "Screw / ABC Spax / 70 / 5",
+            "businessMeaning": "Metadata properties describing the screws used to attach the connector.",
+            "validRange": "Text / Numeric",
+            "unit": "Text / mm",
+            "affectsOutput": "Populates the HardWrComp (Hardware Component) list for BOM/export purposes. Does not change geometry."
+          },
+          {
+            "name": "sShowDetails",
+            "technicalDefault": "No",
+            "businessMeaning": "Toggles visualization of helper geometry (coordinate systems) for debugging or presentation.",
+            "validRange": "Yes, No",
+            "unit": "Boolean",
+            "affectsOutput": "Shows or hides vector lines (vxN, vyN, vzN) in the model."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sConType set to 'Steel' or 'Concrete'",
+            "effect": "Resets 'sTopMilling' to 'No' automatically as millings are not applicable for these substrates.",
+            "cascade": [
+              "sTopMilling"
+            ]
+          },
+          {
+            "trigger": "sType (Model Number) changes",
+            "effect": "Updates the calculated number of screws (nNumDr5, nNumDr9) and the connector width based on the lookup arrays.",
+            "cascade": [
+              "nNumDr5",
+              "nNumDr9",
+              "dWidth"
+            ]
+          },
+          {
+            "trigger": "Non-planar beam geometry detected",
+            "effect": "Script warns user or defaults to 'L-bearing' mode logic to handle vertical displacement.",
+            "cascade": [
+              "sConType",
+              "dOffsetV"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Body",
+            "description": "The 3D solid representation of the aluminum Simpson Strong-Tie bracket.",
+            "appliedTo": "Model Space (visual representation at beam intersection)."
+          },
+          {
+            "type": "Cut / BeamCut",
+            "description": "Milling operations to recess the connector into the timber beams.",
+            "appliedTo": "Female Beam (bm1) and Male Beam (bm0) depending on sConType."
+          },
+          {
+            "type": "HardWrComp",
+            "description": "BOM entries for the connector plate and the required screws.",
+            "appliedTo": "Material List / Production Data."
+          }
+        ]
+      },
+      "tokens_used": 9273,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script via 'Insert TSL' command",
+          "Script prompts for selection of Male Beam(s) (Multi-select allowed)",
+          "Script prompts for selection of Female Beam (Single beam)",
+          "Script checks if Female Beam belongs to an Element (Auto-sets 'Element' connection type if true)",
+          "Properties Dialog is displayed (showDialog)",
+          "User confirms configuration and creates the instance",
+          "Loop starts: For every selected Male Beam paired with the Female Beam",
+          "Script creates a new TSL instance attached to both beams (tsl.dbCreate)",
+          "Temporary helper instance erases itself (eraseInstance)",
+          "Created Instance executes:",
+          "   - Validates beam references exist",
+          "   - Calculates intersection point and local coordinate system",
+          "   - Checks for coplanar alignment of beams",
+          "   - Generates 3D Body (Metal Plate)",
+          "   - Generates Tooling (Cuts/BeamCuts) based on Connection Type",
+          "   - Updates Hardware List (HardWrComp) with Connector and Screw counts",
+          "   - Draws visual representation (Plan view symbols and 3D preview)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Context (Insertion vs. Recalculation)",
+            "path1": {
+              "name": "Insertion",
+              "steps": [
+                "Prompt for Male Beam(s)",
+                "Prompt for Female Beam",
+                "Show Dialog",
+                "Create Child Instances",
+                "Erase Self"
+              ]
+            },
+            "path2": {
+              "name": "Recalculation / Update",
+              "steps": [
+                "Read current properties from OPM",
+                "Re-calculate geometry based on current beam positions",
+                "Update Visuals and BOM"
+              ]
+            }
+          },
+          {
+            "condition": "Connection Type (sConType)",
+            "path1": {
+              "name": "Standard Timber (Milled in Female/Male/Gap)",
+              "steps": [
+                "Apply standard Cut/BeamCut operations to GenBeams",
+                "Align plate based on beam intersection"
+              ]
+            },
+            "path2": {
+              "name": "Concrete/Steel",
+              "steps": [
+                "Force 'Top Milling' property to 'No'",
+                "Skip timber cuts (or apply minimal clearance)",
+                "Generate plate only"
+              ]
+            },
+            "path3": {
+              "name": "Element",
+              "steps": [
+                "Check if Male Beam is part of a valid Element",
+                "If valid: Use Element sheets to calculate advanced cuts",
+                "If invalid: Fallback to 'Milled in Female' and warn user"
+              ]
+            },
+            "path4": {
+              "name": "L-Bearing",
+              "steps": [
+                "Rotate plate geometry 180 degrees around X and Z axes",
+                "Translate plate vertically to align faces",
+                "Apply specialized BeamCut to Male Beam"
+              ]
+            }
+          },
+          {
+            "condition": "Top Milling (sTopMilling)",
+            "path1": {
+              "name": "Yes",
+              "steps": [
+                "Generate slot/milling in the top face of the Male Beam"
+              ]
+            },
+            "path2": {
+              "name": "No",
+              "steps": [
+                "Do not generate top milling (Plate sits on surface or is recessed differently)"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Alignment (Coplanarity Check)",
+            "path1": {
+              "name": "Beams are Coplanar",
+              "steps": [
+                "Proceed with standard geometry generation"
+              ]
+            },
+            "path2": {
+              "name": "Beams are Non-Coplanar",
+              "steps": [
+                "Display Report Message suggesting 'L-bearing' mode",
+                "Continue with current settings (may result in geometric deviation)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam References",
+            "errorMessage": "Implicit (Script exits silently or does nothing)",
+            "recovery": "Ensure the script is linked to at least two beams (1 Male, 1 Female) during selection or via properties."
+          },
+          {
+            "check": "Element Context (if Connection Type = 'Element')",
+            "errorMessage": "NOTE: [Instance Name] on beam [PosNum] I-Beam is not a beam of an element. The Connection Type will be changed to: Milled in female beam",
+            "recovery": "The script automatically corrects the Connection Type to 'Milled in female beam'. No user action required unless Element mode was strictly intended."
+          },
+          {
+            "check": "Planar Alignment",
+            "errorMessage": "NOTE: [Instance Details] I-Beam is not in same plane with -Beam. You might want to change the construction type to 'L-bearing'",
+            "recovery": "User should open Properties Palette and change 'Connection Type' to 'L-bearing' to properly handle the vertical offset."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Connector Size",
+            "how": "OPM (Object Properties Palette) - 'Model' property",
+            "effect": "Updates plate dimensions, cut depths, and screw counts (nNumDr5, nNumDr9)."
+          },
+          {
+            "action": "Adjust Position",
+            "how": "OPM - 'Vertical Offset' / 'Horizontal Offset'",
+            "effect": "Slides the connector and associated cuts along the beam axes (translates the point of insertion)."
+          },
+          {
+            "action": "Modify Fit/Clearance",
+            "how": "OPM - 'Additional Width/Length/Depth'",
+            "effect": "Expands or contracts the milling operations on the timber without changing the metal plate size."
+          },
+          {
+            "action": "Change Installation Method",
+            "how": "OPM - 'Connection Type' dropdown",
+            "effect": "Switches logic between milled, surface-mounted, or element-based connections; changes where cuts are applied."
+          },
+          {
+            "action": "Debug/Verify Geometry",
+            "how": "OPM - 'Show Details' property",
+            "effect": "Toggles the visibility of local coordinate system vectors (Red/Green/Blue lines) at the insertion point."
+          },
+          {
+            "action": "Update Hardware Info",
+            "how": "OPM - 'HW Type/Model/Material' fields",
+            "effect": "Updates the BOM/HardWrComp data exports without altering physical geometry."
+          }
+        ]
+      },
+      "tokens_used": 11040,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# SimpsonStrongTieEL.mcr\n\n## Overview\nInserts a Simpson Strong-Tie EL top connector (BMF Topverbinder) to join a joist (male beam) perpendicular to a main beam (female beam). It generates the 3D metal plate geometry, required timber millings/cuts, and hardware list entries for production.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates on 3D beams and bodies in the model. |\n| Paper Space | No | Not designed for layout views or annotations. |\n| Shop Drawing | No | Does not generate shop drawings directly (model only). |\n\n## Prerequisites\n- **Required Entities**: Two `GenBeam` entities (beams).\n- **Minimum Beam Count**: 2 (1 Male beam and 1 Female beam).\n- **Required Settings**: None specific (script uses internal logic).\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command:** `TSLINSERT`\n**Action:** Browse and select `SimpsonStrongTieEL.mcr`, then click Open.\n\n### Step 2: Select Male Beam(s)\n```\nCommand Line: Select joist(s)/Male beam(s):\nAction: Click on one or multiple beams that will be attached (the joists). Press Enter when finished.\n```\n\n### Step 3: Select Female Beam\n```\nCommand Line: Select main beam/Female beam:\nAction: Click on the single main beam that the joists will connect to.\n```\n\n### Step 4: Configure Properties\n**Action:** A configuration dialog will appear. Adjust the Model (Size), Connection Type, and Offsets as needed. Click **OK** to confirm.\n\n### Step 5: Generation\n**Action:** The script automatically creates a connector instance for every selected Male Beam at its intersection with the Female Beam.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Model | dropdown | EL30 | Selects the Simpson Strong-Tie size (EL30, EL40, EL60, EL80, EL100). Affects plate width, cut depth, and screw count. |\n| Connection Type | dropdown | Milled in female beam | Select installation method: Milled (in female/male), Visible gap, Concrete, Steel, Element, or L-bearing. |\n| Top Milling | dropdown | No | If \"Yes\", creates a horizontal slot on the top face of the male beam. |\n| Vertical Offset | number | 0 | Moves the connector up or down (Z-axis) relative to the female beam. |\n| Horizontal Offset | number | 0 | Moves the connector along the length of the female beam (X-axis). |\n| Add Width | number | 2 | Extra clearance added to the milling width (Male beam). |\n| Add Width 2 | number | 2 | Extra clearance added to the milling width (Female beam). |\n| Add Length | number | 10 | Extra clearance added to the milling length (Male beam). |\n| Add Depth | number | 10 | Extra clearance added to the milling depth (Female beam). |\n| HW Type | text | Screw | Hardware type for BOM (e.g., Screw). |\n| HW Model | text | ABC Spax | Screw model description. |\n| HW Length | number | 70 | Length of the screw. |\n| HW Diameter | number | 5 | Diameter of the screw. |\n| Show Details | dropdown | No | Toggles visualization of helper coordinate system lines for debugging. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Erase | Removes the connector instance from the model. |\n| Recalculate | Updates the geometry based on current beam positions or property changes. |\n| Properties | Opens the Properties Palette to edit parameters listed above. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script uses internal lookup arrays for dimensions and does not require external XML settings files.\n\n## Tips\n- **Multi-Selection**: You can select multiple joists (Male beams) in Step 2 to connect them all to the same main beam at once.\n- **L-Bearing Mode**: If your beams are not on the exact same plane (e.g., one is slightly higher), change the **Connection Type** to \"L-bearing\" to handle the vertical step correctly.\n- **Clearances**: If the timber is swelling or if you want a looser fit on site, increase the **Add Width/Length/Depth** values before generating.\n- **Visual Debugging**: If the connector appears in the wrong orientation, set **Show Details** to \"Yes\" to see the local coordinate axes (Red/Green/Blue) to understand how the script is calculating the intersection.\n\n## FAQ\n- **Q: I got a message saying \"I-Beam is not in same plane.\" What do I do?**\n- **A:** The beams are likely misaligned vertically. Open the Properties Palette, find **Connection Type**, and change it to **L-bearing**. This adjusts the geometry to handle the height difference.\n- **Q: Can I use this to connect to a concrete wall?**\n- **A:** Yes. Set the **Connection Type** to **Concrete**. This will generate the plate without timber millings on the female side.\n- **Q: The script warned me about \"Element\" connection type and reset it. Why?**\n- **A:** The \"Element\" mode only works if the beams belong to an hsbCAD Element construct. If they are standard standalone beams, the script automatically falls back to \"Milled in female beam\" to ensure valid geometry."
+      },
+      "tokens_used": 6713,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,256 @@
+{
+  "filename": "hsbSectionBlock.mcr",
+  "status": "completed",
+  "total_tokens": 44807,
+  "processing_time": 360.09835863113403,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6267,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "Both",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": true,
+          "isMultipageScript": false,
+          "detectionEvidence": "Uses #Type E + _Entity[] storage pattern for ShopDrawView entities. Explicit logic for ShopDrawing generation (_bOnGenerateShopDrawing, _kShopDrawEvent, _kShopDrawViewDataShowSet). Implements Viewport manipulation via ViewData map structures. Also operates in Model Space to create section geometry and symbols (_bOnInsert logic)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "ShopDrawView"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Requires valid Model Space solids/beams for section cutting or existing ShopDrawView entities for view definition.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5049,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "T(\"|Select Entities|\") + \" \" + T(\"|(Solids or shopdraw views)|\")",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "T(\"|Select first point of section line|\")",
+              "condition": "_bOnInsert && Solids selected",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "PrPoint",
+              "promptOriginal": "\"\\n\" + T(\"|Select second point of section line|\")",
+              "condition": "_bOnInsert && Solids selected",
+              "required": true
+            },
+            {
+              "step": 4,
+              "function": "PrPoint",
+              "promptOriginal": "\"\\n\" + T(\"|Select direction|\")",
+              "condition": "_bOnInsert && Solids selected",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "",
+              "condition": "_bOnInsert && ShopDrawView selected",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "_bOnInsert",
+            "title": "Properties",
+            "dataSource": "TSL Instance Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dScale",
+            "type": "PropDouble",
+            "displayName": "Scale of Symbol",
+            "defaultValue": "1",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "sDimStyle",
+            "type": "PropString",
+            "displayName": "Dimstyle",
+            "defaultValue": null,
+            "inputType": "dropdown",
+            "options": "_DimStyles",
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "nColor",
+            "type": "PropInt",
+            "displayName": "Color",
+            "defaultValue": "145",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sViewNr",
+            "type": "PropString",
+            "displayName": "View Number",
+            "defaultValue": "A",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "ShopDraw Event",
+            "handler": "_kShopDrawViewDataShowSet",
+            "action": "Generate or update ShopDrawing view data based on section definition",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 9288,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Defines a section cut line and viewing direction in the 3D model to generate labeled section markers (arrows/circles) and prepare calculation data for 2D Shop Drawing views.\",\n    \"category\": \"ShopDrawing / Annotation\",\n    \"typicalUseCase\": \"Creating a cross-section or elevation cut through a timber structure to automatically generate the corresponding 2D detail view on a layout sheet.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"dScale\",\n      \"technicalDefault\": \"1\",\n      \"businessMeaning\": \"Global scale factor for the section marker graphics. Allows the user to enlarge or shrink the arrows, circles, and text relative to the model or view scale.\",\n      \"validRange\": \"0.1 - 10.0\",\n      \"unit\": \"multiplier\",\n      \"affectsOutput\": \"Controls the visual size of the section symbols (circle radius, arrow length, text size) in the model and on the drawing.\"\n    },\n    {\n      \"name\": \"sDimStyle\",\n      \"technicalDefault\": \"_DimStyles\",\n      \"businessMeaning \" \"Specifies the dimension style (font, text height, arrow style) to be used for the section label and symbol components.\",\n      \"validRange\": \"Any valid Dimension Style name in the current CAD template.\",\n      \"unit\": \"style_name\",\n      \"affectsOutput\": \"Determines the font and height of the 'View Number' text, which subsequently drives the calculated size of the enclosing circle and arrow markers.\"\n    },\n    {\n      \"name\": \"nColor\",\n      \"technicalDefault\": \"145\",\n      \"businessMeaning\": \"Sets the CAD color index (ACI) for the section line, arrows, and text labels.\",\n      \"validRange\": \"1 - 255 (AutoCAD Color Index)\",\n      \"unit\": \"color_index\",\n      \"affectsOutput\": \"Changes the display color of the section symbols and lines in Model Space and the generated Shop Drawing.\"\n    },\n    {\n      \"name\": \"sViewNr\",\n      \"technicalDefault\": \"A\",\n      \"businessMeaning\": \"The unique identifier (label) for the section view, typically displayed inside the section marker circle.\",\n      \"validRange\": \"Text string (e.g., A, B, 1, 2, Section-1)\",\n      \"unit\": \"text\",\n      \"affectsOutput\": \"Updates the text label drawn inside the circle marker. A longer string may affect the circle size calculation if the script adjusts geometry based on text length.\"\n    }\n  ],\n  \"parameterDependencies\": [\n    {\n      \"trigger\": \"sDimStyle is changed\",\n      \"effect\": \"Recalculates the text length (dTxtL), which determines the radius (dW) of the section marker circle and the size of the arrows.\",\n      \"cascade\": [\n        \"Geometry of Section Marker (Circle/Arrows)\"\n      ]\n    },\n    {\n      \"trigger\": \"sViewNr is changed\",\n      \"effect\": \"May affect the calculated text width (dTxtL), potentially resizing the circle geometry to fit the text.\",\n      \"cascade\": [\n        \"Geometry of Section Marker Circle\"\n      ]\n    }\n  ],\n  \"outputEntities\": [\n    {\n      \"type\": \"Section Geometry (Visual)\",\n      \"description\": \"A 3D Body representing the intersection of selected entities with the cutting plane. Visualizes the cut in Model Space.\",\n      \"appliedTo\": \"Selected Solids/GenBeams\"\n    },\n    {\n      \"type\": \"Section Symbol\",\n      \"description\": \"2D graphical representation consisting of a circle, directional arrows, and the View Number text.\",\n      \""
+      },
+      "tokens_used": 9700,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script initializes and displays Properties dialog (Scale, Dimstyle, Color, View Number).",
+          "2. User selects entities (Solids/GenBeams OR ShopDrawViews).",
+          "3. [Conditional Branch] Determine operating mode based on selection.",
+          "4. [Path: Section Cut] User selects first point of section line.",
+          "5. [Path: Section Cut] User selects second point of section line.",
+          "6. [Path: Section Cut] User selects viewing direction.",
+          "7. [Path: ShopDraw Link] User selects an origin point for the link.",
+          "8. Script calculates coordinate system and cutting geometry.",
+          "9. Script generates visual output (Section solids/symbols OR View link lines).",
+          "10. Script stores data to internal Map for ShopDrawing generation."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Type of entity selected during insertion prompt",
+            "path1": {
+              "name": "Section Cut Mode (Solids/GenBeams)",
+              "steps": [
+                "Filter selected entities for Solids/GenBeams.",
+                "Prompt for Section Line Start Point (_PtG[0]).",
+                "Prompt for Section Line End Point (_PtG[1]).",
+                "Prompt for View Direction Point (_PtG[2]).",
+                "Calculate Coordinate System (vx, vy, vz).",
+                "Intersect selected solids with calculated section volume.",
+                "Draw Section Body and Section Markers (Arrows/Circles)."
+              ]
+            },
+            "path2": {
+              "name": "ShopDraw View Link Mode",
+              "steps": [
+                "Filter selected entities for ShopDrawViews.",
+                "Prompt for Origin Point (_Pt0).",
+                "Register ShopDraw Event triggers.",
+                "Draw connecting lines between Origin and linked Views.",
+                "Prepare Map data for Viewport manipulation."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Section Line Point Definition",
+            "errorMessage": null,
+            "recovery": "If insufficient points are gathered (<2), the script automatically erases the instance."
+          },
+          {
+            "check": "ShopDraw Define Entity",
+            "errorMessage": "Error in [scriptName]: no define set entity found.",
+            "recovery": "Ensure the ShopDrawView being linked has valid associated data/define sets."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Visual Properties",
+            "how": "OPM (Object Properties Manager)",
+            "effect": "Changing 'dScale' resizes markers; changing 'sDimStyle' updates text/font; changing 'nColor' updates entity color; changing 'sViewNr' updates label text."
+          },
+          {
+            "action": "Adjust Geometry",
+            "how": "Grip Edit",
+            "effect": "Moving Section Line grips changes the cut location; Moving the Direction grip changes the viewing angle/cut plane orientation."
+          },
+          {
+            "action": "Regenerate ShopDrawing Data",
+            "how": "Right-click Context Menu -> 'ShopDraw Event'",
+            "effect": "Triggers the _kShopDrawViewDataShowSet event to recalculate and update the 2D view data and show sets linked to this section."
+          }
+        ]
+      },
+      "tokens_used": 9163,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbSectionBlock.mcr\n\n## Overview\nDefines a section cut line and viewing direction in the 3D model to generate labeled section markers (arrows/circles) and prepare calculation data for 2D Shop Drawing views.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Used to define section lines and visualize cut geometry on solids. |\n| Paper Space | Yes | Generates and updates views within the Shop Drawing environment. |\n| Shop Drawing | Yes | Fully compatible with ShopDrawing generation events. |\n\n## Prerequisites\n- **Required Entities**: `GenBeam` (Solids) or `ShopDrawView`.\n- **Minimum beam count**: 0 (Can operate on generic solids).\n- **Required settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbSectionBlock.mcr`\n\n### Step 2: Select Entities\n```\nCommand Line: Select Entities (Solids or shopdraw views)\nAction: Click on the 3D solids/beams you want to section, OR select an existing ShopDrawView entity to link to it.\n```\n\n### Step 3a: Define Section Cut (If Solids selected)\n```\nCommand Line: Select first point of section line\nAction: Click in Model Space to set the start of the cut line.\n\nCommand Line: Select second point of section line\nAction: Click to set the end of the cut line.\n\nCommand Line: Select direction\nAction: Click on one side of the line to indicate which direction the \"camera\" is looking.\n```\n\n### Step 4a: Complete Insertion\nThe script will generate the section cut geometry and draw the section symbol (arrows and circle) at the cut line endpoints.\n\n### Step 3b: Define Link Origin (If ShopDrawView selected)\n```\nCommand Line: \nAction: Click to place the origin point for the link in the model.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Scale of Symbol | number | 1 | Adjusts the global size of the section markers (arrows and circles). Increase to make symbols larger. |\n| Dimstyle | dropdown | (Current) | Selects the dimension style used for the View Number text. Changing this affects font and text height. |\n| Color | number | 145 | Sets the AutoCAD color index for the section lines, arrows, and text labels. |\n| View Number | text | A | The label text displayed inside the section marker circle (e.g., A, B, 1, 2). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| ShopDraw Event | Regenerates the 2D Shop Drawing view data associated with this section block. Use this after moving the section line or changing model geometry. |\n\n## Settings Files\nNone required.\n\n## Tips\n- **Grip Editing**: Select the section block in Model Space to use grips. Move the line endpoints to adjust the cut location, or move the direction arrow to change the view side.\n- **Text Size**: If the View Number text is too large for the circle, change the **Dimstyle** property to a style with smaller text height, or decrease the **Scale of Symbol**.\n- **Updating Views**: After moving the section line grips, always right-click and select **ShopDraw Event** to update the corresponding 2D detail view on your layout sheets.\n\n## FAQ\n- **Q: Why did my section block disappear after inserting it?**\n  **A:** The script requires a minimum of 2 points to define a line. If the prompts are cancelled or points are invalid, the instance is automatically erased. Try inserting again and ensure you click valid points.\n- **Q: How do I change the size of the circle around the letter?**\n  **A:** The circle size is calculated based on the text width and the **Scale of Symbol** property. Increase the `Scale of Symbol` value in the properties panel.\n- **Q: Can I section multiple beams at once?**\n  **A:** Yes. Use a window selection at the \"Select Entities\" prompt to choose multiple beams or solids. The section cut will apply to all selected entities."
+      },
+      "tokens_used": 5340,
+      "error": null
+    }
+  }
+}

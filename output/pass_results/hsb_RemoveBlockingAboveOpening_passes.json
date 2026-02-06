@@ -1,0 +1,288 @@
+{
+  "filename": "hsb_RemoveBlockingAboveOpening.mcr",
+  "status": "completed",
+  "total_tokens": 24916,
+  "processing_time": 262.026647567749,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "04.02.2011",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.1",
+            "date": "11.08.2011",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Change sequence Number"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3714,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses PrEntity to select Element entities from the drawing and iterates over the _Element[] array. It performs geometric operations on Beam and Opening objects (el.beam(), el.opening()), calculates 3D realBody() shadows, and uses dbErase() to modify the model. There are no 'sd_' prefixes, Viewport references, or #Type E definitions."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam",
+            "Opening"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "The script requires an active model space containing at least one Element with Beams and Openings to operate on.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2192,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sFilterBeams",
+            "type": "PropString",
+            "displayName": "Filter Beams with Code",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": "Separate multiple entries by ;"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2797,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically detects and deletes solid blocking beams located in the zone directly above wall openings to prevent geometric clashes.",
+          "category": "Model Maintenance / Framing Automation",
+          "typicalUseCase": "Used after generating wall elements to clean up blocking members that intersect with window or door rough openings, ensuring the model is physically valid for manufacturing."
+        },
+        "parameters": [
+          {
+            "name": "sFilterBeams",
+            "technicalDefault": "",
+            "businessMeaning": "An exclusion list containing beam codes (separated by semicolons) that define which blocking elements should be protected from deletion. If a blocking beam's code matches an entry in this list, it will be preserved even if located above an opening.",
+            "validRange": "Text string (semicolon-separated list of beam codes), or empty string to delete all matching blocking.",
+            "unit": "N/A (String)",
+            "affectsOutput": "Determines which specific types of blocking are removed. Only blocking codes NOT present in this list (and of type 'Blocking') will be considered for erasure."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Beam Erasure",
+            "description": "Removes blocking members from the model.",
+            "appliedTo": "Solid blocking beams (type _kSFBlocking) located within the selected Elements that geometrically intersect the calculated area above an Opening."
+          }
+        ]
+      },
+      "tokens_used": 5824,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script initializes sequence number and units (mm).",
+          "Properties are loaded from catalog (if database created).",
+          "[Insertion Phase] Check if 'insertCycleCount > 1'. If yes, script self-destructs to prevent loops.",
+          "[Insertion Phase] If '_kExecuteKey' is empty, display the Properties Dialog.",
+          "[Insertion Phase] Prompt user to select a set of Elements (PrEntity).",
+          "[Insertion Phase] Append selected elements to the internal '_Element' array and pause execution.",
+          "[Execution Phase] Validate that '_Element' array is not empty. If empty, self-destruct.",
+          "[Execution Phase] Parse the 'sFilterBeams' property string into a string array of protected codes.",
+          "[Execution Phase] Iterate through each selected Element.",
+          "[Execution Phase] Retrieve all Beams and Openings for the current Element.",
+          "[Execution Phase] Filter Beams: Collect only those of type 'Blocking' whose code is NOT in the protected list.",
+          "[Execution Phase] Iterate through each Opening in the Element.",
+          "[Execution Phase] Calculate geometric zone: Create a rectangular PlaneProfile extending 15,000mm in the wall's Y-direction above the opening.",
+          "[Execution Phase] Iterate through collected Blocking beams.",
+          "[Execution Phase] Calculate the shadow profile of the Blocking beam projected onto the opening plane.",
+          "[Execution Phase] Check intersection between Beam Shadow and Opening Zone.",
+          "[Execution Phase] If intersecting area > 10mm², execute 'dbErase()' to remove the Blocking beam.",
+          "[Completion] Script self-destructs (eraseInstance)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle Check",
+            "path1": {
+              "name": "Loop Detected",
+              "steps": [
+                "Insert Cycle Count > 1",
+                "eraseInstance()",
+                "Return (Exit)"
+              ]
+            },
+            "path2": {
+              "name": "First Run",
+              "steps": [
+                "Insert Cycle Count <= 1",
+                "Continue to Execution Key Check"
+              ]
+            }
+          },
+          {
+            "condition": "Execution Key / Dialog",
+            "path1": {
+              "name": "Interactive Run",
+              "steps": [
+                "_kExecuteKey is empty",
+                "showDialogOnce()",
+                "Prompt for Element Selection"
+              ]
+            },
+            "path2": {
+              "name": "Automated/Menu Run",
+              "steps": [
+                "_kExecuteKey has value",
+                "Skip Dialog",
+                "Prompt for Element Selection"
+              ]
+            }
+          },
+          {
+            "condition": "Element Selection Validation",
+            "path1": {
+              "name": "Selection Exists",
+              "steps": [
+                "_Element.length() > 0",
+                "Proceed to Parse Filters"
+              ]
+            },
+            "path2": {
+              "name": "Selection Empty/Cancelled",
+              "steps": [
+                "_Element.length() == 0",
+                "eraseInstance()",
+                "Return (Exit)"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Filtering (Protection Logic)",
+            "path1": {
+              "name": "Beam is Protected",
+              "steps": [
+                "Beam is Blocking AND Code is found in Filter List",
+                "Exclude from 'bmBlocking' array",
+                "Beam is NOT erased"
+              ]
+            },
+            "path2": {
+              "name": "Beam is Target",
+              "steps": [
+                "Beam is Blocking AND Code NOT in Filter List",
+                "Add to 'bmBlocking' array",
+                "Check for intersection with Opening"
+              ]
+            }
+          },
+          {
+            "condition": "Geometric Intersection",
+            "path1": {
+              "name": "Overlap Detected",
+              "steps": [
+                "Intersect Area > 10mm²",
+                "bm.dbErase()",
+                "Beam deleted from Model"
+              ]
+            },
+            "path2": {
+              "name": "No Overlap",
+              "steps": [
+                "Intersect Area <= 10mm²",
+                "Beam preserved in Model"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insertion Loop Protection",
+            "errorMessage": "None (Silent exit)",
+            "recovery": "Script automatically erases itself if triggered recursively."
+          },
+          {
+            "check": "Element Selection",
+            "errorMessage": "None (Silent exit)",
+            "recovery": "If no elements are selected or the prompt is cancelled, the script instance is erased."
+          },
+          {
+            "check": "Filter String Parsing",
+            "errorMessage": "None",
+            "recovery": "Empty or malformed filter strings are handled gracefully; empty list results in no filtering (all blocking deleted if overlapping)."
+          },
+          {
+            "check": "Geometric Intersection Threshold",
+            "errorMessage": "None",
+            "recovery": "Threshold is hardcoded to 10mm². Beams with intersection area below this are preserved."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None (Script is Ephemeral)",
+            "how": "N/A",
+            "effect": "The script instance automatically self-destructs (eraseInstance) immediately after processing the elements. It cannot be modified via grips or OPM after execution because it no longer exists in the drawing."
+          }
+        ]
+      },
+      "tokens_used": 5934,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_RemoveBlockingAboveOpening\n\n## Overview\nAutomatically detects and removes solid blocking beams located in the zone directly above wall openings to prevent geometric clashes and clean up the model.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates on Element entities in the 3D model. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | This script modifies the model, not drawing views. |\n\n## Prerequisites\n- **Required Entities:** Elements containing Beams and Openings.\n- **Minimum Beam Count:** At least one Element must be selected.\n- **Required Settings:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_RemoveBlockingAboveOpening.mcr`\n\n### Step 2: Configure Filters (Optional)\n```\nDialog: Properties Palette or Dialog Box\nAction: (Optional) Enter beam codes into the \"Filter Beams with Code\" field to protect specific blocking types from deletion.\n```\n*Note: If run from a menu/toolbar, this step may be skipped or handled automatically.*\n\n### Step 3: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the wall elements in the drawing that contain the openings you wish to clear. Press Enter to confirm selection.\n```\n\n### Step 4: Automatic Processing\nThe script will automatically calculate the area above each opening and erase any blocking beams found within that zone. The script instance will then remove itself from the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Filter Beams with Code | text | \"\" | Enter beam codes (separated by semicolons) to specify which blocking beams should **NOT** deleted. If left empty, all blocking above openings will be removed. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not add specific options to the entity context menu. |\n\n## Settings Files\n- **Filename:** None required.\n- **Location:** N/A\n- **Purpose:** N/A\n\n## Tips\n- **Protecting Specific Beams:** If you have specific blocking members (e.g., decorative headers) that you want to keep above windows, enter their specific codes into the *Filter Beams with Code* property (e.g., `HeaderCode1;HeaderCode2`).\n- **Undo Changes:** Since the script deletes itself immediately after running, you cannot edit it to \"undo\" the action. Use the standard AutoCAD `U` (Undo) command to revert the model changes if needed.\n- **Tolerance:** The script uses a small geometric tolerance (intersection area > 10mm²) to determine if a blocking beam is actually inside the opening zone, ensuring it doesn't delete beams that are merely touching the edge.\n\n## FAQ\n- **Q: The script ran, but no beams were deleted. Why?**\n  A: This can happen if the blocking beams found match the codes in your filter list, or if the blocking is defined as a type other than \"Blocking\" (e.g., a standard stud).\n- **Q: Can I run this on multiple walls at once?**\n  A: Yes. Use a window selection or select multiple elements during the \"Select a set of elements\" prompt to process all of them in one go.\n- **Q: Why can't I find the script in the drawing after I run it?**\n  A: This is a \"Run Once\" script. It automatically erases itself from the drawing after processing to keep your drawing clean. Simply re-insert it from the catalog whenever you need to use it again.\n\n---"
+      },
+      "tokens_used": 4455,
+      "error": null
+    }
+  }
+}

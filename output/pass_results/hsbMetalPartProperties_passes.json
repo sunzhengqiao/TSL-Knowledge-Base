@@ -1,0 +1,212 @@
+{
+  "filename": "hsbMetalPartProperties.mcr",
+  "status": "completed",
+  "total_tokens": 20282,
+  "processing_time": 774.1753027439117,
+  "passes": {
+    "1": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "Request timeout after retries"
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script selects a single entity using getEntity() during _bOnInsert and validates if it is a MassGroup (_Entity[0].bIsKindOf(MassGroup())). It manipulates MassGroup properties (subMapX, attachPropSet). No Viewport or sd_ prefixes are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "MassGroup"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing a MassGroup with hsbPosNum data",
+          "requiredSettings": [
+            "Property Set Definition containing a 'POSNUM' property",
+            "Material table hsbGenBeamDensityConfig.xml (per remarks)"
+          ]
+        }
+      },
+      "tokens_used": 3336,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getEntity",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": [
+          {
+            "filename": "hsbGenBeamDensityConfig.xml",
+            "searchPaths": [
+              "<hsbCompany>\\Abbund\\"
+            ],
+            "purpose": "Material table for density properties (per remarks)",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 2344,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Synchronizes the internal hsbCAD Position Number (hsbPosNum) to a specific field (POSNUM) within the AutoCAD Property Sets of a selected MassGroup.",
+          "category": "Data Management / Scheduling",
+          "typicalUseCase": "Used to expose internal numbering data to AutoCAD properties for labeling, filtering, or exporting data to external production management systems (ERP) that rely on Property Sets rather than internal hsb data."
+        },
+        "parameters": [
+          {
+            "name": "sArPropertyNames",
+            "technicalDefault": "\"POSNUM\"",
+            "businessMeaning": "The target property name within the AutoCAD Property Set Definition that will store the Position Number. It defines the data key used for data synchronization.",
+            "validRange": "Any text string matching a valid Property Definition in the active drawing's Property Set Definitions.",
+            "unit": "String",
+            "affectsOutput": "Determines which specific attribute in the Properties palette receives the numbering value. If the Property Set does not contain this specific name, the script will not update that set."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "MassGroup Selection",
+            "effect": "The script reads the internal 'hsbPosNum' from the selected group. It then scans available Property Set Definitions. Only definitions containing a property matching 'sArPropertyNames' are processed.",
+            "cascade": [
+              "sArPropertyNames"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "PropertySet",
+            "description": "Updates non-geometric data. The script automatically attaches the relevant Property Set Definition to the MassGroup if it is missing, and populates the 'POSNUM' field with the integer value from the hsb numbering system.",
+            "appliedTo": "The specific MassGroup selected during script insertion."
+          }
+        ]
+      },
+      "tokens_used": 5465,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script launches and prompts user to select a single entity via command line (getEntity).",
+          "2. User selects an object in the drawing.",
+          "3. Script enters internal 'On Insert' phase and sets a flag to self-erase upon completion.",
+          "4. Script validates if the selected entity is of type MassGroup.",
+          "5. [Conditional] If valid, script reads the internal hsbCAD position number ('hsbPosNum').",
+          "6. [Conditional] If a valid position number exists, script iterates through all available Property Set Definitions in the drawing.",
+          "7. For each Property Set, the script attempts to attach it to the MassGroup.",
+          "8. Script checks the attached Property Set for a property named 'POSNUM'.",
+          "9. [Conditional] If 'POSNUM' is found, the value is updated; if not found (and newly attached), the Property Set is detached.",
+          "10. Script instance erases itself from the drawing (fire-and-forget execution)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Is the selected entity a valid MassGroup?",
+            "path1": {
+              "name": "Valid Entity",
+              "steps": [
+                "Cast entity to MassGroup",
+                "Retrieve available Property Set Definitions",
+                "Check for hsbPosNum"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Entity",
+              "steps": [
+                "Report error: 'No Entity found!'",
+                "Erase script instance",
+                "Exit"
+              ]
+            }
+          },
+          {
+            "condition": "Does the MassGroup have a valid internal Position Number (> -1)?",
+            "path1": {
+              "name": "Has Position Number",
+              "steps": [
+                "Iterate through available Property Sets",
+                "Attach Property Set to entity",
+                "Check for 'POSNUM' property definition"
+              ]
+            },
+            "path2": {
+              "name": "No Position Number",
+              "steps": [
+                "Report notice: 'has no PosNum assigned'",
+                "Skip Property Set loop",
+                "Erase script instance"
+              ]
+            }
+          },
+          {
+            "condition": "Does the attached Property Set contain the 'POSNUM' property?",
+            "path1": {
+              "name": "Property Found",
+              "steps": [
+                "Update 'POSNUM' value with internal hsbPosNum",
+                "Commit changes to entity"
+              ]
+            },
+            "path2": {
+              "name": "Property Not Found",
+              "steps": [
+                "Check if Property Set was just added by this script",
+                "If yes, detach Property Set to keep object clean",
+                "Continue to next Property Set"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity KindOf MassGroup",
+            "errorMessage": "No Entity found! (Type: [EntityType]) Instance erased.",
+            "recovery": "Select a valid MassGroup entity and run the script again."
+          },
+          {
+            "check": "Property Set Definition contains 'POSNUM'",
+            "errorMessage": "(Implicit) Property Set is skipped or removed if it lacks the field.",
+            "recovery": "Ensure a Property Set Definition with a 'POSNUM' property exists in the drawing."
+          },
+          {
+            "check": "hsbPosNum is assigned",
+            "errorMessage": "[Handle] has no PosNum assigned.",
+            "recovery": "Run hsbCAD numbering commands to assign a position number to the MassGroup before running this script."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 4804,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbMetalPartProperties.mcr\n\n## Overview\nThis script automatically synchronizes the internal hsbCAD Position Number (`hsbPosNum`) of a selected MassGroup to a specific field named `POSNUM` within its AutoCAD Property Sets. It is designed to facilitate data export to external production systems (ERP) or labeling by ensuring critical numbering data is accessible via standard AutoCAD properties.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be run in Model Space. |\n| Paper Space | No | Not supported for layout entities. |\n| Shop Drawing | No | Not intended for use within shop drawing views. |\n\n## Prerequisites\n- **Required Entities:** A MassGroup entity present in the drawing.\n- **Numbering:** The selected MassGroup must have a valid hsbCAD Position Number (`hsbPosNum`) assigned (i.e., a numbering run has been executed).\n- **Property Set Definition:** An AutoCAD Property Set Definition must exist in the drawing containing a property specifically named `POSNUM`.\n- **Settings Files:** `hsbGenBeamDensityConfig.xml` (Standard hsbCAD configuration file).\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the AutoCAD command line.\n2.  Browse to the location of `hsbMetalPartProperties.mcr` and select it.\n3.  Click **Open**.\n\n### Step 2: Select Entity\n```\nCommand Line: Select entity\nAction: Click on the desired MassGroup in the drawing.\n```\n*Note: The script will automatically verify if the selected object is a MassGroup.*\n\n### Step 3: Automatic Processing\nOnce the entity is selected, the script performs the following actions automatically:\n1.  Retrieves the internal hsbCAD Position Number.\n2.  Attaches the relevant Property Set Definition to the MassGroup (if not already attached).\n3.  Updates the `POSNUM` field with the Position Number.\n4.  Erases itself from the drawing (it is a \"fire-and-forget\" script).\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script has no user-editable parameters in the Properties Palette. It runs automatically upon insertion. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | This script does not add any specific options to the right-click context menu. |\n\n## Settings Files\n- **Filename**: `hsbGenBeamDensityConfig.xml`\n- **Location**: `<hsbCompany>\\Abbund\\` (or your configured company path)\n- **Purpose**: Required material table configuration file for script execution.\n\n## Tips\n- **Verify Property Names:** Ensure your AutoCAD Property Set Definition contains a property strictly named `POSNUM`. If the name differs (e.g., \"PosNum\" or \"Position No\"), the script will not update the value.\n- **Pre-numbering:** Run the hsbCAD numbering commands on your model before using this script to ensure the `hsbPosNum` is available for export.\n- **Clean Up:** If the script attaches a Property Set but does not find the `POSNUM` property inside it, it will detach the set again to keep your drawing data clean.\n\n## FAQ\n\n**Q: Why did the script disappear immediately after I selected the object?**\nA: This is intended behavior. The script is designed to run once (insert), perform the update, and then erase itself to avoid cluttering the drawing.\n\n**Q: The script ran, but the \"POSNUM\" field in my properties is still empty.**\nA: Check the following:\n1. Does the MassGroup actually have a Position Number assigned (check the hsbCAD Entity Properties)?\n2. Does your Property Set Definition actually have a property named `POSNUM` (case-sensitive)?\n\n**Q: Can I change the target property name from \"POSNUM\" to something else?**\nA: No, this script is hardcoded to look specifically for the property name \"POSNUM\". You must ensure your Property Set Definition matches this name."
+      },
+      "tokens_used": 4333,
+      "error": null
+    }
+  }
+}

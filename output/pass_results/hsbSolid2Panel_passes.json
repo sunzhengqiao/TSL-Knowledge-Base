@@ -1,0 +1,334 @@
+{
+  "filename": "hsbSolid2Panel.mcr",
+  "status": "completed",
+  "total_tokens": 49184,
+  "processing_time": 291.570431470871,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl converts a given 3DSolid into an hsbPanel\nWhen inserted the user flip, rotate and reassign the panel direction. Also the common text fields can be set\nby selecting a Text in hsbCAD",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "28feb12",
+            "author": "th",
+            "changes": "conversion of curved beams supported, free aligned drills conversion supported"
+          },
+          {
+            "version": "1.0",
+            "date": "25.05.2011",
+            "author": "th@hsbCAD.de",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": [
+          "hsbPanelDrill"
+        ]
+      },
+      "tokens_used": 7804,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Explicit usage of _kModelSpace in tslNew.dbCreate(). Operates on 3DSolid and GenBeam entities using realBody() and volume(). Converts geometry to hsbPanel (SipStyle). No Paper Space or Shop Drawing specific constructs (sd_ prefix, _Viewport, #Type E for drawing entities) found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "3DSolid",
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (3D Environment)",
+          "requiredSettings": [
+            "SipStyle (Panel Styles in catalog)",
+            "hsbPanelDrill TSL"
+          ]
+        }
+      },
+      "tokens_used": 7267,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10429,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Converts 3D solids or generic beams into intelligent hsbPanels, interpreting geometry as contours and embedded voids as machining tools (drills/cuts).",
+          "category": "Modeling/Conversion",
+          "typicalUseCase": "Converting architectural imports (e.g., 3D solids representing walls or floors) into native hsbCAD panel objects to enable detailing and manufacturing."
+        },
+        "parameters": [
+          {
+            "name": "sStrategy",
+            "technicalDefault": "\"Wall 3D\"",
+            "businessMeaning": "Defines the method used to orient the panel's coordinate system relative to the solid, determining which direction is considered 'Up' (normal) and which is the length (grain).",
+            "validRange": "Enumeration: Wall 3D, Wall WCS XY, X-Axis, Y-Axis",
+            "unit": "String",
+            "affectsOutput": "Alters the rotation and alignment of the resulting panel. Incorrect strategy may result in panels lying on their side or having the wrong grain direction."
+          },
+          {
+            "name": "sStyle",
+            "technicalDefault": "\"Auto\"",
+            "businessMeaning": "Assigns the construction catalog style (defining material, layer, and thickness) to the new panel. 'Auto' attempts to match the solid's measured thickness to a style in the catalog.",
+            "validRange": "Any valid SipStyle name from the hsbCAD catalog",
+            "unit": "String (Catalog Reference)",
+            "affectsOutput": "Sets the panel thickness and material attributes. If the selected style thickness differs from the solid, the conversion may produce geometric errors or warnings."
+          },
+          {
+            "name": "dSegmentToArcLength",
+            "technicalDefault": "50 mm",
+            "businessMeaning": "Controls the tolerance for converting faceted polygon edges (typical of mesh/solid exports) into smooth arcs. It sets the maximum chord length allowed before the geometry is treated as a straight line rather than a curve.",
+            "validRange": "10 mm to 500 mm (Typical: 20-100 mm)",
+            "unit": "mm",
+            "affectsOutput": "Lower values result in more detailed contours that might retain small facets; higher values smooth out the geometry but might skip shallow curves or create inaccurate arcs if the source mesh is coarse."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sStyle set to 'Auto'",
+            "effect": "The script measures the source solid's bounding box to determine thickness and attempts to find a catalog entry matching that dimension.",
+            "cascade": [
+              "Panel Thickness assignment",
+              "Catalog matching logic"
+            ]
+          },
+          {
+            "trigger": "dSegmentToArcLength modification",
+            "effect": "Changes the PLine generation logic during the mapIO phase, potentially altering the number of vertices and the presence of bulges in the final panel contour.",
+            "cascade": [
+              "Panel Contour Geometry",
+              "Processing time"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "hsbPanel",
+            "description": "The primary panel element created based on the envelope of the source solid, assigned the specified SipStyle.",
+            "appliedTo": "New entity in Model Space"
+          },
+          {
+            "type": "hsbPanelDrill (TSL)",
+            "description": "Parametric drill instances created for cylindrical holes found in the source solid that are perpendicular to the panel surface.",
+            "appliedTo": "The generated hsbPanel"
+          },
+          {
+            "type": "Static Drill/Cut",
+            "description": "Non-parametric machining features (fixed geometry) added to the panel for angled holes or complex cuts that cannot be represented by the standard hsbPanelDrill script.",
+            "appliedTo": "The generated hsbPanel"
+          }
+        ]
+      },
+      "tokens_used": 7771,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Insertion Start (_bOnInsert == true)",
+          "Insert Cycle Check: if (insertCycleCount()>1), erase instance and return to prevent duplicate processing.",
+          "Show Properties Dialog: Prompt user for Conversion Strategy (sStrategy) and Max Segment Length (dSegmentToArcLength).",
+          "User Selection: Prompt to select one or multiple entities (3DSolids or existing Beams) using PrEntity.",
+          "Iterate through Selection Set:",
+          "  - If entity is a GenBeam, use directly.",
+          "  - If entity is a 3DSolid with volume > 1mm^3, create a temporary GenBeam from the solid's realBody.",
+          "  - Determine coordinate system (X/Y axes) and center point from the beam.",
+          "  - Create new script instance (TslInst.dbCreate) for each valid beam attached to the source geometry, passing 'addTools' flag as true.",
+          "  - Set properties of the new instance from the '_LastInserted' catalog entry.",
+          "Cleanup: Erase the original calling instance and return.",
+          "Execution of Child Instance (_bOnMapIO == true):",
+          "Read input PLine and Segment Length tolerance.",
+          "PLine Geometry Processing:",
+          "  - Identify vertices and classify segments as Straight or Arc based on chord tolerance (dMaxSegLength).",
+          "  - Reconstruct the PLine with bulges where arcs are detected.",
+          "Coordinate System Strategy:",
+          "  - Determine Target Z (vzSip) and X (vxSip) based on sStrategy (Wall 3D, Wall WCS XY, X-Axis, Y-Axis).",
+          "  - Project/Transform the PLine to the target plane.",
+          "Style Resolution:",
+          "  - If sStyle is 'Auto', search catalog for a style matching the measured thickness (distance between parallel segments).",
+          "  - If multiple or no matches found, log error.",
+          "Create hsbPanel:",
+          "  - Generate panel from processed PLine and resolved Style.",
+          "  - Set WoodGrain and X-Axis direction.",
+          "Tool Generation (Only if 'addTools' map flag is true):",
+          "  - Iterate through 'cuts' from the source solid.",
+          "  - Modify panel edges using stretchEdgeTo if cuts align with contour segments.",
+          "  - Apply angled cuts as static tools.",
+          "  - Iterate through 'drills' from the source solid.",
+          "  - If drill is parallel to panel Normal (vzSip), create 'hsbPanelDrill' TSL instance.",
+          "  - If drill is angled or TSL creation fails, add as static Drill tool.",
+          "  - Iterate through 'beamcuts' (abc), enlarge free dimensions, check intersection with panel, and add as static BeamCut if valid.",
+          "Finalize: Clear 'addTools' flag in Map, set 'silent' flag."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count",
+            "path1": {
+              "name": "Cycle > 1",
+              "steps": [
+                "Erase current instance",
+                "Return (Stop execution)"
+              ]
+            },
+            "path2": {
+              "name": "Cycle == 1",
+              "steps": [
+                "Show Dialog",
+                "Proceed to Selection"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Type in Selection",
+            "path1": {
+              "name": "GenBeam",
+              "steps": [
+                "Cast entity to Beam object"
+              ]
+            },
+            "path2": {
+              "name": "3DSolid",
+              "steps": [
+                "Check Volume > 1mm^3",
+                "Create GenBeam using dbCreate(realBody)",
+                "Validate resulting Beam"
+              ]
+            }
+          },
+          {
+            "condition": "Geometry Analysis (Vertex Count)",
+            "path1": {
+              "name": "Vertices > 4",
+              "steps": [
+                "Loop vertices to detect arcs",
+                "Classify segments (Start, On Arc, End Point, Straight)",
+                "Calculate bulges",
+                "Recompose PLine"
+              ]
+            },
+            "path2": {
+              "name": "Vertices <= 4",
+              "steps": [
+                "Keep original PLine (No arc detection)"
+              ]
+            }
+          },
+          {
+            "condition": "Style Selection (sStyle)",
+            "path1": {
+              "name": "Auto",
+              "steps": [
+                "Calculate solid thickness from parallel segments",
+                "Loop Catalog Styles",
+                "Check for thickness match",
+                "Select matching style",
+                "Log error if multiple/none found"
+              ]
+            },
+            "path2": {
+              "name": "Specific Style",
+              "steps": [
+                "Use selected SipStyle directly"
+              ]
+            }
+          },
+          {
+            "condition": "Drill Orientation relative to Panel",
+            "path1": {
+              "name": "Parallel to Panel Normal (vzSip)",
+              "steps": [
+                "Check if drill point inside panel contour",
+                "Create 'hsbPanelDrill' TSL instance",
+                "Set Side property (Ref/Opp)"
+              ]
+            },
+            "path2": {
+              "name": "Angled / Not Parallel",
+              "steps": [
+                "Create static Drill object",
+                "Add to panel using addToolStatic"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Solid Volume",
+            "errorMessage": "Implicitly skips solids with volume <= 1mm^3.",
+            "recovery": "Ensure selected 3DSolid has significant geometric volume."
+          },
+          {
+            "check": "Panel Envelope Area",
+            "errorMessage": "Script stops if PLine area <= 0.01mm^2.",
+            "recovery": "Check source geometry validity; ensure it creates a closed contour with area."
+          },
+          {
+            "check": "Style Availability",
+            "errorMessage": "Log written to drawing if 'Auto' style fails to find a unique catalog match.",
+            "recovery": "Manually select the correct Panel Style in the Properties Palette or ensure Catalog has a style matching the thickness."
+          },
+          {
+            "check": "Drill/Cut Intersection",
+            "errorMessage": "Non-perpendicular cuts/drills are ignored if they do not touch the panel contour effectively.",
+            "recovery": "Verify tool geometry penetrates the panel body."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Panel Style",
+            "how": "Properties Palette (OPM) - 'Panel Style' property",
+            "effect": "Updates the panel construction and thickness (Catalog definition)."
+          },
+          {
+            "action": "Adjust Conversion Strategy",
+            "how": "Properties Palette (OPM) - 'Conversion Strategy' property (Note: This may only affect regeneration logic if implemented dynamically, or simply serves as metadata)",
+            "effect": "Potentially re-orients the coordinate system interpretation if the script is recalculated."
+          },
+          {
+            "action": "Modify Segment Tolerance",
+            "how": "Properties Palette (OPM) - 'max Segment Length' property",
+            "effect": "Adjusts the sensitivity for converting facets to arcs in the contour."
+          },
+          {
+            "action": "Edit Panel Geometry",
+            "how": "Grips / CAD Edit commands",
+            "effect": "Modifies the shape; script recalculates tools based on new boundary."
+          }
+        ]
+      },
+      "tokens_used": 9860,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbSolid2Panel.mcr\n\n## Overview\nThis script converts imported 3D Solids or generic beams into intelligent hsbPanels. It automatically interprets the solid's outer contour for the panel shape and internal voids as machining tools (drills and cuts).\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Operates on 3DSolid and GenBeam entities. |\n| Paper Space | No | Not supported for drawing views. |\n| Shop Drawing | No | This is a modeling/conversion tool. |\n\n## Prerequisites\n- **Required entities**: 3DSolid or GenBeam.\n- **Minimum beam count**: 1.\n- **Required settings**: \n  - Panel Styles (SipStyles) configured in the hsbCAD Catalog.\n  - `hsbPanelDrill` TSL must be present in the search path.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbSolid2Panel.mcr` from the list.\n\n### Step 2: Configure Conversion Settings\n```\nProperties Palette (OPM):\nAction: Set the Conversion Strategy and Max Segment Length before selecting geometry.\n- Strategy: Determines how the panel is oriented (e.g., \"Wall 3D\" uses the solid's current orientation).\n- Segment Length: Defines how accurately curved edges are smoothed (default is 50 mm).\n```\n\n### Step 3: Select Source Geometry\n```\nCommand Line: Select entities:\nAction: Click on the 3D Solid(s) or Beam(s) you wish to convert.\n- You can select multiple entities at once.\n```\n\n### Step 4: Finalize\n```\nCommand Line: [Press Enter or Space]\nAction: The script processes the geometry, creates the hsbPanel, and assigns tools based on voids found in the solid.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sStrategy | String | Wall 3D | Defines the orientation method for the panel's coordinate system (Up direction and length). Options include Wall 3D, Wall WCS XY, X-Axis, and Y-Axis. |\n| sStyle | String | Auto | The Panel Style (SipStyle) from the catalog to apply. \"Auto\" attempts to find a style matching the solid's measured thickness. |\n| dSegmentToArcLength | Double | 50 mm | Tolerance for converting faceted edges (from meshes) into smooth arcs. Lower values retain more detail; higher values smooth out geometry. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Re-runs the conversion logic. Useful if you changed the Style or Segment Length property. |\n\n## Settings Files\n- **Catalog Entity**: SipStyles\n- **Location**: hsbCAD Catalog\n- **Purpose**: Defines material, layer, and thickness for the generated panels.\n\n## Tips\n- **Volume Check**: Ensure the 3D Solids you select have a significant volume (greater than 1mm³). Very small fragments will be ignored.\n- **Auto Style**: Use the \"Auto\" style setting to quickly match imported architectural solids to your existing timber panel catalog based on thickness.\n- **Curved Geometry**: If converted curved walls look jagged or faceted, decrease the `dSegmentToArcLength` value (e.g., to 20mm) and recalculate.\n- **Drill Conversion**: Ensure cylindrical holes in the solid are closed shapes; they will be converted to parametric `hsbPanelDrill` instances if perpendicular to the panel surface.\n\n## FAQ\n- **Q: Why did the script fail to create a panel?**\n  **A:** The source solid might be invalid or too small. Check that the solid has a closed contour and a volume larger than 1mm³.\n- **Q: Why are my curved walls looking jagged?**\n  **A:** The `dSegmentToArcLength` tolerance might be too high. Lower this value to detect arcs more accurately.\n- **Q: What happens to the holes in the solid?**\n  **A:** Voids are interpreted as tools. Vertical holes become parametric drills; angled holes or complex cuts become static machining tools."
+      },
+      "tokens_used": 6053,
+      "error": null
+    }
+  }
+}

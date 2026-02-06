@@ -1,0 +1,242 @@
+{
+  "filename": "hsb_SetOpeningFloorDescriptionFromCatalog.mcr",
+  "status": "completed",
+  "total_tokens": 16365,
+  "processing_time": 125.63750195503235,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2046,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses PrEntity to select 'OpeningRoof' entities and does not contain any shopdrawing specific keywords (sd_*, #Type E) or viewport references. It executes immediately upon insertion and erases itself after processing the selected entities from the model."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "OpeningRoof"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing OpeningRoof entities.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1369,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect a set of Opening Roof/Floors",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "_kExecuteKey == \"\" during insertion",
+            "title": null,
+            "dataSource": "sCatalogName property",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sCatalogName",
+            "type": "PropString",
+            "displayName": "Opening Catalog Name",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2157,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A batch utility used to apply specific property configurations (from a catalog) to multiple selected Roof or Floor openings simultaneously.",
+          "category": "Utilities",
+          "typicalUseCase": "When a user needs to standardize or update the specifications (such as descriptions, material codes, or preset dimensions) of several existing openings to match a specific catalog entry definition."
+        },
+        "parameters": [
+          {
+            "name": "sCatalogName",
+            "technicalDefault": "",
+            "businessMeaning": "The identifier of the specific catalog preset containing the desired configuration for the openings (e.g., a specific fire rating, vendor code, or standard size type).",
+            "validRange": "Any string that exactly matches (case-insensitive) an existing catalog entry name associated with the selected Opening entities.",
+            "unit": "String",
+            "affectsOutput": "Updates the internal properties and attributes of the selected OpeningRoof/OpeningFloor entities to match the values defined in the specified catalog entry."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of Opening entities",
+            "effect": "The available valid values for sCatalogName depend on the catalog entries linked to the type of Opening selected (Floor vs Roof).",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Property Modification",
+            "description": "Updates the attributes of existing OpeningRoof or OpeningFloor entities. The script does not create new geometry but modifies the data of existing entities. The script instance deletes itself upon completion.",
+            "appliedTo": "OpeningRoof and OpeningFloor entities selected by the user."
+          }
+        ]
+      },
+      "tokens_used": 2277,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User executes script insertion.",
+          "Script checks 'insertCycleCount'; if greater than 1, script erases itself immediately.",
+          "Script checks '_kExecuteKey'; if empty, dialog is displayed to input 'sCatalogName'.",
+          "Command prompts user to select a set of 'Opening Roof/Floor' entities.",
+          "User selects entities or presses Enter.",
+          "Script filters selected entities to collect valid 'OpeningRoof' objects into an internal list.",
+          "Script triggers a recalculation cycle (internal TSL process).",
+          "Script iterates through the internal list of collected entities.",
+          "For each entity, script determines if it is a Floor or Roof type to retrieve the correct catalog list.",
+          "Script compares the user-provided 'sCatalogName' against the entity's available catalog entries (case-insensitive).",
+          "If a match is found, the entity's properties are updated from the catalog entry.",
+          "If no match is found, the entity is skipped and left unchanged.",
+          "After processing all entities, the script instance erases itself from the drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion cycle count check",
+            "path1": {
+              "name": "Restart/Redundant Execution",
+              "steps": [
+                "Detect insertCycleCount > 1",
+                "Execute eraseInstance()",
+                "Stop execution"
+              ]
+            },
+            "path2": {
+              "name": "First Execution",
+              "steps": [
+                "Proceed to Execute Key check",
+                "Prompt for Entity Selection"
+              ]
+            }
+          },
+          {
+            "condition": "Catalog Name Match",
+            "path1": {
+              "name": "Match Found",
+              "steps": [
+                "Identify exact catalog name string from list",
+                "Execute opRoof.setValuesFromCatalog()",
+                "Update entity properties"
+              ]
+            },
+            "path2": {
+              "name": "No Match",
+              "steps": [
+                "Skip entity update",
+                "Continue to next entity in loop"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Selection",
+            "path1": {
+              "name": "Valid Selection",
+              "steps": [
+                "Populate internal _Entity array",
+                "Return to trigger processing loop"
+              ]
+            },
+            "path2": {
+              "name": "Empty/Cancelled Selection",
+              "steps": [
+                "_Entity array remains empty",
+                "Script detects length 0",
+                "Execute eraseInstance()"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Validity",
+            "errorMessage": "None (Silent)",
+            "recovery": "The script checks 'op.bIsValid()' for every selected entity. Invalid entities are ignored/skipped during the loop."
+          },
+          {
+            "check": "Catalog Existence",
+            "errorMessage": "None (Silent)",
+            "recovery": "The user input 'sCatalogName' is compared against 'op.getListOfCatalogNames()'. If the input string does not exist in the list, the specific entity is not updated."
+          },
+          {
+            "check": "Script Persistence",
+            "errorMessage": "None",
+            "recovery": "The script automatically deletes itself after execution or if the selection set is empty. There is no recovery for the script instance, but the drawing remains intact."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "The script executes 'eraseInstance()' at the end of the workflow. The script object is removed from the drawing completely. All modifications to the Opening entities are finalized immediately. No further editing is possible via the script instance."
+          }
+        ]
+      },
+      "tokens_used": 4246,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SetOpeningFloorDescriptionFromCatalog\n\n## Overview\nThis batch utility allows you to apply a specific catalog configuration (such as descriptions, material codes, or preset dimensions) to multiple selected Roof or Floor openings simultaneously.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be executed in the model where OpeningRoof or OpeningFloor entities exist. |\n| Paper Space | No | Not designed for layout or paper space usage. |\n| Shop Drawing | No | This script modifies model data, not shop drawing views. |\n\n## Prerequisites\n- **Required Entities**: At least one `OpeningRoof` or `OpeningFloor` entity in the drawing.\n- **Minimum beam count**: N/A (Selects entities, not beams).\n- **Required settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_SetOpeningFloorDescriptionFromCatalog.mcr`\n\n### Step 2: Define Catalog Name\nA dialog box will appear when the script starts.\n```\nDialog: Opening Catalog Name\nAction: Type the name of the catalog entry you wish to apply (e.g., \"StandardFloorTypeA\"). Click OK to proceed.\n```\n\n### Step 3: Select Openings\n```\nCommand Line: Select a set of Opening Roof/Floors\nAction: Click on the desired Roof or Floor openings in the model. You can select multiple entities. Press Enter to confirm your selection.\n```\n*Note: The script will process the selected entities and then delete itself automatically.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Opening Catalog Name | Text | \"\" | The specific name of the catalog preset to apply to the selected openings. This name must match exactly (case-insensitive) with an existing catalog entry. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not add persistent context menu items, as it erases itself after execution. |\n\n## Settings Files\n- **Filename**: None required\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Exact Spelling**: Ensure the Catalog Name entered matches the name in your database exactly. If the name does not match, the specific opening will be skipped without an error message.\n- **Batch Processing**: You can select a mix of Roof and Floor openings in one go. The script automatically detects the type and applies the correct catalog logic.\n- **Script Deletion**: The script instance removes itself from the drawing immediately after running. You do not need to manually delete it.\n\n## FAQ\n- **Q: What happens if I enter a catalog name that doesn't exist?**\n  A: The script will skip the update for the selected entities and leave them unchanged. No error message will be displayed.\n- **Q: Can I undo the changes made by this script?**\n  A: Yes, you can use the standard AutoCAD `UNDO` command to revert the changes if the result is not as expected.\n- **Q: Why did the script disappear from my drawing after I used it?**\n  A: This is a \"run-once\" utility script. It is designed to execute its task and delete its own instance from the drawing automatically to keep the model clean."
+      },
+      "tokens_used": 4270,
+      "error": null
+    }
+  }
+}

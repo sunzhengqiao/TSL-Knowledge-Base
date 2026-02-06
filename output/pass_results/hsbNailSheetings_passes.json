@@ -1,0 +1,213 @@
+{
+  "filename": "hsbNailSheetings.mcr",
+  "status": "completed",
+  "total_tokens": 31780,
+  "processing_time": 554.1507477760315,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.3",
+            "date": "11mar14",
+            "author": "th@hsbCAD.de",
+            "changes": "bugfix multiple openings"
+          },
+          {
+            "version": "1.2",
+            "date": "29feb12",
+            "author": "th@hsbCAD.de",
+            "changes": "color filter bugfix"
+          },
+          {
+            "version": "1.1",
+            "date": "23feb12",
+            "author": "th@hsbCAD.de",
+            "changes": "insert bugfix"
+          },
+          {
+            "version": "1.0",
+            "date": "22feb12",
+            "author": "th@hsbCAD.de",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7895,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses TslInst.dbCreate with _kModelSpace, interacts with Element and GenBeam objects, and relies on 3D coordinate systems (coordSys, vecX/Y/Z). It does not reference viewports, paper space entities, or ShopDrawing specific prefixes (sd_)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space with selected Elements containing sheeting zones (defined by GenBeams).",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4933,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6392,
+      "error": null
+    },
+    "4": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "Request timeout after retries"
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Insertion: Check insert cycle count (terminate if >1).",
+          "2. Configuration: Set properties from Catalog key or Show Dialog.",
+          "3. User Selection: Prompt user to select one or more Elements.",
+          "4. Validation Loop: Iterate through selected Elements.",
+          "5. [Conditional] Check if script instance is already attached to Element.",
+          "6. Branch A (New Attachment): Remove existing NailLines in specified Zone. Create new script instance attached to Element. Set properties to '_LastInserted'.",
+          "7. Branch B (Existing Attachment): Skip Element and report message.",
+          "8. Terminate Insert: Erase the temporary 'caller' instance.",
+          "9. Script Execution (Recalc): Validate linked Element exists.",
+          "10. Data Parsing: Parse Material and Color include/exclude lists from Properties.",
+          "11. Entity Collection: Collect GenBeams from Element in Target Zone and Adjacent Zone (calculated by nZone +/- 1).",
+          "12. Filtering: Apply Material/Color filters to GenBeams in Target Zone.",
+          "13. Geometry Processing: Project GenBeams to 2D PlaneProfiles. Merge gaps based on 'Merge Gaps' property. Remove small holes based on 'Ignore Holes' property.",
+          "14. Intersection: Intersect Target Zone profiles with Adjacent Zone profiles to determine nailing area.",
+          "15. Layout Generation: Calculate boundary segments and intermediate nail rows based on 'Spacing', 'Orientation', and 'Module'.",
+          "16. [Conditional] Check Execute Key (Context Menu Trigger).",
+          "17. Branch A (Release Naillines): Create permanent NailLine entities in database. Erase script instance.",
+          "18. Branch B (Standard Recalc): Create preview visualization (ElemTools). Keep script instance."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script attached during Insert",
+            "path1": {
+              "name": "New Attachment",
+              "steps": [
+                "Check if 'hsbNailSheetings' is already on Element",
+                "If no: Delete old NailLines for the zone",
+                "Create new TslInst attached to Element"
+              ]
+            },
+            "path2": {
+              "name": "Duplicate Skip",
+              "steps": [
+                "Check if 'hsbNailSheetings' is already on Element",
+                "If yes: Report 'has already data attached'",
+                "Do not attach new instance"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Filtering Logic",
+            "path1": {
+              "name": "Target Zone Beam",
+              "steps": [
+                "Check if beam is in 'nZone'",
+                "Apply 'Include' Material/Color filters",
+                "Apply 'Exclude' Material/Color filters",
+                "Add to processing list"
+              ]
+            },
+            "path2": {
+              "name": "Adjacent Zone Beam",
+              "steps": [
+                "Check if beam is in 'nZone-1' or 'nZone+1'",
+                "Add to processing list (No filtering)"
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Trigger: 'Release Naillines'",
+            "path1": {
+              "name": "Generate Physical Entities",
+              "steps": [
+                "Trigger detected (_kExecuteKey matches)",
+                "Loop calculated nail segments",
+                "Create NailLine entities via dbCreate",
+                "Erase script instance"
+              ]
+            },
+            "path2": {
+              "name": "Preview Mode (Default)",
+              "steps": [
+                "No trigger detected",
+                "Loop calculated nail segments",
+                "Add ElemTools to element for visualization",
+                "Retain script instance for future updates"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Linked Element Exists",
+            "errorMessage": "Internal Error: Element not found (Script erases self).",
+            "recovery": "Re-run script insertion and select valid Element."
+          },
+          {
+            "check": "Input Elements Selected",
+            "errorMessage": "None (User prompt loop simply doesn't run).",
+            "recovery": "User must select Elements to proceed."
+          },
+          {
+            "check": "GenBeams in Zones",
+            "errorMessage": "No NailLines generated (Empty lsNails array).",
+            "recovery": "Check Zone property; verify GenBeams exist in the specified zones; check Material/Color filters."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Parameters",
+            "how": "AutoCAD Properties Palette (OPM)",
+            "effect": "Updates the nailing preview (recalculates geometry, spacing, offsets, and filters dynamically)."
+          },
+          {
+            "action": "Release Naillines",
+            "how": "Right-click Context Menu -> 'Release Naillines'",
+            "effect": "Converts the preview tools into actual physical NailLine entities and removes the script instance from the element."
+          }
+        ]
+      },
+      "tokens_used": 7988,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbNailSheetings.mcr\n\n## Overview\nThis script automates the calculation and placement of nail lines for timber sheeting (such as OSB or plywood) on Elements. It generates a dynamic preview of the nailing pattern based on spacing, zones, and material filters, which can then be converted into permanent physical entities.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in 3D Model Space. |\n| Paper Space | No | Not supported for layout views. |\n| Shop Drawing | No | Not intended for 2D drawing generation. |\n\n## Prerequisites\n- **Required Entities**: An `Element` (e.g., a wall or floor panel) containing `GenBeams` that define the sheeting zones.\n- **Minimum Beams**: The Element must contain structural members (GenBeams) in the target zones to calculate nailing geometry.\n- **Required Settings**: None strictly required, though a Catalog entry may be used for default settings.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Select `hsbNailSheetings.mcr` from the file list.\n\n### Step 2: Configure Initial Settings\n```\nDialog/Config: The script may prompt with a dialog or load default settings from the Catalog.\nAction: Review settings for Zone, Spacing, and Material filters. Click OK to proceed.\n```\n\n### Step 3: Select Elements\n```\nCommand Line: Select elements:\nAction: Click on the Element(s) (walls/floors) you wish to apply sheeting nailing to. Press Enter to confirm selection.\n```\n\n### Step 4: Adjust Preview (Optional)\nOnce attached, the script displays a preview of the nail lines.\nAction: Select the Element and open the **Properties Palette**. Modify parameters like Spacing or Offset to update the preview in real-time.\n\n### Step 5: Generate Physical Nail Lines\nAction: Right-click on the Element to open the context menu. Select **Release Naillines**.\nResult: The script creates actual \"NailLine\" entities in the drawing and removes itself from the Element.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Description |\n|-----------|------|-------------|\n| **nZone** | Integer | The specific construction zone (layer index) to apply the nailing to. |\n| **Spacing** | Double | The distance between nail rows. |\n| **Orientation** | Double/Angle | The direction angle of the nail lines relative to the element. |\n| **Module** | Double | The offset/start point for the nailing pattern. |\n| **Material Include** | String | List of materials to include. If empty, all materials are considered. |\n| **Material Exclude** | String | List of materials to exclude from nailing. |\n| **Color Include** | String | Filter to include only specific beam colors. |\n| **Color Exclude** | String | Filter to exclude specific beam colors. |\n| **Merge Gaps** | Double | Gaps smaller than this value are treated as a continuous nailing surface. |\n| **Ignore Holes** | Double | Openings or holes smaller than this value are ignored in the nailing pattern. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Release Naillines** | Converts the calculated preview into permanent NailLine entities and deletes the script instance from the element. |\n\n## Tips\n- **Filtering**: Use the Material and Color filters to prevent nails from being calculated on structural studs or specific opening frames, focusing only on the sheeting material.\n- **Adjacent Zones**: The script automatically checks adjacent zones (`nZone` +/- 1) to determine clean boundaries and stop nailing lines correctly at edges.\n- **Updating**: If you modify the Element (e.g., move an opening), the script automatically recalculates the nailing pattern while in preview mode.\n- **Cleanup**: If you re-run the script on an element that already has this script attached, it will detect the duplicate and skip it to prevent errors.\n\n## FAQ\n- **Q: I ran the script, but I don't see any nail lines.**\n  - **A**: Check your **nZone** property. Ensure the GenBeams in your Element actually exist in that specific zone index. Also, verify that your Material/Color filters are not excluding all beams.\n- **Q: How do I undo the nailing?**\n  - **A**: You can use the standard AutoCAD `UNDO` command immediately after releasing the naillines. If the script is still attached (preview mode), you can simply delete the script instance or erase the element.\n- **Q: Can I change the spacing after I release the naillines?**\n  - **A**: No. Once \"Release Naillines\" is executed, the script is removed and the lines become standard CAD entities. To change spacing, you must re-insert the script or have a saved copy before releasing."
+      },
+      "tokens_used": 4572,
+      "error": null
+    }
+  }
+}

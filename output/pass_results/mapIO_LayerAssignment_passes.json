@@ -1,0 +1,253 @@
+{
+  "filename": "mapIO_LayerAssignment.mcr",
+  "status": "completed",
+  "total_tokens": 27523,
+  "processing_time": 293.25930523872375,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3710,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script executes exclusively via `_bOnMapIO` and calls `eraseInstance()` in all other cases, indicating it is a non-visual utility function. It uses logic specific to structural model organization (checking for `GenBeam` to set default sublayer 'Z' vs 'T' for other types) and manipulates `Group` and `Layer` properties. It lacks `sd_` functions, `_Viewport` references, or `#Type E` declarations associated with ShopDrawing or Paper Space scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Entity (passed via MapIO as 'thisEntity')"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "None specific (Utility script invoked via MapIO)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3700,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2768,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A utility function used to programmatically organize timber elements into the correct hsbCAD Layers and Groups (Project Structure) based on their type or location.",
+          "category": "Utility / Organization",
+          "typicalUseCase": "Automated assignment of generated beams (e.g., studs, rafters) to specific project folders (e.g., 'House/Wall1') to ensure correct nesting and export lists without manual user intervention."
+        },
+        "parameters": [
+          {
+            "name": "layerGroup",
+            "technicalDefault": "Empty String",
+            "businessMeaning": "The target destination name for the element, corresponding to a Group Name or Layer Name in the hsbCAD Project Browser.",
+            "validRange": "Any valid Group name (e.g., 'House\\Roof') or Layer name present in the drawing.",
+            "unit": "String",
+            "affectsOutput": "Determines the primary organization folder where the element will appear. If the Group doesn't exist, it defaults to a standard Layer assignment."
+          },
+          {
+            "name": "subLayerChar",
+            "technicalDefault": "Empty String (Logic defaults to 'Z' for GenBeams, 'T' otherwise)",
+            "businessMeaning": "The specific classification character (Sublayer) used within a Group to filter element types (e.g., 'Z' for structural beams, 'E' for end cuts, 'C' for connectors).",
+            "validRange": "Single character restricted to: 'E', 'T', 'I', 'J', 'Z', 'C'.",
+            "unit": "Char",
+            "affectsOutput": "Sets the detailed filter status of the element within its Group, which controls visibility and what is included in specific production lists."
+          },
+          {
+            "name": "parentEntity",
+            "technicalDefault": "Invalid Entity",
+            "businessMeaning": "The host element (e.g., a wall or auxiliary plane) from which the group assignment should be inherited.",
+            "validRange": "Any valid hsbCAD Entity (Beam, Wall, Contour, etc.)",
+            "unit": "Entity",
+            "affectsOutput": "If the 'layerGroup' is not found as a named Group, the script attempts to copy the layer and group properties from this parent entity to the new entity."
+          },
+          {
+            "name": "thisEntity",
+            "technicalDefault": "Invalid Entity",
+            "businessMeaning": "The specific timber element or machining part that needs to be organized.",
+            "validRange": "Any valid hsbCAD Entity to be processed.",
+            "unit": "Entity",
+            "affectsOutput": "The object being modified. If this is invalid, the script exits without changes."
+          },
+          {
+            "name": "reportDebug",
+            "technicalDefault": "0 (False)",
+            "businessMeaning": "A diagnostic flag to display processing steps in the command line log.",
+            "validRange": "0 (False) or 1 (True)",
+            "unit": "Boolean",
+            "affectsOutput": "No physical change; only displays text feedback to help troubleshoot assignment logic."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "When 'thisEntity' type is a GenBeam",
+            "effect": "Default 'subLayerChar' is set to 'Z' unless overridden.",
+            "cascade": [
+              "subLayerChar"
+            ]
+          },
+          {
+            "trigger": "When 'layerGroup' matches an existing Group name",
+            "effect": "The script adds the entity to that Group and ignores 'parentEntity' for grouping logic.",
+            "cascade": [
+              "parentEntity"
+            ]
+          },
+          {
+            "trigger": "When 'layerGroup' is NOT a Group name",
+            "effect": "The script treats 'layerGroup' as a Layer name. 'parentEntity' is then checked to inherit layers if 'layerGroup' is a single character code.",
+            "cascade": [
+              "layerGroup",
+              "parentEntity"
+            ]
+          }
+        ],
+        "outputEntities": []
+      },
+      "tokens_used": 5608,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script invoked via MapIO (callMapIO) by an external script.",
+          "2. Retrieve parameters from Map (layerGroup, subLayerChar, parentEntity, thisEntity, reportDebug).",
+          "3. [Normalization] If layerGroup is empty but subLayerChar is present and parentEntity is valid, copy subLayerChar to layerGroup.",
+          "4. [Validation] Check if thisEntity is valid and layerGroup is not empty. If not, exit immediately.",
+          "5. [Debug] If reportDebug is true, print received Map arguments to the log.",
+          "6. Determine default Sublayer Character: Set to 'Z' if thisEntity is a GenBeam, otherwise 'T'.",
+          "7. [Override] If subLayerChar parameter is a valid code (E,T,I,J,Z,C), overwrite the default character determined in step 6.",
+          "8. [Group Search] Iterate through all existing Groups in the drawing to find a name matching layerGroup.",
+          "9. [Branch A - Group Found] Add thisEntity to the found Group using the determined Sublayer Character.",
+          "10. [Branch B - No Group Found] Assume layerGroup is a Layer name or code.",
+          "11. [Branch B Check] Check if layerGroup is a single valid code char AND parentEntity is valid.",
+          "12. [Branch B1 - Inheritance] Copy layer and group assignments from parentEntity to thisEntity.",
+          "13. [Branch B2 - Direct Layer] Assign thisEntity directly to the layer named in layerGroup.",
+          "14. [Debug] If reportDebug is true, print final status report."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Does 'layerGroup' match an existing Group name in the Project Browser?",
+            "path1": {
+              "name": "Assign to Group",
+              "steps": [
+                "Locate the specific Group object.",
+                "Execute Group.addEntity() with the calculated Sublayer Character.",
+                "Stop further processing."
+              ]
+            },
+            "path2": {
+              "name": "Treat as Layer / Inheritance",
+              "steps": [
+                "Treat 'layerGroup' as a Layer name.",
+                "Check if 'layerGroup' is a single valid character (E/T/I/J/Z/C) and parentEntity exists.",
+                "If yes, inherit Group/Layer from parent.",
+                "If no, assign directly to the Layer specified."
+              ]
+            }
+          },
+          {
+            "condition": "Is 'layerGroup' empty while 'subLayerChar' is provided?",
+            "path1": {
+              "name": "Map Parameters",
+              "steps": [
+                "Set 'layerGroup' value equal to 'subLayerChar' value.",
+                "Proceed to assignment logic."
+              ]
+            },
+            "path2": {
+              "name": "Use Provided LayerGroup",
+              "steps": [
+                "Use 'layerGroup' as provided.",
+                "Proceed to assignment logic."
+              ]
+            }
+          },
+          {
+            "condition": "Is the input Entity a GenBeam type?",
+            "path1": {
+              "name": "GenBeam Default",
+              "steps": [
+                "Set default Sublayer Character to 'Z'."
+              ]
+            },
+            "path2": {
+              "name": "Other Entity Default",
+              "steps": [
+                "Set default Sublayer Character to 'T'."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "thisEntity validity",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Calling script must ensure a valid entity is passed in the MapIO."
+          },
+          {
+            "check": "layerGroup presence",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Calling script must provide a valid layerGroup or subLayerChar string."
+          },
+          {
+            "check": "Sublayer Character validity",
+            "errorMessage": "None (Invalid characters are ignored)",
+            "recovery": "Calling script should restrict input to 'E', 'T', 'I', 'J', 'Z', or 'C'."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "This is a transient utility script that executes immediately via MapIO and calls eraseInstance(). It does not persist in the drawing to allow post-insertion modifications. The changes made (Layer/Group assignment) are applied to the target entity immediately."
+          }
+        ]
+      },
+      "tokens_used": 6320,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# mapIO_LayerAssignment.mcr\n\n## Overview\nThis is a background utility script used to automatically organize timber elements into the correct hsbCAD Layers and Project Groups. It ensures that generated parts are sorted into the correct project structure (e.g., \"House/Wall1\") based on defined rules, typically invoked by other generation scripts.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Operates on entities within the structural model. |\n| Paper Space | No | Not applicable for paper space or layouts. |\n| Shop Drawing | No | Not used for creating shop drawing views. |\n\n## Prerequisites\n- **Source Entity**: An existing element (beam, machining part, etc.) must be passed to the script via MapIO.\n- **Calling Script**: This script is designed to be called by another TSL script using `callMapIO`; it is not intended for standalone manual use.\n\n## Usage Steps\n\n### Step 1: Automatic Invocation\n*Note: This script has no command line interface or user prompts. It runs automatically when triggered by a parent script.*\n\n1.  The parent script passes the target entity and desired location data to `mapIO_LayerAssignment`.\n2.  The script checks if the requested Project Group (Folder) exists.\n3.  If the Group exists, the entity is added to it.\n4.  If the Group does not exist, the script assigns the entity to a specific Layer or inherits the Layer/Group from a parent host element.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not expose parameters to the Properties Palette. All configuration is handled internally via MapIO inputs. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | This script does not add items to the right-click context menu. |\n\n## Settings Files\n- **None**: This script does not use external settings or XML files.\n\n## Tips\n- **Default Sublayers**: The script intelligently defaults to Sublayer 'Z' (Structure) for Beams and 'T' (Other) for different entity types unless overridden.\n- **Group vs. Layer**: The script first attempts to find a Project Group matching the input. If none is found, it treats the input as a standard Layer name.\n- **Inheritance**: If exact Group assignment fails, the script can copy the organizational properties from a \"Parent\" entity (e.g., assigning a stud to the same layer as the wall it is contained in).\n\n## FAQ\n- **Q: I tried to insert this script but nothing happened.**\n  - **A**: This is a utility script that runs and deletes itself immediately (`eraseInstance`) to prevent cluttering the drawing. It functions only when called by other scripts.\n- **Q: How do I change the layer assignment logic?**\n  - **A**: You must modify the script that is *calling* `mapIO_LayerAssignment`. The inputs (Layer name, Sublayer character) are determined by that parent script."
+      },
+      "tokens_used": 5417,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,371 @@
+{
+  "filename": "TruckDefinition.mcr",
+  "status": "completed",
+  "total_tokens": 50943,
+  "processing_time": 465.49682116508484,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "17.01.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-17564 initial version of truck definition"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8837,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script prompts for an insertion point using PrPoint (\"Select location\"), which is characteristic of Model Space insertion. It does not use _Viewport, _kPaperSpace, or processing logic typical of Shop Drawings (sd_* prefix or Element enumeration). It manages global 'TruckDefinition' objects and creates visual EntPLine representations in the model."
+        },
+        "prerequisites": {
+          "requiredEntities": [],
+          "minimumBeams": 0,
+          "requiredSpace": "Requires Model Space to define the location of the truck definition marker.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6636,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10086,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Inserts and manages truck definitions within the model to visualize loading areas, calculate load volumes, and facilitate logistics planning for timber transport.",
+          "category": "Logistics/Planning",
+          "typicalUseCase": "Used by production managers or planners to define where timber packages can be placed on a truck (loading profiles) and visualize the maximum stacking height for transport optimization."
+        },
+        "parameters": [
+          {
+            "name": "sDefinition",
+            "technicalDefault": "List of all existing truck definition names",
+            "businessMeaning": "Selects the specific truck type from the library. This loads predefined dimensions (Length, Width, Height) and visual representations associated with that truck style.",
+            "validRange": "N/A (List of available predefined styles)",
+            "unit": "String",
+            "affectsOutput": "Updates the geometry bounding box (Length/Width/Height) and loads the specific 3D visual body associated with the selected truck type."
+          },
+          {
+            "name": "dLength",
+            "technicalDefault": "U(13600)",
+            "businessMeaning": "The total length of the truck's loading bed available for placing timber packages.",
+            "validRange": "6000.0 - 20000.0",
+            "unit": "mm",
+            "affectsOutput": "Determines the length of the bounding box drawn around the truck and defines the maximum extent for load profiles along the X-axis."
+          },
+          {
+            "name": "dWidth",
+            "technicalDefault": "U(2480)",
+            "businessMeaning": "The total width of the truck's loading bed.",
+            "validRange": "2200.0 - 2800.0",
+            "unit": "mm",
+            "affectsOutput": "Determines the width of the bounding box drawn around the truck and defines the maximum extent for load profiles along the Y-axis."
+          },
+          {
+            "name": "dHeight",
+            "technicalDefault": "U(2700)",
+            "businessMeaning": "The maximum vertical stacking height from the bed floor. Used to calculate the cubic volume of the load.",
+            "validRange": "2400.0 - 4000.0",
+            "unit": "mm",
+            "affectsOutput": "Defines the top cutting plane for load volume extrusion. Load profiles are extruded vertically to this height to visualize the utilized volume."
+          },
+          {
+            "name": "dTara",
+            "technicalDefault": "0",
+            "businessMeaning": "The unladen weight (empty weight) of the truck. Critical for ensuring the total payload does not exceed legal limits.",
+            "validRange": "5000.0 - 15000.0",
+            "unit": "kg",
+            "affectsOutput": "Used for logistical calculations (Total Weight = Tara + Payload). Does not change geometry."
+          },
+          {
+            "name": "dMaxGross",
+            "technicalDefault": "0",
+            "businessMeaning": "The maximum legally permitted gross weight of the vehicle (Truck + Load).",
+            "validRange": "18000.0 - 44000.0",
+            "unit": "kg",
+            "affectsOutput": "Used for logistical calculations. Does not change geometry."
+          },
+          {
+            "name": "sDescription",
+            "technicalDefault": "",
+            "businessMeaning": "A user-defined label for this specific truck instance (e.g., 'Site A Delivery 1').",
+            "validRange": "Text String",
+            "unit": "String",
+            "affectsOutput": "Text label displayed in the model or properties."
+          },
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "_DimStyles.sorted()",
+            "businessMeaning": "Selects the CAD dimension style used for annotating the truck dimensions.",
+            "validRange": "N/A (List of styles in drawing)",
+            "unit": "String",
+            "affectsOutput": "Visual appearance of dimension lines and text."
+          },
+          {
+            "name": "dTextHeight",
+            "technicalDefault": "U(0)",
+            "businessMeaning": "Overrides the dimension style text height. A value of 0 uses the dimension style's default.",
+            "validRange": "0.0 - 500.0 (0 implies default)",
+            "unit": "mm",
+            "affectsOutput": "Size of text labels."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing sDefinition",
+            "effect": "Updates dLength, dWidth, dHeight, and the visual representation body to match the selected library definition.",
+            "cascade": [
+              "dLength",
+              "dWidth",
+              "dHeight"
+            ]
+          },
+          {
+            "trigger": "Changing dHeight",
+            "effect": "Recalculates the extrusion height of the load profiles, changing the volume visualization.",
+            "cascade": [
+              "Load Volume Visualization"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "EntPLine",
+            "description": "Polylines representing the 'Load Profiles'. These are user-defined boundaries on the truck bed where packages are placed. They are displayed filled with a color (grey/yellow) to indicate occupied area.",
+            "appliedTo": "Model Space (referenced relative to the truck insertion point)"
+          },
+          {
+            "type": "Display Geometry (Body)",
+            "description": "Visual representation of the truck (chassis/wheels) if a display definition was set via 'Set truck display'. Otherwise, a simple bounding box is implied.",
+            "appliedTo": "Model Space"
+          },
+          {
+            "type": "Volume Projection",
+            "description": "Visual projections showing the vertical stack-up of the load profiles up to the defined dHeight.",
+            "appliedTo": "Model Space"
+          }
+        ]
+      },
+      "tokens_used": 8789,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Start: Check 'DialogMode' map entry.",
+          "Branch: If DialogMode > 0 (Specifically 1), show properties dialog for 'EditTruck' and exit.",
+          "Branch: If DialogMode = 0, proceed to execution logic.",
+          "Initialize Constants and Properties: Set colors, default dimensions, and fetch existing truck definitions.",
+          "Execution Flow Check: Determine if script is running in Jig mode or Insert/Recalc mode.",
+          "Branch: Jig Mode (Insertion Phase)",
+          "   Check Jig Key: 'kJigInsert' or 'kJigDrawRectangle'.",
+          "   If 'kJigInsert': Update temporary point _Pt0 and property values from map arguments.",
+          "   If 'kJigDrawRectangle': Retrieve stored points and vectors, draw a dynamic rectangle preview based on cursor position, and exit.",
+          "Branch: Insert Mode (_bOnInsert)",
+          "   Check Insertion Cycle: If count > 1, erase duplicate instance and return.",
+          "   Load Properties: Use Catalog if execute key matches, else show standard properties dialog.",
+          "   Start Jig Loop: Prompt user to 'Select location'.",
+          "   User Interaction: User moves cursor; 'kJigInsert' logic updates preview. User confirms location.",
+          "   Set Insertion Point: _Pt0 is set to selected location. Jig loop ends.",
+          "   Define Coordinate System: Create coordinate system (cs) based on current view vectors.",
+          "   Load Truck Data: Fetch 'TruckDefinition' object (td) corresponding to selected 'sDefinition'. Load dimensions (Length, Width, Height) and display geometry.",
+          "   Entity Management: Check for existing entities linked to this instance (stored in _Map).",
+          "   Branch: Edit Definition Mode (Triggered by 'Edit Definition' key)",
+          "   Context Menu Options: Add triggers for 'Add Load Profile' and 'Set truck display'.",
+          "   Branch: 'Add Load Profile' Triggered",
+          "   Prompt for Geometry: Ask user to pick points for a rectangle OR select existing polylines.",
+          "   Sub-branch: Point Input",
+          "   Pick Point 1: Start axis.",
+          "   Pick Point 2: Define axis vector.",
+          "   Pick Point 3: Define width (dynamic Jig 'kJigDrawRectangle' active here).",
+          "   Create Profile: Generate PLine rectangle, create EntPLine, store in _Map.",
+          "   Sub-branch: Entity Selection",
+          "   Select Polylines: Filter for valid EntPLine, remove duplicates, append to instance data.",
+          "   Recalculate: Set execution loops to 2 to refresh geometry.",
+          "   Branch: 'Set truck display' Triggered",
+          "   Select Entities: Prompt user to select Body entities for truck representation.",
+          "   Update Display: Transform bodies to instance coordinates, save to TruckDefinition display object.",
+          "   Recalculate: Set execution loops to 2.",
+          "   End Edit Mode.",
+          "   Main Drawing Loop: (Standard or Edit Mode)",
+          "   Process Load Profiles: Iterate through stored polylines.",
+          "   Generate Geometry: Transform profiles to World Coordinates.",
+          "   Draw Filled Areas: Draw profiles as filled shapes (Color: Yellow if Edit, Grey if Normal).",
+          "   Calculate Volume: Extrude profiles to top height (dZ), create load volume bodies.",
+          "   Draw Projections: Extract faces from volumes (Side/Front views) and draw projections.",
+          "   Draw Truck Visualization: Render the stored truck display body at the insertion point.",
+          "Script End."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "DialogMode == 1",
+            "path1": {
+              "name": "Edit Dialog",
+              "steps": [
+                "Define Properties (Length, Width, Height, Tara, Gross)",
+                "Return from script (Property Palette interaction)"
+              ]
+            },
+            "path2": {
+              "name": "Run Execution",
+              "steps": [
+                "Initialize Global Variables",
+                "Run Insert/Recalc Logic"
+              ]
+            }
+          },
+          {
+            "condition": "Insertion Cycle",
+            "path1": {
+              "name": "Initial Insert",
+              "steps": [
+                "Show Dialog",
+                "Run Jig for Location",
+                "Place Instance"
+              ]
+            },
+            "path2": {
+              "name": "Subsequent Cycle",
+              "steps": [
+                "Erase Instance",
+                "Return (Prevent duplicates)"
+              ]
+            }
+          },
+          {
+            "condition": "Edit Mode Active",
+            "path1": {
+              "name": "Yes",
+              "steps": [
+                "Expose 'Add Load Profile' / 'Set Truck Display' Context Menu",
+                "Load profiles are editable polylines",
+                "Geometry drawn in Yellow (Warning/Active color)"
+              ]
+            },
+            "path2": {
+              "name": "No (Standard)",
+              "steps": [
+                "Geometry drawn in Grey",
+                "Profiles are calculated volume visualizations only",
+                "No Edit Context Menu"
+              ]
+            }
+          },
+          {
+            "condition": "Add Load Profile Input Method",
+            "path1": {
+              "name": "Points",
+              "steps": [
+                "Pick Origin",
+                "Pick Axis Direction",
+                "Pick Width (Dynamic Jig)",
+                "Create Rectangle PLine"
+              ]
+            },
+            "path2": {
+              "name": "Select Polylines",
+              "steps": [
+                "Select existing EntPLine(s)",
+                "Validate and Append to Instance"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Duplicate Instance Check",
+            "errorMessage": "(Implicit) Instance erased silently if insertCycleCount > 1",
+            "recovery": "N/A"
+          },
+          {
+            "check": "Polyline Validity ( during Load Profile creation)",
+            "errorMessage": "(Implicit) Invalid polylines are skipped/removed from selection set",
+            "recovery": "User selects different valid polylines"
+          },
+          {
+            "check": "Rectangle Area",
+            "errorMessage": "(Implicit) Profile not created if area is effectively zero (pow(dEps, 2))",
+            "recovery": "User picks points further apart"
+          },
+          {
+            "check": "Body Validity (Set Truck Display)",
+            "errorMessage": "(Implicit) Bodies with no real volume (isNull) are skipped",
+            "recovery": "User selects only solid 3D bodies"
+          },
+          {
+            "check": "Jig Coordinate System",
+            "errorMessage": "None explicitly messaged, but logic auto-corrects vector orientation if normal dot product < 0 (flips X and Z)",
+            "recovery": "Automatic"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Truck Definition Style",
+            "how": "OPM (Properties Palette) - 'Truck Definition' dropdown",
+            "effect": "Updates Length, Width, Height properties to match the selected library definition. Updates the visual 3D body if available."
+          },
+          {
+            "action": "Modify Dimensions",
+            "how": "OPM - Edit Length/Width/Height/Text Height",
+            "effect": "Immediate recalculation. Updates the bounding box and the extrusion height of load volumes."
+          },
+          {
+            "action": "Move/Rotate Truck",
+            "how": "CAD Grips / Move / Rotate commands",
+            "effect": "Visual geometry and load profiles move with the insertion point."
+          },
+          {
+            "action": "Edit Load Profile Geometry",
+            "how": "Context Menu 'Edit Definition' -> 'Add Load Profile' OR CAD Grips on the profile polylines",
+            "effect": "In Edit Mode, the polylines are standard CAD entities. Editing their shape updates the calculated load volume immediately."
+          },
+          {
+            "action": "Set Truck Display",
+            "how": "Context Menu 'Edit Definition' -> 'Set truck display'",
+            "effect": "Allows selecting 3D bodies from the drawing to become the permanent visual representation of the truck type."
+          }
+        ]
+      },
+      "tokens_used": 10329,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# TruckDefinition.mcr\n\n## Overview\nInserts a truck definition marker into the model to visualize loading areas, calculate load volumes, and manage logistics planning for timber transport. It allows users to define specific truck dimensions, visualize load profiles, and assign 3D representations to the truck.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script creates visual entities (polylines, bodies) in the model. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required entities**: None.\n- **Minimum beam count**: 0.\n- **Required settings**: None required.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `TruckDefinition.mcr` from the list.\n\n### Step 2: Configure Truck Properties\n```\nCommand Line: [Properties Dialog appears or Properties Palette opens]\nAction: Select a \"Truck Definition\" from the dropdown list to load predefined dimensions.\n        Optionally, modify Length, Width, Height, Tara (empty weight), or Max Gross Weight.\n```\n\n### Step 3: Select Location\n```\nCommand Line: Select location\nAction: Click in the Model Space to place the truck marker. The script will draw a visual representation at the selected point.\n```\n\n### Step 4: Edit Definition (Optional)\nTo define where timber packages will be placed on the truck:\n1. Select the inserted TruckDefinition script in the model.\n2. Right-click and choose **Edit Definition**.\n3. Select **Add Load Profile** from the context menu.\n4. **Input Method A (Draw)**: \n   - Pick an origin point.\n   - Pick a second point to define the length axis.\n   - Pick a third point to define the width (a dynamic rectangle will follow your cursor).\n5. **Input Method B (Select)**:\n   - Type `S` or select the option to pick existing Polylines in the drawing to define the load area.\n\n### Step 5: Set Truck Display (Optional)\nTo add a visual 3D truck body (chassis/wheels) instead of a simple box:\n1. Ensure you are in **Edit Definition** mode.\n2. Right-click and select **Set truck display**.\n3. Select the 3D Body entities in the drawing that represent the truck.\n4. The script will save these entities as the visual display for this truck type.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Truck Definition (sDefinition) | dropdown | (List) | Selects the specific truck type from the library. Updates Length, Width, and Height automatically. |\n| Length (dLength) | Number | 13600 | The total length of the truck's loading bed (mm). |\n| Width (dWidth) | Number | 2480 | The total width of the truck's loading bed (mm). |\n| Height (dHeight) | Number | 2700 | The maximum vertical stacking height for load volume calculation (mm). |\n| Tara (dTara) | Number | 0 | The unladen (empty) weight of the truck (kg). |\n| Max Gross (dMaxGross) | Number | 0 | The maximum legally permitted gross weight of the vehicle (kg). |\n| Description (sDescription) | String | Empty | A user-defined label for this specific truck instance. |\n| Dim Style (sDimStyle) | dropdown | _DimStyles... | Selects the CAD dimension style for annotations. |\n| Text Height (dTextHeight) | Number | 0 | Overrides the dimension style text height. Enter 0 to use the style default. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Edit Definition | Toggles \"Edit Mode\". In this mode, you can add load profiles or change the truck display. Load profiles are highlighted in yellow. |\n| Add Load Profile | (Only available in Edit Mode) Opens options to draw a new loading rectangle or select existing polylines to represent a cargo area. |\n| Set truck display | (Only available in Edit Mode) Allows you to select 3D bodies to serve as the visual representation of the truck. |\n\n## Tips\n- **Edit Mode Geometry**: When in Edit Mode, load profiles are editable polylines. You can use standard AutoCAD Grips to stretch or move them to fit your packages precisely.\n- **Volume Visualization**: The script extrudes the load profiles vertically up to the `Height` (dHeight) parameter to visualize the utilized volume.\n- **Dynamic Updates**: Changing the `Length` or `Width` in the properties palette immediately updates the boundary box, but you must manually adjust load profiles if the truck size changes drastically.\n- **Move/Rotate**: You can use standard AutoCAD `Move` or `Rotate` commands on the script instance to position the truck correctly within the site plan.\n\n## FAQ\n- **Q: How do I change the truck size after inserting it?**\n  A: Select the truck, open the Properties palette (Ctrl+1), and change the `Length`, `Width`, or `Height` values.\n- **Q: Why are my load profiles yellow?**\n  A: Yellow profiles indicate that \"Edit Definition\" mode is active. Right-click and select \"Edit Definition\" again to toggle it off and return to the standard grey view.\n- **Q: Can I use a specific 3D model for the truck?**\n  A: Yes. Enable \"Edit Definition\", right-click, choose \"Set truck display\", and select the 3D bodies you wish to use."
+      },
+      "tokens_used": 6266,
+      "error": null
+    }
+  }
+}

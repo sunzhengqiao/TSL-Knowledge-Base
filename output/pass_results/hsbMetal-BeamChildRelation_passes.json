@@ -1,0 +1,326 @@
+{
+  "filename": "hsbMetal-BeamChildRelation.mcr",
+  "status": "completed",
+  "total_tokens": 33342,
+  "processing_time": 347.546893119812,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "20oct11",
+            "author": "th@hsbCAD.de",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5141,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses getBeam() and getPoint() which are primarily ModelSpace interaction functions. It manipulates 3D entities (Beam, Entity) using Vector3d and CoordSys transformations. There is no 'sd_' or Multipage prefix, no usage of _Viewport or _kPaperSpace, and no #Type E declaration for E-links in drawings. The logic focuses on 3D geometric alignment dependencies."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Entity"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing at least one Beam to act as the driver.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3612,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getBeam",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity.go",
+              "promptOriginal": "|Select Entities|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "getPoint",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": null,
+            "variable": "_Pt0",
+            "type": "PropDouble (Implied Point3d)",
+            "displayName": "Pt0",
+            "defaultValue": null,
+            "inputType": "Point",
+            "options": [],
+            "category": null,
+            "description": "Reference point for rotation and alignment."
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "|Add| |Dependency|",
+            "handler": "|Add| |Dependency|",
+            "action": "Adds selected entities to the alignment dependency list of the beam.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Remove| |Dependency|",
+            "handler": "|Remove| |Dependency|",
+            "action": "Removes selected entities from the alignment dependency list of the beam.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 4615,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Establishes a rigid kinematic link where a set of entities rotates in synchronization with a master beam around a user-defined pivot point.",
+          "category": "Assembly / Model Relation",
+          "typicalUseCase": "When a user needs a group of secondary elements (like purlins, braces, or custom parts) to maintain their relative alignment to a main beam when that main beam is rotated or adjusted, without applying strict geometric constraints."
+        },
+        "parameters": [
+          {
+            "name": "_Pt0",
+            "technicalDefault": "User defined on insert",
+            "businessMeaning": "The pivot point or center of rotation. All linked entities will orbit around this specific 3D coordinate when the driving beam changes orientation.",
+            "validRange": "Any 3D coordinate in Model Space (typically near the beam or intersection point of the assembly).",
+            "unit": "mm (Point3d)",
+            "affectsOutput": "Determines the center of the rotational transformation. Changing this point shifts the axis around which child entities are rotated during updates."
+          },
+          {
+            "name": "_Beam[0] (Driver Beam)",
+            "technicalDefault": "Selected on insert",
+            "businessMeaning": "The primary structural element that drives the behavior. The script monitors this beam's coordinate system changes to trigger updates.",
+            "validRange": "Any valid GenBeam in the model.",
+            "unit": "Entity Reference",
+            "affectsOutput": "Serves as the input trigger. When this beam is rotated or moved (if 'copyerase' mode is active), the script calculates the transformation delta and applies it to all child entities."
+          },
+          {
+            "name": "_Entity[] (Child Entities)",
+            "technicalDefault": "Selected on insert or via context menu",
+            "businessMeaning": "The dependent elements (beams, plates, etc.) that must follow the rotation of the Driver Beam.",
+            "validRange": "Any valid hsbCAD Entity excluding the driver beam itself.",
+            "unit": "Count / Entity References",
+            "affectsOutput": "These entities are physically transformed (moved/rotated) by the script to match the new orientation of the Driver Beam relative to the Pivot Point."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Modification of _Pt0",
+            "effect": "Rewrites the internal dependency map to update the stored origin coordinates. The child entities will not move immediately, but subsequent rotations of the driver beam will use the new pivot location.",
+            "cascade": [
+              "_Map.AlignmentDependency[]",
+              "_Map.ptOrg"
+            ]
+          },
+          {
+            "trigger": "Rotation of _Beam[0]",
+            "effect": "Calculates the angular difference between the stored coordinate system and the current beam system, then applies a transformation matrix to all entities in _Entity[].",
+            "cascade": [
+              "_Entity[] geometry"
+            ]
+          },
+          {
+            "trigger": "Context Menu: 'Add Dependency'",
+            "effect": "Appends newly selected entities to the _Entity array and initializes their orientation mapping in the dependency map.",
+            "cascade": [
+              "_Entity[]",
+              "_Map.AlignmentDependency[]"
+            ]
+          },
+          {
+            "trigger": "Context Menu: 'Remove Dependency'",
+            "effect": "Removes selected entities from the _Entity array and deletes their entries from the dependency map, stopping the script from controlling them.",
+            "cascade": [
+              "_Entity[]",
+              "_Map.AlignmentDependency[]"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Visual Symbol",
+            "description": "A circle with X, Y, and Z axis lines drawn at _Pt0 to visually indicate the location of the pivot point and the current orientation of the driver beam's coordinate system.",
+            "appliedTo": "Model Space (Graphical overlay only)"
+          }
+        ]
+      },
+      "tokens_used": 7009,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User initiates script insertion (e.g., from catalog or toolbar).",
+          "2. [Insertion Phase] Script checks for 'COPYERASE' execute key to enable translation support.",
+          "3. [Insertion Phase] User selects a Driver Beam.",
+          "4. [Insertion Phase] User selects one or more Child Entities (PrEntity selection).",
+          "5. [Insertion Phase] User selects a Pivot Point (_Pt0) via getPoint.",
+          "6. [Insertion Phase] Script calculates initial coordinate system (vectors X, Y, Z) relative to _Pt0 for all Child Entities and saves them to the internal Map.",
+          "7. [Insertion Phase] Script draws visual symbol (Circle and Axes) at _Pt0 and terminates insertion cycle.",
+          "8. [Recalc/Event Phase] On any model change or recalc, script validates that Driver Beam and Child Entities still exist.",
+          "9. [Recalc/Event Phase] Script retrieves current orientation of Driver Beam and compares it to the stored orientation.",
+          "10. [Recalc/Event Phase] If a change is detected (rotation or translation), script transforms Child Entities to match the new orientation.",
+          "11. [Recalc/Event Phase] Visual symbol is updated at _Pt0."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script Execution Phase",
+            "path1": {
+              "name": "Insertion Cycle",
+              "steps": [
+                "Check 'COPYERASE' flag",
+                "Select Driver Beam",
+                "Select Child Entities",
+                "Select Pivot Point",
+                "Initialize internal dependency map",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "Recalc Cycle",
+              "steps": [
+                "Validate Existence of Beams/Entities",
+                "Check Context Menu Triggers",
+                "Check Property Changes",
+                "Check Geometric Changes (Rotation)",
+                "Update Entities and Map"
+              ]
+            }
+          },
+          {
+            "condition": "Change Detected",
+            "path1": {
+              "name": "Pivot Point (_Pt0) Modified",
+              "steps": [
+                "Detect '_Pt0' == _kNameLastChangedProp",
+                "Rebuild dependency map using current beam vectors and new _Pt0 location",
+                "Update _Map with new coordinates"
+              ]
+            },
+            "path2": {
+              "name": "Driver Beam Rotated/Moved",
+              "steps": [
+                "Compare current beam vectors/position to stored values",
+                "Calculate transformation matrix (CoordSys)",
+                "Apply transform to all linked Child Entities",
+                "Update stored coordinates in map to new state"
+              ]
+            },
+            "path3": {
+              "name": "Context Menu Interaction",
+              "steps": [
+                "User selects 'Add Dependency' or 'Remove Dependency'",
+                "Select Entities to modify",
+                "Update _Entity array and AlignmentDependency map",
+                "Set Execution Loops to 2 to force immediate update"
+              ]
+            }
+          },
+          {
+            "condition": "Validation Failure",
+            "path1": {
+              "name": "Entities Missing",
+              "steps": [
+                "Detect _Beam.length < 1 or _Entity.length < 1",
+                "Report 'invalid selection set'",
+                "Erase Instance (Self-delete)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Existence of Driver Beam and Child Entities",
+            "errorMessage": "scriptName: invalid selection set. Tool will be deleted",
+            "recovery": "User must undo or ensure source entities are not deleted, then re-run the script."
+          },
+          {
+            "check": "Recursive Insertion",
+            "errorMessage": "(None, Silent)",
+            "recovery": "Script automatically erases itself if insertCycleCount > 1 to prevent recursion."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Rotate or Move the Driver Beam",
+            "how": "Standard CAD grips/commands or beam properties",
+            "effect": "Child entities automatically rotate/move to maintain their relative orientation to the driver beam, centered around _Pt0."
+          },
+          {
+            "action": "Move Pivot Point (_Pt0)",
+            "how": "Properties Palette (OPM) Point Input",
+            "effect": "The center of rotation updates. Subsequent rotations of the beam will orbit entities around this new point."
+          },
+          {
+            "action": "Add Dependency",
+            "how": "Right-click Context Menu -> 'Add Dependency'",
+            "effect": "Prompts user to select new entities. These entities are added to the group and will align with the beam on the next change."
+          },
+          {
+            "action": "Remove Dependency",
+            "how": "Right-click Context Menu -> 'Remove Dependency'",
+            "effect": "Prompts user to select entities. Selected entities are removed from the group and will no longer follow the beam."
+          }
+        ]
+      },
+      "tokens_used": 8001,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbMetal-BeamChildRelation.mcr\n\n## Overview\nThis script establishes a mechanical link between a \"Driver Beam\" and a group of selected elements, forcing them to rotate and move together around a user-defined pivot point. It is ideal for assemblies where secondary parts must maintain their alignment relative to a main beam during structural adjustments.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D entities and geometry. |\n| Paper Space | No | Not designed for 2D drawings or layouts. |\n| Shop Drawing | No | Not applicable for detailing views. |\n\n## Prerequisites\n- **Required Entities**: At least one Beam (Driver) and one or more additional Entities (Children/Dependents).\n- **Minimum Beam Count**: 1\n- **Required Settings**: None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbMetal-BeamChildRelation.mcr`\n\n### Step 2: Select Driver Beam\n```\nCommand Line: Select Beam\nAction: Click on the main beam that will control the movement. This beam acts as the \"parent.\"\n```\n\n### Step 3: Select Child Entities\n```\nCommand Line: Select Entities\nAction: Select one or more entities (beams, plates, etc.) that you want to attach to the driver beam. Press Enter when finished.\n```\n\n### Step 4: Define Pivot Point\n```\nCommand Line: Specify pivot point\nAction: Click in the model to define the center of rotation. All linked elements will orbit around this point when the driver beam rotates.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Pt0 | Point (3D) | User Defined | The pivot point (center of rotation) for the entire group. Changing this location alters the axis around which child elements rotate. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Add Dependency | Prompts you to select new entities to add to the group. These new entities will automatically follow the driver beam's movement. |\n| Remove Dependency | Prompts you to select entities currently in the group to remove them. They will stop moving automatically and will be left in their current position. |\n\n## Settings Files\nNone. This script does not use external settings files.\n\n## Tips\n- **Pivot Location**: Choose your pivot point carefully. If you place it far from the assembly, rotating the beam will cause the child elements to swing in a large arc.\n- **Visual Symbol**: The script draws a circle with axis lines at the pivot point to help you visualize the center of rotation.\n- **Adjustments**: You can grip-edit the Driver Beam normally; the script will automatically calculate and move the child entities to match.\n- **Re-aligning**: If you need to change the pivot point, you can manually edit the `Pt0` coordinates in the Properties Palette.\n\n## FAQ\n- **Q: Why did the script disappear?**\n  A: The script automatically deletes itself if the Driver Beam or all Child Entities are erased from the model.\n- **Q: Can I move the driver beam to a new location?**\n  A: Yes, provided the script was initialized with the 'COPYERASE' functionality enabled (usually automatic in newer environments), moving the beam will move the children relative to the pivot.\n- **Q: How do I stop a specific part from moving?**\n  A: Right-click the script instance, select \"Remove Dependency,\" and click on the specific part you want to detach."
+      },
+      "tokens_used": 4964,
+      "error": null
+    }
+  }
+}

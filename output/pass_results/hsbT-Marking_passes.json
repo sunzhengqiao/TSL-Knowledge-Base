@@ -1,0 +1,252 @@
+{
+  "filename": "hsbT-Marking.mcr",
+  "status": "completed",
+  "total_tokens": 46177,
+  "processing_time": 275.99380111694336,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9044,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses GenBeam objects (bm0, bm1) to calculate geometry and extract contact faces (extractContactFaceInPlane). It creates Mark objects and adds them to beams using addTool(). There are no references to Viewport, Sheet, sd_* classes, or #Type E constructs typically found in Paper Space or Shop Drawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": [
+            "PainterDefinition (for filtering)",
+            "HSB_G-FilterGenBeams (legacy catalog entries)"
+          ]
+        }
+      },
+      "tokens_used": 6911,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 9,
+            "variable": "sPainterStreamMale",
+            "type": "PropString",
+            "displayName": "Painter Definition Male",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": "General",
+            "description": "Stores the data of the male painter definition"
+          },
+          {
+            "index": 10,
+            "variable": "sPainterStreamFemale",
+            "type": "PropString",
+            "displayName": "Painter Definition Female",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": "General",
+            "description": "Stores the data of the female painter definition"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "Migrate Filters -> Painters",
+            "handler": "Migrate Filters -> Painters",
+            "action": "Iterates through legacy HSB_G-FilterGenBeams catalog entries and converts them to Painter definitions.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 6209,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically places markings (text and lines) on female beams at T-connections, displaying data derived from the intersecting male beam based on specific rules.",
+          "category": "Labeling/Marking",
+          "typicalUseCase": "Used in timber framing models to label connection points automatically, such as marking the intersecting beam's name on the main beam to assist with assembly or prefabrication."
+        },
+        "parameters": [
+          {
+            "name": "sPainterStreamMale",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Stores the configuration logic (Painter Definition) for the 'Male' (intersecting) beam. This serialized data defines which beam is selected as the male part and what data (e.g., Name, Length) is extracted from it to create the marking text.",
+            "validRange": "Serialized Map string containing 'Name', 'Type' (e.g., Beam), 'Filter' (selection criteria), and 'Format' (output template).",
+            "unit": "String (Text)",
+            "affectsOutput": "Determines the content of the marking text and which intersecting beam is considered the source for the data. If empty or invalid, no marking may be generated."
+          },
+          {
+            "name": "sPainterStreamFemale",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Stores the configuration logic (Painter Definition) for the 'Female' (receiving) beam. This ensures the marking is applied to the correct beam in complex connections and defines any formatting specific to the receiving element.",
+            "validRange": "Serialized Map string containing 'Name', 'Type' (e.g., Beam), 'Filter' (selection criteria), and 'Format' (output template).",
+            "unit": "String (Text)",
+            "affectsOutput": "Identifies the target beam that receives the mark. Filters out specific beams from being marked (e.g., ignoring blocking elements in twin walls)."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of 'Migrate Filters -> Painters' context menu",
+            "effect": "Reads legacy catalog entries (HSB_G-FilterGenBeams) and populates these property streams with converted Painter Definition data.",
+            "cascade": [
+              "sPainterStreamMale",
+              "sPainterStreamFemale"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Mark",
+            "description": "A smart labeling object containing text and leader lines, placed on the surface of the female beam.",
+            "appliedTo": "Female Beam (bm1)"
+          }
+        ]
+      },
+      "tokens_used": 9213,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Initialization & Setup: Define units, debug flags, and script constants.",
+          "2. Database Upgrade (OnInsert): Check properties 'Painter Definition Male/Female' for data.",
+          "3. Painter Definition Sync: If properties contain stream data, parse Map to extract Name, Type, Filter, and Format; create corresponding PainterDefinition in database if missing.",
+          "4. Filter Compilation: Build lists of available filters combining Defaults (Parallel X/Y), existing Painters, and legacy HSB_G-FilterGenBeams catalog entries.",
+          "5. Entity Identification: (Implicit) Identify Male (intersecting) and Female (receiving) beams from the selected element or selection set using the active filters.",
+          "6. Geometry Calculation: Calculate intersection point (_Pt0), reference planes, and theoretical marking points (pts) based on alignment settings (Left/Center/Right).",
+          "7. Profile Validation: Extract the contact face from the Female beam. Filter theoretical points to keep only those inside the valid profile area.",
+          "8. Text Generation: Retrieve formatted string from the Male beam based on the active painter's Format string.",
+          "9. Marking Strategy: Determine Mark object configuration based on valid points count and text presence.",
+          "10. Finalize: Add Mark objects to the Female beam, draw visualization geometry, and register migration triggers if legacy filters exist."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Number of Valid Marking Locations (ptsLocs) and Text Existence",
+            "path1": {
+              "name": "Valid Location(s) Found & Has Text",
+              "steps": [
+                "Check if 1 valid location exists but 2 were calculated (offset case).",
+                "If yes: Create text-only Mark at theoretical center, and second point-only Mark at valid location.",
+                "If 2 valid locations: Create Line Mark with text between points.",
+                "If 1 valid location: Create Point Mark with text."
+              ]
+            },
+            "path2": {
+              "name": "No Valid Locations",
+              "steps": [
+                "Check if Text exists.",
+                "If Yes: Calculate theoretical location, offset by half male beam width, create text-only Mark.",
+                "If No: Report error 'could not find any valid marking location', call eraseInstance(), and stop script."
+              ]
+            }
+          },
+          {
+            "condition": "Legacy Filter Migration Trigger",
+            "path1": {
+              "name": "Migrate All Filters",
+              "steps": [
+                "User selects 'Migrate Filters -> Painters' from Context Menu.",
+                "Script iterates all HSB_G-FilterGenBeams entries.",
+                "Creates PainterDefinition for each.",
+                "Sets execution loops to 2 and returns to recalculate."
+              ]
+            },
+            "path2": {
+              "name": "Migrate Single Filter",
+              "steps": [
+                "User selects specific filter name from Context Menu.",
+                "Script creates PainterDefinition for that specific entry.",
+                "Sets execution loops to 2 and returns to recalculate."
+              ]
+            }
+          },
+          {
+            "condition": "Database Creation vs Recalculation",
+            "path1": {
+              "name": "On Database Created (_bOnDbCreated)",
+              "steps": [
+                "Read sPainterStreamMale and sPainterStreamFemale properties.",
+                "Parse Map content.",
+                "Create/Update PainterDefinition entries in the database catalog."
+              ]
+            },
+            "path2": {
+              "name": "Standard Recalculation",
+              "steps": [
+                "Skip Painter creation logic.",
+                "Execute geometry calculation and marking generation."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Valid Marking Locations Inside Contact Profile",
+            "errorMessage": "could not find any valid marking location. Tool will be deleted.",
+            "recovery": "Adjust beam intersections, check alignment settings (Inside/Outside), or ensure the contact face is large enough."
+          },
+          {
+            "check": "Content of Format String",
+            "errorMessage": "Implicit (No text generated if format is empty)",
+            "recovery": "Ensure the selected Painter Definition has a valid 'Format' string defined that extracts data from the Male beam."
+          },
+          {
+            "check": "Legacy Catalog Compatibility",
+            "errorMessage": "Implicit (Legacy filters ignored if specific collection found)",
+            "recovery": "If using specific Painter Collections, ensure the legacy HSB_G-FilterGenBeams entries are migrated to the Painter format."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Painter Definitions",
+            "how": "Properties Palette (OPM)",
+            "effect": "Updates 'Painter Definition Male' or 'Female' property. Triggers recalculation of beam selection and marking text content."
+          },
+          {
+            "action": "Migrate Legacy Filters",
+            "how": "Right-Click Context Menu -> 'Migrate Filters -> Painters' or specific filter name",
+            "effect": "Converts old TSL catalog filter definitions into the new PainterDefinition format, making them available in the properties dropdown."
+          },
+          {
+            "action": "Dynamic Geometry Update",
+            "how": "Grip Edit / Move Beam",
+            "effect": "Marking locations (ptsLocs) are recalculated relative to the new intersection position. Marks update automatically."
+          }
+        ]
+      },
+      "tokens_used": 9310,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "```json\n{\n  \"markdown\": \"# hsbT-Marking.mcr\\n\\n## Overview\\nThis script automatically adds markings (text and leader lines) to timber beams at T-connections. It labels the receiving (female) beam with information derived from the intersecting (male) beam, such as its name or length, to assist with assembly and fabrication.\\n\\n## Usage Environment\\n| Space | Supported | Notes |\\n|-------|-----------|-------|\\n| Model Space | Yes | This script operates on 3D beam geometry. |\\n| Paper Space | No | Not designed for layout views or shop drawings. |\\n| Shop Drawing | No | Does not interact with dimensioning or detailing views. |\\n\\n## Prerequisites\\n- **Required Entities**: At least two `GenBeam` objects intersecting in a T-connection.\\n- **Minimum Beams**: 1 (Female beam selected for insertion), though a second beam (Male) must exist to generate text.\\n- **Required Settings**: Valid Painter Definitions (or legacy HSB_G-FilterGenBeams) must exist in the catalog to define which beams to target and what text to display.\\n\\n## Usage Steps\\n\\n### Step 1: Launch Script\\nCommand: `TSLINSERT`\\n\\n### Step 2: Select Script File\\n```\\nDialog: Select TSL File\\nAction: Browse to and select 'hsbT-Marking.mcr'.\\n```\\n\\n### Step 3: Select Target Beam\\n```\\nCommand Line: Select Element:\\nAction: Click on the receiving (female) beam where you want the marking to appear.\\n```\\n\\n### Step 4: Configure Properties (Optional)\\nIf the default settings do not produce the desired marking:\\n1. Select the beam with the script attached.\\n2. Open the **Properties Palette** (`PROPS`).\\n3. Modify the **Painter Definition Male** and **Painter Definition Female** fields to select specific filters and text formats.\\n\\n## Properties Panel Parameters\\n\\n| Parameter | Type | Default | Description |\\n|-----------|------|---------|-------------|\\n| Painter Definition Male | String | Empty | Defines the configuration for the intersecting (male) beam. Determines which beam is selected and what data (e.g., Name, Length) is extracted for the text label. |\\n| Painter Definition Female | String | Empty | Defines the configuration for the receiving (female) beam. Ensures the marking is applied to the correct element based on specific filters. |\\n\\n## Right-Click Menu Options\\n\\n| Menu Item | Description |\\n|-----------|-------------|\\n| Migrate Filters -> Painters | Converts legacy catalog entries (HSB_G-FilterGenBeams) into the new Painter Definition format. This is useful if you are updating an old project or database. |\\n| [Specific Filter Name] | If legacy filters are detected, specific filter names appear here to allow individual migration to the new format. |\\n\\n## Settings Files\\n\\n- **Catalog Entries**: `PainterDefinition`, `HSB_G-FilterGenBeams` (Legacy)\\n- **Location**: hsbCAD Catalog Database\\n- **Purpose**: Stores the logic for beam selection (Filters) and text formatting (Format strings) used by the script.\\n\\n## Tips\\n- **Placement Issues**: If the text mark disappears, check if the intersection point falls outside the physical profile of the beam.\\n- **Text Formatting**: Ensure the \\\"Format\\\" string within your Painter Definition includes valid placeholders (e.g., `%Name%`, `%Length%`); otherwise, no text will be generated.\\n- **Upgrading**: If migrating from an older version of hsbCAD, use the Right-Click \\\"Migrate Filters\\\" option to update your beam selection logic without re-configuring everything manually.\\n\\n## FAQ\\n\\n- **Q: I see the error \\\"could not find any valid marking location\\\".**\\n  **A:** This usually means the calculated position for the mark is outside the boundary of the beam's face. Try adjusting your beam geometry or check if the \\\"Alignment\\\" settings in your Painter Definition are suitable for the connection angle.\\n\\n- **Q: The script attached, but no text is showing.**\\n  **A:** Check the **Painter Definition Male** property. If the \\\"Format\\\" field inside that definition is empty, or if the filter cannot find a matching intersecting beam, the script will generate the geometry but leave the text blank.\\n\\n- **Q: How do I change what information is displayed (e.g., show Position instead of Name)?**\\n  **A:** You must edit the Painter Definition associated with the \\\"Male\\\" property in your catalog. Change the \\\"Format\\\" string to the desired variable (e.g., `%Pos%`).\"\n}\n```"
+      },
+      "tokens_used": 5490,
+      "error": null
+    }
+  }
+}

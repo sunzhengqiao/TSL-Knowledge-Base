@@ -1,0 +1,329 @@
+{
+  "filename": "hsb_StudDistribution.mcr",
+  "status": "completed",
+  "total_tokens": 28433,
+  "processing_time": 233.58155822753906,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "26.05.2010",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4794,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No sd_* or #Type E prefixes detected. Script uses 3D geometric operations (Element, Vector3d, Beam) typical of model space manipulation. No _Viewport usage found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "User must select an existing Element via command line input.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2065,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getElement",
+              "promptOriginal": "Select an element",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "Select Distribution Point",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "Property Dialog",
+            "trigger": "On Insert (_bOnInsert)",
+            "title": null,
+            "dataSource": "dOffset, strStager",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dOffset",
+            "type": "PropDouble",
+            "displayName": "Distance Between Studs",
+            "defaultValue": "U(400)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "strStager",
+            "type": "PropString",
+            "displayName": "Redistribute to",
+            "defaultValue": "Left",
+            "inputType": "dropdown",
+            "options": [
+              "Left",
+              "Right"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4646,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Redistributes studs within a wall element to a uniform spacing, starting from a specific point and extending in a chosen direction.",
+          "category": "Framing/Automation",
+          "typicalUseCase": "Used when a wall section requires standardization of stud spacing (e.g., changing from random spacing to 400mm or 600mm modules) to meet structural or manufacturing requirements."
+        },
+        "parameters": [
+          {
+            "name": "dOffset",
+            "technicalDefault": "U(400)",
+            "businessMeaning": "The center-to-center distance (spacing) between the newly generated studs.",
+            "validRange": "300 - 800 (Common framing modules are 400mm or 600mm)",
+            "unit": "mm",
+            "affectsOutput": "Determines the frequency and positioning of the new studs. A smaller value creates more studs (denser framing), while a larger value creates fewer studs."
+          },
+          {
+            "name": "strStager",
+            "technicalDefault": "Left",
+            "businessMeaning": "Specifies the side of the distribution point relative to the element's local X-axis where studs will be removed and regenerated.",
+            "validRange": "Left, Right",
+            "unit": "Direction",
+            "affectsOutput": "Controls which side of the selected split point is cleared of existing studs and refilled with new evenly spaced studs."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Element Selection",
+            "effect": "Defines the local coordinate system (Left/Right) which the 'strStager' parameter relies upon.",
+            "cascade": [
+              "strStager"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Stud Beams",
+            "description": "New studs are generated starting from the stud closest to the distribution point, extending backwards in the specified direction at the defined offset.",
+            "appliedTo": "The selected Wall Element"
+          },
+          {
+            "type": "Blocking (Removed)",
+            "description": "Existing blocking or short framing members on the affected side are erased to prevent conflicts with the new stud layout.",
+            "appliedTo": "The selected Wall Element"
+          }
+        ]
+      },
+      "tokens_used": 5435,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Launch: User executes script (hsb_StudDistribution).",
+          "2. Insert Cycle Check: Script verifies if it is the first execution cycle. If a duplicate cycle is detected, the script erases itself immediately.",
+          "3. Properties Dialog: If executed normally (no specific command key), the properties dialog appears prompting for 'Distance Between Studs' and 'Redistribute to' direction.",
+          "4. Element Selection: User is prompted to select an Element in the model.",
+          "5. Distribution Point Selection: User is prompted to click a point to define the start of the redistribution zone.",
+          "6. Direction Initialization: Script determines the redistribution vector based on the 'Redistribute to' property (Left or Right) relative to the element's local X-axis.",
+          "7. Beam Classification: Script iterates through existing studs in the element, classifying them as 'Keep' (on the anchor side) or 'Remove' (on the redistribute side) relative to the distribution point.",
+          "8. Anchor Identification: Script identifies the stud closest to the distribution point on the 'Keep' side to serve as the geometric anchor (reference for dimensions/material).",
+          "9. Erasure Phase: All studs marked 'Remove' are deleted from the model.",
+          "10. Filtering: Script filters out Blocking members from intersection calculations (they are ignored for vertical stretching).",
+          "11. Regeneration Loop: Script calculates positions for new studs starting from the Anchor Stud, moving backwards at the defined offset distance.",
+          "12. Stud Creation: For each valid position (inside element profile), a new stud is created, copying properties from the Anchor Stud.",
+          "13. Vertical Stretching: Each new stud is stretched to intersect with the top and bottom plates (ignoring blocking).",
+          "14. Cleanup: A visual marker line is drawn at the distribution point, and the script instance is erased from the model."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count > 1",
+            "path1": {
+              "name": "Duplicate Cycle",
+              "steps": [
+                "eraseInstance()",
+                "return"
+              ]
+            },
+            "path2": {
+              "name": "First Cycle",
+              "steps": [
+                "Proceed to Properties/Inputs"
+              ]
+            }
+          },
+          {
+            "condition": "Element Selection Result",
+            "path1": {
+              "name": "Selection Empty/Cancelled",
+              "steps": [
+                "eraseInstance()",
+                "return"
+              ]
+            },
+            "path2": {
+              "name": "Valid Element Selected",
+              "steps": [
+                "Get Beams from Element"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Count in Element",
+            "path1": {
+              "name": "No Beams Found",
+              "steps": [
+                "eraseInstance()",
+                "return"
+              ]
+            },
+            "path2": {
+              "name": "Beams Found",
+              "steps": [
+                "Coordinate System Calculation",
+                "Proceed to Redistribution Logic"
+              ]
+            }
+          },
+          {
+            "condition": "Property 'Redistribute to' (strStager)",
+            "path1": {
+              "name": "Left",
+              "steps": [
+                "Set Vector Direction to Element Local X",
+                "Erase studs to the Left of the point"
+              ]
+            },
+            "path2": {
+              "name": "Right",
+              "steps": [
+                "Set Vector Direction to Negative Element Local X",
+                "Erase studs to the Right of the point"
+              ]
+            }
+          },
+          {
+            "condition": "Stud Position relative to Distribution Point (Dot Product)",
+            "path1": {
+              "name": "Redistribute Side (Dot < 0)",
+              "steps": [
+                "Mark for Erasure"
+              ]
+            },
+            "path2": {
+              "name": "Keep Side (Dot >= 0)",
+              "steps": [
+                "Evaluate as Anchor Candidate (if closest to point)"
+              ]
+            }
+          },
+          {
+            "condition": "Calculated Point inside Element Profile",
+            "path1": {
+              "name": "Inside Profile",
+              "steps": [
+                "Create Stud",
+                "Stretch Stud"
+              ]
+            },
+            "path2": {
+              "name": "Outside Profile",
+              "steps": [
+                "Skip Creation (Do nothing)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "User selects an Element",
+            "errorMessage": "None explicit (Script just exits)",
+            "recovery": "User must restart script and ensure a valid Element is clicked."
+          },
+          {
+            "check": "Element contains Beams (arBeam.length >= 1)",
+            "errorMessage": "None explicit (Script just exits)",
+            "recovery": "User must select an Element that contains existing geometry/beams."
+          },
+          {
+            "check": "Existence of Anchor Stud",
+            "errorMessage": "Potential crash/undefined behavior",
+            "recovery": "Script assumes at least one stud exists on the 'Keep' side of the distribution point. If all studs are on the 'Redistribute' side, the script fails to find an anchor and cannot generate new geometry."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Stud Distribution",
+            "how": "Re-run Script",
+            "effect": "Since the script calls 'eraseInstance()' at the end, it does not persist in the model. To change the offset or direction, the user must select and run the script on the element again."
+          }
+        ]
+      },
+      "tokens_used": 6554,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_StudDistribution.mcr\n\n## Overview\nThis script standardizes the stud layout within a wall element by redistributing them at a uniform spacing. It deletes existing studs on one side of a user-selected point and regenerates them based on a specified center-to-center distance.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D elements within the model. |\n| Paper Space | No | Not intended for layout views or shop drawings. |\n| Shop Drawing | No | Does not generate detailing views. |\n\n## Prerequisites\n- **Required Entities**: An existing wall Element containing beams.\n- **Minimum Beam Count**: At least one beam must exist on the side of the wall you intend to keep (to serve as an anchor/reference).\n- **Required Settings Files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n```\nCommand: TSLINSERT\nAction: Browse and select hsb_StudDistribution.mcr\n```\n*Note: Upon selection, the Properties palette (OPM) will display the script settings. You can adjust the \"Distance Between Studs\" and \"Redistribute to\" direction before proceeding to the prompts.*\n\n### Step 2: Select Element\n```\nCommand Line: Select an element\nAction: Click on the wall element where you want to redistribute studs.\n```\n\n### Step 3: Select Distribution Point\n```\nCommand Line: Select Distribution Point\nAction: Click a point on the wall element (e.g., at a door opening or corner) to define where the redistribution should start.\n```\n*Note: Studs will be removed and regenerated starting from this point, extending backwards in the direction specified in the properties.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Distance Between Studs | Number | 400 mm | The center-to-center spacing for the new studs. Common values are 400mm or 600mm. |\n| Redistribute to | Dropdown | Left | Determines which side of the distribution point is cleared and regenerated. **Note:** \"Left\" and \"Right\" refer to the element's local X-axis direction, not necessarily the screen view. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script runs once and erases itself immediately after execution. There are no persistent context menu options. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Local Axes**: If the studs are distributing to the wrong side, check the element's local coordinate system. \"Left\" follows the element's local X-axis.\n- **Anchor Stud**: Ensure there is at least one stud on the \"Keep\" side of your selected point. The script uses this stud to determine height and material for the new ones.\n- **Blocking**: Be aware that any blocking or short framing members on the redistribution side will be deleted to accommodate the new layout.\n\n## FAQ\n- **Q: Can I undo the changes?**\n  - A: Yes, use the standard AutoCAD `UNDO` command immediately after running the script.\n- **Q: Why did the script disappear after I ran it?**\n  - A: This is a \"run-once\" automation script. It erases its own instance from the model after finishing the geometric changes to keep your drawing clean.\n- **Q: What happens if I select a point outside the element?**\n  - A: The script requires the distribution point to be valid relative to the element. If the point is invalid, the script may exit without making changes."
+      },
+      "tokens_used": 4939,
+      "error": null
+    }
+  }
+}

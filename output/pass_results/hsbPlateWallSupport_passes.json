@@ -1,0 +1,313 @@
+{
+  "filename": "hsbPlateWallSupport.mcr",
+  "status": "completed",
+  "total_tokens": 49707,
+  "processing_time": 229.9176037311554,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"header\": {\n    \"type\": null,\n    \"numBeamsReq\": null,\n    \"keywords\": null,\n    \"majorVersion\": null,\n    \"minorVersion\": null,\n    \"dxaOut\": null,\n    \"implInsert\": null\n  },\n  \"description\": \"This tsl creates connection beteen SF walls and main beams Pfette intersecting the walls\\nThere are 3 types of connection that can be selected at the properties\\nif the top beam of the wall is intersected by the main beam Pfette then the top beam\\nwill be split into 2 parts\\nIf the new created vertical beams of the support, intersect the existing beams of the \\nsf wall, the beams of existing sf wall are removed\\nTwo user defined commands are defined.\\nReset - wil delete the generated beams of the connection and join the previously splitted beams\\nReset and Delete - will reset and delete the TSL instance\\n\\nIf one of the cataloges at the property \\\"catalog sheet cut out\\\" is selected then the \\nTSL \\\"hsbPlateWallSheetCut\\\" is called and the sheets are"
+      },
+      "tokens_used": 9241,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly creates physical geometry using Beam().dbCreate() and TslInst.dbCreate(..., _kModelSpace, ...). The summary describes creating physical connections between SF walls and main beams (Pfette) in the 3D model. No Shop Drawing specific functions (sd_, Multipage) or keywords (#Type E) are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": [
+            "TSL 'hsbPlateWallSheetCut' catalogs",
+            "TSL 'T-Connection' (formerly T-Einfräsung) catalogs"
+          ]
+        }
+      },
+      "tokens_used": 7256,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10241,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates structural connections between Stud Frame (SF) walls and intersecting main beams (purlins/Pfette), including vertical supports, splitting top plates, and sheet cutouts.",
+          "category": "Framing/Connection",
+          "typicalUseCase": "When a purlin intersects a wall frame, this script automatically creates vertical support posts within the wall, splits the wall's top beam around the purlin, and prepares sheeting cutouts."
+        },
+        "parameters": [
+          {
+            "name": "dGap",
+            "technicalDefault": "0",
+            "businessMeaning": "The clearance distance between the main beam (purlin) and the vertical support beams created in the wall.",
+            "validRange": "0mm to 20mm",
+            "unit": "mm",
+            "affectsOutput": "Adjusts the spacing of the vertical support beams relative to the purlin centerline, creating an opening that accommodates the purlin dimensions plus this gap."
+          },
+          {
+            "name": "sType",
+            "technicalDefault": "Type 1",
+            "businessMeaning": "Selects the geometric strategy for the connection (e.g., standard support, mid-span support with gap, specific T-connection styles).",
+            "validRange": "Type 1, Type 2, Type 3, Type 4",
+            "unit": "Enumeration",
+            "affectsOutput": "Determines how the vertical beams are placed, whether horizontal beams are split, and how the connection geometry is calculated. Type 4 appears to involve specific cut retention logic."
+          },
+          {
+            "name": "sCatalog",
+            "technicalDefault": "Disabled",
+            "businessMeaning": "Selects a specific catalog preset for the 'hsbPlateWallSheetCut' TSL to automate sheeting cutouts around the connection.",
+            "validRange": "Disabled, [Available catalogs from hsbPlateWallSheetCut]",
+            "unit": "Catalog Reference",
+            "affectsOutput": "Invokes the sheet cutting TSL during insertion to cut the wall sheathing sheets around the new connection geometry."
+          },
+          {
+            "name": "sTopOpen",
+            "technicalDefault": "No",
+            "businessMeaning": "Determines if the top plate beam should be cut/notched when the intersecting purlin does not physically touch it (e.g., floating scenario).",
+            "validRange": "No, Yes",
+            "unit": "Boolean (String)",
+            "affectsOutput": "If 'Yes', it likely forces a cut or modification in the top beam geometry even without direct contact; if 'No', the top beam remains continuous unless directly intersected."
+          },
+          {
+            "name": "sMillingStudPlate",
+            "technicalDefault": "[First available 'T-Connection' catalog]",
+            "businessMeaning": "Selects the machining profile (catalog) for creating T-connections/milling between the new vertical supports and the existing top beam.",
+            "validRange": "[Available catalogs from T-Connection]",
+            "unit": "Catalog Reference",
+            "affectsOutput": "Applies specific milling or machining operations (via the 'T-Connection' TSL) where the vertical studs meet the top beam to ensure a proper structural fit."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sType changes",
+            "effect": "Alters the geometric calculation logic for support placement.",
+            "cascade": [
+              "dGap",
+              "Vertical Support Geometry",
+              "Top Beam Splitting"
+            ]
+          },
+          {
+            "trigger": "sCatalog is not 'Disabled'",
+            "effect": "Triggers the creation of the 'hsbPlateWallSheetCut' TSL instance during insert.",
+            "cascade": [
+              "Sheet Geometry"
+            ]
+          },
+          {
+            "trigger": "sMillingStudPlate selection",
+            "effect": "Applies specific properties to the generated 'T-Connection' TSLs.",
+            "cascade": [
+              "Milling Geometry at Stud/Top Plate interface"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam (Vertical Support)",
+            "description": "New vertical wall studs created to support the connection.",
+            "appliedTo": "Wall Element (between top beam and bottom/middle beam)"
+          },
+          {
+            "type": "TslInst (T-Connection / T-Einfräsung)",
+            "description": "Milling/Notching operations applied at the intersection of vertical supports and the top beam.",
+            "appliedTo": "Vertical Support Beams and Top Wall Beam"
+          },
+          {
+            "type": "Cut (Static Tool)",
+            "description": "Geometric cuts applied to existing wall beams to accommodate the new supports or intersecting purlin.",
+            "appliedTo": "Existing Wall Beams (left/right of connection)"
+          },
+          {
+            "type": "TslInst (hsbPlateWallSheetCut)",
+            "description": "Sheet cutout operations for wall sheathing.",
+            "appliedTo": "Wall Sheets (only during insertion if catalog is selected)"
+          }
+        ]
+      },
+      "tokens_used": 7925,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Launch Script (Command Line or Catalog)",
+          "Read Properties (sType, dGap, sCatalog, sTopOpen, sMillingStudPlate)",
+          "Check Execution Mode (_bOnInsert)",
+          "[Conditional] User Input: Select Wall Element (if _bOnInsert)",
+          "[Conditional] User Input: Select Intersecting Main Beams (if _bOnInsert)",
+          "Validate Selections (Element exists, >=2 beams selected)",
+          "Analyze Geometry (Coordinate system, top/bottom bounds, intersections)",
+          "Handle Context Menu Commands (if triggered: 'Reset' or 'Reset and Delete')",
+          "[Conditional] Generate Vertical Support Beams",
+          "[Conditional] Split Top Beam or Apply Static Cuts",
+          "[Conditional] Create T-Connection (T-Einfräsung) instances for milling",
+          "[Conditional] Invoke hsbPlateWallSheetCut TSL (Only on insert if catalog selected)",
+          "Update Entity References in _Map",
+          "End Execution"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Mode (_bOnInsert)",
+            "path1": {
+              "name": "Initial Insertion",
+              "steps": [
+                "Prompt user for Wall Element",
+                "Prompt user for Main Beams",
+                "Calculate geometry based on selections",
+                "Generate connection beams and tools",
+                "If sCatalog is valid, insert hsbPlateWallSheetCut TSL"
+              ]
+            },
+            "path2": {
+              "name": "Update/Recalc/Reset",
+              "steps": [
+                "Use stored references from _Map",
+                "Recalculate geometry based on new property values or reset command",
+                "Regenerate or Delete entities (beams, cuts, T-Connection TSLs)",
+                "Do NOT insert hsbPlateWallSheetCut TSL"
+              ]
+            }
+          },
+          {
+            "condition": "sType Selection",
+            "path1": {
+              "name": "Type 4",
+              "steps": [
+                "Analyze existing cuts on beams",
+                "Store specific cut points ('ptTyp4Cut') and normals in Map",
+                "Apply cuts to existing horizontal beams"
+              ]
+            },
+            "path2": {
+              "name": "Type 1, 2, or 3",
+              "steps": [
+                "Generate new vertical support beams",
+                "Split top beam if intersected",
+                "Apply standard cuts based on type logic"
+              ]
+            }
+          },
+          {
+            "condition": "Vertical Beam Alignment with Top Beam",
+            "path1": {
+              "name": "Misaligned (Need Milling)",
+              "steps": [
+                "Delete old 'T-Connection' instances from Map",
+                "Create new 'T-Connection' TSLs",
+                "Apply properties from 'sMillingStudPlate' catalog"
+              ]
+            },
+            "path2": {
+              "name": "Aligned",
+              "steps": [
+                "Skip T-Connection creation"
+              ]
+            }
+          },
+          {
+            "condition": "sTopOpen Property",
+            "path1": {
+              "name": "Yes",
+              "steps": [
+                "Force cut/modification of top beam even without direct intersection"
+              ]
+            },
+            "path2": {
+              "name": "No",
+              "steps": [
+                "Only modify top beam if directly intersected"
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Trigger",
+            "path1": {
+              "name": "Reset",
+              "steps": [
+                "Delete generated vertical beams",
+                "Delete 'T-Connection' TSLs",
+                "Join split top beams back together",
+                "Keep TSL instance"
+              ]
+            },
+            "path2": {
+              "name": "Reset and Delete",
+              "steps": [
+                "Execute Reset logic",
+                "Delete the TSL instance itself"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Wall Element selected during prompt",
+            "errorMessage": "No element selected",
+            "recovery": "Select a valid wall element and retry"
+          },
+          {
+            "check": "Main Beams selected during prompt",
+            "errorMessage": "No beams selected",
+            "recovery": "Select valid intersecting beams and retry"
+          },
+          {
+            "check": "Bounding beam found at top of support location",
+            "errorMessage": "No bounding beam at the top for the vertical beam on the left/right",
+            "recovery": "Ensure wall structure has a valid top plate at the connection point"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Properties",
+            "how": "Object Properties Palette (OPM)",
+            "effect": "Changing sType, dGap, or sTopOpen triggers regeneration of the connection geometry and beams. Changing sMillingStudPlate updates the T-Connection machining catalogs."
+          },
+          {
+            "action": "Reset Connection",
+            "how": "Right-click Context Menu -> 'Reset'",
+            "effect": "Removes generated vertical supports and milling, restoring the wall's top beam to its original continuous state (joining split parts)."
+          },
+          {
+            "action": "Reset and Delete",
+            "how": "Right-click Context Menu -> 'Reset and Delete'",
+            "effect": "Restores the wall to original state AND removes the TSL instance from the drawing."
+          },
+          {
+            "action": "Manual Geometry Updates",
+            "how": "Moving connected wall or main beams",
+            "effect": "The TSL detects changes (via dependencies/triggers) and regenerates the connection to fit the new geometry."
+          }
+        ]
+      },
+      "tokens_used": 9267,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbPlateWallSupport.mcr\n\n## Overview\nThis script automates the creation of structural connections between Stud Frame (SF) walls and intersecting main beams (purlins/Pfette). It generates vertical supports within the wall, splits top plates to accommodate beams, and handles sheathing cutouts.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script creates physical beams and geometry in the 3D model. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Entities**:\n  - An existing Stud Frame (SF) Wall **Element**.\n  - One or more Main Beams (Purlins/Pfette) intersecting the wall.\n- **Minimum Beam Count**: 2 (1 Element + 1 Main Beam).\n- **Required Settings**:\n  - Catalogs for `hsbPlateWallSheetCut` (if sheet cutouts are desired).\n  - Catalogs for `T-Connection` (T-Einfräsung) for milling operations.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbPlateWallSupport.mcr`\n\n### Step 2: Select Wall Element\n```\nCommand Line: Select element:\nAction: Click on the Stud Frame Wall Element where the connection will be made.\n```\n\n### Step 3: Select Main Beams\n```\nCommand Line: Select beams/Pfette:\nAction: Select the main beams (purlins) that intersect the wall.\n```\n\n### Step 4: Finish Insertion\n```\nCommand Line: \nAction: Press Enter to finish selection. The script will automatically generate the vertical supports, split the top beam, and apply any configured cuts or TSLs.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sType | dropdown | Type 1 | Selects the geometric strategy for the connection (Type 1, 2, 3, or 4). Affects beam placement and splitting logic. |\n| dGap | number | 0 | Clearance distance (mm) between the main beam and the new vertical support beams. |\n| sCatalog | dropdown | Disabled | Selects a catalog preset for the `hsbPlateWallSheetCut` TSL to automatically cut wall sheets around the connection. |\n| sMillingStudPlate | dropdown | [First Available] | Selects the machining catalog for T-Connections (milling) between the new vertical supports and the top plate. |\n| sTopOpen | dropdown | No | If set to \"Yes\", forces a cut or modification in the top beam even if the purlin does not physically touch it. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Reset | Removes the generated vertical support beams and milling, and rejoins the previously split top beams. The TSL instance remains in the drawing. |\n| Reset and Delete | Performs a Reset (restores original geometry) and then deletes the TSL instance from the project. |\n\n## Settings Files\n- **Catalogs**: `hsbPlateWallSheetCut` and `T-Connection` (or `T-Einfräsung`)\n- **Location**: hsbCAD Catalog Database (Company or Install path).\n- **Purpose**: Provide the geometric data and machining rules for the vertical supports, milling profiles, and sheet cutouts.\n\n## Tips\n- **Modifying Connections**: After insertion, you can change the `sType` or `dGap` in the Properties Palette to adjust the connection geometry without deleting and re-inserting.\n- **Cleaning Up**: Use the \"Reset\" context menu option if you need to temporarily remove the supports but plan to add them back later.\n- **Milling Logic**: Ensure the `sMillingStudPlate` catalog matches your material requirements for the stud-to-top-plate connection.\n- **Sheet Cutouts**: Remember that sheet cutouts (`hsbPlateWallSheetCut`) are only calculated during the initial insertion. If you need to update sheets after changing geometry, you may need to Reset and re-insert.\n\n## FAQ\n- **Q: What happens to the top plate of the wall?**\n  A: If the main beam intersects the top plate, the script automatically splits the top beam into two parts to make room for the connection.\n- **Q: The script didn't cut my sheets. Why?**\n  A: Check the `sCatalog` property. If it is set to \"Disabled,\" the sheet cutout TSL is not executed. Select the appropriate catalog and ensure you are in insertion mode (or reset and re-insert).\n- **Q: Can I change the gap size later?**\n  A: Yes, simply select the TSL instance, open the Properties palette, and modify the `dGap` value. The vertical supports will update automatically.\n- **Q: How do I remove the connection but keep the TSL?**\n  A: Right-click the TSL instance and select \"Reset\". This restores the wall to its original state (joining the top beam) but keeps the script attached for future use."
+      },
+      "tokens_used": 5777,
+      "error": null
+    }
+  }
+}

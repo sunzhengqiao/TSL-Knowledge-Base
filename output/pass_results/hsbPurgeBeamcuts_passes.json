@@ -1,0 +1,249 @@
+{
+  "filename": "hsbPurgeBeamcuts.mcr",
+  "status": "completed",
+  "total_tokens": 23706,
+  "processing_time": 165.8030800819397,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "DATE",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4104,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses PrEntity to prompt for GenBeam selection and operates on 3D geometry properties such as envelopeBody() and cuttingBody(). It performs 3D spatial intersection checks (hasIntersection) on Body objects. No ShopDrawing (#Type E), sd_ prefixes, or layout-related commands are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "ToolEnt"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D environment)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2842,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select beam(s), sheet(s) or panel(s)|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2100,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Removes obsolete machining definitions (beamcuts) from selected elements where the cutting body no longer physically intersects the element's geometry.",
+          "category": "Model Maintenance / Data Integrity",
+          "typicalUseCase": "Used after modifying the model geometry (e.g., moving or deleting walls) to clean up 'ghost' cuts that remain referenced to a beam but no longer cut it, preventing machining errors or clutter in production data."
+        },
+        "parameters": [
+          {
+            "name": "_Entity",
+            "technicalDefault": "Empty",
+            "businessMeaning": "The selection of beams, sheets, or panels to be analyzed and cleaned. The script scans these specific elements for invalid tool connections.",
+            "validRange": "1 to N valid GenBeam, Sheet, or Panel entities.",
+            "unit": "Count",
+            "affectsOutput": "Restricts the purge operation to only the selected elements. Unselected beams in the model are not checked."
+          },
+          {
+            "name": "bDebug",
+            "technicalDefault": "false",
+            "businessMeaning": "Developer flag that controls visualization and script persistence. It allows the user to see the cutting bodies being evaluated and prevents the script from self-deleting.",
+            "validRange": "true (Visualize/Keep), false (Silent run/Erase)",
+            "unit": "Boolean",
+            "affectsOutput": "When true, displays the geometry of cutting bodies in the CAD view and retains the script instance in the drawing. When false, the script executes invisibly and deletes itself upon completion."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "_Entity selection",
+            "effect": "Defines the scope of the cleanup loop.",
+            "cascade": []
+          },
+          {
+            "trigger": "bDebug = true",
+            "effect": "Overrides the automatic erasure of the script instance.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "ToolEnt Connection (Removal)",
+            "description": "Removes the link between a tool (cut) and the beam if the geometric intersection check fails. This cleans the beam's machining list without creating new geometry.",
+            "appliedTo": "The specific GenBeam entities selected during the script insertion."
+          }
+        ]
+      },
+      "tokens_used": 4926,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script execution triggered by user launch.",
+          "2. System checks insertCycleCount to prevent recursive execution.",
+          "3. User prompted via command line to select GenBeam, Sheet, or Panel entities.",
+          "4. (Conditional) If bDebug is set to true in script code, user prompted to select a reference point (_Pt0).",
+          "5. Script iterates through the array of selected entities (_Entity).",
+          "6. For each entity, the script retrieves its envelope body (geometry).",
+          "7. Script iterates backwards through all tools connected to the current entity.",
+          "8. For each tool, validity checks are performed (Is it a valid ToolEnt? Is it a TSL instance?).",
+          "9. Tool geometry is extracted (cuttingBody).",
+          "10. (Conditional) If bDebug is true, the tool body is visualized in the CAD model.",
+          "11. Validation: Tool volume is checked against a 1mm^3 threshold.",
+          "12. Geometry Check: Script determines if the Tool body intersects the Entity's envelope body.",
+          "13. (Conditional) If NO intersection is found, the connection between the tool and the beam is removed.",
+          "14. Progress is reported to the command line report window.",
+          "15. (Conditional) If bDebug is false, the script instance erases itself from the drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Debug Mode Status (bDebug variable)",
+            "path1": {
+              "name": "Debug Mode Active (true)",
+              "steps": [
+                "Prompt user for a reference point.",
+                "Visualize every tool body checked in the 3D view.",
+                "Display report message.",
+                "Script instance remains in the drawing (does not auto-erase)."
+              ]
+            },
+            "path2": {
+              "name": "Production Mode (false/default)",
+              "steps": [
+                "Skip point prompt.",
+                "Run checks invisibly.",
+                "Display report message.",
+                "Script instance deletes itself immediately upon completion."
+              ]
+            }
+          },
+          {
+            "condition": "Geometric Intersection Check",
+            "path1": {
+              "name": "Intersection Detected",
+              "steps": [
+                "Tool is considered valid/active.",
+                "Connection is retained.",
+                "Counters for 'Total Tools' incremented."
+              ]
+            },
+            "path2": {
+              "name": "No Intersection",
+              "steps": [
+                "Tool is considered obsolete/ghost.",
+                "Connection is removed (tent.removeGenBeamConnection).",
+                "Counters for 'Removed Tools' incremented."
+              ]
+            }
+          },
+          {
+            "condition": "Insertion Cycle Check",
+            "path1": {
+              "name": "First Cycle",
+              "steps": [
+                "Proceed to selection prompt."
+              ]
+            },
+            "path2": {
+              "name": "Subsequent Cycle (>1)",
+              "steps": [
+                "Execute eraseInstance().",
+                "Terminate script immediately."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Recursive Execution Protection",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script self-terminates if it detects it is running in a sub-cycle."
+          },
+          {
+            "check": "Entity Validity",
+            "errorMessage": "None (Silent Skip)",
+            "recovery": "If a selected entity is invalid (!bIsValid), the script skips it and continues to the next."
+          },
+          {
+            "check": "Tool Type Validity",
+            "errorMessage": "None (Silent Skip)",
+            "recovery": "If a connected tool is a TSL instance (bIsKindOf(TslInst)), it is skipped to avoid deleting other scripts."
+          },
+          {
+            "check": "Tool Volume Threshold",
+            "errorMessage": "None (Silent Skip)",
+            "recovery": "If a tool's volume is less than 1mm^3, it is ignored (treated as negligible)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "No User Interaction Available",
+            "how": "N/A",
+            "effect": "Because the script lacks PropDouble/PropInt declarations (bDebug is an internal variable) and contains an eraseInstance() call in the default flow, the user cannot modify the script via OPM or context menus after the initial run. The script is designed as a transient utility."
+          }
+        ]
+      },
+      "tokens_used": 5281,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbPurgeBeamcuts\n\n## Overview\nRemoves obsolete machining definitions (beamcuts) from selected beams, sheets, or panels. This utility cleans up \"ghost\" cuts that remain referenced to an element but no longer physically intersect it.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required. The script checks 3D intersections. |\n| Paper Space | No | Not applicable. |\n| Shop Drawing | No | This script operates on 3D model elements only. |\n\n## Prerequisites\n- **Required Entities**: At least one GenBeam, Sheet, or Panel entity.\n- **Minimum Beam Count**: 1 (You must select an element to process).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the command line.\n2. Navigate to the script location and select `hsbPurgeBeamcuts.mcr`.\n3. Click **Open**.\n\n### Step 2: Select Elements\n```\nCommand Line: Select beam(s), sheet(s) or panel(s)\nAction: Click on the beams, sheets, or panels you wish to clean.\n```\n*Note: You can select multiple elements at once. Press **Enter** to confirm your selection.*\n\n### Step 3: Review Results\nThe script will immediately process the selection.\n- The command line will display a report indicating how many tools were checked and how many invalid connections were removed.\n- The script instance will automatically erase itself from the drawing upon completion.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script is a transient utility. It runs once and erases itself; therefore, there are no editable properties in the Properties Panel. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | No context menu options are available. The script does not remain in the drawing to be selected. |\n\n## Settings Files\nNo external settings files are used by this script.\n\n## Tips\n- **Post-Edit Cleanup**: Use this script after significant model modifications, such as moving walls or deleting adjacent elements, to ensure your production data does not contain cuts that no longer exist.\n- **Selection Efficiency**: You can window select a large group of elements to process multiple beams at the same time.\n- **Undo**: If you accidentally remove cuts you wanted to keep, you can use the standard AutoCAD `UNDO` command immediately after running the script.\n\n## FAQ\n- **Q: Where did the script go after I used it?**\n  - A: This script is designed to be a \"run-and-done\" utility. It automatically erases itself from the drawing after finishing its task to keep your drawing clean.\n\n- **Q: Does this script delete the actual beam or panel?**\n  - A: No. It only removes the *machining links* (cuts) that are no longer valid. It does not delete the structural elements themselves.\n\n- **Q: Why do I have \"ghost\" cuts?**\n  - A: This often happens if you move a beam that was previously cut by another element, or if you delete a wall that had a window cutout. The machining definition remains linked to the beam even if the geometry causing the cut is gone."
+      },
+      "tokens_used": 4453,
+      "error": null
+    }
+  }
+}

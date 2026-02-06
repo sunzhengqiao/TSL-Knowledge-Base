@@ -1,0 +1,212 @@
+{
+  "filename": "hsb_RevolutionMillTool.mcr",
+  "status": "completed",
+  "total_tokens": 18048,
+  "processing_time": 141.8235285282135,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2081,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses _Beam0.addTool() to apply RevolutionMill and Cut objects, which are 3D geometric operations applied to beams. Uses Display(-1) to draw geometry. No ShopDrawing (sd_) or Viewport specific code found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2086,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "nIndex",
+            "type": "PropInt",
+            "displayName": "Mill index",
+            "defaultValue": 0,
+            "inputType": "dropdown",
+            "options": [
+              "0",
+              "1"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 1697,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Applies a cylindrical RevolutionMill machining operation to a timber beam, referencing a specific tool definition from the CNC machine's library.",
+          "category": "Machining/Hardware",
+          "typicalUseCase": "Used when a user needs to mill a hole or pocket using a specific tool bit (defined in the machine settings) without manually entering the diameter, ensuring the tool output matches the physical cutter available on the machine."
+        },
+        "parameters": [
+          {
+            "name": "nIndex",
+            "technicalDefault": "0",
+            "businessMeaning": "The identifier (Tool Index) for the specific cutter/drill bit in the CNC machine database. It determines the physical geometry (diameter, length, corner radius) of the milling operation.",
+            "validRange": "0 to 1 (Dropdown restricted to indices 0 and 1 by script, though comment suggests only 0 is actively supported)",
+            "unit": "Index (Integer)",
+            "affectsOutput": "Determines the diameter and profile of the 'RevolutionMill' added to the beam. Changing the index switches the referenced tool definition, altering the size of the milled volume."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "When nIndex changes",
+            "effect": "Updates the tool definition referenced by the RevolutionMill object.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "RevolutionMill",
+            "description": "A volumetric removal operation defined by a rotational profile (cylindrical mill), created at the insertion point.",
+            "appliedTo": "_Beam0 (The selected beam)"
+          },
+          {
+            "type": "Cut",
+            "description": "A planar saw cut added at the insertion point, likely serving as a start/stop cut for the mill or a trimming operation.",
+            "appliedTo": "_Beam0 (The selected beam)"
+          },
+          {
+            "type": "Visual Geometry",
+            "description": "3D lines representing the local X, Y, and Z axes to help the user orient the tool during insertion.",
+            "appliedTo": "Model Space"
+          }
+        ]
+      },
+      "tokens_used": 3375,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User launches the hsb_RevolutionMillTool script.",
+          "2. User selects a target GenBeam (implied requirement for _Beam0).",
+          "3. User defines the insertion point (_Pt0) and coordinate system orientation (X/Y/Z axes) via command line input.",
+          "4. Script initializes properties: sets nIndex to default (0).",
+          "5. Script instantiates RevolutionMill object using current nIndex and insertion point.",
+          "6. Script instantiates Cut object at insertion point.",
+          "7. Script applies both RevolutionMill and Cut tools to _Beam0.",
+          "8. Script draws visual crosshairs (PLine geometry) at insertion point in Model Space.",
+          "9. Script execution completes; object is added to the drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User modifies the 'Mill index' (nIndex) property via OPM",
+            "path1": {
+              "name": "Index 0 (Default/Supported)",
+              "steps": [
+                " nIndex set to 0",
+                " RevolutionMill.setToolIndex(0) is called",
+                " CNC Tool definition for Index 0 is applied to the geometry"
+              ]
+            },
+            "path2": {
+              "name": "Index 1 (Alternative/Restricted)",
+              "steps": [
+                " nIndex set to 1",
+                " RevolutionMill.setToolIndex(1) is called",
+                " CNC Tool definition for Index 1 is applied (Note: Code comment suggests only index 0 is actively supported)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam Selection",
+            "errorMessage": "Script expects a valid GenBeam to attach tools.",
+            "recovery": "User must ensure a beam is selected or the script context provides a valid _Beam0 entity."
+          },
+          {
+            "check": "Property Range",
+            "errorMessage": "Value for 'Mill index' is restricted to the array {0, 1}.",
+            "recovery": "User must select either 0 or 1 from the dropdown list in the Properties Palette."
+          },
+          {
+            "check": "CNC Tool Definition",
+            "errorMessage": "If the selected nIndex does not correspond to a valid tool in the machine's database, the milling operation may fail or generate invalid output.",
+            "recovery": "User must verify the CNC Machine Library contains definitions for the selected tool index."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Move Machining Operation",
+            "how": "Grip Edit (Drag element)",
+            "effect": "Updates _Pt0 location. Both the RevolutionMill and the Cut object move synchronously to the new position."
+          },
+          {
+            "action": "Change Tool Profile",
+            "how": "OPM (Properties Palette) -> Edit 'Mill index'",
+            "effect": "Updates the tool definition referenced by the RevolutionMill. Changes the diameter and geometry of the milled volume."
+          },
+          {
+            "action": "Reorient Operation",
+            "how": "Grip Edit (Rotate handles) or Properties",
+            "effect": "Rotates the local coordinate system (_X0, _Y0, _Z0). The RevolutionMill axis aligns to the new _Y0 direction."
+          },
+          {
+            "action": "Delete Tool",
+            "how": "Select element and delete",
+            "effect": "Removes the script instance, the associated RevolutionMill, and the Cut object from the beam."
+          }
+        ]
+      },
+      "tokens_used": 4612,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_RevolutionMillTool\n\n## Overview\nApplies a cylindrical milling operation (RevolutionMill) to a timber beam using a specific tool index from your CNC machine library. It automatically adjusts the mill diameter based on the selected tool and includes a standard saw cut at the insertion point.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in the 3D model to modify beam geometry. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | This is a model generation tool, not a drawing detailer. |\n\n## Prerequisites\n- **Required Entities**: One `GenBeam` (Timber Beam).\n- **Minimum Beam Count**: 1.\n- **Required Settings**: A valid CNC Machine Library containing definitions for Tool Index 0 (and optionally 1).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_RevolutionMillTool.mcr`\n\n### Step 2: Select Target Beam\n```\nCommand Line: Select beam:\nAction: Click on the timber beam you wish to apply the machining to.\n```\n\n### Step 3: Define Location\n```\nCommand Line: Give insertion point:\nAction: Click on the beam where the center of the revolution mill should be located.\n```\n\n### Step 4: Define Orientation\n```\nCommand Line: Give X-direction / Give Y-direction / Give Z-direction:\nAction: Click to define the orientation of the tool axis (usually aligning the tool axis with the beam or a specific angle).\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Mill index | dropdown | 0 | Selects the CNC tool bit (Index 0 or 1) from the machine library to define the mill diameter and profile. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| *(None specific)* | This script does not add custom items to the right-click menu. Use standard grips or Properties to edit. |\n\n## Settings Files\n- **Filename**: *(None)*\n- **Location**: N/A\n- **Purpose**: This script relies on the global hsbCAD CNC Machine Configuration for tool definitions, rather than a specific local settings file.\n\n## Tips\n- **Grip Editing**: After insertion, select the script element and use the blue square grip to drag the mill to a new position along the beam.\n- **Reorienting**: Use the rotation handle (usually the circular arrow grip appearing near the insertion point) to change the direction of the mill bit.\n- **Tool Index**: Ensure your CNC administrator has configured Tool Index 0 (or 1) in the machine settings with the correct diameter for your design intent.\n\n## FAQ\n- **Q: I changed the Mill Index, but nothing happened visually.**\n  A: The geometry updates only if the diameter defined in Tool Index 1 differs from Tool Index 0. If they are identical in the machine database, the visual size will not change.\n- **Q: What is the extra Cut object added by this script?**\n  A: The script automatically adds a planar \"Cut\" at the insertion point, likely intended as a trimming cut or a start/stop cut for the milling path.\n- **Q: Can I use Index 2 or higher?**\n  A: The script interface currently restricts selection to Index 0 or 1. Use 0 for the primary tool."
+      },
+      "tokens_used": 4197,
+      "error": null
+    }
+  }
+}

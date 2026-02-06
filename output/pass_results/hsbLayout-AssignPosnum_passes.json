@@ -1,0 +1,316 @@
+{
+  "filename": "hsbLayout-AssignPosnum.mcr",
+  "status": "completed",
+  "total_tokens": 40443,
+  "processing_time": 344.40939235687256,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl assigns posnums to genbeams or/and TSL instances\n in a viewport that contains elements (wall element, floor or a roof)\n in the property \"check for posnum numbering:\" it is decided whether the \n category will be considered for numbering or not\n in the property \"Start number\" it is entered the start number for the PosNum numbering\n in the property \"Text Height\" it is entered the height of text for the display\n custom command  \"select viewport\" to select a new viewport\n each time the \"Start number\" is changed, the calculation will \n run with the new \"Start number\"\n TSL can not be entered twice in _kMySpace",
+        "versionHistory": [
+          {
+            "version": "1.4",
+            "date": "21jun2019",
+            "author": "marsel.nakuci@hsbcad.com",
+            "changes": "report message if no element viewport+fix bug at-> if(iIndex==1)"
+          },
+          {
+            "version": "1.3",
+            "date": "28mar2019",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "typo of property name fixed "
+          },
+          {
+            "version": "1.2",
+            "date": "26mar2019",
+            "author": "marsel.nakuci@hsbcad.com",
+            "changes": "add for TSL and extend properties "
+          },
+          {
+            "version": "1.1",
+            "date": "26mar2019",
+            "author": "marsel.nakuci@hsbcad.com",
+            "changes": "suggestions in HSBCAD-627 "
+          },
+          {
+            "version": "1.0",
+            "date": "26mar2019",
+            "author": "marsel.nakuci@hsbcad.com",
+            "changes": "initial "
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6947,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Prompt explicitly requests to 'Pick a point outside of paperspace'. Filename uses 'hsbLayout' prefix. Script utilizes Viewport objects to access Element data (GenBeam, TslInst) within a layout context."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "AutoCAD Model Space (Layout environment) containing Viewports linked to structural elements (Walls, Floors, Roofs).",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6044,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5298,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically assigns production position numbers (PosNum) to structural members (beams, panels) and connection scripts (TSLs) within a selected layout viewport.",
+          "category": "ShopDrawing / Layout",
+          "typicalUseCase": "Used during drawing creation to batch-number elements in a wall, floor, or roof view for manufacturing labels or bills of materials."
+        },
+        "parameters": [
+          {
+            "name": "sNoYesGenBeam",
+            "technicalDefault": "1 (Yes)",
+            "businessMeaning": "Master switch to enable or disable the automatic numbering of timber beams, sheets, and structural panels.",
+            "validRange": "Yes / No",
+            "unit": "Boolean (Enumeration)",
+            "affectsOutput": "If 'No', no beams are processed. If 'Yes', unnumbered beams in the viewport are assigned a PosNum."
+          },
+          {
+            "name": "nStartPosNumGenBeam",
+            "technicalDefault": "1",
+            "businessMeaning": "The starting integer for the position numbering sequence of structural members.",
+            "validRange": "1 to 99999",
+            "unit": "Count",
+            "affectsOutput": "Sets the specific PosNum attribute on the first unnumbered beam; subsequent beams increment sequentially from this value."
+          },
+          {
+            "name": "sZone",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Defines which construction layers (zones) are included in the numbering process. If empty, all zones (-5 to 5) are processed.",
+            "validRange": "Semicolon-separated integers (e.g., \"1;-1;0\") or Empty",
+            "unit": "Zone Index",
+            "affectsOutput": "Filters the GenBeam collection so only beams in the specified zones receive new numbers."
+          },
+          {
+            "name": "sNoYesTSL",
+            "technicalDefault": "1 (Yes)",
+            "businessMeaning": "Master switch to enable or disable the automatic numbering of TSL instances (connection scripts or hardware).",
+            "validRange": "Yes / No",
+            "unit": "Boolean (Enumeration)",
+            "affectsOutput": "If 'No', no TSLs are processed. If 'Yes', unnumbered TSLs in the viewport are assigned a PosNum."
+          },
+          {
+            "name": "nStartPosNumTSL",
+            "technicalDefault": "1",
+            "businessMeaning": "The starting integer for the position numbering sequence of TSL instances.",
+            "validRange": "1 to 99999",
+            "unit": "Count",
+            "affectsOutput": "Sets the specific PosNum attribute on the first unnumbered TSL; subsequent TSLs increment sequentially from this value."
+          },
+          {
+            "name": "dTextHeight",
+            "technicalDefault": "10",
+            "businessMeaning": "The height of the text label displayed in the CAD layout to indicate the script's status.",
+            "validRange": "2.5 to 100",
+            "unit": "mm",
+            "affectsOutput": "Adjusts the visibility of the script marker text at the insertion point."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing 'nStartPosNumGenBeam' or 'nStartPosNumTSL'",
+            "effect": "Script recalculates and reassigns PosNums starting from the new value.",
+            "cascade": []
+          },
+          {
+            "trigger": "Changing 'sZone'",
+            "effect": "Modifies the set of GenBeams selected for numbering based on their layer properties.",
+            "cascade": [
+              "sNoYesGenBeam"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Property Attribute (PosNum)",
+            "description": "Writes an integer position number to the 'PosNum' property of entities.",
+            "appliedTo": "GenBeam and TslInst objects contained within the Element linked to the selected Viewport."
+          },
+          {
+            "type": "Text Annotation",
+            "description": "Visual marker displaying the script name and instructions.",
+            "appliedTo": "Model Space at the user-selected insertion point."
+          }
+        ]
+      },
+      "tokens_used": 7624,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch Script: User executes insert command.",
+          "2. Insert Cycle Check: Script verifies it is not running recursively (cycle count > 1).",
+          "3. Property Initialization: Checks for a command key (silent insert) to load catalog settings, or displays the Properties Dialog.",
+          "4. Viewport Selection: Command line prompts 'Select a viewport'. User selects a layout viewport.",
+          "5. Insertion Point: Command line prompts 'Pick a point outside of paperspace'. User selects a coordinate.",
+          "6. Deduplication: Script searches the current space for existing instances of 'hsbLayout-AssignPosnum' and erases them to enforce uniqueness.",
+          "7. Viewport Validation: Script checks if the selected viewport links to a valid structural Element.",
+          "8. GenBeam Processing (Conditional): If 'Numbering' property is 'Yes' for GenBeams, script collects beams from the Element.",
+          "9. Zone Filtering: Parses the 'Zone' property string or defaults to all zones (-5 to 5) to filter the beam list.",
+          "10. Beam Numbering: Iterates through filtered beams. If 'PosNum' is 0, assigns a number starting from 'Start number' (GenBeam).",
+          "11. TSL Processing (Conditional): If 'Numbering' property is 'Yes' for TSLs, script collects TSL instances from the Element.",
+          "12. TSL Numbering: Iterates through TSLs. If 'PosNum' is 0, assigns a number starting from 'Start number' (TSL).",
+          "13. Final Display: Draws the script name and status text at the insertion point."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Trigger (Insert Key)",
+            "path1": {
+              "name": "Catalog/Silent Insert",
+              "steps": [
+                "Read _kExecuteKey",
+                "Match against catalog entries",
+                "Load properties from matched catalog or '_LastInserted'",
+                "Skip visual dialog"
+              ]
+            },
+            "path2": {
+              "name": "Standard Insert",
+              "steps": [
+                "Execute showDialog()",
+                "User manually configures properties",
+                "Click OK to proceed"
+              ]
+            }
+          },
+          {
+            "condition": "Viewport Selection Method",
+            "path1": {
+              "name": "Initial Insert",
+              "steps": [
+                "Prompt for Viewport",
+                "Prompt for Insertion Point"
+              ]
+            },
+            "path2": {
+              "name": "Context Menu / Double Click",
+              "steps": [
+                "Execute 'Select View Port' command",
+                "Update _Viewport[0]",
+                "Recalculate immediately"
+              ]
+            }
+          },
+          {
+            "condition": "GenBeam Availability",
+            "path1": {
+              "name": "No GenBeams Found",
+              "steps": [
+                "Check GenBeam array length (< 1)",
+                "Report error 'no genBeam (beam, sheet or panel) found'",
+                "Stop execution (Return)"
+              ]
+            },
+            "path2": {
+              "name": "GenBeams Found",
+              "steps": [
+                "Filter by Zone",
+                "Assign PosNum to unnumbered beams"
+              ]
+            }
+          },
+          {
+            "condition": "Zone Property Content",
+            "path1": {
+              "name": "Empty String",
+              "steps": [
+                "Default to all zones (-5 to 5)",
+                "Process all beams in element"
+              ]
+            },
+            "path2": {
+              "name": "User Defined List",
+              "steps": [
+                "Parse semicolon-separated integers",
+                "Convert legacy values (6-10) to negative zones",
+                "Process only beams in specified zones"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Viewport Element Link",
+            "errorMessage": "no valid elements in the viewport",
+            "recovery": "Select a viewport that is linked to a Wall, Floor, or Roof element. The script instance will erase itself if this check fails."
+          },
+          {
+            "check": "Element Handle Validity",
+            "errorMessage": "no element found in the viewport",
+            "recovery": "Ensure the selected viewport actually contains a structural element. The script instance will erase itself if this check fails."
+          },
+          {
+            "check": "GenBeam Presence (when Numbering=Yes)",
+            "errorMessage": "no genBeam (beam, sheet or panel) found",
+            "recovery": "If the element has no beams but you wish to number TSLs, set the 'Numbering' property under the 'GenBeam' category to 'No'. Otherwise, select a viewport containing beams."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Select New Viewport",
+            "how": "Right-click Context Menu -> 'Select View Port' or Double-click the TSL instance",
+            "effect": "Re-prompts the user to select a different viewport, refreshes the element link, and re-runs the numbering logic."
+          },
+          {
+            "action": "Adjust Numbering Settings",
+            "how": "AutoCAD Properties Palette (OPM)",
+            "effect": "Changing 'Start number', 'Zone', or 'Numbering' (Yes/No) flags triggers an automatic recalculation of the position numbers."
+          },
+          {
+            "action": "Visual Adjustment",
+            "how": "Grip Edit (Move)",
+            "effect": "Moving the TSL insertion point changes the location of the status text label."
+          }
+        ]
+      },
+      "tokens_used": 8467,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbLayout-AssignPosnum.mcr\n\n## Overview\nAutomatically assigns production position numbers (PosNum) to structural beams, sheets, panels, and TSL connections within a selected layout viewport. It filters elements by construction zones and allows independent numbering sequences for structural members and hardware.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script instance is inserted here. |\n| Paper Space | No | Although the script works on Viewports located in Layout tabs, the script itself must be inserted in Model Space. |\n| Shop Drawing | Yes | Designed for numbering elements in production views. |\n\n## Prerequisites\n- **Required Entities**: A Layout Viewport that is linked to a valid structural Element (Wall, Floor, or Roof).\n- **Minimum Beam Count**: 0 (Required only if beam numbering is enabled).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbLayout-AssignPosnum.mcr`\n\n### Step 2: Configure Properties\nThe Properties dialog may appear automatically, or you can configure settings later via the Properties Palette.\n1.  Set **Number GenBeams** to \"Yes\" to number structural parts.\n2.  Set **Number TSLs** to \"Yes\" to number connection scripts.\n3.  (Optional) Enter specific **Start Numbers** for each category.\n4.  (Optional) Define specific **Zone List** to filter which layers are numbered.\n\n### Step 3: Select Viewport\n```\nCommand Line: Select a viewport\nAction: Click on a layout viewport that displays the element you wish to number.\n```\n\n### Step 4: Place Script Marker\n```\nCommand Line: Pick a point outside of paperspace\nAction: Click anywhere in Model Space to place the script label.\n```\n*Note: This point determines where the text identifying the script is displayed. The numbering itself happens inside the viewport.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sNoYesGenBeam | dropdown | 1 (Yes) | Determines if structural members (beams, sheets, panels) are included in the numbering process. |\n| nStartPosNumGenBeam | number | 1 | The starting integer for the PosNum sequence assigned to GenBeams. |\n| sZone | text | \"\" | Specifies which construction zones to number. Leave empty for all zones, or enter semicolon-separated values (e.g., \"1;0;-1\"). |\n| sNoYesTSL | dropdown | 1 (Yes) | Determines if TSL instances (connections/hardware) are included in the numbering process. |\n| nStartPosNumTSL | number | 1 | The starting integer for the PosNum sequence assigned to TSLs. |\n| dTextHeight | number | 10 | The height (in current drawing units) of the status text displayed at the insertion point. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Select View Port | Re-prompts you to select a different viewport. The script will immediately update the numbering based on the new selection. |\n\n## Settings Files\nNone. This script relies on direct property inputs.\n\n## Tips\n- **Auto-Update**: Changing the \"Start number\" properties in the Properties Palette automatically triggers the script to re-number the elements.\n- **Zone Filtering**: Use the `sZone` property to target specific construction layers (e.g., only number the studs in zone 0).\n- **Uniqueness**: This script ensures it is the only instance of its type in the current space. If you insert a second one, the first will be erased automatically.\n\n## FAQ\n- **Q: I get the error \"no genBeam (beam, sheet or panel) found\".**\n  A: The script is set to number beams (`sNoYesGenBeam` = Yes), but the selected viewport contains no beams, or they are filtered out by the Zone setting. Either add beams to the viewport, adjust the `sZone` property, or set `sNoYesGenBeam` to \"No\".\n- **Q: How do I renumber the elements after changing the design?**\n  A: Simply double-click the script instance or right-click and select \"Select View Port\", then re-select the same viewport to force a refresh.\n- **Q: Can I number beams and TSLs with the same sequence?**\n  A: No, this script uses separate counters (`nStartPosNumGenBeam` and `nStartPosNumTSL`). You must manually set the start numbers to avoid overlap if desired."
+      },
+      "tokens_used": 6063,
+      "error": null
+    }
+  }
+}

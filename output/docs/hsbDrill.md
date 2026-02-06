@@ -1,149 +1,97 @@
-# hsbDrill
+# hsbDrill.mcr
 
 ## Overview
+Creates a linear distribution of drills (round holes), slotted holes, and sinkholes (counterbores) across one or multiple selected beams to facilitate mechanical connections like bolting.
 
-**hsbDrill** is a versatile drilling tool that creates drill patterns along timber beams, panels, or plates. It supports both single drill operations and distributed drill patterns along the X-direction of selected members. The script can automatically connect multiple beams and supports advanced features like slotted holes and sinkholes (counterbores) on both sides of the drill.
+## Usage Environment
+| Space | Supported | Notes |
+|-------|-----------|-------|
+| Model Space | Yes | Script operates on 3D model entities. |
+| Paper Space | No | Not supported in layouts. |
+| Shop Drawing | No | Does not generate 2D drawing views directly. |
 
-| Property | Value |
-|----------|-------|
-| **Script Type** | O (Object) |
-| **Version** | 2.7 |
-| **Beams Required** | 0 |
+## Prerequisites
+- **Required Entities**: GenBeam (Timber Beams)
+- **Minimum Beam Count**: 1
+- **Required Settings Files**: None
 
----
+## Usage Steps
 
-## Properties
+### Step 1: Launch Script
+Command: `TSLINSERT` → Select `hsbDrill.mcr`
 
-### General
+### Step 2: Select Main Beam
+```
+Command Line: Select main genbeam
+Action: Click on the primary timber beam to define the reference context.
+```
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| **Depth** | Double | 0 | Sets the depth of the drill. A value of 0 creates a through-hole. |
-| **Diameter** | Double | 18 mm | Sets the diameter of the drill hole. |
-| **UCS** | String | -Z | Sets the alignment of the drills in relation to the most aligned beam direction of the current UCS. Options: -Z, -Y, Z, Y |
-| **Snap to center line** | String | Yes | Defines if the drills will be placed along the axis of the first selected beam. Options: Yes, No |
-| **Axis offset** | Double | 0 mm | Defines the offset from the beam axis. Only active for non-zero entries when "Snap to center line" is set to No. |
+### Step 3: Select Additional Beams
+```
+Command Line: Select additional genbeams
+Action: Click any other beams you wish to drill through simultaneously. Press Enter to finish selection if only drilling one beam.
+```
 
-### Sinkhole - Reference Side
+### Step 4: Define Start Point
+```
+Command Line: Select startpoint
+Action: Click in the model to set the starting location for the row of holes.
+```
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| **Depth** | Double | 0 | Sets the depth of the sink hole on the reference (entry) side. A negative value shortens the drill in the main object if applicable. |
-| **Diameter** | Double | 18 mm | Sets the diameter of the counterbore on the reference side. |
+### Step 5: Define End Point
+```
+Command Line: Select endpoint
+Action: Click to set the ending location for the row of holes.
+```
 
-### Sinkhole - Opposite Side
+## Properties Panel Parameters
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| **Depth** | Double | 0 | Sets the depth of the counterbore on the opposite (exit) side. Only applicable for through-holes. |
-| **Diameter** | Double | 18 mm | Sets the diameter of the counterbore on the opposite side. |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| **General** | | | |
+| Depth | Number | 0 | Depth of the drill hole. Use 0 for a through hole. |
+| Diameter | Number | U(18) | Diameter of the main drill hole. |
+| UCS | Dropdown | - | Aligns the drill direction relative to the current UCS (-Z, -Y, Z, Y). |
+| Snap to center line | Dropdown | - | If "Yes", locks the drill path to the beam's axis. |
+| Axis offset | Number | U(0) | Lateral offset from the beam centerline (Only active if Snap to center line is "No"). |
+| **Sinkhole Reference Side** | | | |
+| Depth | Number | 0 | Depth of the counterbore on the start side. Negative value shortens the drill. |
+| Diameter | Number | U(18) | Diameter of the counterbore on the start side. |
+| **Sinkhole opposite Side** | | | |
+| Depth | Number | 0 | Depth of the counterbore on the end side. 0 for through. |
+| Diameter | Number | U(18) | Diameter of the counterbore on the end side. |
+| **Slotted Hole** | | | |
+| Length | Number | U(18) | Length of the hole. If Length > Diameter, a slotted hole is created. |
+| Assignment | Dropdown | - | Selects which objects get the slotted hole (none, first object, second object, all). |
+| **Baufritz** | | | |
+| Hardware | Dropdown | - | Selects specific hardware fasteners (e.g., Schlüsselschraube, Stehbolzen) for reporting/BOM. |
+| **Distribution** | | | |
+| Mode | Dropdown | - | Sets spacing logic: "Even Distribution" or "Fixed Distribution". |
+| Inter distance | Number | U(70) | Center-to-center distance between holes (used in Fixed mode). |
+| Distance from startpoint | Number | 0 | Offsets the first hole from the selected start point. |
+| Distance from endpoint | Number | 0 | Offsets the last hole from the selected end point. |
 
-### Slotted Hole
+## Right-Click Menu Options
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| **Length** | Double | 18 mm | Creates a slotted hole if the length exceeds the diameter. |
-| **Assignment** | String | none | Defines which objects receive the slotted hole. Options: none, first object, second object, all |
+| Menu Item | Description |
+|-----------|-------------|
+| TslDoubleClick | Re-executes the script or performs the default double-click action to modify parameters. |
 
-### Distribution (During Insertion Only)
+## Settings Files
+None defined.
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| **Mode** | String | Even Distribution | Sets the distribution method. "Even Distribution" spaces drills evenly; "Fixed Distribution" uses exact inter-distance. |
-| **Inter distance** | Double | 70 mm | Sets the spacing between drills in the pattern. |
-| **Distance from startpoint** | Double | 0 | Sets the offset from the start point of the distribution. |
-| **Distance from endpoint** | Double | 0 | Sets the offset from the end point of the distribution. |
+## Tips
+- **Through Holes**: Always set the main Depth to `0` to ensure the hole goes completely through the material, regardless of thickness changes.
+- **Counterbores**: Use the Sinkhole parameters to create space for bolt heads or washers. A negative depth on "Sinkhole Reference Side" is useful for hiding bolt heads or creating dowel-like connections.
+- **Slotted Holes**: To create a slot, ensure the `Length` property is larger than the `Diameter`. Use the `Assignment` property to apply the slot only to specific beams in a stack (e.g., allow movement on the outer beam while fixing the inner beam).
+- **Alignment**: If holes are not drilling in the intended direction, check the `UCS` property to ensure it matches your current view orientation (e.g., switch between Z or Y).
 
----
-
-## Usage Workflow
-
-### Basic Insertion
-
-1. **Start the Script**: Launch hsbDrill from the TSL library or toolbar.
-
-2. **Configure Drill Parameters**: A dialog appears allowing you to set:
-   - Drill diameter and depth
-   - UCS alignment direction
-   - Sinkhole dimensions (if needed)
-   - Slotted hole settings (if needed)
-   - Distribution mode and spacing
-
-3. **Select Main Beam**: Click on the primary beam, panel, or plate to receive the drill.
-
-4. **Select Additional Beams (Optional)**: Select any additional members that should receive the same drill pattern, or press Enter to skip.
-
-5. **Select Start Point**: Click to set the start point of the drill distribution, or press Enter to use the beam's start point.
-
-6. **Select End Point**: Click to set the end point of the drill distribution, or press Enter to use the beam's end point.
-
-The script will automatically create drill instances along the specified path according to the distribution settings.
-
-### Modifying Drills After Placement
-
-Once placed, individual drill instances can be modified through the Properties Palette (OPM):
-- Adjust diameter, depth, and sinkhole parameters
-- Change the UCS alignment
-- Toggle center line snapping
-- Modify slotted hole settings
-
----
-
-## Context Menu Commands
-
-Right-click on a placed drill instance to access these commands:
-
-| Command | Description |
-|---------|-------------|
-| **Add entities** | Select additional beams to add to the drill operation |
-| **Remove entities** | Select beams to remove from the drill operation |
-
----
-
-## Special Features
-
-### Slotted Holes
-To create slotted holes (elongated holes), set the **Length** property to a value greater than the **Diameter**. Use the **Assignment** property to control which connected beams receive the slotted hole:
-- **none**: All beams get round holes
-- **first object**: Only the main beam gets slotted holes
-- **second object**: Only secondary beams get slotted holes
-- **all**: All connected beams get slotted holes
-
-### Sinkholes (Counterbores)
-Configure counterbores on either or both sides of the drill:
-- Set the **Depth** and **Diameter** for each side
-- The sinkhole diameter must be larger than the main drill diameter
-- Opposite side sinkholes only apply to through-holes (Depth = 0)
-- A negative depth on the reference side shortens the drill in the main object, useful for dowel-type connections
-
-### Distribution Modes
-- **Even Distribution**: Drills are spaced evenly between start and end points, always including both endpoints
-- **Fixed Distribution**: Drills are placed at exact intervals from the start point
-
-### Element Support
-When the selected beam belongs to an Element (wall, floor, or roof), the script automatically detects intersecting beams and can assign the drill tool to them.
-
----
-
-## Technical Notes
-
-- The script operates in two modes internally: Distribution mode (for initial placement) and Single drill mode (for individual modifications)
-- Drills are aligned to the current UCS setting (-Z, -Y, Z, or Y)
-- The script validates that connected beams are coplanar with the main beam
-- When "Snap to center line" is Yes, drills are automatically positioned along the beam's centerline
-- The script supports catalog-based insertion for standardized drill configurations
-
----
-
-## Version History
-
-| Version | Date | Changes |
-|---------|------|---------|
-| 2.7 | 03.12.2024 | Added property for distance from beam axis |
-| 2.6 | 08.01.2019 | Alignment bugfix, intersecting beams detection |
-| 2.5 | 10.10.2018 | Alignment fixed |
-| 2.4 | 09.10.2018 | Intersecting beams detected on element creation |
-| 2.3 | 19.07.2017 | Drill tool enter direction validated |
-| 2.2 | 14.03.2015 | Slotted drills suppress overlapping drills |
-| 2.1 | 25.11.2015 | Distribution mode supports remote catalog settings |
-| 2.0 | 21.04.2015 | New copy and erase method |
+## FAQ
+- **Q: How do I drill multiple holes in a line?**
+  A: The script automatically creates a distribution based on the start and end points you selected. Adjust the `Inter distance` or `Distribution Mode` in the properties to control spacing.
+- **Q: My hole is not going all the way through the beam.**
+  A: Check the `Depth` property under General. Ensure it is set to `0`.
+- **Q: Can I offset the holes from the center of the beam?**
+  A: Yes. Set `Snap to center line` to "No" and define a value for `Axis offset`.
+- **Q: What does the Hardware dropdown do?**
+  A: This is primarily for reporting (BOM) and potentially presetting dimensions for specific manufacturers (Baufritz standards).

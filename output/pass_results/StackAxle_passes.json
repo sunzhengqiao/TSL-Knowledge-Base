@@ -1,0 +1,288 @@
+{
+  "filename": "StackAxle.mcr",
+  "status": "completed",
+  "total_tokens": 53004,
+  "processing_time": 414.96629309654236,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"header\": {\n    \"type\": \"\",\n    \"numBeamsReq\": 0,\n    \"keywords\": [],\n    \"majorVersion\": 0,\n    \"minorVersion\": 0,\n    \"dxaOut\": 0,\n    \"implInsert\": 0\n  },\n  \"description\": \"\",\n  \"versionHistory\": [\n    {\n      \"version\": \"1.5\",\n      \"date\": \"07/03/2025\",\n      \"author\": \"Marsel Nakuci\",\n      \"changes\": \"HSB-23313: Consider if no existing grip when adding a grip\"\n    },\n    {\n      \"version\": \"1.4\",\n      \"date\": \"07.02.2025\",\n      \"author\": \"Marsel Nakuci\",\n      \"changes\": \"HSB-23313: Show weight in elevation\"\n    },\n    {\n      \"version\": \"1.3\",\n      \"date\": \"31.01.2025\",\n      \"author\": \"Marsel Nakuci\",\n      \"changes\": \"HSB-23313: Fix when saving after \\\"edit in place\\\"\"\n    },\n    {\n      \"version\": \"1.2\",\n      \"date\": \"23.01.2025\",\n      \"author\": \"Marsel Nakuci\",\n      \"changes\": \"HSB-23313: Use radio buttons for sve mode\"\n    },\n    {\n      \"version\": \"1.1\",\n      \""
+      },
+      "tokens_used": 9700,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses interactive features like PrPoint.goJig, Grip objects, and 3D geometry creation (PlaneProfile, PLine, Display) which are characteristic of Model Space operation. No 'sd_' prefix, Viewport handling, or '#Type E' patterns found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "StackEntity",
+            "TruckDefinition"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "TslUtilities.dll for DialogService",
+            "Valid TruckDefinition entries in the catalog"
+          ]
+        }
+      },
+      "tokens_used": 7920,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": [],
+          "dynamicInteractions": [
+            {
+              "context": "Adding or Removing Axles",
+              "prompt": "|Select Point|",
+              "type": "PrPoint.goJig",
+              "description": "User clicks in the drawing area to add a new axle position or select an existing one to remove it."
+            }
+          ]
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "|Save Definition|",
+            "handler": "sTriggerSaveAxleConfigInTruckDef",
+            "action": "Saves the current axle configuration map into the parent TruckDefinition.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Add axle|",
+            "handler": "sTriggerAddAxle",
+            "action": "Initiates a Jig interaction allowing the user to click points to add new axles to the stack.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Remove axle|",
+            "handler": "sTriggerRemoveAxle",
+            "action": "Initiates a Jig interaction allowing the user to click existing axle grips to remove them.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 9941,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "This script manages the axle configuration for a TruckDefinition, allowing users to visualize, add, remove, and position axles relative to a stack load to calculate axle weights.",
+          "category": "Logistics/Transport",
+          "typicalUseCase": "Used during the design of transport stacks to determine axle load distribution and comply with road transport regulations."
+        },
+        "parameters": [
+          {
+            "name": "dDistFront",
+            "technicalDefault": "U(2000)",
+            "businessMeaning": "The default distance from the start of the load area to the first front axle during initialization.",
+            "validRange": "500 - 4000 mm",
+            "unit": "mm",
+            "affectsOutput": "Sets the initial position of the first axle marker in 3D space."
+          },
+          {
+            "name": "dDistBack",
+            "technicalDefault": "U(1000)",
+            "businessMeaning": "The default distance from the end of the load area to the last back axle during initialization.",
+            "validRange": "500 - 4000 mm",
+            "unit": "mm",
+            "affectsOutput": "Sets the initial position of the last axle marker in 3D space."
+          },
+          {
+            "name": "bStyleBased",
+            "technicalDefault": "false (derived from edit mode)",
+            "businessMeaning": "Determines if the axle configuration is linked to the TruckDefinition style (shared across instances) or specific to this single stack instance.",
+            "validRange": "true/false",
+            "unit": "bool",
+            "affectsOutput": "Controls whether saving the definition updates the global catalog or just the current element's data. Changes visual color (Style=Blue, Instance=Red)."
+          },
+          {
+            "name": "dWeight",
+            "technicalDefault": "from StackEntity Data",
+            "businessMeaning": "Total weight of the load on the truck/stack.",
+            "validRange": "> 0 kg",
+            "unit": "kg",
+            "affectsOutput": "Used to calculate the specific weight distributed to each axle."
+          },
+          {
+            "name": "ptCOG",
+            "technicalDefault": "from StackEntity Data",
+            "businessMeaning": "Center of Gravity of the load relative to the truck origin.",
+            "validRange": "within load profile",
+            "unit": "3D coordinates (mm)",
+            "affectsOutput": "Determines the physics-based distribution of weight across the axles."
+          },
+          {
+            "name": "vecX, vecY, vecZ",
+            "technicalDefault": "from StackEntity System",
+            "businessMeaning": "The local coordinate system of the stack/truck (Length, Width, Height).",
+            "validRange": "Orthogonal vectors",
+            "unit": "Vector3d",
+            "affectsOutput": "Defines the orientation and alignment of all axle geometry and calculations."
+          },
+          {
+            "name": "ppLoad",
+            "technicalDefault": "from StackEntity Geometry",
+            "businessMeaning": "The 2D profile representing the footprint of the load.",
+            "validRange": "Non-zero area",
+            "unit": "PlaneProfile",
+            "affectsOutput": "Defines the boundary where axles can legally be placed."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User adds/removes axle via Grip",
+            "effect": "Updates the Axle Map and recalculates axle weights based on the new configuration.",
+            "cascade": [
+              "mapAxleMap",
+              "dAxleWeights"
+            ]
+          },
+          {
+            "trigger": "Change in Total Weight (dWeight) or COG",
+            "effect": "Recalculates the load on each individual axle.",
+            "cascade": [
+              "dAxleWeights"
+            ]
+          },
+          {
+            "trigger": "Save Definition Context Menu",
+            "effect": "Overwrites the TruckDefinition's default axle map if 'StyleBased' is active.",
+            "cascade": [
+              "TruckDefinition.SubMapX(Axle)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "VisualGeometry",
+            "description": "Triangles representing axles and text labels displaying the weight distribution (Load Plan).",
+            "appliedTo": "Model Space (Visual overlay on StackEntity)"
+          },
+          {
+            "type": "Grip",
+            "description": "Interactive diamond-shaped handles for adding or moving axles.",
+            "appliedTo": "StackAxle Script Entity"
+          },
+          {
+            "type": "DataMap",
+            "description": "Stores the calculated axle weights and positions.",
+            "appliedTo": "TslStackEntity (SubMapX 'Axle')"
+          }
+        ]
+      },
+      "tokens_used": 8618,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution triggered on StackEntity",
+          "Retrieve parent StackEntity and linked TruckDefinition",
+          "Determine execution mode (Insert/Edit vs Recalc)",
+          "[Conditional: Insert Mode] Generate default axle map (Front 2000mm, Back 1000mm)",
+          "[Conditional: Recalc Mode] Load axle map from Style (Catalog) or Instance Data",
+          "Calculate axle load distribution based on Stack Weight and Center of Gravity (COG)",
+          "Generate visual geometry (Triangles, Text Labels) based on axle positions",
+          "[Loop: User Interaction] Wait for Grip movement or Context Menu command",
+          "[Action: Edit] Update axle coordinates based on new Grip positions",
+          "Save updated axle map to Entity SubMap"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Initial Execution Mode (bEditInPlace)",
+            "path1": {
+              "name": "Insert / Edit In Place",
+              "steps": [
+                "Call initiateAxles() to set default front/back positions",
+                "Create initial Grip points",
+                "Run logic to map Grip points to Axle Map"
+              ]
+            },
+            "path2": {
+              "name": "Standard Recalculation",
+              "steps": [
+                "Check 'Style Based' flag (bStyleBased)",
+                "If True: Load map from TruckDefinition (Catalog)",
+                "If False: Load map from Script Instance (_Map)"
+              ]
+            }
+          },
+          {
+            "condition": "Jig Interaction Type (Add vs Remove)",
+            "path1": {
+              "name": "Add Axle",
+              "steps": [
+                "User clicks in 3D space",
+                "Validate click is within Load Profile boundaries",
+                "Append new point to ptGripsRemain array",
+                "Create new Grip object and add to _Grip array"
+              ]
+            },
+            "path2": {
+              "name": "Remove Axle",
+              "steps": [
+                "User clicks existing Grip/Position",
+                "Find closest axle index to click point",
+                "Remove index from ptGripsRemain array",
+                "Filter and rebuild _Grip array excluding removed indices"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Point Profile Boundary",
+            "errorMessage": "None (Implicit)",
+            "recovery": "The script ignores clicks outside the 'ppLoadAllowed' profile (extended rectangle of the load) during the Jig interaction. The user must click closer to the load profile."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Axle Positions",
+            "how": "Drag Grip points",
+            "effect": "Updates the 'X' coordinate in the Axle Map and recalculates axle weights visually."
+          },
+          {
+            "action": "Add/Remove Axles",
+            "how": "Right-click Context Menu: |Add axle| or |Remove axle|",
+            "effect": "Enters a Jig loop allowing dynamic addition of new positions or deletion of existing ones."
+          },
+          {
+            "action": "Save to Catalog",
+            "how": "Right-click Context Menu: |Save Definition|",
+            "effect": "Writes the current instance axle configuration to the parent TruckDefinition (Catalog), updating the 'StyleBased' default for future insertions."
+          }
+        ]
+      },
+      "tokens_used": 10724,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# StackAxle.mcr\n\n## Overview\nThis script manages the axle configuration for transport stacks (StackEntity). It allows users to visualize, position, add, and remove axles to calculate and display the load distribution weight on each axle.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in the 3D model environment to visualize axles relative to the load. |\n| Paper Space | No | Not applicable for layouts. |\n| Shop Drawing | No | This is a logistics/planning tool, not a detailing tool. |\n\n## Prerequisites\n- **Required Entities**: A `StackEntity` (representing the load) must exist and be selected. A valid `TruckDefinition` must be linked to the stack.\n- **Minimum Beams**: 0 (This is not a beam processing script).\n- **Required Settings**: `TslUtilities.dll` must be installed. Valid `TruckDefinition` entries must exist in the catalog.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the AutoCAD command line.\n2. Select `StackAxle.mcr` from the file list.\n3. Select the `StackEntity` (the transport load) you wish to analyze.\n\n### Step 2: Initial Configuration (First Run)\nWhen first inserted, the script will automatically generate a default axle configuration:\n*   **Front Axle**: Placed 2000 mm from the start of the load.\n*   **Rear Axle**: Placed 1000 mm from the end of the load.\n\n### Step 3: Adjust Axle Positions\n1. The script displays triangle markers representing axles.\n2. **Drag the diamond-shaped grips** along the length of the stack to reposition axles.\n3. The displayed text values update automatically to show the new weight distribution.\n\n### Step 4: Add or Remove Axles\n1. Right-click on the script instance to open the context menu.\n2. Select **|Add axle|** or **|Remove axle|**.\n3. **If Adding**: Click anywhere within the load profile (highlighted area) in the 3D view to place a new axle.\n4. **If Removing**: Click on an existing axle marker/grip to delete it.\n\n## Properties Panel Parameters\nThis script does not expose standard OPM (Properties Palette) parameters. All configuration is handled via interactive grips and the Right-Click Context Menu.\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | See Right-Click Menu for controls. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Save Definition** | Saves the current axle configuration (positions) to the parent TruckDefinition catalog. This makes the current layout the default for future stacks using this truck type. |\n| **Add axle** | Activates a Jig mode allowing you to click points on the stack to add new axles. |\n| **Remove axle** | Activates a Jig mode allowing you to click on existing axles to remove them. |\n\n## Settings Files\n- **TruckDefinition**: Catalog entry within the hsbCAD database.\n- **Location**: Project/Catalog database.\n- **Purpose**: Provides the default axle map and truck style data.\n\n## Tips\n- **Visual Cues**:\n    - **Blue Axles**: Indicate the configuration is loaded from the TruckDefinition catalog (Style Based).\n    - **Red Axles**: Indicate the configuration is specific to this single stack instance (not linked to the catalog).\n- **Weight Calculation**: The calculation relies on the `StackEntity` weight and Center of Gravity (COG). Ensure these are accurate in the stack properties before using this script.\n- **Boundary Limits**: You cannot place axles outside the projected load profile. The script will ignore clicks outside this area.\n\n## FAQ\n- **Q: How do I make my current axle setup the default for all trucks of this type?**\n  - A: Arrange the axles as desired, then right-click and select **|Save Definition|**.\n- **Q: The script ignores my clicks when adding axles. Why?**\n  - A: You must click within the \"allowed\" load profile area (typically the rectangle of the stack footprint). Clicking outside this boundary has no effect.\n- **Q: What happens if I change the weight of the stack?**\n  - A: The script will automatically recalculate the weight on each axle the next time it updates (recalculates)."
+      },
+      "tokens_used": 6101,
+      "error": null
+    }
+  }
+}

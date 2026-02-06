@@ -1,0 +1,192 @@
+{
+  "filename": "hsb_RenameElements.mcr",
+  "status": "completed",
+  "total_tokens": 17003,
+  "processing_time": 860.5858941078186,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "31.08.2011",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4433,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Entity arEnt[] = gr.collectEntities( bAlsoInSubGroups, Element(), _kModelSpace);"
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "hsb_ElementRenameUtility.dll"
+          ]
+        }
+      },
+      "tokens_used": 2838,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "DotNetWindow",
+            "trigger": "Script execution",
+            "title": "Element Rename Utility",
+            "dataSource": "hsb_ElementRenameUtility.dll",
+            "features": {
+              "searchable": true,
+              "multiSelect": true
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": [
+          {
+            "filename": "hsb_ElementRenameUtility.dll",
+            "searchPaths": [
+              "%hsbInstall%\\Content\\UK\\TSL\\DLLs\\ElementRenameUtility"
+            ],
+            "purpose": "Provides the UI form and logic for renaming elements",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 2580,
+      "error": null
+    },
+    "4": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "API error 500: {\"error\":{\"code\":\"500\",\"message\":\"操作失败\"}}"
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution starts",
+          "Check if script is in insertion mode (_bOnInsert)",
+          "[Conditional] If inserting: Check insertCycleCount",
+          "[Conditional] If insertCycleCount > 1: Erase script instance and exit",
+          "[Conditional] If inserting for first time: Exit initialization (return)",
+          "[Main Flow] Initialize entity collection from Model Space",
+          "Iterate through all collected entities to find valid Elements",
+          "Organize Elements by Floor/Group name",
+          "Construct nested Map structure: Groups -> Element Names",
+          "Execute external .NET DLL (hsb_ElementRenameUtility.dll)",
+          "Display UI dialog (Element Rename Utility) populated with data",
+          "User interacts with UI to define new names",
+          "Receive updated Map containing Old and New names",
+          "Match new names to original Element entities",
+          "[Safety Step] Rename all target Elements to a temporary 'TEMP' suffix",
+          "[Final Step] Apply final new names to target Elements",
+          "Erase script instance from drawing"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Check if script is running during initial insertion",
+            "path1": {
+              "name": "Insertion Mode (Cycle > 1)",
+              "steps": [
+                "Detect insertCycleCount > 1",
+                "Execute eraseInstance()",
+                "Terminate script execution"
+              ]
+            },
+            "path2": {
+              "name": "Insertion Mode (First Cycle)",
+              "steps": [
+                "Detect insertCycleCount <= 1",
+                "Execute return",
+                "Proceed to main execution block on next regeneration"
+              ]
+            }
+          },
+          {
+            "condition": "Element Organization during Collection",
+            "path1": {
+              "name": "New Group Encountered",
+              "steps": [
+                "Floor/Group name not found in current list",
+                "Append new Group Name to list",
+                "Link Element to this new Group index"
+              ]
+            },
+            "path2": {
+              "name": "Existing Group Encountered",
+              "steps": [
+                "Floor/Group name found in current list",
+                "Link Element to existing Group index"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Validity",
+            "errorMessage": "None explicit in script",
+            "recovery": "Script filters invalid entities using if (el.bIsValid()) checks, silently skipping them."
+          },
+          {
+            "check": "DLL Availability",
+            "errorMessage": "None explicit in script (likely system error if missing)",
+            "recovery": "Ensure hsb_ElementRenameUtility.dll exists in path defined by _kPathHsbInstall + ... \\ElementRenameUtility\\"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Element Numbers",
+            "how": "Script Execution (No OPM/Context menu interaction)",
+            "effect": "Permanently changes the Element Number (Name) property of selected Elements in the Model Space."
+          }
+        ]
+      },
+      "tokens_used": 3252,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_RenameElements.mcr\n\n## Overview\nThis script provides a user-friendly utility window to batch rename hsbCAD Elements within the Model Space. It organizes elements by their Floor or Group assignments, allowing for efficient renaming and renumbering.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script only processes entities located in the Model Space. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required Entities**: hsbCAD Elements must exist in the drawing.\n- **Minimum Beam Count**: 0 (This script targets Elements, not beams).\n- **Required Settings**: The external file `hsb_ElementRenameUtility.dll` must be present in the specified TSL DLLs folder.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the AutoCAD command line.\n2. Select `hsb_RenameElements.mcr` from the file dialog.\n3. Place the script instance in the drawing (the specific location does not matter).\n\n### Step 2: Automatic Execution\n- The script will automatically initialize and erase its own instance from the drawing immediately.\n- The **Element Rename Utility** dialog window will appear.\n\n### Step 3: Use the Rename Utility\n1. **Review Elements**: The dialog displays all Elements found in the Model Space, organized by their Group/Floor names.\n2. **Search/Filter**: Use the search functionality to locate specific Elements or Groups if needed.\n3. **Select Elements**: Click on Elements or select multiple items as required.\n4. **Define New Names**: Enter the new Element names or numbers directly in the interface.\n\n### Step 4: Apply Changes\n1. Click the **OK** or **Apply** button in the utility window.\n2. The script updates the Element names in the background.\n3. The utility window closes.\n\n## Properties Panel Parameters\n\nThis script does not expose any parameters to the Properties Palette (OPM). All interaction is handled through the external utility window.\n\n## Right-Click Menu Options\n\nThis script does not add specific items to the right-click context menu. It runs automatically upon insertion.\n\n## Settings Files\n- **Filename**: `hsb_ElementRenameUtility.dll`\n- **Location**: `%hsbInstall%\\Content\\UK\\TSL\\DLLs\\ElementRenameUtility`\n- **Purpose**: This DotNet DLL provides the user interface form and logic required to search, select, and rename the Elements.\n\n## Tips\n- **Organization**: The tool automatically sorts elements by their Group or Floor names, making it easier to rename specific sections of a building.\n- **Safety**: The script uses a temporary naming convention during the update process to prevent naming conflicts before applying the final names.\n- **Clean Up**: The script instance erases itself automatically after running. You do not need to manually delete it from the drawing.\n\n## FAQ\n- **Q: The script disappeared immediately after I inserted it. Is that normal?**\n  - **A:** Yes. This is intentional behavior. The script runs once to open the rename utility and then removes itself from the drawing to keep your model clean.\n  \n- **Q: Can I use this to rename individual beams?**\n  - **A:** No. This script is designed specifically to rename hsbCAD **Elements**. It will not affect standard beams or other entity types.\n\n- **Q: What happens if the dialog does not appear?**\n  - **A:** Ensure that `hsb_ElementRenameUtility.dll` is located in the correct directory specified in the Settings Files section above."
+      },
+      "tokens_used": 3900,
+      "error": null
+    }
+  }
+}

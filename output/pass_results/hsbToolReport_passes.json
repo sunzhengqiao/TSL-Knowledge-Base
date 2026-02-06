@@ -1,0 +1,350 @@
+{
+  "filename": "hsbToolReport.mcr",
+  "status": "completed",
+  "total_tokens": 48021,
+  "processing_time": 251.20471453666687,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9002,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "Both",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Summary explicitly states: 'It can be used in modelspace, paperspace and element layout'. Code detects mode based on selection: if (_Viewport.length()>0) (Mode 1/PaperSpace), else if (ent.bIsKindOf(ShopDrawView())) (Mode 2/ShopDrawing), else (ModelSpace/Element Layout)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element",
+            "ShopDrawView",
+            "Viewport"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space, Paper Space, or Element Layout",
+          "requiredSettings": [
+            "Optional XML file (hsbToolReport.xml) located in company TSL\\Settings folder for color mapping and exclusion lists"
+          ]
+        }
+      },
+      "tokens_used": 6804,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "showDialog",
+              "promptOriginal": null,
+              "condition": "if(_bOnInsert) && (sKey.length()==0)",
+              "required": false
+            },
+            {
+              "step": 2,
+              "function": "PrEntity.go",
+              "promptOriginal": "|Select a defining entity (GenBeam, Element, ShopDrawView)| |<Enter> to select a paperspace viewport|",
+              "condition": "if(_bOnInsert)",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "getViewport",
+              "promptOriginal": "|Select a viewport|",
+              "condition": "if(_bOnInsert) && (_Entity.length()<1)",
+              "required": true
+            },
+            {
+              "step": 4,
+              "function": "getPoint",
+              "promptOriginal": null,
+              "condition": "if(_bOnInsert)",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": null,
+            "variable": "sDimStyle",
+            "type": "PropString",
+            "displayName": "|Dimstyle|",
+            "defaultValue": "_DimStyles",
+            "inputType": "dropdown",
+            "options": [],
+            "category": "|Display|",
+            "description": null
+          },
+          {
+            "index": null,
+            "variable": "dTextHeight",
+            "type": "PropDouble",
+            "displayName": "|Text Height|",
+            "defaultValue": "U(0)",
+            "inputType": "number",
+            "options": [],
+            "category": "|Display|",
+            "description": "|Defines the Text Height| |(0 = by dimstyle)|"
+          },
+          {
+            "index": null,
+            "variable": "nColor",
+            "type": "PropInt",
+            "displayName": "|Color|",
+            "defaultValue": "0",
+            "inputType": "number",
+            "options": [],
+            "category": "|Display|",
+            "description": "|Defines the Color|"
+          },
+          {
+            "index": null,
+            "variable": "sFormatDiameter",
+            "type": "PropString",
+            "displayName": "|FormatDiameter|",
+            "defaultValue": "@(Diameter:CU;mm:DN0)",
+            "inputType": "text",
+            "options": [],
+            "category": "|Display|",
+            "description": "|Defines the format for diameter|"
+          },
+          {
+            "index": null,
+            "variable": "sFormatDepth",
+            "type": "PropString",
+            "displayName": "|FormatDepth|",
+            "defaultValue": "@(Depth:CU;mm:DN0)",
+            "inputType": "text",
+            "options": [],
+            "category": "|Display|",
+            "description": "|Defines the format for depth|"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "|Export Default Settings|",
+            "handler": "sExportSettingsTrigger",
+            "action": "Writes the default mapSetting to an XML file in the company TSL\\Settings folder",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "hsbToolReport.xml",
+            "searchPaths": [
+              "_kPathHsbCompany\\TSL\\Settings"
+            ],
+            "purpose": "Stores color mappings for sequential drill visualization and a list of script names to exclude from the report.",
+            "required": false
+          }
+        ]
+      },
+      "tokens_used": 8504,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates a graphical schedule (table) listing all unique drills and holes found in selected structural elements or beams, visualizing them in 2D views.",
+          "category": "ShopDrawing/Reporting",
+          "typicalUseCase": "Creating a drill legend or hole schedule on a drawing layout to inform manufacturing of all required drill diameters and depths."
+        },
+        "parameters": [
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "_DimStyles",
+            "businessMeaning": "Selects the CAD Dimension Style to inherit text font, arrow styles, and other standard drafting attributes for the schedule.",
+            "validRange": "Any existing Dimension Style name in the current drawing",
+            "unit": "String",
+            "affectsOutput": "Font type, arrowheads, and general drafting appearance of the schedule text and dimensions."
+          },
+          {
+            "name": "dTextHeight",
+            "technicalDefault": "U(0)",
+            "businessMeaning": "Sets the explicit height for the text in the schedule table. A value of 0 overrides this setting and uses the text height defined in the selected DimStyle.",
+            "validRange": ">= 0 (Typically 2.5mm to 5.0mm for Paper Space, larger for Model Space)",
+            "unit": "Length (mm/inches depending on project)",
+            "affectsOutput": "The physical size of the text characters in the report table."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "0",
+            "businessMeaning": "Determines the CAD color index used for the text and lines of the schedule. 0 typically means 'ByBlock'.",
+            "validRange": "0-255 (Standard CAD Color Index)",
+            "unit": "Index",
+            "affectsOutput": "The displayed color of the report elements on screen and in plots."
+          },
+          {
+            "name": "sFormatDiameter",
+            "technicalDefault": "@(Diameter:CU;mm:DN0)",
+            "businessMeaning": "Defines the format string controlling how drill diameters are displayed (e.g., unit suffix, decimal precision, labels).",
+            "validRange": "Valid TSL Format String (e.g., '@(Diameter:CU;mm:DN2)' for 2 decimal places)",
+            "unit": "String",
+            "affectsOutput": "The string representation of the Diameter column (e.g., '12' vs '12.0' vs 'Diameter 12mm')."
+          },
+          {
+            "name": "sFormatDepth",
+            "technicalDefault": "@(Depth:CU;mm:DN0)",
+            "businessMeaning": "Defines the format string controlling how drill depths are displayed.",
+            "validRange": "Valid TSL Format String",
+            "unit": "String",
+            "affectsOutput": "The string representation of the Depth column (e.g., '50' vs '50.5')."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dTextHeight is set to 0",
+            "effect": "The script ignores the explicit height value and reads the text height from the style defined in sDimStyle.",
+            "cascade": [
+              "sDimStyle"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Text/Polyline",
+            "description": "A schedule table containing rows for each unique drill size found, listing Diameter, Depth, and a graphical symbol.",
+            "appliedTo": "Model Space, Paper Space, or Element Layout views depending on insertion mode."
+          }
+        ]
+      },
+      "tokens_used": 8507,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch Script (hsbToolReport)",
+          "2. Check Execution Key (_kExecuteKey) for Catalog usage",
+          "[Conditional] If no Key: Show Properties Dialog",
+          "3. Prompt User to select Defining Entity (GenBeam, Element, or ShopDrawView)",
+          "[Conditional] If no Entity selected: Prompt User to select PaperSpace Viewport",
+          "4. Prompt User for Insertion Point",
+          "5. Load Settings (Read XML from TSL\\Settings or generate Defaults)",
+          "6. Determine Operating Mode (Viewport, ShopDrawView, or ModelSpace)",
+          "7. Collect Beams and Analyze Drill Data from defining entities",
+          "8. Filter Drills based on Exclusion List",
+          "9. Sort and Group Drills by unique Diameter, Depth, and SubType",
+          "10. Draw Schedule Table (Header, Row Text, and Drill Symbols)",
+          "11. Apply Visual Styles (Colors, Solid vs. Ring based on Drill Type)",
+          "[Conditional] If XML was missing: Add Context Menu to Export Defaults"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Key presence on insert",
+            "path1": {
+              "name": "Catalog/Key Insert",
+              "steps": [
+                "Check if key matches existing catalog entries",
+                "Load properties from specific catalog entry",
+                "Skip Property Dialog"
+              ]
+            },
+            "path2": {
+              "name": "Standard Insert",
+              "steps": [
+                "Launch Property Dialog",
+                "User selects configuration",
+                "Proceed to entity selection"
+              ]
+            }
+          },
+          {
+            "condition": "User selection at Entity Prompt",
+            "path1": {
+              "name": "Entity/View Selected",
+              "steps": [
+                "Validate GenBeam, Element, or ShopDrawView",
+                "Calculate transformation matrix based on selected entity",
+                "Proceed to Point prompt"
+              ]
+            },
+            "path2": {
+              "name": "Viewport Selected",
+              "steps": [
+                "Detect Press Enter",
+                "Prompt for Viewport selection",
+                "Extract Element from Viewport",
+                "Calculate Viewport transformation matrix"
+              ]
+            }
+          },
+          {
+            "condition": "Drill Type Visualization",
+            "path1": {
+              "name": "Through Drill",
+              "steps": [
+                "Create solid color bar representation",
+                "Draw full circle profile"
+              ]
+            },
+            "path2": {
+              "name": "Blind Drill",
+              "steps": [
+                "Create ring/hollow color bar representation",
+                "Subtract profile to indicate non-through status"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "ShopDrawView ViewData Mapping",
+            "errorMessage": "Implicit: If no ViewData found for the specific ShopDrawView index, processing is skipped.",
+            "recovery": "Ensure the script is running within a valid generation context or the view mapping exists."
+          },
+          {
+            "check": "Settings File Availability",
+            "errorMessage": "None (Defaults generated automatically)",
+            "recovery": "User can use 'Export Default Settings' context menu to create the XML file for future modification."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Update Report Layout",
+            "how": "OPM Properties (Display Category)",
+            "effect": "Changes Text Height, Color, DimStyle, and formatting strings (Diameter/Depth) trigger an immediate redraw of the schedule."
+          },
+          {
+            "action": "Move Schedule",
+            "how": "Grip Edit (Insertion Point)",
+            "effect": "Relocates the entire schedule table to the new point."
+          },
+          {
+            "action": "Update Drill List",
+            "how": "Modify Source Beams (Add/Remove drills) and Recalc",
+            "effect": "The script re-analyzes the referenced beams and updates the table rows and symbols to match the new geometry."
+          },
+          {
+            "action": "Export Settings",
+            "how": "Right-click Context Menu -> 'Export Default Settings'",
+            "effect": "Writes the internal default color map and exclusion list to 'hsbToolReport.xml' in the company settings folder."
+          }
+        ]
+      },
+      "tokens_used": 9447,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbToolReport.mcr\n\n## Overview\nThis script automatically generates a graphical schedule (table) listing all unique drill diameters and depths found within a selected element or set of beams. It creates a visual legend in 2D, distinguishing between through-drills (solid) and blind-drills (ringed), to serve as a manufacturing guide on shop drawings.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Select a GenBeam or Element directly. |\n| Paper Space | Yes | Press Enter at the prompt to select a Viewport, or select a ShopDrawView. |\n| Shop Drawing | Yes | Select a ShopDrawView entity to report on that specific view. |\n\n## Prerequisites\n- **Required Entities**: A `GenBeam`, `Element`, `ShopDrawView`, or a Paper Space `Viewport`.\n- **Minimum Beam Count**: 0 (The script scans whatever is contained within the selected Element or View).\n- **Required Settings**: None (defaults are built-in). An optional `hsbToolReport.xml` can be used for custom color mappings.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbToolReport.mcr` from the list.\n\n### Step 2: Configure Properties (Optional)\n```\nDialog: Properties Palette\nAction: Adjust settings such as Text Height or Color if needed, then click OK.\n```\n*Note: If running from a catalog key, this dialog may be skipped.*\n\n### Step 3: Select Defining Entity\n```\nCommand Line: Select a defining entity (GenBeam, Element, ShopDrawView) <Enter> to select a paperspace viewport\nAction:\n  - Click on a Beam, Element, or ShopDrawing view to analyze its content.\n  - OR Press Enter to select a Viewport frame in Paper Space.\n```\n\n### Step 4: Place Report\n```\nCommand Line: Insertion point\nAction: Click in the drawing area where you want the top-left corner of the drill table to appear.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Dimstyle | dropdown | `_DimStyles` | Selects the CAD dimension style to control text font and arrow appearance. |\n| Text Height | number | `U(0)` | Sets the height of the table text. `0` uses the height defined in the selected DimStyle. |\n| Color | number | `0` | Sets the CAD color index for the report lines and text. `0` = ByBlock. |\n| FormatDiameter | text | `@(Diameter:CU;mm:DN0)` | Format string controlling how Diameter is displayed (e.g., units and decimals). |\n| FormatDepth | text | `@(Depth:CU;mm:DN0)` | Format string controlling how Depth is displayed. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Export Default Settings | Creates a `hsbToolReport.xml` file in your company settings folder containing the current color map and exclusion list. |\n\n## Settings Files\n- **Filename**: `hsbToolReport.xml`\n- **Location**: `\\\\Company\\\\TSL\\\\Settings`\n- **Purpose**: Stores color mappings for visualizing different drill sequences and maintains a list of tool names to exclude from the report. If this file is missing, the script uses internal defaults.\n\n## Tips\n- **Visual Clarity**: The script automatically draws \"Solid\" circles for Through Drills and \"Ring\" (hollow) circles for Blind Drills to help operators quickly identify hole types.\n- **Scaling**: If the text appears too small in Paper Space, increase the `Text Height` property or ensure your `DimStyle` is set correctly for the viewport scale.\n- **Updating the Table**: If you modify the beams (add/remove drills) after inserting the report, select the table and run `RECALC` (or modify a property) to refresh the data.\n\n## FAQ\n- **Q: Can I change the units from mm to inches in the table?**\n  **A**: Yes. Modify the `FormatDiameter` and `FormatDepth` properties in the palette. Change `mm` to `inch` within the format string (e.g., `@(Diameter:CU;inch:DN2)`).\n- **Q: Why are some of my drills not showing up in the list?**\n  **A**: They may be listed in the exclusion list within the `hsbToolReport.xml` file. Use the \"Export Default Settings\" right-click option to generate the file and check the exclusion list."
+      },
+      "tokens_used": 5757,
+      "error": null
+    }
+  }
+}

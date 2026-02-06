@@ -1,0 +1,248 @@
+{
+  "filename": "hsbCenterOfGravity_setOpeningWeight.mcr",
+  "status": "completed",
+  "total_tokens": 30019,
+  "processing_time": 379.53464245796204,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"header\": {\n    \"type\": \"\",\n    \"numBeamsReq\": 0,\n    \"keywords\": [],\n    \"majorVersion\": 0,\n    \"minorVersion\": 0,\n    \"dxaOut\": 0,\n    \"implInsert\": 0\n  },\n  \"description\": \"This tsl sets the weight at openings\\nIt allows the user to set the weight at openings windows, doors, assemblies\\nA pseudo density is calculated from the volume of the opening\\nThe information is saved in a mapX called \\\"OpeningCOG\\\"\\nWhen the mapX with the density is present at opening\\nthen the hsbCenterOfGravity TSL will use that information for the calculation of weight\",\n  \"versionHistory\": [\n    {\n      \"version\": \"1.2\",\n      \"date\": \"20.11.2024\",\n      \"author\": \"Marsel Nakuci\",\n      \"changes\": \"HSB-23011. Just a comment\"\n    },\n    {\n      \"version\": \"1.1\",\n      \"date\": \"03/06/2024\",\n      \"author\": \"Marsel Nakuci\",\n      \"changes\": \"HSB-20484: Fix density\"\n    },\n    {\n      \"version\": \"1.0\",\n     "
+      },
+      "tokens_used": 6264,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly targets the Opening class in the 3D model and uses `_kModelSpace` during `tslNew.dbCreate`. It contains no ShopDrawing (#Type E), sd_ prefixes, or references to Viewports."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Opening"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "ModelSpace",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2853,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "T(\"|Select openings|\")",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dWeight",
+            "type": "PropDouble",
+            "displayName": "T(\"|Weight|\")",
+            "defaultValue": "U(0)",
+            "inputType": "number",
+            "options": [],
+            "category": "T(\"|General|\")",
+            "description": "T(\"|Defines the Weight of the opening in Kg.|\")+\" \"+T(\"|Entries 0 will disable the mapX and the hsbCenterOfGravity TSL will ignore the mapX.|\")"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6009,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Assigns a specific weight to openings (windows, doors) to improve the accuracy of structural weight and center of gravity calculations performed by the hsbCenterOfGravity script.",
+          "category": "Data/Calculation",
+          "typicalUseCase": "When accurate load calculations are required, specifically to account for the weight of pre-fabricated window or door assemblies inserted into the timber frame, rather than treating them as empty voids."
+        },
+        "parameters": [
+          {
+            "name": "dWeight",
+            "technicalDefault": "U(0)",
+            "businessMeaning": "The total physical weight of the opening assembly (e.g., window, door, or curtain wall unit) in Kilograms.",
+            "validRange": "0 to 1000+ (depending on size, glazing type, and material of the assembly)",
+            "unit": "kg",
+            "affectsOutput": "Stores a calculated 'pseudo density' on the opening entity. If set to 0, the script effectively disables weight accounting for this opening. If > 0, the hsbCenterOfGravity script uses this data to adjust the total building weight and balance point."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dWeight is set > 0",
+            "effect": "Calculates a pseudo density (Weight / Volume) and stores it in the Opening's MapX.",
+            "cascade": [
+              "Density",
+              "WeightInitial"
+            ]
+          },
+          {
+            "trigger": "dWeight is set to 0",
+            "effect": "Removes or ignores the weight contribution, causing hsbCenterOfGravity to treat the opening as having no mass or using default fallback values.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "MapX (Attribute Data)",
+            "description": "Adds non-geometric metadata to the Opening entity. Specifically writes to a sub-map named 'OpeningCOG' containing 'Density' and 'WeightInitial'.",
+            "appliedTo": "Opening entities selected by the user."
+          }
+        ]
+      },
+      "tokens_used": 3886,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script (hsbCenterOfGravity_setOpeningWeight)",
+          "Script enters Insertion Mode (_bOnInsert == true)",
+          "User inputs Weight (dWeight) via Properties Dialog or loads from Catalog",
+          "Script prompts user to Select Opening entities",
+          "Validation loop: Checks if selected openings are valid",
+          "Validation loop: Compares Style, Width, and Height of selected entities",
+          "[Branch] If all selected openings match dimensions and style:",
+          "  -> Script creates a new instance of the TSL attached to each valid opening",
+          "[Branch] If selected openings differ in dimensions or style:",
+          "  -> Script reports 'Different openings were selected' error",
+          "  -> Loop restarts or user cancels",
+          "Attached instances execute Calculation Block (_bOnInsert == false)",
+          "Instance validates it is attached to exactly one Opening",
+          "Instance retrieves Volume of the Opening",
+          "[Branch] Volume Check:",
+          "  -> If Real Body Volume is sufficient (> 10mm^3): Use real volume",
+          "  -> If Real Body Volume is too small: Calculate volume using PLine shape and FrameWidth from ModelMap",
+          "Instance calculates pseudo density (Density = Weight / Volume)",
+          "Instance writes MapX 'OpeningCOG' with Density and WeightInitial to the Opening",
+          "Instance erases itself from the model (Script completion)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Consistency of Selected Openings (during insertion)",
+            "path1": {
+              "name": "Consistent Group",
+              "steps": [
+                "Style, Width, and Height match across selection",
+                "TSL instances are created for each unique Opening entity",
+                "Instances process and assign weight data"
+              ]
+            },
+            "path2": {
+              "name": "Inconsistent Group",
+              "steps": [
+                "Dimensions or Style mismatch detected",
+                "Command is ignored for that selection",
+                "Error message displayed to user",
+                "Dialog shown again to allow new selection"
+              ]
+            }
+          },
+          {
+            "condition": "Opening Volume Availability (during calculation)",
+            "path1": {
+              "name": "Valid Real Body",
+              "steps": [
+                "Opening body volume > 10mm³",
+                "Volume taken directly from op.realBody()"
+              ]
+            },
+            "path2": {
+              "name": "Calculated Volume",
+              "steps": [
+                "Opening body volume <= 10mm³ (empty or invalid geometry)",
+                "Script queries ModelMap for 'frameWidth'",
+                "Volume calculated as (PLineShape * FrameWidth)"
+              ]
+            }
+          },
+          {
+            "condition": "Execution Context",
+            "path1": {
+              "name": "Insertion",
+              "steps": [
+                "Handles user input",
+                "Selection filtering",
+                "Creation of child instances"
+              ]
+            },
+            "path2": {
+              "name": "Calculation (Instance)",
+              "steps": [
+                "Attached to specific entity",
+                "Performs math",
+                "Writes MapX",
+                "Self-deletes"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Count",
+            "errorMessage": "(Implicit break) No action taken if selection is empty.",
+            "recovery": "User must select entities."
+          },
+          {
+            "check": "Opening Homogeneity",
+            "errorMessage": "Different openings were selected. command was ignored",
+            "recovery": "Select openings with identical Style, Width, and Height."
+          },
+          {
+            "check": "Valid Single Opening",
+            "errorMessage": "One valid opening needed",
+            "recovery": "Script erases itself; user must ensure the TSL is initialized correctly on a valid Opening object."
+          },
+          {
+            "check": "Volume Threshold",
+            "errorMessage": "None (Silent fallback)",
+            "recovery": "Automatically falls back to calculating volume via FrameWidth if Real Body volume is too small."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Weight",
+            "how": "Re-run the TSL insertion command and select the opening again",
+            "effect": "Overwrites the 'OpeningCOG' MapX with the new density/weight values. (Note: The TSL instance self-deletes after execution, so OPM editing is not available on subsequent days)."
+          },
+          {
+            "action": "Disable Weight Contribution",
+            "how": "Re-run script and set dWeight to 0",
+            "effect": "MapX is updated. Density becomes 0. hsbCenterOfGravity script will ignore this opening."
+          }
+        ]
+      },
+      "tokens_used": 6287,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCenterOfGravity_setOpeningWeight.mcr\n\n## Overview\nThis script allows you to assign a specific weight to openings (windows, doors, or assemblies) to improve the accuracy of structural weight calculations. It stores the weight data on the opening so that the `hsbCenterOfGravity` script can include it in the overall building mass calculation.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script operates on 3D Opening entities. |\n| Paper Space | No | Not applicable for layouts. |\n| Shop Drawing | No | Does not generate 2D drawing views. |\n\n## Prerequisites\n- **Required entities**: At least one Opening (Window, Door, or Assembly).\n- **Minimum beam count**: 0.\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the command line.\n2.  Browse and select `hsbCenterOfGravity_setOpeningWeight.mcr`.\n3.  Press **Enter**.\n\n### Step 2: Configure Weight\n1.  The Properties palette will appear automatically.\n2.  Locate the **Weight** parameter.\n3.  Enter the total weight of the opening unit in Kilograms (kg).\n    *   *Note: If you enter 0, the opening will be ignored in weight calculations.*\n\n### Step 3: Select Openings\n1.  The command line will prompt: `Select openings`\n2.  Click on the opening(s) in the model to which you want to apply this weight.\n3.  Press **Enter** to confirm selection.\n4.  **Constraint**: You must select openings that share the **same Style, Width, and Height**. If you select mixed sizes, the script will display an error (\"Different openings were selected\") and abort the action.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Weight | Number | 0 | Defines the total weight of the opening assembly in Kilograms (Kg). If set to 0, the weight calculation for this opening is disabled. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not add specific options to the right-click context menu. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script does not rely on external settings files.\n\n## Tips\n- **Batch Assignment**: You can select multiple openings at once, but ensure they are identical in size and type.\n- **Editing Weight**: The script instance automatically deletes itself after processing. To change the weight later, simply re-run the `TSLINSERT` command on the same opening and update the value.\n- **Data Storage**: The script calculates a \"pseudo-density\" based on the opening's volume and saves it into the entity's attributes (MapX). This data is read by the `hsbCenterOfGravity` script.\n- **Volume Calculation**: If the opening has no solid geometry volume, the script attempts to calculate the volume using the polyline shape and frame width defined in the ModelMap.\n\n## FAQ\n- **Q: What happens if I set the Weight to 0?**\n  - A: The script will effectively disable weight tracking for that specific opening. The `hsbCenterOfGravity` script will treat it as having no mass or ignore it.\n- **Q: Can I select different window sizes at the same time?**\n  - A: No. The script requires all selected openings in a single command execution to have the same Style, Width, and Height. Group them by size before running the script.\n- **Q: Where is the weight data stored?**\n  - A: It is stored as non-geometric data (MapX) directly on the Opening entity under the name `OpeningCOG`."
+      },
+      "tokens_used": 4720,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,383 @@
+{
+  "filename": "SimpsonHanger.mcr",
+  "status": "completed",
+  "total_tokens": 52062,
+  "processing_time": 242.4470887184143,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 1,
+          "implInsert": 1
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "0.0",
+            "date": "25JULY2007",
+            "author": "Craig Colomb",
+            "changes": ""
+          },
+          {
+            "version": "4.0",
+            "date": "30April2013",
+            "author": "",
+            "changes": "Customized for RMLH"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": [
+          "HangerList.mcr"
+        ]
+      },
+      "tokens_used": 7503,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Documentation explicitly states 'Inserted by user in Model Space'. Script performs 3D geometric calculations using Quader, Plane, and Line intersections. It creates 3D construction entities (Web Stiffeners via Beam.dbCreate) and visualizes models. No sd_ prefix, Viewport references, or 2D layout logic found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space containing at least one Joist and one Carrying Beam with a T-connection.",
+          "requiredSettings": [
+            "HangerList.mcr (script attempts to run this automatically if the Map 'Hangers'/'Simpson' is missing or empty)"
+          ]
+        }
+      },
+      "tokens_used": 7276,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"Select Joists, all must be parallel\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      },\n      {\n        \"step\": 2,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"Select Carrying Beams\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [],\n  \"opmProperties\": [\n    {\n      \"index\": 0,\n      \"variable\": \"psRunMode\",\n      \"type\": \"PropString\",\n      \"displayName\": \"Execution Mode\",\n      \"defaultValue\": \"Standard\",\n      \"inputType\": \"dropdown\",\n      \"options\": [\n        \"Standard\",\n        \"Manual\"\n      ],\n      \"category\": null,\n      \"description\": \"\\\"Execution mode\\\" controls whether hanger models are selected by joist type, or simple geometry.\"\n    },\n    {\n      \"index\": 6,\n      \"variable\": \"pdNum\",\n      \"type\": \"PropDouble\",\n      \"displayName\": \"Posnum\",\n      \"defaultValue\": -1,\n      \"inputType\": \"number\",\n      \"options\": [],\n      \"category\": null,\n      \"description\": null\n    },\n    {\n      \"index\": 1,\n      \"variable\": \"psNotes\",\n      \"type\": \"PropString\",\n      \"displayName\": \"General notes\",\n      \"defaultValue\": \"\",\n      \"inputType\": \"text\",\n      \"options\": [],\n      \"category\": null,\n      \"description\": null\n    },\n    {\n      \"index\": 2,\n      \"variable\": \"psWeb\",\n      \"type\": \"PropString\",\n      \"displayName\": \"Web Stiffener\",\n      \"defaultValue\": \"No\",\n      \"inputType\": \"dropdown\",\n      \"options\": [\n        \"No\",\n        \"Yes\"\n      ],\n      \"category\": null,\n      \"description\": \"\\\"Web Stiffener\\\" & \\\"Backer Block\\\" turn these accessories on and off.\"\n    },\n    {\n      \"index\": 10,\n      \"variable\": \"psBacker\",\n      \"type\": \"PropString\",\n      \"displayName\": \"Backer Block\",\n      \"defaultValue\": \"None\",\n      \"inputType\": \"dropdown\",\n      \"options\": [\n        \"None\",\n        \"Single\",\n        \"Double\"\n      ],\n      \"category\": null,\n      \"description\": \"\\\"Web Stiffener\\\" & \\\"Backer Block\\\" turn these accessories on and off.\"\n    },\n    {\n      \"index\": 0,\n      \"variable\": \"piColor\",\n      \"type\": \"PropInt\",\n      \"displayName\": \"Hanger Color\",\n      \"defaultValue\": 6,\n      \"inputType\": \"number\",\n      \"options\": [],\n      \"category\": null,\n      \"description\": null\n    }\n  ],\n  \"context"
+      },
+      "tokens_used": 10421,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the selection, placement, and detailing of Simpson Strong-Tie joist hangers at T-connections between joists and carrying beams, including optional web stiffeners.",
+          "category": "Hardware / Connection",
+          "typicalUseCase": "When detailing a floor or roof frame to ensure joists are properly secured to carrying members with engineered metal connectors."
+        },
+        "parameters": [
+          {
+            "name": "psRunMode",
+            "technicalDefault": "Standard",
+            "businessMeaning": "Determines the logic used to select the correct hanger model. 'Standard' uses joist profiles to auto-select from a library; 'Manual' is used if joists are non-standard or mixed sizes.",
+            "validRange": "Standard, Manual",
+            "unit": "enum",
+            "affectsOutput": "Dictates which lookup tables are accessed in the 'Simpson' map. If mixed joist sizes are detected, it defaults to 'Manual'."
+          },
+          {
+            "name": "pdNum",
+            "technicalDefault": -1,
+            "businessMeaning": "The Position Number (Item Mark) assigned to this specific hanger instance for shop drawings and BOMs.",
+            "validRange": "Positive Integer (e.g., 1, 2, 101)",
+            "unit": "count",
+            "affectsOutput": "Updates the entity property and report data; does not change geometry."
+          },
+          {
+            "name": "psNotes",
+            "technicalDefault": "",
+            "businessMeaning": "User-defined text for specific installation instructions or fabrication notes.",
+            "validRange": "Alphanumeric text string",
+            "unit": "text",
+            "affectsOutput": "Saved to the instance map and potentially exported to labels/BOMs; no geometric impact."
+          },
+          {
+            "name": "psWeb",
+            "technicalDefault": "No",
+            "businessMeaning": "Controls whether solid wood web stiffeners (fillers) are generated inside the joist to prevent crushing from the hanger's top flange.",
+            "validRange": "No, Yes",
+            "unit": "enum",
+            "affectsOutput": "If 'Yes', creates two internal timber beams (bmFillL, bmFillR) acting as stiffeners. If 'No', deletes these entities."
+          },
+          {
+            "name": "psBacker",
+            "technicalDefault": "None",
+            "businessMeaning": "Specifies the configuration of backer blocks on the carrying beam to provide nailing backup or support.",
+            "validRange": "None, Single, Double",
+            "unit": "enum",
+            "affectsOutput": "Intended to create blocking beams on the header (though the generation code is currently commented out)."
+          },
+          {
+            "name": "piColor",
+            "technicalDefault": 6,
+            "businessMeaning": "The visual color index used to display the hanger model in the CAD model space.",
+            "validRange": "0-256 (AutoCAD Color Index)",
+            "unit": "index",
+            "affectsOutput": "Changes the display color of the hanger entity."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Detection of non-matching joist profiles in a set",
+            "effect": "Script forces 'psRunMode' to 'Manual'",
+            "cascade": [
+              "psRunMode"
+            ]
+          },
+          {
+            "trigger": "psWeb set to 'No'",
+            "effect": "Script erases 'bmFillL' and 'bmFillR' entities from the model",
+            "cascade": [
+              "bmFillL",
+              "bmFillR"
+            ]
+          },
+          {
+            "trigger": "psBacker set to 'None'",
+            "effect": "Script erases backer block entities 'bmBackF' and 'bmBackB' (if they exist)",
+            "cascade": [
+              "bmBackF",
+              "bmBackB"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Model",
+            "description": "A 3D representation of the Simpson hanger (e.g., HUS, LUS series) sized to the joist and header dimensions.",
+            "appliedTo": "Intersection of Joist and Header."
+          },
+          {
+            "type": "Beam (Web Stiffener)",
+            "description": "Solid wood fillers placed inside the joist web to reinforce the connection area.",
+            "appliedTo": "Interior of the Joist."
+          },
+          {
+            "type": "Data Export",
+            "description": "BOM data including hanger name, dimensions, nail patterns, and position number.",
+            "appliedTo": "TSL Instance Map (for hsbExcel)."
+          }
+        ]
+      },
+      "tokens_used": 8810,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initialization & Map Retrieval",
+          "2. Validate/Load 'Hangers/Simpson' Map",
+          "3. Declare OPM Properties (Mode, Notes, Web, Backer, Color)",
+          "4. Check Context Menu: 'Update Hanger List'",
+          "5. Branch: Insertion Mode (_bOnInsert)",
+          "   a. Select Set of Joists (Parallel check implied)",
+          "   b. Select Set of Carrying Beams (Headers)",
+          "   c. Sort and Group Joists (identify sisters/triples)",
+          "   d. Iterate Joists vs Headers to find T-Connections",
+          "   e. Spawn new TSL Instance for each T-Connection",
+          "   f. Return (Exit Script)",
+          "6. Branch: Calculation/Update Mode (Existing Instance)",
+          "   a. Validate required beams exist (Min 2), else self-erase",
+          "   b. Calculate Geometric Intersection (Points P0-P4, Planes)",
+          "   c. Determine Joint Situation (Square, Angled, Sloped)",
+          "   d. Analyze Joist Profiles (I-Joist vs Solid Sawn)",
+          "   e. Check Profile Consistency (Force 'Manual' if mixed)",
+          "   f. Lookup Hanger Model in Map based on Geometry & Joist type",
+          "   g. Generate Hanger 3D Model",
+          "   h. Process Web Stiffeners (Create, Update, or Erase)",
+          "   i. Export BOM/Label Data (dxaout, TSLBOM Map)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Map 'Hangers'/'Simpson' validity check",
+            "path1": {
+              "name": "Map Valid",
+              "steps": [
+                "Retrieve Map into mpHangerLibrary",
+                "Proceed to Property Declaration"
+              ]
+            },
+            "path2": {
+              "name": "Map Invalid/Empty",
+              "steps": [
+                "Execute 'HangerList.mcr' via TslInst.dbCreate",
+                "Attempt to retrieve Map again",
+                "Report notice if still empty"
+              ]
+            }
+          },
+          {
+            "condition": "Insertion Cycle Check (_bOnInsert)",
+            "path1": {
+              "name": "Insertion Cycle",
+              "steps": [
+                "User input prompts (Joists/Headers)",
+                "Filter and Sort logic",
+                "Instance generation (dbCreate)",
+                "Immediate Return"
+              ]
+            },
+            "path2": {
+              "name": "Update Cycle",
+              "steps": [
+                "Geometry calculations",
+                "Model generation",
+                "Accessory generation (Web Stiffeners)",
+                "Data export"
+              ]
+            }
+          },
+          {
+            "condition": "Joist Profile Consistency",
+            "path1": {
+              "name": "All Joists Match",
+              "steps": [
+                "Keep psRunMode as 'Standard'",
+                "Use Joist Profile for specific Hanger Lookup"
+              ]
+            },
+            "path2": {
+              "name": "Mixed Profiles Detected",
+              "steps": [
+                "Force psRunMode to 'Manual'",
+                "Skip profile-specific library constraints"
+              ]
+            }
+          },
+          {
+            "condition": "Geometric Analysis (Joint Type)",
+            "path1": {
+              "name": "Perpendicular & Flat",
+              "steps": [
+                "Set Joint Type to 'Square'",
+                "Lookup standard hanger list"
+              ]
+            },
+            "path2": {
+              "name": "Angled (Plan)",
+              "steps": [
+                "Set Joint Type to 'Angled' (if dot product > .02)",
+                "Lookup skewed hanger list"
+              ]
+            },
+            "path3": {
+              "name": "Sloped (Elevation)",
+              "steps": [
+                "Set Joint Type to 'Sloped' (if not perpendicular to ZW)",
+                "Lookup sloped hanger list"
+              ]
+            }
+          },
+          {
+            "condition": "Web Stiffener Property (psWeb)",
+            "path1": {
+              "name": "Set to 'Yes'",
+              "steps": [
+                "Check Map for existing beams bmFillL/bmFillR",
+                "Create if missing, Reposition if existing",
+                "Apply Top/Bottom cuts",
+                "Assign to Joist groups"
+              ]
+            },
+            "path2": {
+              "name": "Set to 'No'",
+              "steps": [
+                "Retrieve bmFillL/bmFillR from Map",
+                "Erase from database (dbErase)",
+                "Remove from Instance Map"
+              ]
+            }
+          },
+          {
+            "condition": "Hanger Model Volume Check",
+            "path1": {
+              "name": "Volume > 0",
+              "steps": [
+                "Render 3D Model geometry"
+              ]
+            },
+            "path2": {
+              "name": "Volume == 0 (Model missing/invalid)",
+              "steps": [
+                "Draw 2D Circles at intersection point for visualization"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Number of GenBeams attached to instance",
+            "errorMessage": "Simpson Hanger self-erasing not enough beams",
+            "recovery": "Ensure at least 1 Joist and 1 Header are attached/selected."
+          },
+          {
+            "check": "Map 'Hangers'/'Simpson' content length",
+            "errorMessage": "Failed to retrieve hanger data, please consult CAD manager",
+            "recovery": "Right-click and select 'Update Hanger List' or ensure HangerList.mcr is present."
+          },
+          {
+            "check": "Insertion Cycle Count",
+            "errorMessage": "(None, Silent self-erase)",
+            "recovery": "Script automatically erases duplicate insertions."
+          },
+          {
+            "check": "Sorting Loop Safety",
+            "errorMessage": "Safety broke sorting loop",
+            "recovery": "Indicates potential geometric anomaly; script attempts recovery."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Execution Mode",
+            "how": "OPM Property 'Execution Mode'",
+            "effect": "Toggles between 'Standard' (Auto-select by profile) and 'Manual' (Geometry only)."
+          },
+          {
+            "action": "Toggle Web Stiffeners",
+            "how": "OPM Property 'Web Stiffener'",
+            "effect": "Creates solid wood filler blocks inside joist (Yes) or removes them (No)."
+          },
+          {
+            "action": "Toggle Backer Block",
+            "how": "OPM Property 'Backer Block'",
+            "effect": "Updates data comparison key (Note: Generation code is commented out in this version)."
+          },
+          {
+            "action": "Update Hanger Library",
+            "how": "Right-click Context Menu -> 'Update Hanger List'",
+            "effect": "Re-runs HangerList.mcr to refresh the local Map of allowable Simpson hangers."
+          },
+          {
+            "action": "Edit Notes",
+            "how": "OPM Property 'General notes'",
+            "effect": "Updates text data stored in Map for export to labels/BOMs."
+          }
+        ]
+      },
+      "tokens_used": 11287,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# SimpsonHanger.mcr\n\n## Overview\nAutomates the selection, placement, and detailing of Simpson Strong-Tie joist hangers at T-connections between joists and carrying beams. It supports automatic model selection based on joist profiles and includes options for web stiffeners and backer blocks.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script calculates 3D intersections and places models. |\n| Paper Space | No | Script is not designed for 2D layout or detailing views. |\n| Shop Drawing | No | Generates 3D models and data exports, not shop drawings directly. |\n\n## Prerequisites\n- **Required Entities**: At least one set of Joists and one set of Carrying Beams (Headers).\n- **Minimum Beams**: 2 (1 Joist and 1 Header forming a T-connection).\n- **Required Settings**: The script attempts to auto-generate a library map named `Hangers/Simpson`. If the map is missing, ensure `HangerList.mcr` is present in your script folder.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `SimpsonHanger.mcr`\n\n### Step 2: Select Joists\n```\nCommand Line: Select Joists, all must be parallel\nAction: Click on the joists that need hangers. You can select multiple joists at once, but they must run in the same direction.\n```\n\n### Step 3: Select Carrying Beams\n```\nCommand Line: Select Carrying Beams\nAction: Click on the carrying beams (headers or rim beams) that the joists connect into.\n```\n\n### Step 4: Generation\nThe script will automatically identify T-connections, calculate the geometry, and insert a hanger instance at each valid intersection.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Execution Mode | dropdown | Standard | **Standard**: Selects hanger based on joist profile type (I-Joist vs Sawn). <br> **Manual**: Selects hanger based purely on geometry (used for mixed or non-standard joists). |\n| Posnum | number | -1 | The Position Number (Item Mark) for this specific hanger instance used in lists and BOMs. |\n| General notes | text | | User-defined text for specific installation notes or fabrication instructions. |\n| Web Stiffener | dropdown | No | **Yes**: Creates solid wood blocks inside the joist to reinforce the web. <br> **No**: Removes any stiffeners. |\n| Backer Block | dropdown | None | Specifies the configuration of backer blocks on the carrying beam (None, Single, or Double). |\n| Hanger Color | number | 6 | Sets the display color of the 3D hanger model (AutoCAD Color Index). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Update Hanger List | Re-runs the `HangerList.mcr` script to refresh the internal library of available Simpson hangers. Use this if the script reports missing data. |\n\n## Settings Files\n- **Dependency**: `HangerList.mcr`\n- **Location**: TSL Scripts folder\n- **Purpose**: This script is called automatically by `SimpsonHanger.mcr` to populate the internal \"Hangers/Simpson\" map used to look up correct model numbers based on dimensions.\n\n## Tips\n- **Mixed Joist Sizes**: If you select joists with different profiles, the script automatically switches to \"Manual\" mode to ensure the correct geometry is calculated.\n- **I-Joist Reinforcement**: For I-Joists, it is highly recommended to set **Web Stiffener** to \"Yes\" to prevent the web from crushing under the hanger's top flange.\n- **Visual Feedback**: If a hanger model cannot be found in the library, the script will draw a circle at the connection point to indicate the location.\n\n## FAQ\n- **Q: The script disappeared after I ran it. Why?**\n  - A: This usually happens if the script did not detect valid beams (e.g., no T-connection found) or if the hanger library data is completely empty. Check your command line for error messages.\n- **Q: How do I force a specific hanger model if the auto-selection is wrong?**\n  - A: Change the **Execution Mode** property to \"Manual\". You can then modify the hanger data properties manually if exposed, or ensure your library map matches your joist profile names.\n- **Q: What does \"Safety broke sorting loop\" mean?**\n  - A: This indicates a geometric anomaly (likely collinear beams or extremely close spacing). The script attempts to recover, but you may need to check the beam alignment manually."
+      },
+      "tokens_used": 6765,
+      "error": null
+    }
+  }
+}

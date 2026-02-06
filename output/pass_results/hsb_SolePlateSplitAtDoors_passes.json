@@ -1,0 +1,303 @@
+{
+  "filename": "hsb_SolePlateSplitAtDoors.mcr",
+  "status": "completed",
+  "total_tokens": 28786,
+  "processing_time": 182.36605787277222,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "This tsl split soleplates at doors",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "11.04.2022",
+            "author": "Marsel Nakuci",
+            "changes": "HSB-15012: after splitting delete pieces at doors"
+          },
+          {
+            "version": "1.0",
+            "date": "11.05.2021",
+            "author": "Marsel Nakuci",
+            "changes": "HSB-11750: initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5026,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script operates on Element and Beam objects (el.beam(), el.opening()), uses dbSplit() to modify geometry, and contains no ShopDrawing (#Type E) or Viewport references. It erases its own instance at the end, characteristic of a model-modifying command script."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space with a wall containing door openings",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3738,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getElement",
+              "promptOriginal": "|Select wall|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select beams that need be splitted at door positions|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3377,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically splits and removes sections of wall sole plates located beneath door openings to provide a clear opening for door installation.",
+          "category": "Framing",
+          "typicalUseCase": "After placing door openings in a wall design, use this tool to cut the bottom plate (sole plate) so it does not run through the door threshold, ensuring accurate detailing for manufacturing."
+        },
+        "parameters": [
+          {
+            "name": "_Element",
+            "technicalDefault": "null",
+            "businessMeaning": "The specific wall assembly or panel that contains the door definitions. This provides the geometric context and coordinate system to locate where the doors are positioned.",
+            "validRange": "Any wall Element (in ModelSpace) that contains at least one 'Door' type opening.",
+            "unit": "Entity",
+            "affectsOutput": "Determines the locations (X-coordinates) where the sole plates will be split. If no doors are present in this element, no splits will occur."
+          },
+          {
+            "name": "_Beam",
+            "technicalDefault": "empty",
+            "businessMeaning": "The specific sole plate (bottom plate) beams that need to be interrupted to allow for door clearance.",
+            "validRange": "Beams representing the bottom plate of the selected wall. Must be within the vertical projection of the wall.",
+            "unit": "Entity",
+            "affectsOutput": "These beams are physically split at the door jambs. The segment of the beam falling directly under the door width is erased, while the left and right remains remain."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of _Element",
+            "effect": "Defines the set of valid door openings (_kDoor) used to calculate split points.",
+            "cascade": [
+              "_Beam Split Locations"
+            ]
+          },
+          {
+            "trigger": "Selection of _Beam",
+            "effect": "Identifies which specific entities in the model are modified by the split logic.",
+            "cascade": [
+              "Beam Geometry"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Split Beams",
+            "description": "The original sole plates are divided into separate segments at the exact coordinates of the door sides (jambs).",
+            "appliedTo": "User-selected Beams (_Beam)"
+          },
+          {
+            "type": "Erased Beams",
+            "description": "The middle segment of the sole plate that lies directly within the width of the door opening is deleted to clear the threshold.",
+            "appliedTo": "User-selected Beams (_Beam)"
+          }
+        ]
+      },
+      "tokens_used": 5591,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched (via command or catalog insertion)",
+          "Check execution state: if insertCycleCount > 1, erase instance and exit immediately",
+          "Prompt user to select a Wall Element",
+          "Prompt user to select Beams (Sole Plates) to split",
+          "Pause execution (return) to allow CAD to process inputs",
+          "Resume Calculation: Verify Element selection exists",
+          "Resume Calculation: Verify Beam selection exists",
+          "Extract Element coordinate system (Origin, X, Y, Z vectors)",
+          "Identify all Openings within the selected Element",
+          "Filter Openings: Isolate only those of type '_kDoor'",
+          "Loop through each identified Door",
+          "Calculate Door's X-axis extents (Start and End points)",
+          "Loop through all Sole Plate Beams",
+          "Check if Door Start Point intersects Beam Profile (extended in Y)",
+          "If Yes: Split Beam at Start Point, add resulting segment to list",
+          "Check if Door End Point intersects Beam Profile (extended in Y)",
+          "If Yes: Split Beam at End Point, add resulting segment to list",
+          "Loop through all Beam segments (original and split)",
+          "Check if Beam Center Point lies inside the Door width",
+          "If Yes: Erase that specific Beam segment",
+          "Erase the Script Instance from the model",
+          "Finish"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count",
+            "path1": {
+              "name": "Cycle > 1 (Recalc/Regen)",
+              "steps": [
+                "Erase Instance",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "Cycle 1 (Initial Insert)",
+              "steps": [
+                "Proceed to User Prompts"
+              ]
+            }
+          },
+          {
+            "condition": "Element Input Validation",
+            "path1": {
+              "name": "Element Missing",
+              "steps": [
+                "Report 'one wall needed'",
+                "Erase Instance",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "Element Present",
+              "steps": [
+                "Proceed to Beam Validation"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Input Validation",
+            "path1": {
+              "name": "Beams Missing",
+              "steps": [
+                "Report 'Soleplate beams needed'",
+                "Erase Instance",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "Beams Present",
+              "steps": [
+                "Proceed to Geometry Processing"
+              ]
+            }
+          },
+          {
+            "condition": "Opening Type",
+            "path1": {
+              "name": "Type is Door",
+              "steps": [
+                "Add to processing list (ppDoors)",
+                "Calculate Split Points"
+              ]
+            },
+            "path2": {
+              "name": "Other Type (e.g., Window)",
+              "steps": [
+                "Ignore opening"
+              ]
+            }
+          },
+          {
+            "condition": "Door Edge vs Beam Profile",
+            "path1": {
+              "name": "Intersects",
+              "steps": [
+                "Execute dbSplit at that coordinate",
+                "Append new beam to processing list"
+              ]
+            },
+            "path2": {
+              "name": "No Intersection",
+              "steps": [
+                "Skip beam for this specific point"
+              ]
+            }
+          },
+          {
+            "condition": "Deletion Check (Beam Center vs Door Profile)",
+            "path1": {
+              "name": "Inside Door",
+              "steps": [
+                "Execute dbErase on beam"
+              ]
+            },
+            "path2": {
+              "name": "Outside Door",
+              "steps": [
+                "Retain beam"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Array Length (_Element)",
+            "errorMessage": "hsb_SolePlateSplitAtDoors one wall needed",
+            "recovery": "User must re-run the script and ensure a valid wall element is selected."
+          },
+          {
+            "check": "Beam Array Length (_Beam)",
+            "errorMessage": "hsb_SolePlateSplitAtDoors Soleplate beams needed",
+            "recovery": "User must re-run the script and select at least one beam to act as the sole plate."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 6810,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SolePlateSplitAtDoors.mcr\n\n## Overview\nThis script automatically splits wall sole plates (bottom plates) at the location of door openings and removes the section of the plate located directly under the door width.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in the 3D model. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | This is a model modification script. |\n\n## Prerequisites\n- **Wall Element**: A wall must exist in the model that contains Door type openings.\n- **Beams**: At least one beam representing the sole plate (bottom plate) must exist to be processed.\n- **Context**: The selected beams must be located within the vertical projection of the wall's door openings.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_SolePlateSplitAtDoors.mcr` from the file dialog.\n\n### Step 2: Select Wall\n```\nCommand Line: |Select wall|\nAction: Click on the wall element (Element) that contains the door definitions.\n```\n\n### Step 3: Select Beams\n```\nCommand Line: |Select beams that need be splitted at door positions|\nAction: Select the sole plate (bottom plate) beams that run through the doors. Press Enter to confirm selection.\n```\n\n**Note**: The script will automatically process the splits, delete the middle segments under the doors, and then remove its own instance from the model.\n\n## Properties Panel Parameters\nThis script does not expose any parameters to the AutoCAD Properties Palette (OPM). All configuration is handled via command-line selection.\n\n## Right-Click Menu Options\nThis script does not add specific items to the entity context menu.\n\n## Settings Files\nNo external settings files are required or used by this script.\n\n## Tips\n- **Verification**: Ensure your wall element has defined \"Door\" type openings. Windows or other opening types will be ignored by this script.\n- **Self-Deleting**: This tool acts as a command. Once it finishes splitting and erasing the beam segments, it deletes itself from the drawing automatically.\n- **Selection**: You can select multiple sole plate beams in Step 3 if they all need to be split by the same set of doors.\n\n## FAQ\n- **Q: I ran the script, but nothing happened.**\n  A: Check the command line history. If it says \"one wall needed,\" you may have missed selecting the wall element. If it says \"Soleplate beams needed,\" ensure you selected beams in Step 2. Also, verify the wall actually contains Doors and not just Windows.\n\n- **Q: Did it split the plate?**\n  A: The script will physically cut the selected beam at the door jambs and delete the center piece. You should see two separate beam segments remaining where there used to be one continuous beam.\n\n- **Q: Can I use this for windows?**\n  A: No, this script specifically filters for Door type openings (`_kDoor`). It will not cut plates for windows."
+      },
+      "tokens_used": 4244,
+      "error": null
+    }
+  }
+}

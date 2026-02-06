@@ -1,0 +1,237 @@
+{
+  "filename": "hsbModifyBeamProperties.mcr",
+  "status": "completed",
+  "total_tokens": 26892,
+  "processing_time": 160.8883662223816,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "10oct2019",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "sequence number = 0"
+          },
+          {
+            "version": "1.0",
+            "date": "1.0",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6338,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses _bOnElementConstructed flag, iterates through _Element and Beam entities to modify 3D properties (Color, Type). No sd_ prefixes or _kPaperSpace references found. Logic targets model geometry generation."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4062,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select element(s)| |<Enter> to report beamtypes|",
+              "condition": "_bOnInsert",
+              "required": false
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3305,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Modifies beam properties (Color and Beamtype) based on special instructions embedded in the beam's material string, then removes those instructions to ensure clean data.",
+          "category": "Automation/Properties",
+          "typicalUseCase": "Used during wall calculation to override default beam classifications for manufacturing purposes (e.g., excluding certain beams from a specific CNC list) or to highlight specific components visually."
+        },
+        "parameters": [
+          {
+            "name": "Color (in Material String)",
+            "technicalDefault": "N/A (Instruction string)",
+            "businessMeaning": "Sets the visual display color index of the beam in the CAD model.",
+            "validRange": "0-255 (standard CAD color indices)",
+            "unit": "Index",
+            "affectsOutput": "Visual representation of the beam in the model. Does not affect geometry or CNC."
+          },
+          {
+            "name": "Beamtype (in Material String)",
+            "technicalDefault": "N/A (Instruction string)",
+            "businessMeaning": "Overrides the structural classification of the beam (e.g., Stud, Plate, Post) regardless of its geometric position.",
+            "validRange": "0 to available BeamTypes in project catalog",
+            "unit": "Index",
+            "affectsOutput": "Determines how the beam is processed in lists, reports, and potentially manufacturing stations (e.g., filtering out specific beamtypes)."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Beam Material contains '(Color:X)' or '(Beamtype:Y)'",
+            "effect": "Script reads the value, applies it to the beam, and then removes the text from the Material property.",
+            "cascade": [
+              "Beam Material",
+              "Beam Color",
+              "Beam Type"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "PropertyUpdate",
+            "description": "Updates the Color and Type attributes of existing beams without creating new geometry.",
+            "appliedTo": "Beams within selected Elements or Walls containing the TSL in their definition."
+          },
+          {
+            "type": "StringSanitization",
+            "description": "Removes the processing instructions from the Beam's Material and BeamCode fields to prevent future processing or data contamination.",
+            "appliedTo": "Beams where instructions were found."
+          }
+        ]
+      },
+      "tokens_used": 3539,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched (manual insertion) or triggered (wall element construction)",
+          "[Initialization] Check if running on Insert or Element Constructed event",
+          "[Branch 1: Manual Insert] Prompt user 'Select element(s)' with option to press Enter",
+          "[Branch 1: Manual Insert] If elements selected -> Set internal 'onInsert' flag",
+          "[Branch 1: Manual Insert] If NO elements selected -> Retrieve and list all project BeamTypes to console",
+          "[Branch 2: Processing Triggered] Iterate through all beams in target Element(s)",
+          "Read Material string of each beam",
+          "Tokenize Material string searching for patterns enclosed in parentheses (e.g., '(Color:3)')",
+          "Parse tokens for specific keys: 'COLOR' or 'BEAMTYPE'",
+          "Validate parsed value is an integer",
+          "[Branch 3: Valid Token] Apply value to Beam Property (setColor or setType)",
+          "[Branch 3: Valid Token] Remove the instruction text from the Beam Material string",
+          "[Branch 3: Valid Token] Update BeamCode to match the sanitized Material string",
+          "[Branch 3: Invalid Token] Report error (invalid key) or ignore (bad format)",
+          "Script erases instance and exits"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "User action during Manual Insert (_bOnInsert)",
+            "path1": {
+              "name": "Select Elements",
+              "steps": [
+                "User picks Elements",
+                "Script processes beams in those elements",
+                "Erases instance"
+              ]
+            },
+            "path2": {
+              "name": "Press Enter (No Selection)",
+              "steps": [
+                "Script sorts project BeamTypes alphabetically",
+                "Script prints BeamType Index and Name to Notice window",
+                "Erases instance"
+              ]
+            }
+          },
+          {
+            "condition": "Token Analysis in Material String",
+            "path1": {
+              "name": "Valid Key and Integer Value",
+              "steps": [
+                "Identify Key (Color/Beamtype)",
+                "Convert Value String to Integer",
+                "Update Beam Property",
+                "Clean Material String",
+                "Update BeamCode"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Key or Non-Integer Value",
+              "steps": [
+                "Log 'Invalid key' error to reportMessage (if key unknown)",
+                "Skip token silently (if value format wrong)",
+                "Proceed to next token"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Key must be 'COLOR' or 'BEAMTYPE' (case-insensitive)",
+            "errorMessage": "'ScriptName Element # invalid key [KEY]'",
+            "recovery": "Token is skipped; remaining tokens are processed."
+          },
+          {
+            "check": "Value associated with Key must be a strict integer (e.g., '12', not '12a')",
+            "errorMessage": "None (Silent)",
+            "recovery": "Token is ignored; property is not modified."
+          },
+          {
+            "check": "Token format must contain exactly one colon ':' separator",
+            "errorMessage": "None",
+            "recovery": "Token is ignored via loop continue."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None (Script self-erases)",
+            "how": "Script Logic (eraseInstance)",
+            "effect": "The TSL instance does not persist in the drawing after execution. User must re-insert or rely on wall definition trigger to run again. No OPM edits or context menus available post-run."
+          }
+        ]
+      },
+      "tokens_used": 4755,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbModifyBeamProperties.mcr\n\n## Overview\nThis script automatically updates the Color and Beamtype of beams by interpreting special codes embedded within the beam's material string. After applying the changes, it cleans the material string to remove the instructions, ensuring the final data is clean.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Designed for processing 3D model elements. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | Not intended for shop drawing generation. |\n\n## Prerequisites\n- **Required Entities**: Element (e.g., Walls or Roofs containing beams).\n- **Minimum beam count**: None.\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbModifyBeamProperties.mcr`\n\n### Step 2: Select Elements or View Report\n```\nCommand Line: Select element(s) | <Enter> to report beamtypes\nAction:\n- Select the Elements (e.g., walls) you want to process and press Enter.\nOR\n- Press Enter immediately without selecting anything to see a list of available BeamTypes in the command line history.\n```\n*Note: Once processing is complete, the script instance will automatically erase itself.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not use Property Palette parameters. Configuration is done via the Beam Material string (see Tips). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | The script erases itself after running, so no context menu options are available. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Instruction Syntax**: To modify a beam, add `(Color:X)` or `(Beamtype:Y)` to the beam's **Material** string (where X is the Color Index 0-255 and Y is the BeamType Index).\n- **Case Insensitive**: The keys `COLOR` and `BEAMTYPE` are not case-sensitive (e.g., `(color:3)` works).\n- **Data Cleanup**: The script automatically removes the instruction text (e.g., `(Color:3)`) from the Material name and BeamCode after applying the change.\n- **Lookup BeamTypes**: If you do not know the specific number for a BeamType, run the script and press `Enter` at the selection prompt. A sorted list of all project BeamTypes and their indices will be printed to the command line.\n- **Integration**: This script can be triggered during wall element construction if included in the wall's calculation script, allowing for automatic property adjustments based on catalog definitions.\n\n## FAQ\n- **Q: Where do I input the Color or Beamtype number?**\n- **A:** You do not type it into the script properties. You must type it directly into the **Material** field of the individual beam (or your catalog definition) in the format `(Color:5)` or `(Beamtype:10)`.\n- **Q: Why did the script disappear after I used it?**\n- **A:** This is a \"run and done\" script. It processes the data, updates the beams, and automatically deletes its own instance to keep your drawing clean. To run it again, simply insert it via `TSLINSERT` again.\n- **Q: What happens if I type text instead of a number?**\n- **A:** The script requires an integer value (e.g., `5`). If you provide invalid text or a bad format, that specific instruction will be ignored, and the property will not change."
+      },
+      "tokens_used": 4893,
+      "error": null
+    }
+  }
+}

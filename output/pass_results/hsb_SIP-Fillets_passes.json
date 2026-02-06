@@ -1,0 +1,267 @@
+{
+  "filename": "hsb_SIP-Fillets.mcr",
+  "status": "completed",
+  "total_tokens": 24045,
+  "processing_time": 123.8956310749054,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "05.09.2013",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4250,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script utilizes `PrEntity` with `ERoofPlane` during `_bOnInsert` to select roof planes, which is a Model Space interaction. It manipulates `Beam` geometry directly via transforms and cuts. There are no `sd_` prefixes, `Viewport` checks, or `#Type E` declarations found in the script."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ERoofPlane",
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space with valid ERoofPlane entities that contain underlying Beams.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2595,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select a set of roof elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3080,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the creation of structural fillets (wedge cuts) at the intersections of roof panels (specifically SIPs or CLT) to ensure they fit together seamlessly.",
+          "category": "Joinery/Machining",
+          "typicalUseCase": "Used during the detailing phase of roof design to prepare the geometry of panel-to-panel connections where two roof planes meet, ensuring the panels physically lock together or meet at a specific joint width."
+        },
+        "parameters": [
+          {
+            "name": "U(140)",
+            "technicalDefault": "140",
+            "businessMeaning": "The target width of the structural fillet or tongue created at the intersection of the roof panels. This is the width of material that remains connecting the two panels after the mating cuts are applied.",
+            "validRange": "100mm - 300mm",
+            "unit": "mm",
+            "affectsOutput": "Controls the depth of the cut and the position of the beam. The script calculates the offset required to extend the beam so that after a planar cut is made, the remaining width of the beam perpendicular to the intersection equals this value."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Change to U(140) constant in code",
+            "effect": "Recalculates the transform offset for the beams (moving them closer or further from the intersection) and adjusts the dimensional property of the beam width before applying the cut.",
+            "cascade": [
+              "bmA.transformBy",
+              "bmB.transformBy",
+              "bmA.setD",
+              "bmB.setD",
+              "Cut definition"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Cut",
+            "description": "A static planar cut applied to the roof panel beam. The cut normal is calculated to bisect the external angle between the two intersecting roof planes, creating a tight mitered joint.",
+            "appliedTo": "The specific Beam entities identified as being closest to the intersection line of two selected Roof Elements."
+          },
+          {
+            "type": "Beam Modification",
+            "description": "Transforms (moves) the beam geometry to ensure enough material exists for the fillet, and explicitly sets the width property of the beam to the defined fillet width.",
+            "appliedTo": "The beams intersecting the roof plane valleys/hips."
+          }
+        ]
+      },
+      "tokens_used": 3613,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script executed via command or hsbCAD menu.",
+          "Initial check for _bOnInsert flag (Insertion Mode).",
+          "Prompt user to select a set of Roof Elements (ERoofPlane) using PrEntity.",
+          "Validate selection set. If valid, iterate through selected elements.",
+          "Store valid ERoofPlane entities into the script's internal _Entity collection.",
+          "Script instance saved into drawing and execution pauses.",
+          "Script resumes on recalculation (e.g., regenerate or update).",
+          "Check if _Entity collection contains elements. If empty, erase instance.",
+          "Extract geometric data (Envelope PLine, Element, CoordSys) from stored Roof Elements.",
+          "Start nested loop: Iterate through each Roof Element against every other Roof Element to find intersections.",
+          "Calculate intersection line between the planes of two Roof Elements.",
+          "Check if the Envelope PLines of the two roofs intersect (Segment analysis).",
+          "If valid intersection exists (Segment length > 0), identify candidate Beams in both Roof Elements that are parallel to the intersection line.",
+          "Find the single closest Beam in Roof A and the single closest Beam in Roof B to the intersection segment midpoint.",
+          "Calculate the bisecting normal vector for the fillet cut based on the panel orientations.",
+          "Transform (Move) Beams A and B along their local Y-axis to align their surfaces for the specific fillet width (U(140)).",
+          "Update the width property (dD) of Beams A and B to the target fillet width.",
+          "Create and apply static Cuts to Beams A and B using the calculated bisecting normal.",
+          "Repeat for all intersecting roof pairs and their associated beams.",
+          "Erase the script instance from the drawing.",
+          "Process Complete."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Selection of Roof Elements at Insertion",
+            "path1": {
+              "name": "User cancels selection",
+              "steps": [
+                "Script exits without storing entities.",
+                "No instance is created or running instance is terminated."
+              ]
+            },
+            "path2": {
+              "name": "User selects valid elements",
+              "steps": [
+                "Entities stored.",
+                "Instance created and calculation triggered."
+              ]
+            }
+          },
+          {
+            "condition": "Script Recalculation / Validation",
+            "path1": {
+              "name": "No entities found in _Entity",
+              "steps": [
+                "Script executes eraseInstance().",
+                "Script self-destructs."
+              ]
+            },
+            "path2": {
+              "name": "Entities found",
+              "steps": [
+                "Proceed to geometric extraction and intersection logic."
+              ]
+            }
+          },
+          {
+            "condition": "Roof Pair Intersection Analysis",
+            "path1": {
+              "name": "Roofs do not intersect physically",
+              "steps": [
+                "Intersection points array length <= 1.",
+                "Loop skips to next pair.",
+                "No cuts or modifications made."
+              ]
+            },
+            "path2": {
+              "name": "Roofs intersect",
+              "steps": [
+                "LineSeg created.",
+                "Beam search initiated."
+              ]
+            }
+          },
+          {
+            "condition": "Beam Identification",
+            "path1": {
+              "name": "No matching beams found",
+              "steps": [
+                "bmToAdjustThis or bmToAdjustNext arrays are empty.",
+                "Loop skips cut creation.",
+                "No modification to geometry."
+              ]
+            },
+            "path2": {
+              "name": "Beams identified",
+              "steps": [
+                "Vector math performed.",
+                "Beams transformed and cut."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "User must select at least one ERoofPlane during insertion.",
+            "errorMessage": "None explicit, but if selection is cancelled, script does nothing.",
+            "recovery": "Run command again and select valid roof planes."
+          },
+          {
+            "check": "ERoofPlane must be valid and contain a valid Element.",
+            "errorMessage": "None explicit, invalid entities are filtered out via `if (roofpl.bIsValid())`.",
+            "recovery": "Ensure selected roof planes are properly generated in the model."
+          },
+          {
+            "check": "Roof planes must physically overlap (intersect) to generate fillets.",
+            "errorMessage": "None explicit, non-intersecting roofs are simply skipped.",
+            "recovery": "Check roof geometry layout; ensure valleys or hips exist between selected planes."
+          },
+          {
+            "check": "Roof Elements must contain Beams parallel to the intersection line.",
+            "errorMessage": "None explicit. If no beams are found, the script skips that specific intersection.",
+            "recovery": "Ensure the roof elements have structural members (beams) generated running along the eave/ridge direction relevant to the intersection."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Script Self-Deletion",
+            "how": "Automatic execution",
+            "effect": "The script instance (`eraseInstance()`) removes itself from the drawing database immediately after applying modifications. The changes (cuts and beam dimensions) remain as native CAD entities, but the script logic is gone."
+          }
+        ]
+      },
+      "tokens_used": 5317,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SIP-Fillets.mcr\n\n## Overview\nThis script automates the creation of structural fillets (wedge cuts) at the intersections of roof panels (specifically SIPs or CLT). It processes selected roof planes to modify the geometry of the underlying beams, ensuring they fit together seamlessly with a specific joint width.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script must be run in the model where the roof planes exist. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | This is a detailing/modeling script. |\n\n## Prerequisites\n- **Required Entities:** `ERoofPlane` entities that contain valid `Element` and `Beam` objects.\n- **Minimum Configuration:** At least two Roof Planes that physically intersect (e.g., at a hip or valley).\n- **Geometry Requirements:** The Roof Elements must contain structural beams that run generally parallel to the intersection line.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Browse to and select `hsb_SIP-Fillets.mcr`\n\n### Step 2: Select Roof Elements\n```\nCommand Line: Select a set of roof elements\nAction: Click on the Roof Planes (ERoofPlane) you wish to process. You can select multiple planes. Press Enter to confirm selection.\n```\n\n### Step 3: Automatic Processing\nOnce the selection is confirmed, the script will automatically:\n1.  Analyze intersections between the selected roofs.\n2.  Identify the beams closest to these intersections.\n3.  Move the beams and adjust their width.\n4.  Apply the planar cuts.\n5.  **Delete itself** from the drawing (the geometry changes remain, but the script instance is removed).\n\n## Properties Panel Parameters\nThis script does not expose any editable parameters in the AutoCAD Properties Palette.\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | No user-editable properties available. |\n\n## Right-Click Menu Options\nThis script does not add any specific options to the entity right-click context menu.\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | No context menu items added. |\n\n## Settings Files\nThis script does not use any external settings files (XML/INI). All logic is contained within the script.\n\n## Tips\n- **Self-Cleaning Script:** The script is designed to run once and delete itself. Do not be alarmed if the script object disappears from the model after processing; the cuts and beam modifications are permanent.\n- **Hardcoded Width:** The script currently uses a fixed internal value of **140mm** for the fillet width. If you require a different width, the script code must be modified by a developer.\n- **Beam Direction:** Ensure that the beams within your roof elements are oriented correctly relative to the intersection. The script looks for beams parallel to the intersection line.\n\n## FAQ\n- **Q: Why did the script disappear after I ran it?**\n  **A:** This is normal behavior. The script executes its logic, applies the geometry changes, and then automatically erases its instance to keep the drawing clean.\n- **Q: The script ran, but no cuts appeared on my roof.**\n  **A:** Ensure that the selected Roof Planes physically overlap (intersect) and that they contain valid Beams inside the Element structure. If the roofs are disjoint or lack beams, no cuts are generated.\n- **Q: Can I change the 140mm fillet width?**\n  **A:** Not through the interface. This value is hardcoded within the script logic. Contact your CAD administrator if this value needs to be adjusted for different standards."
+      },
+      "tokens_used": 5190,
+      "error": null
+    }
+  }
+}

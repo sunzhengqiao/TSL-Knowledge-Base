@@ -1,0 +1,275 @@
+{
+  "filename": "hsbCLT-Tape.mcr",
+  "status": "completed",
+  "total_tokens": 46725,
+  "processing_time": 193.2799596786499,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"header\": {\n    \"type\": null,\n    \"numBeamsReq\": null,\n    \"keywords\": null,\n    \"majorVersion\": null,\n    \"minorVersion\": null,\n    \"dxaOut\": null,\n    \"implInsert\": null\n  },\n  \"description\": null,\n  \"versionHistory\": [\n    {\n      \"version\": \"1.6\",\n      \"date\": \"15.12.2021\",\n      \"author\": \"Marsel Nakuci\",\n      \"changes\": \"HSB-13767: improve segments at lapjoints\"\n    },\n    {\n      \"version\": \"1.5\",\n      \"date\": \"27.10.2021\",\n      \"author\": \"Marsel Nakuci\",\n      \"changes\": \"HSB-12605: group assignment, fix lap joint, add display maps in xml\"\n    },\n    {\n      \"version\": \"1.4\",\n      \"date\": \"05.10.2021\",\n      \"author\": \"Marsel Nakuci\",\n      \"changes\": \"HSB-12605: apply distribution rules;write hardware"
+      },
+      "tokens_used": 9232,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script operates on Sip (Element) entities using 3D coordinates and _bOnJig logic. It generates hardware components (HardWrComp) and DimRequest for shop drawings but does not use 'sd_' prefix, viewport iteration, or Paper Space specific APIs."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Sip"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "TapeCatalog.xml"
+          ]
+        }
+      },
+      "tokens_used": 7242,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6574,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically applies structural air-tightness tapes (adhesive strips) to CLT panel edges based on dimensions and edge types, with options for manual edge selection.",
+          "category": "Hardware / CLT Finishing",
+          "typicalUseCase": "Applying specific adhesive tape products to the edges of Cross Laminated Timber (CLT) walls and floors to meet air-tightness requirements, ensuring the correct number of strips and widths are calculated for production lists."
+        },
+        "parameters": [
+          {
+            "name": "dTapeWidthFrontDefault",
+            "technicalDefault": "U(3) (from XML)",
+            "businessMeaning": "Visual representation width of the tape in the 3D model and 2D shop drawings. This is for clarity in documents and does not affect the physical BOM quantity.",
+            "validRange": "1mm to 20mm",
+            "unit": "mm",
+            "affectsOutput": "Thickness of the drawn rectangle in Front/Plan views."
+          },
+          {
+            "name": "iTransparencyDefault",
+            "technicalDefault": "75 (from XML)",
+            "businessMeaning": "Opacity of the tape visualization. Allows users to see panel edges or layers underneath the tape symbol.",
+            "validRange": "0 (Solid) to 100 (Invisible)",
+            "unit": "percent",
+            "affectsOutput": "Visual styling in Model Space and CAD layouts."
+          },
+          {
+            "name": "iColorDefault",
+            "technicalDefault": "1 (Red/Magenta standard)",
+            "businessMeaning": "CAD color index used to draw the tape. Helps distinguish different tape types or highlight sealing areas.",
+            "validRange": "0 to 255 (AutoCAD Color Index)",
+            "unit": "index",
+            "affectsOutput": "Color of the graphical representation."
+          },
+          {
+            "name": "TapeCatalog.xml",
+            "technicalDefault": "\"TapeCatalog\"",
+            "businessMeaning": "Database file containing the available tape products, their physical widths, and Article Numbers. The script uses this to determine which tape fits the panel edge.",
+            "validRange": "Valid XML file path",
+            "unit": "string (filename)",
+            "affectsOutput": "Determines the Article Number assigned to Hardware components and the calculated widths of the tapes."
+          },
+          {
+            "name": "dExtraWidth",
+            "technicalDefault": "Logic Dependent",
+            "businessMeaning": "Additional length added to the tape calculation to ensure overlap or handling allowance at the ends of the panel edge.",
+            "validRange": "0mm to 200mm",
+            "unit": "mm",
+            "affectsOutput": "Total length of tape generated (HardWrComp Scale X)."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Panel Edge Width calculation",
+            "effect": "Determines how many strips (iNr150) and which remainder product (mapProduct) are selected from the TapeCatalog.",
+            "cascade": [
+              "Hardware Component Article Number",
+              "Hardware Component Scale Y (Width)"
+            ]
+          },
+          {
+            "trigger": "Number of Tapes Generated (iNrTapes)",
+            "effect": "Looks up the corresponding Display Map in XML to apply specific Color/Transparency settings for that configuration.",
+            "cascade": [
+              "iColor",
+              "iTransparency"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "HardWrComp (Hardware Component)",
+            "description": "Data objects representing the tape material lengths and widths for BOM/lists. Scale X represents length, Scale Y represents width.",
+            "appliedTo": "The selected Sip (Element) or the specific edges defined by the Jig."
+          },
+          {
+            "type": "DimRequest (PlaneProfileTape)",
+            "description": "Graphical representation of the tape in 2D shop drawings, visible only in specific view directions (Plan/Front).",
+            "appliedTo": "The Sip (Element) for annotation/hatching in drawings."
+          }
+        ]
+      },
+      "tokens_used": 8858,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch Script: User executes the command 'TSLCONTENT' triggering the script insertion.",
+          "2. Environment Check: Script verifies the existence of 'TapeCatalog.xml' in the Company or Install path.",
+          "3. Entity Selection: User selects CLT panels (Sip/Element entities).",
+          "4. Selection Logic Branch:",
+          "   - If Single Panel selected: The script enters 'Manual Mode'.",
+          "   - If Multiple Panels selected: The script enters 'Automatic Mode' (batch processing).",
+          "5. Insertion Phase (_bOnInsert):",
+          "   - Settings and Display Maps (Color, Transparency, Width) are loaded from the XML.",
+          "   - Automatic Mode: TSL instances are created for all selected panels.",
+          "   - Manual Mode: TSL instance is created, and Jig (interactive drag) mode initiates.",
+          "6. Calculation Phase (_bOnCompute / Execution Loop):",
+          "   - Panel geometry (Edges, PlaneProfiles) is extracted.",
+          "   - Edge widths are calculated.",
+          "   - Tape configuration is determined (Single vs. Multiple strips) based on edge width.",
+          "   - 'TapeCatalog.xml' is queried to find the matching Article Number.",
+          "   - Hardware Components (HardWrComp) are generated with specific Length (Scale X) and Width (Scale Y).",
+          "   - 3D geometry (Model) and 2D Shop Drawing symbols (DimRequest) are generated.",
+          "   - XData 'Tape' map is updated on the panel with total lengths.",
+          "7. Jig/Interactive Phase (Manual Mode only):",
+          "   - User moves cursor; closest edge is highlighted dynamically.",
+          "   - User clicks to confirm tape placement on the highlighted edge.",
+          "   - Loop continues for next edge or right-click to terminate.",
+          "8. Completion: Final visualization and Hardware lists are updated in the model."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Number of Panels Selected",
+            "path1": {
+              "name": "Single Panel (Manual Mode)",
+              "steps": [
+                "Script starts.",
+                "Immediate entry into Jig loop (_bOnJig).",
+                "User hovers cursor to highlight specific edges.",
+                "User clicks to place tape on highlighted edge.",
+                "Repeat for next edge."
+              ]
+            },
+            "path2": {
+              "name": "Multiple Panels (Automatic Mode)",
+              "steps": [
+                "Script starts for each panel.",
+                "Iterates through all valid edges automatically.",
+                "Applies tape logic without user interaction per edge.",
+                "Calculates and generates hardware for all edges."
+              ]
+            }
+          },
+          {
+            "condition": "Edge Width vs. Tape Products",
+            "path1": {
+              "name": "Single Tape Fits",
+              "steps": [
+                "Edge width compared to catalog.",
+                "Single product found where Width >= Edge Width.",
+                "One Hardware Component generated.",
+                "Display map for 'NrTapesEdge=0' applied."
+              ]
+            },
+            "path2": {
+              "name": "Complex/Multiple Tapes",
+              "steps": [
+                "Edge width exceeds standard product widths.",
+                "Calculates number of 150mm strips (iNr150).",
+                "Calculates remainder width.",
+                "Generates multiple Hardware Components (Remainder + Strips).",
+                "Display map matching specific 'NrTapesEdge' count applied."
+              ]
+            }
+          },
+          {
+            "condition": "XML Settings Versioning",
+            "path1": {
+              "name": "Versions Match",
+              "steps": [
+                "Compare DB version vs Install file version.",
+                "No mismatch found.",
+                "Script proceeds normally."
+              ]
+            },
+            "path2": {
+              "name": "Version Mismatch",
+              "steps": [
+                "Compare DB version vs Install file version.",
+                "Mismatch detected.",
+                "ReportNotice generated warning user of version difference."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "TapeCatalog.xml Presence",
+            "errorMessage": "Notice generated if file is missing or version differs from installation default.",
+            "recovery": "Ensure XML exists in '\\\\Company\\TSL\\Settings' or '\\\\Install\\Content\\General\\TSL\\Settings'."
+          },
+          {
+            "check": "Product Lookup",
+            "errorMessage": "Implicit failure if no product in XML covers the calculated edge width.",
+            "recovery": "Edit 'TapeCatalog.xml' to include products with sufficient width."
+          },
+          {
+            "check": "Cursor Proximity (Jig)",
+            "errorMessage": "Text 'No Edge found' displayed at cursor if too far from panel.",
+            "recovery": "Move cursor closer to a valid panel edge."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Explode Automatic TSL",
+            "how": "Context menu / Right-click option.",
+            "effect": "Breaks a single Automatic TSL instance into multiple independent Manual TSL instances (one per edge)."
+          },
+          {
+            "action": "Recalculate / Update",
+            "how": "Context menu / Property change triggers.",
+            "effect": "Re-evaluates edge widths and hardware assignments based on current geometry or XML settings."
+          },
+          {
+            "action": "Move Panel",
+            "how": "Standard CAD Move commands.",
+            "effect": "Tapes move with the panel geometry (Logic updated in v1.3 to maintain references)."
+          },
+          {
+            "action": "Manual Edit (Jig)",
+            "how": "Double-click or specific command trigger on Manual instances.",
+            "effect": "Re-enters Jig mode allowing addition or removal of tapes on specific edges."
+          }
+        ]
+      },
+      "tokens_used": 9158,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-Tape.mcr\n\n## Overview\nThis script automatically applies structural air-tightness tapes (adhesive strips) to the edges of Cross Laminated Timber (CLT) panels. It supports both automatic batch processing for multiple panels and interactive manual placement for specific edges, generating hardware components for production lists and visual symbols for drawings.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Primary working environment. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Script is run in Model Space, but creates 2D symbols that appear in layouts. |\n\n## Prerequisites\n- **Required Entities**: Element (Sip) - CLT Panels.\n- **Minimum Beam Count**: 1.\n- **Required Settings Files**: `TapeCatalog.xml` (Must be located in `\\\\Company\\TSL\\Settings` or `\\\\Install\\Content\\General\\TSL\\Settings`).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Select `hsbCLT-Tape.mcr` from the file list and click Open.\n\n### Step 2: Select CLT Panels\n```\nCommand Line: Select elements:\nAction: Click on the CLT panels (Elements) you wish to process.\n```\n- **Manual Mode**: Select **exactly one** panel. The script will enter interactive mode (Jig) to let you pick specific edges.\n- **Automatic Mode**: Select **multiple** panels. The script will immediately calculate and apply tapes to all valid edges of the selected panels.\n\n### Step 3: Define Tape Location (Manual Mode Only)\nIf you selected a single panel, the following interaction occurs:\n```\nCommand Line: Select edge / [Right-click to finish]:\nAction: Move your cursor over the panel edges.\n```\n- The closest edge to your cursor will highlight dynamically.\n- **Left Click**: Apply tape to the highlighted edge.\n- Move to the next edge and repeat.\n- **Right Click or Enter**: Finish the command and generate the hardware components.\n\n*(Note: If Multiple Panels were selected, this step is skipped as the script processes all edges automatically.)*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| dTapeWidthFrontDefault | Number | 3.0 mm | The visual width of the tape representation in 3D model and 2D drawings (does not affect physical BOM quantity). |\n| iTransparencyDefault | Integer | 75 | The opacity of the tape visualization (0 = Solid, 100 = Invisible). Allows underlying layers to be seen. |\n| iColorDefault | Integer | 1 | The AutoCAD color index used to draw the tape (e.g., 1 = Red). Helps distinguish sealing areas. |\n| TapeCatalog.xml | String | TapeCatalog | The filename of the XML catalog containing available tape products, widths, and Article Numbers. |\n| dExtraWidth | Number | (Logic Dependent) | Additional length added to the tape calculation to ensure overlap or handling allowance at ends of the panel edge. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Explode Automatic TSL | Converts a single \"Automatic Mode\" instance (handling multiple edges) into multiple independent \"Manual Mode\" instances. This allows you to edit or remove tapes from individual edges later. |\n| Recalculate | Re-runs the tape calculation based on current panel geometry or updated XML settings. |\n\n## Settings Files\n- **Filename**: `TapeCatalog.xml`\n- **Location**: `\\\\Company\\TSL\\Settings` or `\\\\Install\\Content\\General\\TSL\\Settings`\n- **Purpose**: Defines the database of available tape products. It maps physical widths to Article Numbers and stores display rules (Color/Transparency) for different tape configurations.\n\n## Tips\n- **Batch Processing**: Use Automatic Mode (select multiple panels) to quickly apply tapes to an entire floor or wall layout.\n- **Visual Clarity**: If you cannot see panel details through the tape, increase the `iTransparencyDefault` value towards 100.\n- **Editing**: If you need to remove a tape from just one edge on a large panel, use the \"Explode Automatic TSL\" right-click option to break the link, then delete the specific Manual TSL instance associated with that edge.\n- **Catalog Matching**: The script attempts to find the best fit tape from the catalog based on edge width. If the edge is wider than any single product, it may combine multiple strips (e.g., one 150mm strip + one remainder strip).\n\n## FAQ\n- **Q: Why does the script show a \"Version Mismatch\" warning?**\n  - A: The version of the `TapeCatalog.xml` in your Company folder differs from the installation default. Update your Company file to ensure you have the latest tape definitions.\n- **Q: Can I move the panel after applying tapes?**\n  - A: Yes, the tapes are associated with the panel and will move correctly when the panel is moved or modified.\n- **Q: What happens if no tape in the catalog is wide enough for my edge?**\n  - A: The script may fail to generate a hardware component for that edge. Edit the `TapeCatalog.xml` to add products with sufficient width."
+      },
+      "tokens_used": 5661,
+      "error": null
+    }
+  }
+}

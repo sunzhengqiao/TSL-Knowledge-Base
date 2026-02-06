@@ -1,0 +1,244 @@
+{
+  "filename": "hsbCullenRstStrap.mcr",
+  "status": "completed",
+  "total_tokens": 51451,
+  "processing_time": 345.95289397239685,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9710,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Explicitly uses _kModelSpace in dbCreate() and collectEntities(). Generates 3D Body geometry and HardWrComp. No usage of _kPaperSpace, _Viewport, or sd_ prefixes."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Beam",
+            "ElementWall"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7778,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10385,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates 3D geometry, labeling, and hardware data for 'Cullen' brand restraint straps (twist straps) that connect two perpendicular timber members (GenBeams), or automatically distributes straps between a beam and a wall.",
+          "category": "Hardware",
+          "typicalUseCase": "Detailing structural connections where a timber beam or joist requires lateral restraint or tension hold-down to an adjacent perpendicular beam or wall top plate, specifically using Cullen metal straps."
+        },
+        "parameters": [
+          {
+            "name": "dWidthStrap",
+            "technicalDefault": "U(30)",
+            "businessMeaning": "The physical width of the metal strap material.",
+            "validRange": "20mm - 100mm (Typically 30mm or 40mm for standard straps)",
+            "unit": "mm",
+            "affectsOutput": "Defines the width of the generated 3D Body geometry and the profile thickness calculations."
+          },
+          {
+            "name": "sType",
+            "technicalDefault": "TFPC",
+            "businessMeaning": "The model code or product name of the strap (e.g., TFPC, TFPC 1000). This determines the strap's length based on internal lookup tables.",
+            "validRange": "Manufacturer specific codes (e.g., 'TFPC', 'TFPC 1000', 'TFPC 1200')",
+            "unit": "String",
+            "affectsOutput": "Sets the hardware Article Number, Model, and Description in the BOM. Also controls the length dimensions (dX, dY) used to generate the 3D strap geometry."
+          },
+          {
+            "name": "dTextHeight",
+            "technicalDefault": "U(50)",
+            "businessMeaning": "The height of the text label used to annotate the strap in the model/cad view.",
+            "validRange": "10mm - 150mm (Depending on drawing scale requirements)",
+            "unit": "mm",
+            "affectsOutput": "Scales the size of the text drawn in the 3D view representing the strap type."
+          },
+          {
+            "name": "Mode",
+            "technicalDefault": "0",
+            "businessMeaning": "Operational mode determining the connection logic.",
+            "validRange": "0 (GenBeam to GenBeam), 101 (Beam to Wall distribution)",
+            "unit": "Integer",
+            "affectsOutput": "Mode 0 creates the strap directly between two selected beams. Mode 101 takes a beam and a wall, calculates intersections with wall studs, and automatically generates new Mode 0 instances for those connections."
+          },
+          {
+            "name": "iVdir",
+            "technicalDefault": "1",
+            "businessMeaning": "Selection index for the face direction on the primary beam to which the strap is aligned.",
+            "validRange": "-1 to 4 (Indices representing the 6 orthogonal faces of the beam)",
+            "unit": "Index",
+            "affectsOutput": "Determines which face of the first beam is used as the anchor plane, effectively rotating or flipping the strap orientation."
+          },
+          {
+            "name": "iVdir1",
+            "technicalDefault": "1",
+            "businessMeaning": "Selection index for the face direction on the secondary beam to which the strap is aligned.",
+            "validRange": "-1 to 4 (Indices representing the 6 orthogonal faces of the beam)",
+            "unit": "Index",
+            "affectsOutput": "Determines which face of the second beam is used as the anchor plane."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sType changes",
+            "effect": "The script looks up specific dimensions (dX and dY) associated with that model code to generate the correct strap length.",
+            "cascade": [
+              "Body Geometry (Length)",
+              "HardWrComp (Model/Article Number)"
+            ]
+          },
+          {
+            "trigger": "Mode is 101",
+            "effect": "The script acts as a generator to find valid connections and insert new script instances, rather than generating geometry itself.",
+            "cascade": [
+              "TslInst Creation",
+              "Geometry (Suppressed for parent instance)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Body",
+            "description": "3D solid representation of the metal strap, including the twisted center section and flat end sections.",
+            "appliedTo": "ModelSpace (visually bridges the two GenBeams)"
+          },
+          {
+            "type": "HardWrComp",
+            "description": "Hardware component entry for the Bill of Materials (BOM), defining manufacturer (Cullen), model, and material (Galvanised mild steel).",
+            "appliedTo": "The first GenBeam in the connection."
+          },
+          {
+            "type": "TslInst",
+            "description": "New instances of the strap script inserted at wall stud intersection points (only when Mode 101 is active).",
+            "appliedTo": "ModelSpace"
+          }
+        ]
+      },
+      "tokens_used": 8201,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initiated: User launches script via command or catalog.",
+          "2. Entity Selection: User selects either (A) Two GenBeams or (B) One Beam and one ElementWall, depending on default 'Mode'.",
+          "3. Property Initialization: Script loads properties (sType, dWidthStrap, iVdir, Mode).",
+          "4. Mode Evaluation: Script checks the 'Mode' property integer value.",
+          "5. [Branch] Mode 0 (GenBeam Connection): Validates two GenBeams, calculates perpendicular plane couples, selects specific faces using iVdir/iVdir1, generates 3D Body, creates Hardware component, and draws label.",
+          "6. [Branch] Mode 101 (Wall Distribution): Validates Beam and Wall, checks perpendicularity, identifies intersecting wall studs, inserts new Mode 0 TslInsts at stud locations, and deletes the temporary Mode 101 instance."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Value of 'Mode' property",
+            "path1": {
+              "name": "Standard Beam-to-Beam (Mode 0)",
+              "steps": [
+                "Check if _GenBeam array contains 2 elements.",
+                "Calculate 6 planes for both beams (calcGbPlanes).",
+                "Identify valid perpendicular plane couples (calcAllPlaneCouples).",
+                "Filter couples based on iVdir and iVdir1 properties.",
+                "Extract geometry profiles and generate Body (create 3d part).",
+                "Update HardWrComp (BOM) linked to the first GenBeam.",
+                "Draw Plan Text label."
+              ]
+            },
+            "path2": {
+              "name": "Beam-to-Wall Generator (Mode 101)",
+              "steps": [
+                "Check if _Beam has 1 element and _Element (ElementWall) has 1 element.",
+                "Verify Beam is perpendicular to Wall (vecZ // vecXbm).",
+                "Identify left and right studs within the wall that intersect the beam span.",
+                "For each valid stud: Create new TslInst (Mode 0) connecting the main beam to the stud.",
+                "Erase the current Mode 101 instance (eraseInstance)."
+              ]
+            }
+          },
+          {
+            "condition": "Plane Geometry Calculation (Mode 0)",
+            "path1": {
+              "name": "Valid Perpendicular Planes",
+              "steps": [
+                "Accepts planes where normal vectors are perpendicular (isPerpendicularTo).",
+                "Continues to geometry generation."
+              ]
+            },
+            "path2": {
+              "name": "Invalid Geometry",
+              "steps": [
+                "Ignores non-perpendicular planes.",
+                "Sets Error flag if input GenBeams are insufficient."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "GenBeam count in Mode 0",
+            "errorMessage": "2 genbeams needed",
+            "recovery": "Select exactly two GenBeams in the tree or ensure selection filter allows two beams."
+          },
+          {
+            "check": "Beam and Wall existence in Mode 101",
+            "errorMessage": "No beam found for the beam wall connection",
+            "recovery": "Ensure a Beam entity is assigned to the script.",
+            "errorMessage2": "No SF wall found for the beam wall connection",
+            "recovery2": "Ensure an ElementWall is assigned to the script."
+          },
+          {
+            "check": "Perpendicularity (Mode 101)",
+            "errorMessage": "beam not perpendicular to the wall",
+            "recovery": "Rotate the beam or wall so they are orthogonal (90 degrees)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Strap Type",
+            "how": "OPM (Properties Palette) - 'sType' property",
+            "effect": "Updates the strap length dimensions (dX, dY), hardware Article Number, and BOM description."
+          },
+          {
+            "action": "Flip Strap Orientation",
+            "how": "OPM - 'iVdir' or 'iVdir1' properties",
+            "effect": "Changes which face of the GenBeam the strap connects to, rotating the strap 90 degrees or flipping it to the opposite side."
+          },
+          {
+            "action": "Adjust Dimensions",
+            "how": "OPM - 'dWidthStrap' or 'dTextHeight'",
+            "effect": "Changes the physical width of the 3D strap geometry and the size of the text label."
+          }
+        ]
+      },
+      "tokens_used": 9971,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCullenRstStrap\n\n## Overview\nThis script generates 3D geometry, labels, and hardware data for Cullen brand restraint straps (twist straps). It is used to connect two perpendicular timber beams or automatically distribute straps between a beam and a wall structure.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Generates 3D bodies and hardware components. |\n| Paper Space | No | Not applicable. |\n| Shop Drawing | No | Model detailing script only. |\n\n## Prerequisites\n- **Required Entities**: \n  - **Mode 0**: Two `GenBeams` (perpendicular to each other).\n  - **Mode 101**: One `Beam` and one `ElementWall`.\n- **Minimum Beam Count**: 2 (for standard connection) or 1 (for wall distribution mode).\n- **Required Settings**: None specific (internal lookup tables used for strap types).\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the command line.\n2.  Browse and select `hsbCullenRstStrap.mcr`.\n\n### Step 2: Select Entities\n**Standard Connection (Mode 0):**\n```\nCommand Line: Select GenBeams\nAction: Select two perpendicular GenBeams in the 3D model or Project Tree.\n```\n\n**Wall Distribution (Mode 101):**\n1.  Select the script instance.\n2.  Open the Properties Palette (Ctrl+1).\n3.  Change the **Mode** property to `101`.\n4.  Assign the main `Beam` and the `ElementWall` to the script instance in the tree or property links.\n5.  The script will automatically calculate intersections with wall studs and create individual straps.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sType | String | TFPC | The Cullen product code (e.g., TFPC, TFPC 1000). Changing this updates the strap length and BOM description. |\n| dWidthStrap | Double | 30 mm | The physical width of the metal strap. |\n| dTextHeight | Double | 50 mm | The height of the text label displayed in the model. |\n| Mode | Integer | 0 | **0**: Connects two GenBeams. **101**: Distributes straps between a Beam and a Wall (Generator Mode). |\n| iVdir | Integer | 1 | Determines which face of the **first** beam the strap connects to (valid range: -1 to 4). |\n| iVdir1 | Integer | 1 | Determines which face of the **second** beam the strap connects to (valid range: -1 to 4). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Refreshes the script geometry if changes were made to connected beams or properties. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script uses internal logic for strap dimensions based on the `sType` string. No external XML files are required.\n\n## Tips\n- **Flipping Orientation**: If the strap attaches to the wrong side of the beam, change the `iVdir` or `iVdir1` values in the Properties Palette.\n- **Changing Sizes**: Simply type the new Cullen product code (e.g., \"TFPC 1200\") into the `sType` field to update the length and BOM data instantly.\n- **Wall Joists**: Use **Mode 101** when you have a series of joists running into a wall. It will automatically detect the studs in the wall and place the straps for you, then remove itself.\n\n## FAQ\n- **Q: Why does the script say \"2 genbeams needed\"?**\n  **A:** Ensure you are in **Mode 0** and have assigned exactly two GenBeams to the script instance.\n- **Q: Why does the script disappear after I assign a wall and beam?**\n  **A:** This happens in **Mode 101**. The script acts as a \"generator\"—it creates the individual strap instances at the stud locations and then deletes itself, leaving only the new straps behind.\n- **Q: How do I change the strap length?**\n  **A:** Edit the `sType` property to the desired manufacturer code (e.g., change \"TFPC\" to \"TFPC 1000\")."
+      },
+      "tokens_used": 5406,
+      "error": null
+    }
+  }
+}

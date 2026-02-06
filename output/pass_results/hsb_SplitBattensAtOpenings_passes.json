@@ -1,0 +1,283 @@
+{
+  "filename": "hsb_SplitBattensAtOpenings.mcr",
+  "status": "completed",
+  "total_tokens": 27019,
+  "processing_time": 168.5372335910797,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "01.12.2011",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.1",
+            "date": "16.10.2013",
+            "author": "",
+            "changes": "Add the option to split also when intersect beams with a code."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4382,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script interacts directly with Element, Sheet, and Opening database objects using dbCreate and dbErase. Performs 3D geometric boolean operations (PlaneProfile union/subtract) to modify the composition of the timber structure. No Viewport references or 2D drawing generation (sd_*) functions found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing Elements with Openings and Sheets (specifically zones with distribution code 'HSB-PL09' or user-specified zones).",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3363,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "psZones",
+            "type": "PropString",
+            "displayName": "Zones to split the Sheets",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": "Please type the number of the zones separate by ; (1-10)"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3210,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically cuts holes in sheeting or battening layers (zones) of wall elements to accommodate openings like windows and doors, respecting defined clearance gaps.",
+          "category": "Framing",
+          "typicalUseCase": "Used after wall elements are generated and openings are placed to ensure external sheeting or battens (zones with code HSB-PL09 or user-specified zones) are trimmed back around the openings rather than overlapping them."
+        },
+        "parameters": [
+          {
+            "name": "psZones",
+            "technicalDefault": "",
+            "businessMeaning": "Specifies which construction zones (layers) contain the sheets or battens that need to be split. This allows the user to target specific layers (e.g., external battening) for trimming if they are not automatically detected by the script's default search code ('HSB-PL09').",
+            "validRange": "1 to 10 (values separated by ';'). Note: Inputs 1-5 map to positive zones (1 to 5), while inputs 6-10 map to negative zones (-1 to -5) relative to the element coordinate system.",
+            "unit": "Index",
+            "affectsOutput": "Determines which layers of the selected elements will be modified. Only sheets belonging to the listed zones (or auto-detected zones) will be split."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Sheet",
+            "description": "New sheet entities created by subtracting the opening profiles (with gaps) from the original sheet contours. The original sheets in the affected zones are erased and replaced by these split segments.",
+            "appliedTo": "Selected Element entities (Walls) in the processed zones."
+          }
+        ]
+      },
+      "tokens_used": 5415,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Execution Start",
+          "Check if script is in Insertion Cycle (_bOnInsert)",
+          "[Insertion Cycle] Verify insertCycleCount() is 1 (prevent recursion), otherwise erase instance",
+          "[Insertion Cycle] Prompt user to select a set of Elements using PrEntity",
+          "[Insertion Cycle] Append selected elements to internal list (_Element) and return (exit script)",
+          "[Post-Insertion Cycle] Validate that elements exist in internal list",
+          "Parse 'psZones' property string (trimming, splitting by ';') to extract explicit zone numbers (1-10)",
+          "Map input values (1-10) to internal real zones (1-5 and -1 to -5)",
+          "Iterate through each selected Element",
+          "Iterate through all standard real zones to find zones with distribution code 'HSB-PL09'",
+          "Combine auto-detected zones ('HSB-PL09') and user-defined zones (psZones) into a unique list (nZonesToSplit)",
+          "Construct a combined 'cutting' profile (ppOp) by iterating through all Openings in the Element",
+          "For each Opening: Create temporary profile expanded by gap properties (Side, Top, Bottom) and union them",
+          "Union all expanded opening profiles into ppOp and shrink by 5mm",
+          "Iterate through zones in nZonesToSplit",
+          "Retrieve all Sheets in the current zone",
+          "Iterate through each Sheet in the zone",
+          "Check if the Sheet profile intersects with the combined Opening profile (ppOp)",
+          "[Conditional Intersection] Check if remaining area is greater than 5mm^2",
+          "[Conditional Area > 5mm] Subtract ppOp from Sheet profile to create new geometry (ppShOriginal)",
+          "[Conditional Subtraction] Generate new Sheet entities for each valid ring of the resulting profile",
+          "[Conditional New Sheets] Copy properties (Name, Material, Color) from original Sheet to new Sheets",
+          "[Conditional Modification] Mark original sheets for erasure (shToErase)",
+          "Erase all original sheets that were split and replaced",
+          "Erase the script instance",
+          "Execution End"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script State: Insertion vs Calculation",
+            "path1": {
+              "name": "Insertion Path",
+              "steps": [
+                "Check insertCycleCount()",
+                "Execute PrEntity for Element selection",
+                "Store Elements",
+                "Return"
+              ]
+            },
+            "path2": {
+              "name": "Calculation Path",
+              "steps": [
+                "Process stored Elements",
+                "Calculate geometry (Zones, Openings, Profiles)",
+                "Modify database (Create/Erase Sheets)",
+                "Erase Script Instance"
+              ]
+            }
+          },
+          {
+            "condition": "Zone Detection Strategy",
+            "path1": {
+              "name": "Auto-Detection",
+              "steps": [
+                "Scan all internal zones (-5 to 5)",
+                "Check if Zone Code equals 'HSB-PL09'",
+                "Add zone to processing list"
+              ]
+            },
+            "path2": {
+              "name": "Manual Override",
+              "steps": [
+                "Parse psZones property string",
+                "Map input 1-10 to internal zones 1-5, -1 to -5",
+                "Add to processing list"
+              ]
+            }
+          },
+          {
+            "condition": "Sheet Intersection with Openings",
+            "path1": {
+              "name": "Intersection Detected",
+              "steps": [
+                "Verify intersection via ppSh.intersectWith(ppOp)",
+                "Proceed to Area Calculation"
+              ]
+            },
+            "path2": {
+              "name": "No Intersection",
+              "steps": [
+                "Sheet is ignored (remains unchanged)",
+                "Next Sheet"
+              ]
+            }
+          },
+          {
+            "condition": "Remaining Area Threshold",
+            "path1": {
+              "name": "Area > 5mm",
+              "steps": [
+                "Subtract Opening Profile (ppOp) from Sheet Profile",
+                "Create new Sheet entities from resulting rings",
+                "Queue original Sheet for deletion"
+              ]
+            },
+            "path2": {
+              "name": "Area <= 5mm",
+              "steps": [
+                "Sheet is effectively destroyed (area too small)",
+                "No new entities created",
+                "Original Sheet is likely removed"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "None explicit (Silent failure)",
+            "recovery": "Script erases itself if _Element.length() == 0. User must re-run and select elements."
+          },
+          {
+            "check": "Insertion Recursion",
+            "errorMessage": "None explicit",
+            "recovery": "Script automatically checks insertCycleCount() > 1 and erases instance to prevent loops."
+          },
+          {
+            "check": "Zone Input Validity",
+            "errorMessage": "None (Silent skip)",
+            "recovery": "Invalid tokens in psZones (e.g., text, numbers > 10) are ignored silently. User must ensure input is '1-10' separated by ';'."
+          },
+          {
+            "check": "Opening Validity",
+            "errorMessage": "None",
+            "recovery": "Script skips openings where op.bIsValid() returns false."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Update Zones to Split",
+            "how": "OPM (Object Properties Palette) - 'Zones to split the Sheets' property",
+            "effect": "Changes which layers are processed upon next recalculation."
+          },
+          {
+            "action": "Automatic Recalculation",
+            "how": "System Event (_bOnElementConstructed) or internal flag (nErase)",
+            "effect": "If the element is modified or the script splits sheets (nErase=true), the script re-runs to update geometry, then erases itself."
+          }
+        ]
+      },
+      "tokens_used": 5509,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SplitBattensAtOpenings.mcr\n\n## Overview\nThis script automatically cuts holes in sheeting or battening layers (zones) of wall elements to accommodate openings like windows and doors. It respects clearance gaps and can automatically detect specific layers or process user-specified construction zones.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script interacts directly with 3D Elements and Sheets. |\n| Paper Space | No | Not designed for 2D drawing generation. |\n| Shop Drawing | No | Not a shop drawing script. |\n\n## Prerequisites\n- **Required entities**: Wall Elements that contain both Openings and Sheets (battens/sheeting).\n- **Minimum beam count**: 0 (Script works on Elements).\n- **Required settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_SplitBattensAtOpenings.mcr`\n\n### Step 2: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the wall elements you wish to process and press Enter.\n```\n*The script will process these elements and then erase itself automatically once the sheets are split.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Zones to split the Sheets | String | Empty | Specifies which construction zones to split. Enter numbers 1-10 separated by a semicolon (e.g., `1;5`). <br>**Note**: Inputs 1-5 map to positive zones (1 to 5), and 6-10 map to negative zones (-1 to -5). If left blank, the script automatically searches for zones with the distribution code `HSB-PL09`. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu options are defined for this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Automatic Detection**: If your battens are defined with the distribution code `HSB-PL09`, you do not need to enter anything in the \"Zones to split the Sheets\" field; the script will find them automatically.\n- **Negative Zones**: To split zones on the opposite side of the wall (e.g., Zone -1), enter `6` in the properties. (6=-1, 7=-2, 8=-3, 9=-4, 10=-5).\n- **Gaps**: The script uses the gap properties defined in the Opening (Side, Top, Bottom) to calculate the cut-out size.\n- **Re-running**: Since the script erases itself after execution, simply run `TSLINSERT` again if you need to re-process the walls after design changes.\n\n## FAQ\n- **Q: The script did not cut my battens.**\n  **A:** Check the \"Zones to split the Sheets\" property. Ensure the zone index (1-10) matches the layer where your battens are located. If the property is empty, verify the material/layer of your battens uses the code `HSB-PL09`.\n- **Q: What happens if a sheet is completely inside an opening?**\n  **A:** Any resulting sheet piece with an area of 5mm² or less is removed and not replaced.\n- **Q: Can I select multiple walls at once?**\n  **A:** Yes, you can window select or pick multiple wall elements during the insertion prompt."
+      },
+      "tokens_used": 5140,
+      "error": null
+    }
+  }
+}

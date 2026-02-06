@@ -1,0 +1,397 @@
+{
+  "filename": "hsbElektro Typ3.mcr",
+  "status": "completed",
+  "total_tokens": 54444,
+  "processing_time": 654.9550659656525,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9574,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses '_Element.append(getElement())' during insertion which indicates a ModelSpace interactive script. It processes Element and GenBeam objects ('el.addTool', 'bm.addTool'). It also utilizes 'dpPlan.draw()' calls to generate geometry in layouts, confirming support for PaperSpace output. The script is not prefixed with 'sd_' and does not iterate '_Entity[]', ruling out ShopDrawing or Multipage types."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Must be inserted onto an Element in the Model.",
+          "requiredSettings": [
+            "Catalog entries (referenced by setPropValuesFromCatalog)",
+            "Valid DimStyles in the drawing (referenced by _DimStyles property)"
+          ]
+        }
+      },
+      "tokens_used": 8302,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9566,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Inserts electrical installations (sockets, switches, etc.) into timber wall elements, creating the necessary milling for wire chases and boxes, while protecting the area with 'no-nail' zones.",
+          "category": "Hardware/Installation",
+          "typicalUseCase": "Detailing floor plans where electrical boxes need to be placed between studs, with vertical or horizontal wiring slots milled into the studs."
+        },
+        "parameters": [
+          {
+            "name": "dElevation",
+            "technicalDefault": "400",
+            "businessMeaning": "The installation height of the electrical box measured from the floor reference.",
+            "validRange": "0 - 3000",
+            "unit": "mm",
+            "affectsOutput": "Moves the insertion point and machining vertically in the model and plan views."
+          },
+          {
+            "name": "sAlignment",
+            "technicalDefault": "Horizontal",
+            "businessMeaning": "Arrangement direction when multiple boxes are defined (e.g., side-by-side or stacked vertically).",
+            "validRange": "Horizontal, Vertical",
+            "unit": "enum",
+            "affectsOutput": "Calculates the relative offset between multiple electrical blocks defined in s0-s4."
+          },
+          {
+            "name": "s0, s1, s2, s3, s4",
+            "technicalDefault": "",
+            "businessMeaning": "Definition of the specific electrical device for each position (e.g., 'Steckdose', 'Ausschalter', 'Antenne').",
+            "validRange": "[List of 40+ electrical types]",
+            "unit": "enum",
+            "affectsOutput": "Selects the 2D symbol geometry and the BOM article number for the export."
+          },
+          {
+            "name": "dDiam",
+            "technicalDefault": "68",
+            "businessMeaning": "The diameter or width of the cutout required for the electrical box in the timber.",
+            "validRange": "50 - 100",
+            "unit": "mm",
+            "affectsOutput": "Defines the width of the 'Drill', 'Slot', or 'Rectangular' tool added to beams."
+          },
+          {
+            "name": "dDepthInst",
+            "technicalDefault": "68",
+            "businessMeaning": "The depth of the electrical box penetration into the wall element.",
+            "validRange": "40 - 100",
+            "unit": "mm",
+            "affectsOutput": "Defines the depth of the tooling operation."
+          },
+          {
+            "name": "sMillAlignment",
+            "technicalDefault": "Bottom",
+            "businessMeaning": "Determines where the wire chase (groove for cables) is routed relative to the insertion point.",
+            "validRange": "Bottom, Both, Top, Kabelführung versetzen (Offset conduit), none",
+            "unit": "enum",
+            "affectsOutput": "Controls the start point and direction of the PLine used to generate milling and no-nail zones."
+          },
+          {
+            "name": "dMillWidth",
+            "technicalDefault": "60",
+            "businessMeaning": "Width of the wire chase slot.",
+            "validRange": "40 - 100",
+            "unit": "mm",
+            "affectsOutput": "Width of the slot tooling and width of the no-nail zone protection."
+          },
+          {
+            "name": "dMillDepth",
+            "technicalDefault": "30",
+            "businessMeaning": "Depth of the wire chase slot.",
+            "validRange": "10 - 50",
+            "unit": "mm",
+            "affectsOutput": "Depth of the slot tooling."
+          },
+          {
+            "name": "sShape",
+            "technicalDefault": "Drill",
+            "businessMeaning": "The geometric shape of the machining for the box cutout.",
+            "validRange": "Drill, Slotted Hole, Rectangular",
+            "unit": "enum",
+            "affectsOutput": "Switches between adding a Drill, Slot, or Rectangular contour to the beams."
+          },
+          {
+            "name": "sWPTool",
+            "technicalDefault": "Milling",
+            "businessMeaning": "The specific CNC operation type to be used for manufacturing.",
+            "validRange": "Milling, Drill, None",
+            "unit": "enum",
+            "affectsOutput": "Sets the CNC attribute for the generated tooling."
+          },
+          {
+            "name": "nToolIndex",
+            "technicalDefault": "1",
+            "businessMeaning": "The CNC tool number to be used for the machining operation.",
+            "validRange": "1 - 999",
+            "unit": "count",
+            "affectsOutput": "Updates the tooling index in the CAM export."
+          },
+          {
+            "name": "sElementTooling",
+            "technicalDefault": "Yes",
+            "businessMeaning": "Flag to enable or disable the application of 'No Nail' zones (element tooling).",
+            "validRange": "Yes, No",
+            "unit": "enum",
+            "affectsOutput": "If 'No', ElemNoNail tools are skipped, meaning the area is not protected from nailing/screwing."
+          },
+          {
+            "name": "nZoneTooling",
+            "technicalDefault": "0",
+            "businessMeaning": "Specifies the element zone (layer) where the tooling/no-nail zones are applied. 0 is the outer zone.",
+            "validRange": "0 - 5",
+            "unit": "count",
+            "affectsOutput": "Determines which surface of the element receives the protection zones."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing 'sAlignment' to Vertical",
+            "effect": "The script calculates the offset for multiple electrical boxes (s0-s4) along the vertical axis (Z) instead of horizontal (X).",
+            "cascade": [
+              "s0",
+              "s1",
+              "s2",
+              "s3",
+              "s4"
+            ]
+          },
+          {
+            "trigger": "Changing 'sMillAlignment' to 'Kabelführung versetzen'",
+            "effect": "Calculates a specific offset for the wirechase based on geometry points, shifting the no-nail zone laterally.",
+            "cascade": [
+              "dMillWidth",
+              "nZoneTooling"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Drill/Slot/Rectangular",
+            "description": "Cutouts for the electrical boxes and wire chases in the timber studs.",
+            "appliedTo": "GenBeam (studs intersected by the insertion ray or envelope)."
+          },
+          {
+            "type": "ElemNoNail",
+            "description": "Protective zones on the element surface to prevent fasteners from hitting cables/boxes.",
+            "appliedTo": "Element (wall surface)."
+          },
+          {
+            "type": "HardWrComp",
+            "description": "BOM entries for the selected electrical devices (sockets, switches).",
+            "appliedTo": "Script Instance (export list)."
+          }
+        ]
+      },
+      "tokens_used": 9486,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch / Insert",
+          "[Check] Is this an insertion cycle (first time)?",
+          "[Branch No] Erase duplicate instance and Exit",
+          "[Branch Yes] Check for execute key (preset catalog values)",
+          "[Check] Does execute key exist?",
+          "[Branch Yes] Load properties from Catalog using setPropValuesFromCatalog",
+          "[Branch No] Show Selection Dialog (TslUtilities)",
+          "Prompt User: Select Element (wall)",
+          "[Check] Is Element valid?",
+          "[Branch No] Erase Instance and Exit",
+          "[Branch Yes] Prompt User: Select Insertion Point",
+          "[Check] Is Point valid?",
+          "[Branch No] (Implicit exit/error)",
+          "[Branch Yes] Save Point and calculate Element Coordinate System",
+          "Locate Insertion Point on Element Outline (project to wall)",
+          "Calculate Orientation based on Element Side (Front/Back)",
+          "Retrieve Beams within Installation Envelope (intersecting wall)",
+          "[Check] Are there Beams to process?",
+          "[Branch No] Skip tooling, proceed to 2D generation",
+          "[Branch Yes] Generate Tooling Geometry (Drill/Slot/Rect) for Box",
+          "[Check] Wirechase Alignment? (Bottom, Top, Both, Offset, None)",
+          "Generate Wirechase PLine based on Alignment",
+          "Add Tools to Beams (bm.addTool) if CNC not 'None'",
+          "Generate Shadow Profile for 'No-Nail' Zones",
+          "[Check] Is Element Tooling active? (sElementTooling != 'No')",
+          "[Branch No] Skip No-Nail zone creation",
+          "[Branch Yes] Add ElemNoNail tools to Element zones",
+          "Generate 2D Geometry (Model View: PLine, Text, Blocks)",
+          "Generate 2D Geometry (Plan View: Symbols, Text, Dimensions)",
+          "Create Hardware Components (BOM entries) for s0-s4",
+          "Set Compare Key and Finalize Script"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Context (Insert vs Update)",
+            "path1": {
+              "name": "Insert Cycle",
+              "steps": [
+                "Check insertCycleCount()",
+                "Load Catalog/Show Dialog",
+                "Prompt for Element and Point",
+                "Set initial properties"
+              ]
+            },
+            "path2": {
+              "name": "Update/Recalc Cycle",
+              "steps": [
+                "Skip Dialog/Point prompts",
+                "Recalculate geometry based on current properties",
+                "Update tooling and graphics"
+              ]
+            }
+          },
+          {
+            "condition": "Wirechase Alignment (sMillAlignment)",
+            "path1": {
+              "name": "Bottom / Top / Both",
+              "steps": [
+                "Calculate start point at Installation Point",
+                "Calculate end points at Envelope intersection",
+                "Create rectangular No-Nail zone along the path"
+              ]
+            },
+            "path2": {
+              "name": "Offset (Kabelführung versetzen)",
+              "steps": [
+                "Offset the wirechase PLine by vector dot product",
+                "Create specific closed rectangular No-Nail zone around the offset line",
+                "Exclude from standard 'Bottom/Top' logic"
+              ]
+            },
+            "path3": {
+              "name": "None",
+              "steps": [
+                "Skip adding tools to beams for the wirechase",
+                "Skip No-Nail zone generation for wirechase"
+              ]
+            }
+          },
+          {
+            "condition": "Box Shape (sShape)",
+            "path1": {
+              "name": "Drill",
+              "steps": [
+                "Create cylindrical Drill tool",
+                "Use nToolIndex"
+              ]
+            },
+            "path2": {
+              "name": "Slotted Hole / Rectangular",
+              "steps": [
+                "Create Slot or Rectangular contour tool",
+                "Use dDiam and dDepthInst"
+              ]
+            }
+          },
+          {
+            "condition": "Installation Alignment (sAlignment)",
+            "path1": {
+              "name": "Horizontal",
+              "steps": [
+                "Layout 2D blocks side-by-side (X-axis relative)",
+                "Calculate offsets using ((nNumInst-1)/2 - i)"
+              ]
+            },
+            "path2": {
+              "name": "Vertical",
+              "steps": [
+                "Layout 2D blocks stacked (Z-axis relative)",
+                "Calculate offsets using i * offset"
+              ]
+            }
+          },
+          {
+            "condition": "Element Tooling (sElementTooling)",
+            "path1": {
+              "name": "Yes",
+              "steps": [
+                "Execute el.addTool(ElemNoNail...)",
+                "Apply protection zones to surface"
+              ]
+            },
+            "path2": {
+              "name": "No",
+              "steps": [
+                "Skip el.addTool calls",
+                "No protection zones generated"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Assignment",
+            "errorMessage": "(Implicit) Script erases instance if _Element.length < 1",
+            "recovery": "User must re-insert script and select a valid Element."
+          },
+          {
+            "check": "Insertion Point",
+            "errorMessage": "If getPoint returns null or invalid (standard hsbCAD behavior)",
+            "recovery": "Retry insertion and provide a valid point on the Element."
+          },
+          {
+            "check": "Property Values (Catalog)",
+            "errorMessage": "If Catalog key does not exist in current database",
+            "recovery": "Ensure correct catalog is loaded or use dialog to select manually."
+          },
+          {
+            "check": "Geometry Intersection",
+            "errorMessage": "If no beams are found in the envelope",
+            "recovery": "Script runs but produces no 3D machining; 2D symbol remains visible."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Elevation",
+            "how": "OPM (Properties Palette) -> dElevation",
+            "effect": "Updates vertical position of the box, 3D tooling, and 2D plan view height dimension."
+          },
+          {
+            "action": "Change Electrical Types",
+            "how": "OPM -> s0, s1, s2, s3, s4",
+            "effect": "Updates the 2D block symbol and the BOM entry (HardWrComp)."
+          },
+          {
+            "action": "Modify Wirechase Settings",
+            "how": "OPM -> sMillAlignment, dMillWidth, dMillDepth",
+            "effect": "Recalculates the path and geometry of the wirechase groove and updates the No-Nail protection zones."
+          },
+          {
+            "action": "Toggle Element Tooling",
+            "how": "OPM -> sElementTooling",
+            "effect": "Adds or removes the 'ElemNoNail' protection zones from the wall surface."
+          },
+          {
+            "action": "Adjust Tooling Zone",
+            "how": "OPM -> nZoneTooling",
+            "effect": "Moves the Element Tooling (No-Nail zones) to a different material layer/zone (0-5) of the wall."
+          }
+        ]
+      },
+      "tokens_used": 10453,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbElektro Typ3.mcr Documentation\n\n## Overview\nThis script is used to insert electrical installations (such as sockets, switches, and antennas) into timber wall elements. It automatically creates the necessary 3D machining (drills or slots) for the boxes and wire chases within the studs, while applying protective \"no-nail\" zones to the wall surface to prevent fasteners from damaging the cables.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Primary usage for inserting boxes and defining wire chases. |\n| Paper Space | Yes | Generates 2D symbols and dimensions in layout views. |\n| Shop Drawing | No | This is a detailing/modeling script, not a shop drawing generator. |\n\n## Prerequisites\n- **Required Entities**: An existing timber wall Element must be present in the model.\n- **Minimum Beam Count**: The wall should contain structural studs (GenBeams) to receive the machining. If no studs are found at the insertion point, the 2D symbol will still be generated, but no 3D machining will occur.\n- **Required Settings**: A valid TSL Catalog (XML) is recommended to quickly load standard electrical configurations, though manual selection is also possible.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or run from your hsbCAD toolbar/menu).\nSelect `hsbElektro Typ3.mcr` from the file list.\n\n### Step 2: Select Wall Element\n```\nCommand Line: Select Element:\nAction: Click on the desired wall element in Model Space where you want to place the electrical installation.\n```\n*Note: If no element is selected, the script will abort and erase the instance.*\n\n### Step 3: Define Insertion Point\n```\nCommand Line: Select insertion point:\nAction: Click on the wall face or elevation view to set the location of the electrical box.\n```\n*Tip: The script projects this point onto the wall outline to determine the exact placement.*\n\n### Step 4: Configuration (Optional)\n- If a specific catalog key was not pre-selected, a dialog box may appear asking you to select the specific electrical types (e.g., \"Steckdose\", \"Ausschalter\").\n- Make your selections and confirm to generate the geometry.\n- Alternatively, you can accept the defaults and modify properties later via the Properties Palette.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **dElevation** | Number | 400 | Installation height of the box measured from the floor reference (in mm). |\n| **sAlignment** | Dropdown | Horizontal | Defines how multiple boxes (s0-s4) are arranged relative to each other. Choose between \"Horizontal\" (side-by-side) or \"Vertical\" (stacked). |\n| **s0** - **s4** | Dropdown | [Empty] | Defines the electrical type for up to 5 positions. Options include sockets, switches, antennas, etc. Changing this updates the 2D symbol and the BOM article. |\n| **dDiam** | Number | 68 | Diameter or width of the cutout required for the electrical box (in mm). |\n| **dDepthInst** | Number | 68 | Depth of the electrical box penetration into the timber (in mm). |\n| **sMillAlignment** | Dropdown | Bottom | Determines the routing direction of the wire chase (groove). Options: Bottom, Top, Both, Kabelführung versetzen (Offset conduit), or None. |\n| **dMillWidth** | Number | 60 | Width of the wire chase slot (in mm). |\n| **dMillDepth** | Number | 30 | Depth of the wire chase slot (in mm). |\n| **sShape** | Dropdown | Drill | The shape of the machining for the box cutout. Options: Drill (cylindrical), Slotted Hole, or Rectangular. |\n| **sWPTool** | Dropdown | Milling | The CNC operation type. Options: Milling, Drill, or None. |\n| **nToolIndex** | Number | 1 | The CNC tool number assigned to this machining operation. |\n| **sElementTooling** | Dropdown | Yes | Toggles the application of protective \"No-Nail\" zones on the element surface. Set to \"No\" to disable protection. |\n| **nZoneTooling** | Number | 0 | Specifies the material layer (zone) where the \"No-Nail\" zones are applied (0 = outer surface). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Recalculate** | Forces the script to re-run and update all geometry and machining based on the current property values. |\n\n## Settings Files\n- **Filename**: `TSL Catalog` (varies by company configuration)\n- **Location**: Defined in your hsbCAD configuration (Company or Install path).\n- **Purpose**: Stores predefined lists of electrical types and default dimensions to speed up the insertion process.\n\n## Tips\n- **Adjusting Height**: Use the `dElevation` property in the Properties Palette to quickly move the socket up or down without re-inserting the script.\n- **Multiple Boxes**: Use properties `s0` through `s4` to add multiple boxes in a single cluster. Ensure `sAlignment` is set correctly (Horizontal vs Vertical) to arrange them as desired.\n- **No-Nail Zones**: If the wire chase is not appearing on the element surface, check that `sElementTooling` is set to \"Yes\" and that `sMillAlignment` is not set to \"None\".\n- **Plan Views**: The script automatically generates the correct 2D symbols in your layout views; ensure your DimStyles are set up correctly for dimensions to display properly.\n\n## FAQ\n- **Q: Why is there no hole in my stud?**\n  - A: Ensure the insertion point actually intersects with a structural stud (GenBeam). If the script only touches the cladding or empty space, 3D machining will not be generated.\n- **Q: How do I change the symbol displayed in the plan view?**\n  - A: Change the `s0` (or s1-s2) property to select a different electrical device type (e.g., change from \"Steckdose\" to \"Antenne\").\n- **Q: The wire chase is going the wrong way.**\n  - A: Modify the `sMillAlignment` property. Switching between \"Bottom\", \"Top\", or \"Both\" changes where the groove starts and ends relative to the insertion point."
+      },
+      "tokens_used": 7063,
+      "error": null
+    }
+  }
+}

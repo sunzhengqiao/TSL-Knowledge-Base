@@ -1,0 +1,343 @@
+{
+  "filename": "hsb_SplitBlockingBeams.mcr",
+  "status": "completed",
+  "total_tokens": 33506,
+  "processing_time": 204.22290301322937,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "10.09.2009",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.1",
+            "date": "16.09.2009",
+            "author": "",
+            "changes": "Bugfix"
+          },
+          {
+            "version": "1.2",
+            "date": "18.05.2010",
+            "author": "",
+            "changes": "Fix with Sequence and erase Instance"
+          },
+          {
+            "version": "1.3",
+            "date": "10.06.2010",
+            "author": "",
+            "changes": "Remove a report notice"
+          },
+          {
+            "version": "1.4",
+            "date": "13.08.2010",
+            "author": "",
+            "changes": "Copy the beam code of the parent beam to all the Dwangs Created"
+          },
+          {
+            "version": "1.5",
+            "date": "13.08.2010",
+            "author": "",
+            "changes": "Change the way the valid areas are calculated so it's more robust."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5625,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select 'Element' objects, iterates through the _Element array, performs 3D boolean operations (realBody, shadowProfile), and creates new beams using dbCreate(). No sd_ prefix, _Viewport usage, or Sheet entities found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4580,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Please select Elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sBeamCodesToSplit",
+            "type": "PropString",
+            "displayName": "Beam code to split",
+            "defaultValue": "D",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sBeamName",
+            "type": "PropString",
+            "displayName": "Name of blockings",
+            "defaultValue": "BLOCKING",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6185,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically splits continuous dummy blocking beams into individual pieces that fit around openings and intersecting structural members.",
+          "category": "Framing/Automation",
+          "typicalUseCase": "Used when a designer draws long blocking beams (e.g., dwangs) across a whole wall element including window openings, and needs them converted into separate blocking segments above, below, and between the openings without manual trimming."
+        },
+        "parameters": [
+          {
+            "name": "sBeamCodesToSplit",
+            "technicalDefault": "D",
+            "businessMeaning": "Identifies which specific beams in the element are considered 'rough' blocking that need to be cut up. The script scans the element for beams matching this code.",
+            "validRange": "Any string matching a Beam Code defined in the hsbCAD catalog (e.g., 'D', 'BLOCK', 'NOG').",
+            "unit": "String",
+            "affectsOutput": "Determines which beams are removed and replaced by the generated split pieces. If no beams match this code, the script does nothing."
+          },
+          {
+            "name": "sBeamName",
+            "technicalDefault": "BLOCKING",
+            "businessMeaning": "Assigns a specific Name property to the newly created blocking segments.",
+            "validRange": "Any text string.",
+            "unit": "String",
+            "affectsOutput": "Labels the resulting beams in the model and production reports (e.g., lists, drawings)."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "GenBeam",
+            "description": "New individual blocking beams created in the valid spaces defined by the openings and surrounding structure. Original 'rough' beams are erased.",
+            "appliedTo": "The selected Element (Wall, Floor, or Roof)."
+          }
+        ]
+      },
+      "tokens_used": 5435,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Start: Set sequence number and units (mm).",
+          "2. Database Creation: Load property values from catalog (if applicable).",
+          "3. Insertion Phase: Check for duplicate insert cycles; exit if duplicate.",
+          "4. User Interaction: Display Properties dialog (if not executed by key).",
+          "5. Selection: Prompt user to select Elements (PrEntity).",
+          "6. Pre-processing: Parse 'Beam code to split' string into a list of codes.",
+          "7. Element Loop: Iterate through selected Elements.",
+          "8. Coordinate Setup: Extract Element coordinate system (vx, vy, vz).",
+          "9. Beam Categorization: Filter Element beams into 'To Split' (matches code) and 'No Blocking' (others, excluding code 'B').",
+          "10. Geometry Generation: Create a union profile of all 'No Blocking' beams ('ppShapeBeams').",
+          "11. Openings Processing: Create a profile of all Element openings ('ppShapeOpenings').",
+          "12. Split Loop: Iterate through each beam designated for splitting.",
+          "13. Void Calculation: Calculate the intersection of the split beam with other beams to identify 'void' areas.",
+          "14. Profile Subtraction: Subtract voids from the split beam's shadow profile.",
+          "15. Segment Analysis: Analyze resulting rings to find valid center points and lengths.",
+          "16. Validation Check: Discard segments shorter than 50mm (dMinLength).",
+          "17. Creation: Create new GenBeams at valid center points.",
+          "18. Collision Filter: Intersect new beams with 'ppShapeBeams'; erase new beam if overlap is > 10mm².",
+          "19. Final Cleanup: Erase original beams that were marked for splitting.",
+          "20. Script Termination: Erase script instance."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count",
+            "path1": {
+              "name": "Cycle > 1",
+              "steps": [
+                "Erase Instance",
+                "Exit Script"
+              ]
+            },
+            "path2": {
+              "name": "Cycle = 1",
+              "steps": [
+                "Continue to User Input"
+              ]
+            }
+          },
+          {
+            "condition": "Elements Selected",
+            "path1": {
+              "name": "No Elements",
+              "steps": [
+                "Erase Instance",
+                "Exit Script"
+              ]
+            },
+            "path2": {
+              "name": "Elements Selected",
+              "steps": [
+                "Process Elements"
+              ]
+            }
+          },
+          {
+            "condition": "Vertical Beam Check",
+            "path1": {
+              "name": "No Vertical Beams found",
+              "steps": [
+                "Skip Element (Return)"
+              ]
+            },
+            "path2": {
+              "name": "Vertical Beams found",
+              "steps": [
+                "Continue Processing"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Code Match",
+            "path1": {
+              "name": "Matches Split Code",
+              "steps": [
+                "Mark as 'To Split'",
+                "Set Type to Blocking"
+              ]
+            },
+            "path2": {
+              "name": "Does not match AND code != 'B'",
+              "steps": [
+                "Mark as 'No Blocking' (Obstacle)"
+              ]
+            }
+          },
+          {
+            "condition": "Segment Length",
+            "path1": {
+              "name": "Length <= 50mm",
+              "steps": [
+                "Discard Segment"
+              ]
+            },
+            "path2": {
+              "name": "Length > 50mm",
+              "steps": [
+                "Create Beam at Segment"
+              ]
+            }
+          },
+          {
+            "condition": "Position in Opening",
+            "path1": {
+              "name": "Center Point in Opening",
+              "steps": [
+                "Discard Segment (Continue)"
+              ]
+            },
+            "path2": {
+              "name": "Center Point valid",
+              "steps": [
+                "Proceed to Beam Creation"
+              ]
+            }
+          },
+          {
+            "condition": "Structural Overlap",
+            "path1": {
+              "name": "Intersection Area > 10mm²",
+              "steps": [
+                "Erase New Beam"
+              ]
+            },
+            "path2": {
+              "name": "Intersection Area <= 10mm²",
+              "steps": [
+                "Keep New Beam"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Minimum Segment Length",
+            "errorMessage": "None (Silent)",
+            "recovery": "Segments are simply not created if they are 50mm or shorter."
+          },
+          {
+            "check": "Location within Openings",
+            "errorMessage": "None (Silent)",
+            "recovery": "Any potential blocking beam whose center point lies inside an opening is automatically skipped."
+          },
+          {
+            "check": "Beam Code 'B' Exclusion",
+            "errorMessage": "None (Hardcoded Logic)",
+            "recovery": "Beams with code 'B' are explicitly treated as obstacles to prevent accidental deletion of battens in specific regions."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "The script calls `eraseInstance()` at the end of execution. The resulting blocking beams become standard GenBeams in the model and are no longer controlled by this script instance."
+          }
+        ]
+      },
+      "tokens_used": 6877,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SplitBlockingBeams.mcr\n\n## Overview\nThis script splits continuous \"dummy\" blocking beams (e.g., dwangs) within an element into individual segments. It automatically calculates the valid spaces around openings and intersecting beams to create the necessary blocking pieces.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in 3D Model Space. |\n| Paper Space | No | Not supported for detailing views. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required Entities**: An existing Element (Wall, Floor, or Roof) containing beams.\n- **Setup**: The element must contain beams with the specific \"Beam code to split\" (default is \"D\") that represent the rough blocking layout.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_SplitBlockingBeams.mcr`\n\n### Step 2: Configure Properties (Optional)\n```\nAction: Before selecting elements, open the Properties Palette (Ctrl+1).\nAdjust the \"Beam code to split\" or \"Name of blockings\" if your project uses different standards than the default.\n```\n\n### Step 3: Select Elements\n```\nCommand Line: Please select Elements\nAction: Click on the Wall, Floor, or Roof elements that contain the blocking beams you want to split.\nAction: Press Enter to confirm selection.\n```\n\n### Step 4: Processing\n```\nAction: The script will automatically:\n1. Identify the beams matching the split code.\n2. Calculate cutouts for openings and other structural beams.\n3. Create new individual blocking beams.\n4. Erase the original rough beams.\n5. Remove itself from the drawing.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Beam code to split | Text | D | The code of the existing beams in the element that should be replaced by split segments (e.g., 'D', 'BLOCK'). |\n| Name of blockings | Text | BLOCKING | The name assigned to the newly created individual blocking beams for reporting and listing. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom right-click menu options are available for this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script relies on internal logic and Property Palette inputs; no external settings file is required.\n\n## Tips\n- **Minimum Length**: The script ignores blocking segments shorter than 50mm to prevent creating very small, unusable pieces.\n- **Beam Code 'B'**: Beams with code 'B' are treated as obstacles (holes) rather than blocking, ensuring they are not accidentally cut or deleted.\n- **One-Time Run**: The script instance automatically erases itself after running. Use the AutoCAD `UNDO` command if you need to revert the changes.\n- **Openings**: The script automatically detects openings in the element and ensures no blocking is generated inside the void of the opening.\n\n## FAQ\n- **Q: The script ran, but no new beams appeared.**\n  A: Ensure the element you selected actually contains beams with the specific \"Beam code to split\" (default is 'D'). If the beams have a different code, update the property in the palette before running.\n- **Q: Why are some small gaps not filled with blocking?**\n  A: Any calculated segment shorter than 50mm is automatically discarded.\n- **Q: Can I use this on curved walls?**\n  A: Yes, the script uses the element's coordinate system and profile analysis, making it suitable for complex geometries."
+      },
+      "tokens_used": 4804,
+      "error": null
+    }
+  }
+}

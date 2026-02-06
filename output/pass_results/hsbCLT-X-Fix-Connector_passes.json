@@ -1,0 +1,280 @@
+{
+  "filename": "hsbCLT-X-Fix-Connector.mcr",
+  "status": "completed",
+  "total_tokens": 52887,
+  "processing_time": 307.6728937625885,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "raw_content": "```json"
+      },
+      "tokens_used": 9673,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script modifies 3D geometry using Sip entities and adds tools (BeamCut, SolidSubtract, Dove) to them. It utilizes 3D input methods (getPoint, PrEntity for Sip) and does not contain logic for generating 2D fabrication drawings, dimensions, or hatches. It uses Display objects for visualization in 3D views (showInDxa), but the core logic is Model Space based."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sip"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing CLT/Sip panels.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7826,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10401,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates X-Fix shear connectors (C70/C90) between two collinear CLT/Sip panels, including the necessary X-shaped routing, chamfers, and hardware assignment.",
+          "category": "Hardware / Connection",
+          "typicalUseCase": "Connecting two CLT wall panels edge-to-edge or floor-to-floor to provide shear resistance, typically in pre-fabricated timber construction."
+        },
+        "parameters": [
+          {
+            "name": "sType",
+            "technicalDefault": "\"X-fix C70\"",
+            "businessMeaning": "Selects the specific manufacturer model of the X-Fix connector.",
+            "validRange": "X-fix C70, X-fix C90",
+            "unit": "Enum",
+            "affectsOutput": "Determines the penetration depth of the routing (70mm or 90mm) and the hardware data exported to production."
+          },
+          {
+            "name": "dOffset1",
+            "technicalDefault": "200",
+            "businessMeaning": "The margin from the start of the joint edge to the center of the first connector.",
+            "validRange": "0 - 1000",
+            "unit": "mm",
+            "affectsOutput": "Shifts the position of the first connector in the distribution pattern away from the start point."
+          },
+          {
+            "name": "dOffset2",
+            "technicalDefault": "200",
+            "businessMeaning": "The margin from the end of the joint edge to the center of the last connector.",
+            "validRange": "0 - 1000",
+            "unit": "mm",
+            "affectsOutput": "Shifts the position of the last connector in the distribution pattern away from the end point."
+          },
+          {
+            "name": "dInterdist",
+            "technicalDefault": "1000",
+            "businessMeaning": "The center-to-center spacing between consecutive connectors along the joint.",
+            "validRange": "110 - 3000",
+            "unit": "mm",
+            "affectsOutput": "Controls the quantity of connectors generated. Must be > 110mm to fit the tool geometry."
+          },
+          {
+            "name": "sAlignment",
+            "technicalDefault": "\"Reference Side\"",
+            "businessMeaning": "Determines which face of the assembly the connector calculation is referenced from.",
+            "validRange": "Reference Side, Opposite Side",
+            "unit": "Enum",
+            "affectsOutput": "Flips the normal vector used for placing the routing and can switch which specific panel in a pair receives the 'male' vs 'female' cuts relative to the grid origin."
+          },
+          {
+            "name": "dChamferRef",
+            "technicalDefault": "0",
+            "businessMeaning": "The size of the top/bottom edge bevel (chamfer) on the Reference side of the joint.",
+            "validRange": "0 - 50",
+            "unit": "mm",
+            "affectsOutput": "Adds a 45-degree beam cut to the panel edge on the reference side."
+          },
+          {
+            "name": "dChamferOpp",
+            "technicalDefault": "0",
+            "businessMeaning": "The size of the top/bottom edge bevel (chamfer) on the Opposite side of the joint.",
+            "validRange": "0 - 50",
+            "unit": "mm",
+            "affectsOutput": "Adds a 45-degree beam cut to the panel edge on the opposite side."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sType changes",
+            "effect": "Updates the internal depth variable (dDepth) to match the connector length.",
+            "cascade": [
+              "dDepth"
+            ]
+          },
+          {
+            "trigger": "_Pt0 (Grip Point) is dragged",
+            "effect": "Recalculates the origin of the connector distribution grid along the wall edge.",
+            "cascade": [
+              "Connector Position"
+            ]
+          },
+          {
+            "trigger": "Double Click",
+            "effect": "Toggles the sAlignment between Reference and Opposite sides.",
+            "cascade": [
+              "sAlignment"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Dove (Dovetail)",
+            "description": "Creates dovetail pockets to hold the wings of the X-Fix connector.",
+            "appliedTo": "Selected CLT/Sip Panels"
+          },
+          {
+            "type": "SolidSubtract",
+            "description": "Subtracts the main X-shaped body of the connector to allow it to sit flush within the panel.",
+            "appliedTo": "Selected CLT/Sip Panels"
+          },
+          {
+            "type": "BeamCut",
+            "description": "Creates 45-degree chamfers on the top or bottom edges if specified in properties.",
+            "appliedTo": "Selected CLT/Sip Panels"
+          },
+          {
+            "type": "Hardware Component (Greenethic)",
+            "description": "Assigns the X-Fix part data (C70 or C90) for BOM and CNC export.",
+            "appliedTo": "Script Instance"
+          }
+        ]
+      },
+      "tokens_used": 9198,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched via catalog or command line.",
+          "Check for Catalog Key (_kExecuteKey) to load presets; if none, load 'LastInserted'.",
+          "Show Properties Dialog to user.",
+          "Prompt user to select Sip panels (PrEntity).",
+          "Evaluate Selection Count to determine workflow mode.",
+          "[Branch] If 0 panels selected: Prompt for Element (Wall) and point to define Split location (Mode 3).",
+          "[Branch] If 1 panel selected: Prompt user to define split axis (Point 1 & Point 2); execute dbSplit to create second panel (Mode 1 -> 2).",
+          "[Branch] If 2+ panels selected: Proceed to Connection Mode (Mode 2).",
+          "Calculate connector depth based on sType (C70=70mm, C90=90mm).",
+          "Validate parameters (Offsets >= 0, Interdist >= 110mm).",
+          "Calculate edge geometry and determine quantity of connectors based on length and interdistance.",
+          "Loop through connector positions to generate tools (Dove, SolidSubtract, BeamCut).",
+          "Apply Chamfers if dChamferRef or dChamferOpp > 0.",
+          "Generate Display objects and assign Hardware Components (Greenethic)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Number of selected Sip entities on insert",
+            "path1": {
+              "name": "Wall Mode (0 Panels)",
+              "steps": [
+                "Prompt for Element (Wall).",
+                "Prompt for Point on Wall.",
+                "Set internal mode to 3.",
+                "(Note: Script acts as a generator/manager for the wall in this state)."
+              ]
+            },
+            "path2": {
+              "name": "Split Mode (1 Panel)",
+              "steps": [
+                "Prompt for Split Axis (2 Points).",
+                "Calculate Split Plane.",
+                "Execute dbSplit on the single panel.",
+                "If split fails, erase instance and report error.",
+                "Append new panel to selection set.",
+                "Proceed to Connection Mode."
+              ]
+            },
+            "path3": {
+              "name": "Connection Mode (2 Panels)",
+              "steps": [
+                "Set internal mode to 2.",
+                "Process joint between the two panels."
+              ]
+            }
+          },
+          {
+            "condition": "Available Edge Length vs. Required Offsets",
+            "path1": {
+              "name": "Forced Single Connector",
+              "steps": [
+                "Check if EdgeLength <= (Offset1 + Offset2 + 110mm).",
+                "Set nQty = 1.",
+                "Place single connector at the midpoint of the edge."
+              ]
+            },
+            "path2": {
+              "name": "Distributed Connectors",
+              "steps": [
+                "Calculate available length (EdgeLength - Offsets).",
+                "Divide by Interdistance to determine quantity.",
+                "Distribute connectors evenly starting from Offset1."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Offset 1 (dOffset1) < 0",
+            "errorMessage": "Offset < 0 not possible --> value corrected to 0mm",
+            "recovery": "Script automatically resets value to 0 and continues."
+          },
+          {
+            "check": "Offset 2 (dOffset2) < 0",
+            "errorMessage": "Offset < 0 not possible --> value corrected to 0mm",
+            "recovery": "Script automatically resets value to 0 and continues."
+          },
+          {
+            "check": "Interdistance (dInterdist) < 110mm",
+            "errorMessage": "Interdistance < 110mm not possible --> value corrected to Default (1000mm)",
+            "recovery": "Script automatically resets value to 1000mm and continues."
+          },
+          {
+            "check": "Split Operation Failure (Single Panel Mode)",
+            "errorMessage": "Splitting was not successful. Tool will be deleted.",
+            "recovery": "Script erases itself using eraseInstance() and halts execution."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Toggle Alignment",
+            "how": "Double Click",
+            "effect": "Cycles sAlignment property between 'Reference Side' and 'Opposite Side', triggering a geometry recalculation."
+          },
+          {
+            "action": "Move Reference Point",
+            "how": "Grip Edit (_Pt0)",
+            "effect": "Drags the origin of the connector distribution along the wall edge. In Wall mode, dragging relative to panel width can also trigger an alignment switch (Ref/Opp/None)."
+          },
+          {
+            "action": "Modify Dimensions",
+            "how": "Properties Palette (OPM)",
+            "effect": "Updating Type, Offsets, Interdistance, or Chamfers immediately regenerates the cuts and hardware."
+          }
+        ]
+      },
+      "tokens_used": 9927,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-X-Fix-Connector.mcr\n\n## Overview\nThis script generates X-Fix shear connectors (types C70 or C90) between two collinear CLT/Sip panels. It automatically creates the necessary X-shaped routing, chamfers, and assigns hardware data for production.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script is designed for 3D model manipulation of CLT walls. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Entities**: `Sip` (CLT Panels).\n- **Minimum Beam Count**: 1 (if splitting) or 2 (if connecting existing).\n- **Required Settings**: None required.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command:** `TSLINSERT` → Select `hsbCLT-X-Fix-Connector.mcr` from the catalog.\n\n### Step 2: Select Panels\nThe script behaves differently depending on how many panels you select before or during the command:\n\n**Scenario A: Connect two existing panels (Standard Mode)**\n1. Select **2** Sip panels that are aligned edge-to-edge.\n2. Launch the script.\n3. The connectors will be automatically generated along the joint.\n\n**Scenario B: Split and Connect (Split Mode)**\n1. Select **1** Sip panel.\n2. Launch the script.\n3. **Command Line:** `Specify start point of split axis:`\n   - Action: Click a point on the panel to define where the split begins.\n4. **Command Line:** `Specify end point of split axis:`\n   - Action: Click a second point to define the split line.\n   - Result: The panel is split into two, and connectors are applied to the new joint.\n\n**Scenario C: Wall Mode**\n1. Launch the script without selecting any elements.\n2. **Command Line:** `Select Element (Wall):`\n   - Action: Click a wall element.\n3. **Command Line:** `Specify point on element:`\n   - Action: Click a point to define the split location.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sType | Dropdown | X-fix C70 | Selects the connector model (C70 or C90). This determines the routing depth (70mm or 90mm). |\n| dOffset1 | Number | 200 | Margin (mm) from the start of the joint edge to the center of the first connector. |\n| dOffset2 | Number | 200 | Margin (mm) from the end of the joint edge to the center of the last connector. |\n| dInterdist | Number | 1000 | Center-to-center spacing (mm) between connectors. Minimum is 110mm. |\n| sAlignment | Dropdown | Reference Side | Determines which face of the panel the connector references. Switching this may flip the routing between the two panels. |\n| dChamferRef | Number | 0 | Size (mm) of the 45-degree chamfer on the top/bottom edge of the Reference side panel. |\n| dChamferOpp | Number | 0 | Size (mm) of the 45-degree chamfer on the top/bottom edge of the Opposite side panel. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Refreshes the connector geometry based on current property values. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script uses internal presets (LastInserted) and does not require an external XML settings file.\n\n## Tips\n- **Grip Edit**: Drag the grip point (_Pt0) along the wall edge to shift the starting position of the connector distribution.\n- **Toggle Alignment**: Double-click the script instance to quickly toggle the alignment between \"Reference Side\" and \"Opposite Side\".\n- **Short Joints**: If the joint length is too short for the defined offsets and spacing, the script will automatically force a single connector at the midpoint.\n\n## FAQ\n- **Q: The script failed when I tried to split a panel. Why?**\n  - A: The split line might result in a geometry that cannot be processed, or it was outside the panel bounds. The script will delete itself if the split operation fails.\n- **Q: Why did my spacing change to 1000mm automatically?**\n  - A: The `dInterdist` value must be greater than 110mm to fit the tool geometry. If you entered a lower value, the script resets it to the default 1000mm.\n- **Q: How do I switch the connector to the other panel?**\n  - A: Use the `sAlignment` property in the palette or simply double-click the script in the model to toggle the reference side."
+      },
+      "tokens_used": 5862,
+      "error": null
+    }
+  }
+}

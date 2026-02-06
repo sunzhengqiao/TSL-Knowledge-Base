@@ -1,0 +1,174 @@
+{
+  "filename": "hsbLayoutDim.mcr",
+  "status": "completed",
+  "total_tokens": 51066,
+  "processing_time": 487.5550594329834,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9222,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses transform matrices 'ms2ps' (Model Space to Paper Space) and 'ps2ms' to convert coordinates; logic manipulates 'ppVp' (Viewport Profile) to ensure dimensions are 'outside of viewport' (HSB-24401); explicit comments mention 'usage in detail view ports' and 'WCS in paperspace'."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Sheet",
+            "Sip",
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Paper Space with an active Viewport",
+          "requiredSettings": [
+            "DimStyle"
+          ]
+        }
+      },
+      "tokens_used": 7775,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9943,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Automatically generates 2D offset dimensions in Paper Space for specific material zones (e.g., sheathing or framing) relative to a reference contour, ensuring dimension lines are placed outside the viewport boundary for readability.\",\n    \"category\": \"ShopDrawing\",\n    \"typicalUseCase\": \"Detailing wall or floor sections to show the precise overhang or setback of cladding layers relative to the structural frame in production drawings.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"nZoneIndex\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"Selects the specific construction layer (zone) to analyze and dimension (e.g., Zone 0 = Frame, Zone 1 = Inner Cladding).\",\n      \"validRange\": \"0 to MaxZones\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Determines which physical entities (Sheets, Sips, or Beams) are collected and profiled to generate the dimension points.\"\n    },\n    {\n      \"name\": \"nShowOffsetsAngles\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"Defines the reference geometry used to calculate the offset distance (e.g., referencing the extreme frame outline vs. the overall element contour).\",\n      \"validRange\": \"0, 1, 2 (Enumeration)\",\n      \"unit\": \"Enumeration\",\n      \"affectsOutput\": \"Switches the reference boundary ('ppRef') that the dimension extension lines project towards, changing the measured values.\"\n    },\n    {\n      \"name\": \"nDispDelta\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"The offset distance for the dimension text or leader from the measured geometry point.\",\n      \"validRange\": \"0 - 500 mm\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Visually spaces the dimension text away from the drawing geometry to prevent clutter.\"\n    },\n    {\n      \"name\": \"bAutoscale\",\n      \"technicalDefault\": \"1\",\n      \"businessMeaning\": \"Automatically scales the dimension text height and arrow size to match the current Viewport scale.\",\n      \"validRange\": \"0 (Off), 1 (On)\",\n      \"unit\": \"Boolean\",\n      \"affectsOutput\": \"Ensures dimensions remain legible regardless of the drawing zoom level; if off, uses a fixed scale factor.\"\n    },\n    {\n      \"name\": \"sExcludeColor\",\n      \"technicalDefault\": \"\\\"\\\"\",\n      \"businessMeaning\": \"A list of color indices (AutoCAD colors) that should be ignored when collecting geometry to dimension.\",\n      \"validRange\": \"String of integers separated by semicolons (e.g., '1;5; red')\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Filters out specific entities from the dimensioning process based on their display color.\"\n    },\n    {\n      \"name\": \"nObjectToDim\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"Specifies the type of entities to collect for dimensioning (e.g., Beams, Sheets, SIPs, Bearing Points)."
+      },
+      "tokens_used": 9523,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch: User inserts script into Paper Space (likely associated with a specific Viewport).",
+          "2. Initialization: Script detects active Viewport geometry and calculates transformation matrices (Model Space to Paper Space).",
+          "3. Data Collection: Script collects geometry (Beams, Sheets, SIPs) based on properties (nZoneIndex, nObjectToDim, sExcludeColor).",
+          "4. Profile Generation: Creates the 'Zone Profile' (geometry to dimension) and 'Reference Profile' (geometry to measure from).",
+          "5. Vector Analysis: Iterates through profile edges to calculate potential dimension points (mid-vertices) and determine perpendicular vectors.",
+          "6. Boundary Check: Evaluates if the calculated dimension points lie inside or on the boundary of the Viewport.",
+          "7. Projection Adjustment: If points are inside/near boundary, projects the dimension lines outward to ensure they are fully visible outside the Viewport (HSB-24401).",
+          "8. Rendering: Draws the dimension lines and text in Paper Space using the calculated coordinates and styles."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Property 'nShowOffsetsAngles' (Reference Geometry Selection)",
+            "path1": {
+              "name": "Frame Reference",
+              "steps": [
+                "Script sets reference profile ('ppRef') to the outer contour of the structural frame (Zone 0 or specific beam outline)."
+              ],
+              "trigger": "nShowOffsetsAngles == 0 or 1"
+            },
+            "path2": {
+              "name": "Element Outline Reference",
+              "steps": [
+                "Script sets reference profile ('ppRef') to the overall element outline, ignoring internal zero-thickness zones."
+              ],
+              "trigger": "nShowOffsetsAngles == 2"
+            }
+          },
+          {
+            "condition": "Viewport Intersection Test (HSB-24401)",
+            "path1": {
+              "name": "Safe Placement",
+              "steps": [
+                "Calculated dimension points are already outside the Viewport profile.",
+                "Script draws dimension using original coordinates."
+              ]
+            },
+            "path2": {
+              "name": "Forced Outside Projection",
+              "steps": [
+                "Calculated points fall inside the Viewport profile.",
+                "Script constructs a plane at the dimension point parallel to the dimension line.",
+                "Script intersects this plane with the extended Viewport profile to find the furthest valid edge point.",
+                "Script redraws dimension line terminating at this new outer point."
+              ]
+            }
+          },
+          {
+            "condition": "Entity Type Collection",
+            "path1": {
+              "name": "Sheet Processing",
+              "steps": [
+                "Entity is identified as a Sheet.",
+                "Script uses 'profShape()' and unions it into the Zone Profile."
+              ]
+            },
+            "path2": {
+              "name": "SIP Processing",
+              "steps": [
+                "Entity is identified as a Structural Insulated Panel (SIP).",
+                "Script generates 'plEnvelope()' and subtracts openings before union."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Active Viewport Existence",
+            "errorMessage": "Implicit error (no dimensions drawn).",
+            "recovery": "Ensure a Paper Space layout with an active Viewport showing the model is selected before insertion."
+          },
+          {
+            "check": "Zone Validity",
+            "errorMessage": "No dimensions generated if zone is empty.",
+            "recovery": "Verify 'nZoneIndex' corresponds to a construction layer that actually exists in the element."
+          },
+          {
+            "check": "Geometry Area",
+            "errorMessage": "Profile area too small.",
+            "recovery": "Ensure the collected geometry in the viewport results in a valid profile area > 1mm²."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Adjust Dimensioned Zone",
+            "how": "OPM Property Palette (nZoneIndex)",
+            "effect": "Switches dimension targets to different material layers (e.g., from Framing to Sheathing)."
+          },
+          {
+            "action": "Change Reference Mode",
+            "how": "OPM Property Palette (nShowOffsetsAngles)",
+            "effect": "Toggles whether dimensions measure offset from the Frame or the total Element Outline."
+          },
+          {
+            "action": "Toggle Auto-Scale",
+            "how": "OPM Property Palette (bAutoscale)",
+            "effect": "Enables/Disables automatic scaling of dimension text height to match the Viewport zoom factor."
+          },
+          {
+            "action": "Recalculate on Viewport Move",
+            "how": "Standard AutoCAD Regen or Viewport Move",
+            "effect": "Script re-evaluates the boundary check (HSB-24401) to keep dimensions outside the viewport if the viewport is panned or zoomed."
+          }
+        ]
+      },
+      "tokens_used": 9535,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbLayoutDim.mcr\n\n## Overview\nThis script automatically generates 2D offset dimensions in Paper Space for specific construction zones (such as sheathing or framing) relative to a reference contour. It intelligently ensures dimension lines are placed outside the viewport boundary to maintain drawing readability.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | Script reads geometry from Model Space but writes dimensions to Paper Space. |\n| Paper Space | Yes | This is the primary environment for script insertion and execution. |\n| Shop Drawing | No | Used for detailing layout views and sections within standard CAD layouts. |\n\n## Prerequisites\n- **Required Entities**: The drawing must contain `GenBeams`, `Sheets`, `SIPs`, or `Elements` visible through the viewport.\n- **Minimum Beam Count**: 0 (Script dimensions cladding/materials, not just beams).\n- **Required Settings**: An active Viewport in Paper Space and a valid AutoCAD DimStyle configured in the drawing.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Open your drawing and switch to a **Paper Space** Layout tab.\n2. Ensure a Viewport is active and displaying the model geometry you wish to dimension.\n3. Type `TSLINSERT` in the command line and select `hsbLayoutDim.mcr`.\n4. Click in the Paper Space to insert the script instance (usually near the viewport you are detailing).\n\n### Step 2: Configure Dimensions\n1. Select the inserted script object.\n2. Open the **Properties Palette** (Ctrl+1).\n3. Adjust parameters (see below) to define which material zone to dimension and the display style.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Zone Index** (`nZoneIndex`) | Number | 0 | Selects the construction layer to dimension (e.g., 0 for Frame, 1 for Inner Cladding). |\n| **Reference Mode** (`nShowOffsetsAngles`) | Number | 0 | Determines the reference geometry: <br>0/1 = Offset from the Frame.<br>2 = Offset from the overall Element Outline. |\n| **Display Delta** (`nDispDelta`) | Number | 0 | Offset distance (in mm) to shift the dimension text or leader away from the geometry point to prevent clutter. |\n| **Auto Scale** (`bAutoscale`) | Boolean | 1 | If **On** (1), automatically scales text height and arrows to match the Viewport zoom level. |\n| **Object to Dim** (`nObjectToDim`) | Number | 0 | Specifies which entity types to collect for dimensioning (e.g., Beams only, Sheets only, or all). |\n| **Exclude Color** (`sExcludeColor`) | String | \"\" | A list of AutoCAD color indices to ignore (e.g., \"1;5\"). Entities with these colors will not be dimensioned. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Recalculate** | Updates the dimension positions if the model geometry changes or the viewport is panned/zoomed. |\n\n## Settings Files\n- **Filename**: `DimStyle` (AutoCAD Standard)\n- **Location**: Current Drawing Database\n- **Purpose**: Determines the visual appearance (arrow style, text size, precision) of the generated dimensions.\n\n## Tips\n- **Viewport Visibility**: This script specifically ensures dimensions do not overlap the model drawing. If you pan the viewport, run **Recalculate** to push the dimensions back outside the boundary.\n- **Layer Switching**: You can quickly switch between dimensioning the structural frame and the outer sheathing by changing the **Zone Index** property in the palette.\n- **Readability**: Enable **Auto Scale** (default) so that your dimensions remain legible even if you have detail viewports at different scales on the same sheet.\n\n## FAQ\n- **Q: Why are no dimensions appearing when I insert the script?**\n  - A: Ensure the **Zone Index** you selected actually contains material in your model. If you select Zone 1 but only have a structural frame (Zone 0), nothing will be drawn.\n- **Q: My dimension text is tiny compared to the viewport.**\n  - A: Check the **Auto Scale** property. If it is set to 0 (Off), the script uses a fixed scale factor that may not match your current zoom level. Set it to 1 (On).\n- **Q: Can I dimension specific colored beams only?**\n  - A: Yes. Use the **Exclude Color** property to list colors you want to ignore (e.g., enter \"red\" or the color index number) to filter out specific entities."
+      },
+      "tokens_used": 5068,
+      "error": null
+    }
+  }
+}

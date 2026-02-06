@@ -1,0 +1,280 @@
+{
+  "filename": "hsb_RemoveModuleInformation.mcr",
+  "status": "completed",
+  "total_tokens": 23313,
+  "processing_time": 283.80972933769226,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "31.08.2011",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3538,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select Element objects; iterates through Element.beam() array; modifies GenBeam properties (setModule, setColor); lacks sd_ prefix or Viewport handling."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space with Elements containing Beams",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2371,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sFilterBeams",
+            "type": "PropString",
+            "displayName": "|Filter Beams with Code|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": "|Separate multiple entries by| ;"
+          },
+          {
+            "index": 0,
+            "variable": "nColor",
+            "type": "PropInt",
+            "displayName": "Color for the Beams",
+            "defaultValue": "32",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4370,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A utility script to remove module assignments from specific beams within selected elements and recolor them to indicate they are no longer part of a module.",
+          "category": "Data Management / Utility",
+          "typicalUseCase": "When a user needs to extract specific beam types (e.g., columns or joists) from a pre-defined modular assembly to be treated as loose elements or separate entities, often used during design changes or detailing preparation."
+        },
+        "parameters": [
+          {
+            "name": "sFilterBeams",
+            "technicalDefault": "",
+            "businessMeaning": "A list of beam code prefixes used to identify which specific beams within the selected elements should have their module information removed.",
+            "validRange": "Any string matching the first token of existing Beam Codes (e.g., 'WAL', 'STU', 'COL')",
+            "unit": "Text (String)",
+            "affectsOutput": "Determines the selection criteria; only beams whose code starts with the specified values will be modified (Module cleared and Color changed). If empty, no beams are modified."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "32",
+            "businessMeaning": "The AutoCAD color index applied to the beams after their module assignment has been cleared, providing visual confirmation of the change.",
+            "validRange": "1-255 (Standard AutoCAD Color Index)",
+            "unit": "Integer (Index)",
+            "affectsOutput": "Updates the graphical display color of the modified beams in the model."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sFilterBeams",
+            "effect": "If the string is empty or does not match any beam codes, the nColor parameter is effectively ignored as no beams are modified.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "GenBeam (Modified)",
+            "description": "Existing beams have their 'Module' property set to empty and their color updated.",
+            "appliedTo": "Beams contained within the Elements selected by the user during execution, filtered by the sFilterBeams parameter."
+          }
+        ]
+      },
+      "tokens_used": 4446,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch",
+          "Check if running for the first time (insertCycleCount>1)",
+          "If subsequent execution cycle, erase instance and exit",
+          "Check if executed via Catalog (_kExecuteKey)",
+          "If manual run (ExecuteKey empty), show Properties Dialog (OPM) for Filter and Color",
+          "Prompt user to select Elements (PrEntity)",
+          "Check if valid Element selection was made (ssE.go() success)",
+          "If selection made, store elements in internal _Element array",
+          "Parse the 'sFilterBeams' property string into a token array (splitting by ';') and converting to uppercase",
+          "Determine if beam filtering is active (checks if filter array length > 0)",
+          "Iterate through each selected Element",
+          "For each Element, iterate through all Beams contained within it",
+          "For each Beam, check if the first token of its code exists in the filter array",
+          "If match found (or if filtering logic dictates), clear the Beam's 'Module' assignment and set its color to 'nColor'",
+          "Flag script for erasure",
+          "Erase the script instance from the drawing"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle Check",
+            "path1": {
+              "name": "Subsequent Cycle",
+              "steps": [
+                "Detect insertCycleCount > 1",
+                "Erase Instance",
+                "Exit"
+              ]
+            },
+            "path2": {
+              "name": "First Cycle",
+              "steps": [
+                "Proceed to Execute Key check"
+              ]
+            }
+          },
+          {
+            "condition": "Execution Source (Catalog vs Manual)",
+            "path1": {
+              "name": "Manual Execution",
+              "steps": [
+                "Detect _kExecuteKey is empty",
+                "Show Dialog (showDialogOnce)"
+              ]
+            },
+            "path2": {
+              "name": "Catalog Execution",
+              "steps": [
+                "Skip Dialog",
+                "Use Property Defaults (setPropValuesFromCatalog)"
+              ]
+            }
+          },
+          {
+            "condition": "Element Selection",
+            "path1": {
+              "name": "Selection Made",
+              "steps": [
+                "User picks elements",
+                "ssE.go() returns true",
+                "Populate _Element array",
+                "Proceed to processing"
+              ]
+            },
+            "path2": {
+              "name": "Selection Cancelled/Empty",
+              "steps": [
+                "ssE.go() returns false",
+                "_Element remains empty",
+                "Erase Instance",
+                "Exit"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Filter Matching",
+            "path1": {
+              "name": "Code Matches Filter",
+              "steps": [
+                "bm.beamCode().token(0) found in sBeamFilter array",
+                "bm.setModule('')",
+                "bm.setColor(nColor)"
+              ]
+            },
+            "path2": {
+              "name": "No Match",
+              "steps": [
+                "Beam is skipped",
+                "No properties modified"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection Existence",
+            "errorMessage": "None explicit, but script terminates silently",
+            "recovery": "User must re-run the script and ensure elements are selected at the command prompt."
+          },
+          {
+            "check": "Filter String Format",
+            "errorMessage": "None explicit",
+            "recovery": "User should separate codes with semicolons (e.g., 'WAL;COL'). Script handles extra spaces automatically."
+          },
+          {
+            "check": "Filter Match Existence",
+            "errorMessage": "None explicit",
+            "recovery": "If sFilterBeams does not contain prefixes matching the actual beams, no changes will occur visually. User must check spelling or update the filter property."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Properties (OPM)",
+            "how": "Not applicable (Script erases itself immediately after execution)",
+            "effect": "N/A. The script is a 'fire and forget' utility. To run again with different settings, the user must insert a new instance."
+          }
+        ]
+      },
+      "tokens_used": 4009,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_RemoveModuleInformation.mcr\n\n## Overview\nThis utility script allows you to remove module assignments from specific beams within selected elements and updates their color to indicate they are no longer part of a module. It is typically used to extract specific beam types (e.g., columns) from a modular assembly to be treated as loose elements.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be run in the model space where elements and beams are located. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required entities:** Elements containing GenBeams.\n- **Minimum beam count:** 0 (You must select elements, but they do not need to contain a specific minimum number of beams).\n- **Required settings files:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the command line.\n2. Browse to and select `hsb_RemoveModuleInformation.mcr`.\n\n### Step 2: Configure Properties (If Manual Run)\n- **Action:** If executed manually (not from a catalog), a Properties dialog will appear automatically.\n- **Action:** Enter the **Filter Beams with Code** string (e.g., `COL;STU`) to identify which beams to modify.\n- **Action:** Set the **Color for the Beams** to a visible index (e.g., 32) to mark modified beams.\n- **Action:** Click OK to proceed.\n\n### Step 3: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the Elements in the drawing that contain the beams you wish to update. Press Enter to confirm selection.\n```\n\n### Step 4: Automatic Processing\n- **Action:** The script will automatically iterate through the selected elements.\n- **Result:** Beams matching your filter criteria will have their **Module** property cleared and their color updated.\n- **Cleanup:** The script instance will automatically erase itself from the drawing upon completion.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Filter Beams with Code | text | (empty) | Enter the beam code prefixes to target (e.g., `WAL;COL`). Separate multiple codes with a semicolon `;`. Only beams whose code starts with these values will be modified. |\n| Color for the Beams | number | 32 | The AutoCAD color index (1-255) applied to the beams after their module assignment is removed. |\n\n## Right-Click Menu Options\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script is a \"fire and forget\" utility. It erases itself immediately after execution and does not provide context menu options. |\n\n## Settings Files\n- No external settings files are required for this script.\n\n## Tips\n- **Check Codes:** Ensure the `Filter Beams with Code` matches the beginning of the actual beam codes in your model (e.g., use \"COL\" for \"COL-01\"). The filter is case-insensitive.\n- **Visual Feedback:** Use a distinct color (like bright Red or Magenta) temporarily to easily verify which beams were affected by the script.\n- **Re-running:** Since the script erases itself, you must run `TSLINSERT` again if you need to process additional elements with different settings.\n\n## FAQ\n- **Q: I ran the script, but nothing changed color. Why?**\n  - A: This usually means the `Filter Beams with Code` did not match any beam codes within the selected elements, or the filter string was left empty. Check the spelling of the beam codes.\n- **Q: Where did the script object go after I used it?**\n  - A: This script is designed to delete itself automatically after processing to keep your drawing clean.\n- **Q: Can I use wildcards in the filter?**\n  - A: No, the script filters based on the first token of the beam code. You must list the specific prefixes (e.g., `WAL;FLO`)."
+      },
+      "tokens_used": 4579,
+      "error": null
+    }
+  }
+}

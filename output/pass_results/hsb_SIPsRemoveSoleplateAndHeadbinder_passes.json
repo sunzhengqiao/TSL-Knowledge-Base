@@ -1,0 +1,230 @@
+{
+  "filename": "hsb_SIPsRemoveSoleplateAndHeadbinder.mcr",
+  "status": "completed",
+  "total_tokens": 18538,
+  "processing_time": 102.58110857009888,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "24.01.2011",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3192,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select 'Element' type objects, operates on Beam arrays (el.beam()), and uses dbErase(). No sd_* prefixes, #Type E, or _Viewport references found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1640,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sFilterBeams",
+            "type": "PropString",
+            "displayName": "Exclude Beams with Code",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": "Separate multiple entries by ;"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2304,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Removes structural plates (soleplates and headbinders) from selected SIP elements, while preserving plates that match specific user-defined beam codes.",
+          "category": "Maintenance / Modification / SIPs",
+          "typicalUseCase": "A user needs to remove standard top and bottom plates from a wall element but must retain specific plates (e.g., pressure-treated sill plates or specific grade lumber) identified by their beam codes."
+        },
+        "parameters": [
+          {
+            "name": "sFilterBeams",
+            "technicalDefault": "",
+            "businessMeaning": "A list of beam codes that define exceptions to the removal process. Any beam matching one of these codes will NOT be deleted.",
+            "validRange": "Any text string matching existing Beam Codes in the project.",
+            "unit": "Text",
+            "affectsOutput": "Determines which Soleplates and Headbinders are preserved. If a beam's code exists in this list, the beam is kept; otherwise, it is erased."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Beam Removal",
+            "description": "Erases specific beam entities from the model database.",
+            "appliedTo": "Beams within selected Elements where the beam type is 'Pressure Treated Plate' or 'Cap Strip', provided the beam code is not listed in the filter."
+          }
+        ]
+      },
+      "tokens_used": 3526,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launched / Insert Command Started",
+          "Check if Insert Cycle Count > 1",
+          "[Condition: Cycle > 1] -> Erase Instance and Exit",
+          "[Condition: Cycle == 1] -> Check Execute Key",
+          "[Condition: Key Empty] -> Show Properties Dialog (OPM)",
+          "Prompt User: 'Select a set of elements'",
+          "[Condition: Selection Cancelled/Empty] -> Exit",
+          "[Condition: Selection Valid] -> Store Elements, Return (Script waits for regeneration/recalc)",
+          "Script Recalculation Triggered (bOnInsert is false)",
+          "Check if Elements were selected (Array Length)",
+          "[Condition: No Elements] -> Erase Instance and Exit",
+          "Parse 'Exclude Beams with Code' property into a filter list",
+          "Loop through each selected Element",
+          "  - Get Element Coordinate System and all Beams",
+          "  - Identify Beams of type 'Pressure Treated Plate' or 'Cap Strip'",
+          "  - Loop through identified Beams",
+          "    - Check if Beam Code exists in the Filter List",
+          "    - [Condition: Code NOT in Filter] -> Erase Beam",
+          "    - [Condition: Code IS in Filter] -> Keep Beam",
+          "Set Erase Flag to True",
+          "Check if Element was just constructed or Beams were erased",
+          "[Condition: Yes] -> Erase Script Instance and Exit",
+          "Script Complete (Model Updated)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count > 1",
+            "path1": {
+              "name": "Duplicate Insertion Prevention",
+              "steps": [
+                "Detect insertCycleCount() > 1",
+                "Erase the current script instance",
+                "Terminate execution immediately"
+              ]
+            },
+            "path2": {
+              "name": "First Insertion Cycle",
+              "steps": [
+                "Check Execute Key",
+                "Proceed to Dialog/Selection prompt"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Code Matching",
+            "path1": {
+              "name": "Beam Matches Filter",
+              "steps": [
+                "Compare Beam Code against user-defined list",
+                "Match found (Index != -1)",
+                "Beam is preserved in the model"
+              ]
+            },
+            "path2": {
+              "name": "Beam Does Not Match Filter",
+              "steps": [
+                "Compare Beam Code against user-defined list",
+                "No match found (Index == -1)",
+                "Execute dbErase() to remove beam"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection Validation",
+            "errorMessage": "None (Silent Exit)",
+            "recovery": "User must re-run the command and ensure at least one Element is selected."
+          },
+          {
+            "check": "Beam Type Validation",
+            "errorMessage": "None (Silent Skip)",
+            "recovery": "N/A (Script specifically targets 'Pressure Treated Plate' or 'Cap Strip' types only)"
+          },
+          {
+            "check": "Filter String Parsing",
+            "errorMessage": "None",
+            "recovery": "Script handles empty or malformed filter strings by treating them as empty or partial matches based on semicolon delimiters."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Filter Codes via Properties Palette (OPM)",
+            "how": "Select the script instance (if not auto-deleted), open Properties, edit 'Exclude Beams with Code'",
+            "effect": "Updating the property would trigger a recalc, potentially restoring or removing beams based on the new filter."
+          },
+          {
+            "action": "Re-run Selection",
+            "how": "Delete script instance and launch command again",
+            "effect": "Allows selecting a different set of elements to process."
+          }
+        ]
+      },
+      "tokens_used": 3652,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SIPsRemoveSoleplateAndHeadbinder.mcr\n\n## Overview\nThis script removes structural plates (soleplates and headbinders) from selected SIPs (Structural Insulated Panel) elements. It includes a filtering option to preserve specific plates based on their beam codes, allowing for exceptions like pressure-treated sill plates.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in the 3D model where Elements are located. |\n| Paper Space | No | Not applicable for layouts. |\n| Shop Drawing | No | This script modifies the model geometry, not drawing views. |\n\n## Prerequisites\n- **Required Entities**: SIPs Wall Elements.\n- **Minimum Beam Count**: None (Script processes beams contained within the selected elements).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_SIPsRemoveSoleplateAndHeadbinder.mcr` from the file list.\n\n### Step 2: Configure Exclusions (Optional)\nIf the script requires a specific key to run, or immediately after insertion before selection:\n1. The Properties Palette may open automatically.\n2. Locate the **Exclude Beams with Code** field.\n3. Enter the beam codes you wish to **keep**, separated by a semicolon (e.g., `PT_SILL;HELD_PLACE`).\n4. *Note: If left empty, all soleplates and headbinders will be removed.*\n\n### Step 3: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the SIPs wall elements from which you want to remove plates. Press Enter to confirm selection.\n```\n\n### Step 4: Execution\n1. The script will scan the selected elements.\n2. It identifies beams of type \"Pressure Treated Plate\" or \"Cap Strip\".\n3. It erases these beams **unless** their code matches a code entered in the Exclude list.\n4. The script instance deletes itself automatically upon completion.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Exclude Beams with Code | Text | (Empty) | Enter beam codes here to prevent them from being deleted. Separate multiple codes with a semicolon (;). If empty, all matching plates are removed. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu options are defined for this script. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Check Beam Codes**: Before running, use the `List` command or check the Properties of a plate to ensure you use the correct text in the \"Exclude Beams with Code\" field.\n- **Undo**: If you remove the wrong plates, simply use the standard AutoCAD `UNDO` command immediately after running the script.\n- **Filtering Logic**: This script specifically looks for beam types \"Pressure Treated Plate\" and \"Cap Strip\". It will not affect standard wall studs or other structural members within the element.\n\n## FAQ\n- **Q: What happens if I leave the \"Exclude Beams with Code\" field blank?**\n  **A:** The script will remove all soleplates and headbinders found in the selected elements.\n\n- **Q: How do I keep a specific pressure-treated sill plate but remove the rest?**\n  **A:** Find the specific beam code of that sill plate, enter it into the \"Exclude Beams with Code\" property, and then run the script.\n\n- **Q: Can I use wildcards in the filter?**\n  **A:** No, the script looks for exact matches of the beam code. Ensure you type the code exactly as it appears in the entity properties."
+      },
+      "tokens_used": 4224,
+      "error": null
+    }
+  }
+}

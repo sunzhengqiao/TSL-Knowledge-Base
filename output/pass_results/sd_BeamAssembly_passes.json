@@ -1,0 +1,252 @@
+{
+  "filename": "sd_BeamAssembly.mcr",
+  "status": "completed",
+  "total_tokens": 29255,
+  "processing_time": 277.6747941970825,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3569,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": true,
+          "isMultipageScript": true,
+          "detectionEvidence": "Filename 'sd_BeamAssembly.mcr' indicates Shop Drawing. Script contains explicit comment 'when the shopdraw engine calls this Tsl'. Uses 'addDimRequest' for dimension generation and interacts with the 'Generation' map ('_Map.getMap(\"Generation\")') and 'entCollector', which are specific to the Shop Drawing/Multipage environment. Iterates over '_Entity' array."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "ShopDrawing generation context",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4058,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getBeam",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "Select point near tool",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4412,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically generates dimension requests for a beam and its connected assembly (tools/hardware) across Front, Left, and Top views within the Shop Drawing environment.",
+          "category": "ShopDrawing",
+          "typicalUseCase": "Used to calculate and prepare extreme points for dimensioning a specific beam assembly during the creation of production drawings or layouts."
+        },
+        "parameters": [
+          {
+            "name": "_Beam0",
+            "technicalDefault": "null",
+            "businessMeaning": "The primary structural timber beam to be detailed. This beam serves as the parent entity for the view and the collector for all connected elements.",
+            "validRange": "Any valid Beam entity in the model",
+            "unit": "Entity",
+            "affectsOutput": "Defines the local coordinate system (vecX, vecY, vecZ) for the generated views and determines which connected tools (MetalParts, TSLs) are included in the dimension calculations."
+          },
+          {
+            "name": "_Pt0",
+            "technicalDefault": "0,0,0",
+            "businessMeaning": "A reference point selected near the tool or assembly. It acts as the mathematical origin for sorting dimension points.",
+            "validRange": "Any 3D point in the vicinity of the beam",
+            "unit": "mm",
+            "affectsOutput": "Determines the order of dimension points along the dimension lines. Effectively sets the reading direction (e.g., Left-to-Right vs Right-to-Left) for the dimensions in the drawing."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "_Beam0 selection",
+            "effect": "Identifies the list of connected tools (MetalParts, TSLs) that must be included in the dimension calculation.",
+            "cascade": [
+              "Dimension Request Points",
+              "View bounding box"
+            ]
+          },
+          {
+            "trigger": "_Pt0 selection",
+            "effect": "Establishes the sorting origin for the extreme points of the beam and tools.",
+            "cascade": [
+              "Dimension Point Ordering"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "DimRequest",
+            "description": "Generates dimension points at the geometric extremes (min/max) of the beam body and connected tools in X and Y directions for Front, Left, and Top views.",
+            "appliedTo": "The selected Beam and any connected MetalParts or TSL instances."
+          }
+        ]
+      },
+      "tokens_used": 6035,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script initializes units and variables.",
+          "Check if script is in Insert mode (_bOnInsert).",
+          "[Insert Mode] Prompt user to select a Beam (getBeam).",
+          "[Insert Mode] Prompt user to select a Reference Point near the tool (getPoint).",
+          "[Insert Mode] Save inputs and exit execution (return).",
+          "[Execution/Calculation Mode] Retrieve Target Beam: Prioritize _Beam0, fallback to _Entity[0].",
+          "Validate Beam existence: If invalid, report error and erase instance.",
+          "Get the physical body (realBody) of the Beam.",
+          "Retrieve all connected entities (eToolsConnected).",
+          "Filter and collect connected entities into an array: Keep MetalParts and TSLs (with volume > epsilon).",
+          "Define 3 Views (Front, Left, Top) using Beam vectors (vecX, vecY, vecZ).",
+          "Loop through each defined View.",
+          "Calculate geometric extremes (extremeVertices) for the Beam body in current view directions.",
+          "Calculate geometric extremes for all collected connected tools in current view directions.",
+          "Sort all calculated extreme points along the view vector using the Reference Point as the origin.",
+          "Generate Dimension Requests: Create DimRequestPoints for X and Y axes based on sorted extremes.",
+          "Write Dimension Requests to the Shop Drawing Engine (addDimRequest).",
+          "Store global Min/Max points to the Multipage Map (if entCollector is valid)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Is the script running during manual insertion?",
+            "path1": {
+              "name": "Manual Insertion",
+              "steps": [
+                "Pause and wait for user to select a Beam.",
+                "Pause and wait for user to select a Reference Point.",
+                "Store inputs to properties and stop."
+              ]
+            },
+            "path2": {
+              "name": "Auto-Execution (Shop Draw)",
+              "steps": [
+                "Read inputs from existing properties or the Engine Entity array.",
+                "Proceed directly to calculation logic."
+              ]
+            }
+          },
+          {
+            "condition": "Is the primary beam property (_Beam0) valid?",
+            "path1": {
+              "name": "Property Valid",
+              "steps": [
+                "Use _Beam0 as the target beam."
+              ]
+            },
+            "path2": {
+              "name": "Property Invalid",
+              "steps": [
+                "Check if _Entity array contains elements.",
+                "Use _Entity[0] (provided by Shop Draw Engine) as the target beam."
+              ]
+            }
+          },
+          {
+            "condition": "What type of tool is connected to the beam?",
+            "path1": {
+              "name": "MetalPart",
+              "steps": [
+                "Include tool in dimension calculation array."
+              ]
+            },
+            "path2": {
+              "name": "TSL Instance",
+              "steps": [
+                "Check if TSL realBody volume > Epsilon.",
+                "If Yes, include tool in dimension calculation array.",
+                "If No, ignore tool."
+              ]
+            },
+            "path3": {
+              "name": "Other Entity",
+              "steps": [
+                "Ignore tool."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Valid Beam Entity",
+            "errorMessage": "\\n+scriptName() +: |No beam found. !Instance erased.|",
+            "recovery": "The script automatically erases the instance. The user must ensure the script is applied to a valid beam or that the shop drawing engine provides a valid entity."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Reference Point",
+            "how": "OPM Properties Palette / Grip Edit",
+            "effect": "Updates the sorting origin for dimension points, effectively changing the reading direction (Left-to-Right vs Right-to-Left) of the dimensions on the drawing."
+          },
+          {
+            "action": "Change Target Beam",
+            "how": "OPM Properties Palette / Select different beam",
+            "effect": "Completely recalculates the view and dimensions based on the geometry and connected tools of the newly selected beam."
+          },
+          {
+            "action": "Update Geometry or Tools",
+            "how": "Modify the timber beam or add/remove connected hardware in the model",
+            "effect": "Script automatically regenerates upon next calculation event to include new extremes or remove old ones."
+          }
+        ]
+      },
+      "tokens_used": 6352,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# sd_BeamAssembly.mcr\n\n## Overview\nThis script automatically calculates and generates dimension requests for a beam assembly, including the main timber beam and any connected hardware or tools. It is used to prepare precise geometric boundaries for Front, Left, and Top views within the Shop Drawing generation process.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Used to insert and assign the script to a specific beam. |\n| Paper Space | No | The script runs during the generation calculation, not directly in layout view. |\n| Shop Drawing | Yes | This is the primary context; it interacts with the Shop Drawing Engine to define view extents. |\n\n## Prerequisites\n- **Required Entities**: A single structural Beam.\n- **Minimum Beam Count**: 1.\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `sd_BeamAssembly.mcr` from the list.\n\n### Step 2: Select Beam\n```\nCommand Line: Select beam:\nAction: Click on the structural timber beam in the model that you wish to detail.\n```\n\n### Step 3: Select Reference Point\n```\nCommand Line: Select point near tool:\nAction: Click a point in the model space near the assembly (e.g., to the left of the beam). \nNote: This point determines the origin for sorting dimensions, effectively setting the reading direction (Left-to-Right vs. Right-to-Left).\n```\n\n### Step 4: Completion\nThe script instance is attached to the beam. It will automatically calculate dimension requests when the Shop Drawing generation process is executed.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| _Beam0 | Entity | null | The target structural beam to be detailed. Change this to apply the script to a different beam. |\n| _Pt0 | Point | 0,0,0 | The reference point used to sort dimension points. Moving this point changes the order in which dimensions are displayed in the drawing. |\n\n## Right-Click Menu Options\nNo custom context menu options are defined for this script. Modifications are made via the Properties Palette.\n\n## Settings Files\nNo external settings files are required for this script.\n\n## Tips\n- **Control Dimension Direction**: The location of the `_Pt0` (Reference Point) relative to the beam controls the \"reading direction\" of the dimensions. If you want dimensions to read from left to right, place the reference point to the left of the beam assembly.\n- **Connected Tools**: The script automatically detects and includes connected MetalParts and TSL instances in the dimension calculation, provided they have physical volume.\n- **Troubleshooting**: If the script instance disappears from the model, it usually means the target beam was deleted or became invalid.\n\n## FAQ\n- **Q: Why are some of my connected tools not being dimensioned?**\n  **A:** The script filters out tools that do not have a significant physical volume (realBody volume check). Ensure your tools have 3D geometry.\n- **Q: Can I change which beam is being detailed after inserting the script?**\n  **A:** Yes. Select the script instance in Model Space, open the Properties Palette (Ctrl+1), and click the `_Beam0` field to select a different beam.\n- **Q: How do I reverse the order of the dimensions on the drawing?**\n  **A:** Select the script instance and change the `_Pt0` (Reference Point) property in the Properties Palette to the opposite side of the beam assembly."
+      },
+      "tokens_used": 4829,
+      "error": null
+    }
+  }
+}

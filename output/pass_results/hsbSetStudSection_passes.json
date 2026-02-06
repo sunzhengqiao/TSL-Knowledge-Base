@@ -1,0 +1,369 @@
+{
+  "filename": "hsbSetStudSection.mcr",
+  "status": "completed",
+  "total_tokens": 48727,
+  "processing_time": 412.74306654930115,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.2",
+            "date": "13jul2020",
+            "author": "nils.gregor@hsbcad.com",
+            "changes": "HSB-7533 redesigned stretch functionality of vertical beams"
+          },
+          {
+            "version": "1.1",
+            "date": "16jun2020",
+            "author": "nils.gregor@hsbcad.com",
+            "changes": "HSB-7533 bugfix beam pos in T-Connection array"
+          },
+          {
+            "version": "1.0",
+            "date": "16jun2020",
+            "author": "nils.gregor@hsbcad.com",
+            "changes": "HSB-7533 initial "
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 9179,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Explicitly uses _kModelSpace in dbCreate call. Manipulates 3D geometry of ElementWall and Beam objects. No drawing generation (addGraph/addLine) or viewport logic found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space with at least one ElementWall selected during insertion",
+          "requiredSettings": [
+            "Painter rules (referenced by PainterDefinition)"
+          ]
+        }
+      },
+      "tokens_used": 6699,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select element(s)",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDialog",
+            "trigger": "_bOnInsert (if no execute key provided)",
+            "title": null,
+            "dataSource": "Script Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sSide",
+            "type": "PropString",
+            "displayName": "Select Side",
+            "defaultValue": "|Icon side|",
+            "inputType": "dropdown",
+            "options": [
+              "|Icon side|",
+              "|Opposite side|"
+            ],
+            "category": "|General|",
+            "description": "|Defines the side the choosen beams are aligned to|"
+          },
+          {
+            "index": 1,
+            "variable": "dWidth",
+            "type": "PropDouble",
+            "displayName": "Change width",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": "|General|",
+            "description": "|Changes the width of the beam(s)|"
+          },
+          {
+            "index": 2,
+            "variable": "dHeight",
+            "type": "PropDouble",
+            "displayName": "Change height",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": "|General|",
+            "description": "|Changes the height of the beam(s)|"
+          },
+          {
+            "index": 3,
+            "variable": "sFilterRule",
+            "type": "PropString",
+            "displayName": "Filter rule",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": [
+              "Dynamic entries from PainterDefinition"
+            ],
+            "category": "|General|",
+            "description": "|Select one of the filter rules from painter. If no rules shown, create painter rules.|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": [
+          {
+            "filename": "PainterDefinition",
+            "searchPaths": [
+              "Internal hsbCAD Painter system"
+            ],
+            "purpose": "Provides the list of filter rules used to select beams for modification.",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 7160,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A batch modification tool that changes the width and/or height of specific wall studs based on Painter filter rules, with intelligent spacing logic to prevent overlaps.",
+          "category": "Framing/Modification",
+          "typicalUseCase": "Used when a designer needs to resize specific structural members within a wall (e.g., upgrading standard studs to accommodate thicker insulation or different load requirements) without manually editing each beam or causing collision issues with adjacent studs."
+        },
+        "parameters": [
+          {
+            "name": "sSide",
+            "technicalDefault": "|Icon side|",
+            "businessMeaning": "Defines the reference face of the wall that the modified beams should align to. This ensures that when dimensions change, the beams grow 'inwards' or maintain their position relative to this specific side (e.g., Exterior side), rather than floating arbitrarily.",
+            "validRange": "|Icon side|, |Opposite side|",
+            "unit": "enum",
+            "affectsOutput": "Determines the vector direction for height alignment and the calculation of width expansion towards the interior of the wall."
+          },
+          {
+            "name": "dWidth",
+            "technicalDefault": "0",
+            "businessMeaning": "The new cross-sectional width (thickness) of the target beams. If the value is greater than 0, the script increases the beam width and automatically pushes adjacent parallel beams away to maintain equal spacing and prevent geometry collision.",
+            "validRange": "0 (No change) to typical wall thickness (e.g., 45mm - 200mm)",
+            "unit": "mm",
+            "affectsOutput": "Modifies the width dimension of selected beams and translates the position of neighboring beams along the wall axis to accommodate the new size."
+          },
+          {
+            "name": "dHeight",
+            "technicalDefault": "0",
+            "businessMeaning": "The new cross-sectional height (depth) of the target beams. The beam is resized and then shifted so that the face corresponding to the 'Select Side' parameter remains in its original position.",
+            "validRange": "0 (No change) to typical stud heights (e.g., 95mm - 300mm)",
+            "unit": "mm",
+            "affectsOutput": "Modifies the height dimension of selected beams and translates their position normal to the wall face to preserve alignment with the selected side."
+          },
+          {
+            "name": "sFilterRule",
+            "technicalDefault": "",
+            "businessMeaning": "A selection criteria (Painter rule) that identifies which specific beams within the wall should be modified. This allows targeting only specific structural members, such as 'Cripples', 'King Studs', or specific material grades, leaving other beams untouched.",
+            "validRange": "Any string matching an existing hsbCAD Painter Definition in the project",
+            "unit": "string",
+            "affectsOutput": "Filters the set of beams processed by the script. Beams not matching the rule retain their original dimensions and position."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sSide",
+            "effect": "Determines the vector direction used to apply height changes and width expansion.",
+            "cascade": [
+              "dHeight",
+              "dWidth"
+            ]
+          },
+          {
+            "trigger": "sFilterRule",
+            "effect": "Restricts the geometry modifications (dWidth/dHeight) to only the beams matching the rule.",
+            "cascade": [
+              "dWidth",
+              "dHeight"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "GenBeam",
+            "description": "Existing wall beams are modified: their cross-sectional dimensions (Width/Height) are updated, and their positions are translated to maintain wall alignment and spacing. The script instance erases itself after execution.",
+            "appliedTo": "Beams within the selected ElementWall that match the sFilterRule."
+          }
+        ]
+      },
+      "tokens_used": 9157,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User inserts script (via command or catalog entry)",
+          "2. Script checks if executed via Catalog Key (Silent mode) or Command Line (Interactive mode)",
+          "3. [Conditional] If Interactive: Show Properties Dialog (Select Side, Width, Height, Filter Rule)",
+          "4. Prompt user to select one or more ElementWall entities",
+          "5. Attach script instance to selected ElementWall entities with defined properties",
+          "6. Erase the temporary insertion script instance",
+          "7. [Validation] Attached instance checks if valid ElementWall reference exists",
+          "8. [Validation] Attached instance waits if Wall beams are not yet generated",
+          "9. Collect all beams from wall and classify into Verticals (Studs) and Horizontals (Plates)",
+          "10. Loop through all wall beams to filter by Painter Rule and apply Height changes (if dHeight > 0)",
+          "11. Loop through filtered beams to apply Width changes and resolve collisions (if dWidth > 0)",
+          "12. Loop through all Vertical beams to find intersecting Horizontal beams for stretching",
+          "13. [Conditional] Stretch Vertical beams to Top and Bottom intersections (1 or 2 beams)",
+          "14. Erase script instance (Fire-and-forget)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Method determined by _kExecuteKey",
+            "path1": {
+              "name": "Silent/Catalog Mode",
+              "steps": [
+                "Read properties from catalog definition",
+                "Skip Dialog display",
+                "Proceed to Entity Selection"
+              ]
+            },
+            "path2": {
+              "name": "Interactive Mode",
+              "steps": [
+                "Execute showDialog()",
+                "User inputs/selects properties via OPM or Dialog",
+                "Proceed to Entity Selection"
+              ]
+            }
+          },
+          {
+            "condition": "Beam matches Painter Filter Rule (sFilterRule)",
+            "path1": {
+              "name": "Match",
+              "steps": [
+                "Beam is added to 'To Change' list if dWidth > 0",
+                "Beam Height is updated and transformed if dHeight > 0"
+              ]
+            },
+            "path2": {
+              "name": "No Match",
+              "steps": [
+                "Beam is ignored for dimension changes",
+                "Beam is still considered for stretching/intersecting logic"
+              ]
+            }
+          },
+          {
+            "condition": "Vertical Beam Intersections (Stretching)",
+            "path1": {
+              "name": "Single Intersection (nFTop/nFBottom == 1)",
+              "steps": [
+                "Execute stretchStaticTo() to extend vertical beam to single horizontal beam"
+              ]
+            },
+            "path2": {
+              "name": "Double Intersection (nFTop/nFBottom == 2)",
+              "steps": [
+                "Execute stretchStaticToMultiple() to handle T-connections or double plates",
+                "Vertical beam is stretched to the furthest beam or split logic"
+              ]
+            },
+            "path3": {
+              "name": "No Valid Intersection",
+              "steps": [
+                "Ignore stretching for this specific side",
+                "Proceed to next beam"
+              ]
+            }
+          },
+          {
+            "condition": "Width Change Collision (dWidth > 0)",
+            "path1": {
+              "name": "Collision Detected",
+              "steps": [
+                "Calculate overlap distance (dDiff)",
+                "Transform current beam away from edge",
+                "Transform neighboring beams (bmYs/bmOthers) to maintain spacing"
+              ]
+            },
+            "path2": {
+              "name": "No Collision",
+              "steps": [
+                "Set beam width (setD)",
+                "Skip beam transformation logic"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Valid Wall Reference",
+            "errorMessage": "scriptName() + could not find reference to element.",
+            "recovery": "User must select a valid ElementWall during insertion. Script erases itself if failed."
+          },
+          {
+            "check": "Wall Construction Status",
+            "errorMessage": "None (Silent return)",
+            "recovery": "Script checks if beam count < 1. If true, it returns without execution, waiting for the wall to finish construction/regenerate in the next cycle."
+          },
+          {
+            "check": "Painter Rule Availability",
+            "errorMessage": "None (List empty)",
+            "recovery": "If 'Filter rule' list is empty in dialog, user must create Painter rules in the hsbCAD environment before using the script."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None (Script Self-Destructs)",
+            "how": "N/A",
+            "effect": "The script instance executes its logic once and calls eraseInstance(). The changes to the beams (Width, Height, Position) are baked into the ElementWall geometry. The user cannot modify the script instance afterwards via OPM; they would need to re-run the script to make further batch changes."
+          }
+        ]
+      },
+      "tokens_used": 10555,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbSetStudSection.mcr\n\n## Overview\nThis script allows you to batch modify the cross-section (width and height) of specific studs within a selected wall using Painter filter rules. It automatically adjusts adjacent studs to prevent overlapping when increasing widths and ensures the modified beams stay aligned to the selected wall face.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates directly on 3D wall geometry in Model Space. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | This is a modeling tool, not a detailing/drawing generation script. |\n\n## Prerequisites\n- **Required Entities:** At least one `ElementWall` entity.\n- **Minimum Beam Count:** 0 (The script waits for the wall to generate beams if they do not exist yet).\n- **Required Settings:** `PainterDefinition` rules must exist in your project to populate the Filter Rule list.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbSetStudSection.mcr`\n\n### Step 2: Configure Properties\n```\nDialog Box: Set Stud Section\nAction: Configure the modification parameters before selecting the wall.\n```\n1. **Filter rule**: Select a Painter rule (e.g., \"Cripples\", \"King Studs\") to identify which beams to change. If the list is empty, you need to create Painter rules first.\n2. **Change height**: Enter the new height (depth) for the selected beams (e.g., `45` to `220`). Set to `0` to ignore height changes.\n3. **Change width**: Enter the new width (thickness) for the selected beams (e.g., `0` to `0`). Set to `0` to ignore width changes.\n4. **Select Side**: Choose whether the beams should align to the \"Icon side\" or \"Opposite side\" of the wall when dimensions change.\n\n### Step 3: Select Wall\n```\nCommand Line: Select element(s)\nAction: Click on the ElementWall(s) you wish to process and press Enter.\n```\nThe script will attach to the wall, process the beams, and then automatically erase itself.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Select Side | dropdown | \\|Icon side\\| | Determines which face of the wall the modified beams should align to when height or width changes. |\n| Change width | number | 0 | The new width (thickness) of the beams. If > 0, the script increases the width and pushes neighboring studs away to avoid collisions. |\n| Change height | number | 0 | The new height (depth) of the beams. If > 0, the beam is resized and shifted to maintain alignment with the selected side. |\n| Filter rule | dropdown | [Empty] | Selects the specific group of beams to modify based on hsbCAD Painter rules. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script is a \"fire-and-forget\" tool. It erases itself immediately after execution. No context menu options are available after insertion. |\n\n## Settings Files\n- **System Resource**: `PainterDefinition`\n- **Location**: Internal hsbCAD Painter System / Project Data\n- **Purpose**: Provides the list of filter rules (e.g., \"Studs\", \"Posts\") used in the \"Filter rule\" dropdown to select specific beams within the wall.\n\n## Tips\n- **Automatic Spacing**: When you increase the **Change width**, the script automatically calculates the overlap and translates adjacent parallel studs to maintain equal spacing. You do not need to manually move neighbors.\n- **Alignment Logic**: Use the **Select Side** property to control which side of the beam remains fixed. For example, selecting \"Icon side\" usually keeps the exterior face of the stud fixed while extending it inward.\n- **Fire-and-Forget**: Once you select the wall, the script instance deletes itself. If you need to undo changes, use the standard AutoCAD `UNDO` command immediately.\n- **Validation**: If the script runs but nothing happens, ensure the wall has generated beams (not just an outline) and that a valid **Filter rule** is selected that actually matches beams in that wall.\n\n## FAQ\n- **Q: The \"Filter rule\" dropdown is empty. What do I do?**\n  A: This script relies on hsbCAD Painter rules. You must define Painter rules in your project (e.g., naming specific layers or entity types) before they will appear in this list.\n- **Q: Can I use this to change a single specific stud?**\n  A: This tool is designed for batch modifications based on rules (Painter). To change a single beam, it is often easier to select the beam and modify its properties directly in the AutoCAD Properties Palette.\n- **Q: I changed the width, but beams are overlapping.**\n  A: Ensure you are selecting the correct **ElementWall** and that the beams are recognized as parallel \"Verticals\" or \"Horizontals\" by the script logic. The spacing logic applies to beams along the same axis."
+      },
+      "tokens_used": 5977,
+      "error": null
+    }
+  }
+}

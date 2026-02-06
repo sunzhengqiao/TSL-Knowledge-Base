@@ -1,0 +1,212 @@
+{
+  "filename": "truckImporter.mcr",
+  "status": "completed",
+  "total_tokens": 38386,
+  "processing_time": 443.6146652698517,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6214,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No sd_ or Multipage* prefix found. No usage of Viewport or sd_ functions found. The script creates 3D geometry (Body, PLine extrusions) based on a Map structure and draws it using a Display object. It relies on _bOnDbCreated to set color, typical of ModelSpace entity instances."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "A Map named 'truckLoad' containing 'truckLoadLayout', 'loadBody[]', 'loadAxle[]' etc., accessible via _Map.getMap(). The map structure contains coordinate systems and dimensions for truck geometry.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4722,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": [
+          {
+            "filename": "truckLoad",
+            "searchPaths": [
+              "_Map"
+            ],
+            "purpose": "Map structure containing truck geometry coordinates, load body dimensions, axle configurations, and stack item entity references.",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 5174,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Visualizes a logistics plan by generating a 3D truck model loaded with specific timber packages or elements to verify transport arrangement.",
+          "category": "Logistics/Visualization",
+          "typicalUseCase": "Used during production planning to generate a 3D representation of how timber packs (Elements) or individual beams (GenBeams) are positioned on a truck trailer, ensuring they fit within the load space and checking for axle weight distribution visually."
+        },
+        "parameters": [
+          {
+            "name": "truckLoad (Map)",
+            "technicalDefault": "_Map.getMap(\"truckLoad\")",
+            "businessMeaning": "The central data source containing the truck configuration and the manifest of items to be loaded, including their positions and orientations.",
+            "validRange": "Requires a map with 'truckLoadLayout', 'loadBody[]', and 'loadAxle[]' keys.",
+            "unit": "N/A",
+            "affectsOutput": "Defines the entire structure of the visualization. If the map is empty or missing, no geometry is generated."
+          },
+          {
+            "name": "length (Box Dimensions)",
+            "technicalDefault": "mpQuader.getDouble(\"length\")",
+            "businessMeaning": "The longitudinal size of a load package, load space, or truck component.",
+            "validRange": "Real-world lengths (e.g., 2000mm to 16000mm depending on truck type).",
+            "unit": "mm",
+            "affectsOutput": "Scales the 3D boxes representing cargo or truck parts along the truck's length."
+          },
+          {
+            "name": "width (Box Dimensions)",
+            "technicalDefault": "mpQuader.getDouble(\"width\")",
+            "businessMeaning": "The lateral size of a load package or truck chassis.",
+            "validRange": "Standard truck width (typically ~2550mm) or package width.",
+            "unit": "mm",
+            "affectsOutput": "Scales the 3D boxes representing cargo or truck parts along the truck's width."
+          },
+          {
+            "name": "height (Box Dimensions)",
+            "technicalDefault": "mpQuader.getDouble(\"height\")",
+            "businessMeaning": "The vertical size of a load package or truck component.",
+            "validRange": "Physical height limits (usually max 4000-4400mm for road transport).",
+            "unit": "mm",
+            "affectsOutput": "Scales the 3D boxes representing cargo or truck parts vertically."
+          },
+          {
+            "name": "entityHandle (Stack Item Reference)",
+            "technicalDefault": "mpStackItem.getEntity(\"entityHandle\")",
+            "businessMeaning": "The link to the actual production data (Element or GenBeam) that occupies a specific slot on the truck.",
+            "validRange": "Any valid Element or GenBeam ID in the drawing.",
+            "unit": "N/A",
+            "affectsOutput": "If valid, the script draws the real geometric body of the timber component. If invalid, it draws a generic grey placeholder box."
+          },
+          {
+            "name": "isDoubleWheel (Axle Configuration)",
+            "technicalDefault": "mpLoadAxle.getInt(\"doublewheel\")",
+            "businessMeaning": "Determines if the axle uses single tires or dual tires (twin wheels) per side.",
+            "validRange": "0 (Single) or 1 (Double)",
+            "unit": "Count",
+            "affectsOutput": "If true (1), renders an additional wheel pair offset from the primary axle wheels."
+          },
+          {
+            "name": "truckStartOffset (Calculated Position)",
+            "technicalDefault": "Calculated based on loadBody minimum X",
+            "businessMeaning": "The reference point derived from the foremost cargo, used to dynamically position the truck cab at the correct distance from the load.",
+            "validRange": "Calculated automatically.",
+            "unit": "mm",
+            "affectsOutput": "Adjusts the position of the Truck Cab relative to the trailer load."
+          },
+          {
+            "name": "truckCoordSys (Global Offset)",
+            "technicalDefault": "_ThisInst.coordSys() shifted by -50000mm in X",
+            "businessMeaning": "Defines where the truck is drawn in the model space relative to the script insertion point.",
+            "validRange": "Any 3D coordinate system.",
+            "unit": "mm",
+            "affectsOutput": "Moves the entire truck visualization (cab, chassis, load) to the specified location."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "entityHandle is valid (Is Element or GenBeam)",
+            "effect": "Script retrieves and transforms the real body of the timber item instead of drawing a placeholder box.",
+            "cascade": [
+              "Geometry Generation",
+              "Coordinate Transformation (Element/Beam to Stack Item)"
+            ]
+          },
+          {
+            "trigger": "isDoubleWheel == 1",
+            "effect": "Script executes a secondary block of code to generate extra wheel geometry.",
+            "cascade": [
+              "Wheel Geometry Count",
+              "Axle Visual Complexity"
+            ]
+          },
+          {
+            "trigger": "truckLoad Map contents change",
+            "effect": "Regenerates the entire truck layout, including number of axles, load bodies, and stack items.",
+            "cascade": [
+              "All Geometry",
+              "truckStartOffset"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Body (Visual)",
+            "description": "3D solid bodies representing the truck chassis, cargo boxes (green), and loading zones (transparent white).",
+            "appliedTo": "Model Space (Script Instance)"
+          },
+          {
+            "type": "Body (Entity Reference)",
+            "description": "The actual geometry of Elements or GenBeams found in the map, transformed to the truck's coordinate system.",
+            "appliedTo": "The specific Element or GenBeam referenced."
+          },
+          {
+            "type": "Body (Wheels/Cab)",
+            "description": "Parametrically generated 3D bodies for wheels (with drilled hubs) and the truck cab.",
+            "appliedTo": "Model Space (Script Instance)"
+          }
+        ]
+      },
+      "tokens_used": 7509,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"Script initializes, sets unit to mm, and establishes a Display object.\",\n    \"Retrieves the 'truckLoad' Map from the drawing.\",\n    \"Defines the global Truck Coordinate System by shifting the Script Instance coordinate system -50000mm in X.\",\n    \"Iterates through 'loadBody[]' entries in the map to draw cargo zones.\",\n    \"Calculates 'truckStartOffset' based on the minimum X position of the cargo bodies to determine where the cab should attach.\",\n    \"Draws the green Load Body geometry.\",\n    \"Iterates through nested 'loadSpace[]' and 'stack[]' structures.\",\n    \"Iterates through 'stackItem[]' entries within each stack.\",\n    \"Evaluates the 'entityHandle' for each stack item.\",\n    \"[Conditional] If a valid Element or GenBeam is found, transforms and draws the real"
+      },
+      "tokens_used": 10046,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# truckImporter.mcr\n\n## Overview\nThis script visualizes a logistics plan by generating a 3D truck model loaded with specific timber packages or elements. It is used to verify that timber packs fit within the truck's load space and to check the visual arrangement of the cargo.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script generates 3D geometry (Bodies) in the model. |\n| Paper Space | No | Not designed for 2D layout or shop drawings. |\n| Shop Drawing | No | Does not interact with detailing views. |\n\n## Prerequisites\n- **Required Entities**: The drawing must contain the Elements or GenBeams referenced in the load manifest. If these are missing, only placeholder boxes will be drawn.\n- **Minimum Beam Count**: 0.\n- **Required Settings Files**: A Map structure named `truckLoad` must exist within the drawing. This map acts as the configuration file, containing truck dimensions, axle layouts, and a list of items to load.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or select from hsbCAD menu)\nAction: Select `truckImporter.mcr` from the file browser.\n\n### Step 2: Automatic Execution\nAction: Upon insertion, the script automatically reads the `truckLoad` Map.\n- If the Map exists and contains valid data, the 3D truck and load will appear immediately.\n- If the Map is missing or empty, no geometry will be generated.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | **Note:** This script does not expose parameters in the Properties Palette. All configuration is handled via the `truckLoad` Map in the drawing. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | No custom context menu options are defined for this script. |\n\n## Settings Files\n- **Filename**: `truckLoad` (Internal Map)\n- **Location**: Stored within the drawing's internal `_Map` structure.\n- **Purpose**: This data structure defines the truck geometry (chassis, wheels, cab) and the manifest of timber elements to be loaded. It includes coordinates, stack positions, and entity references to specific Elements or GenBeams.\n\n## Tips\n- **Missing Geometry**: If you insert the script and see nothing, check that the `truckLoad` Map has been correctly populated in the drawing.\n- **Real vs. Placeholder**: The script attempts to draw the actual timber geometry for every item on the truck. If an item cannot be found (invalid handle), it will draw a grey placeholder box instead.\n- **Cab Position**: The script automatically calculates where to place the truck cab based on the position of the cargo; you do not need to measure this manually.\n\n## FAQ\n- **Q: Can I resize the truck using the Properties Palette?**\n  **A:** No. You must modify the dimensions inside the `truckLoad` Map structure (usually handled by another script or export tool).\n- **Q: Why are my packages showing as grey boxes instead of actual timber?**\n  **A:** The script cannot find the specific Element or GenBeam referenced in the load list. Ensure the source entities exist in the current drawing and have not been erased."
+      },
+      "tokens_used": 4721,
+      "error": null
+    }
+  }
+}

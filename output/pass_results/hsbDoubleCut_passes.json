@@ -1,0 +1,326 @@
+{
+  "filename": "hsbDoubleCut.mcr",
+  "status": "completed",
+  "total_tokens": 37158,
+  "processing_time": 363.562157869339,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7179,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses getGenBeam() and GenBeam.addTool() which are Model Space operations. Uses setEraseAndCopyWithBeams(). No sd_ prefixes, #Type E, or _Viewport usage found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4198,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getGenBeam",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "|Select apex location of double cut.|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "getPoint",
+              "promptOriginal": "|Select second apex point|",
+              "condition": "bUseSecondPoint",
+              "required": false
+            },
+            {
+              "step": 4,
+              "function": "getPoint",
+              "promptOriginal": "|Select point on first plane.|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 5,
+              "function": "getPoint",
+              "promptOriginal": "|Select point on second plane.|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "pIsEndTool",
+            "type": "PropString",
+            "displayName": "|Insert as end tool|",
+            "defaultValue": "|No|",
+            "inputType": "dropdown",
+            "options": [
+              "|No|",
+              "|Yes|"
+            ],
+            "category": "|General|",
+            "description": "|Inserting as end tool will remove all the end tools in that direction.|"
+          },
+          {
+            "index": 1,
+            "variable": "pUseSecondPoint",
+            "type": "PropString",
+            "displayName": "|Use second point for direction|",
+            "defaultValue": "|No|",
+            "inputType": "dropdown",
+            "options": [
+              "|No|",
+              "|Yes|"
+            ],
+            "category": "|General|",
+            "description": "|The direction of the double cut is calculated most perpendicular to the part surface. But if a second point is set, the direction is through the second point.|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6997,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates a double cut (intersecting planes) on timber elements to form complex angles like hips, valleys, or diagonal end cuts.",
+          "category": "Machining",
+          "typicalUseCase": "Shaping the end of a beam to match a roof intersection (e.g., where a valley meets a ridge) or creating a specific angular geometry on panels and CLT."
+        },
+        "parameters": [
+          {
+            "name": "pIsEndTool",
+            "technicalDefault": "|No|",
+            "businessMeaning": "Determines if the cut defines the physical end of the element. If Yes, it replaces all other end tools in that direction, effectively setting the element's length to the cut.",
+            "validRange": "|No|, |Yes|",
+            "unit": "Enum",
+            "affectsOutput": "If 'Yes', the tool acts as an end processor (calculating element length). If 'No', it acts as an internal subtraction tool."
+          },
+          {
+            "name": "pUseSecondPoint",
+            "technicalDefault": "|No|",
+            "businessMeaning": "Controls how the orientation (ridge line) of the double cut is calculated. 'No' calculates it perpendicular to the beam surface automatically. 'Yes' allows the user to manually define the direction using a specific point.",
+            "validRange": "|No|, |Yes|",
+            "unit": "Enum",
+            "affectsOutput": "Alters the calculation logic for the intersection line of the two cut planes and determines if a 3rd grip point is required during insertion."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "pUseSecondPoint set to '|Yes|'",
+            "effect": "Prompts the user to select a 'Second apex point' during insertion and generates a 3rd grip point (_PtG[2]) to define the cut direction manually.",
+            "cascade": [
+              "Insertion Step 3 (Select second apex point)",
+              "_PtG[2]"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "DoubleCut",
+            "description": "A geometric tool created by the intersection of two half-planes, removing material from the element where they overlap.",
+            "appliedTo": "The selected GenBeam (Beam, Sheet, Panel, Sip, or CLT)."
+          },
+          {
+            "type": "Cut",
+            "description": "A single planar cut created as a fallback when the defined planes are parallel or coplanar.",
+            "appliedTo": "The selected GenBeam."
+          }
+        ]
+      },
+      "tokens_used": 6313,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Launch Script",
+          "Check if Insert Mode (_bOnInsert)",
+          "Check for Execute Key (_kExecuteKey)",
+          "[Branch] Load Catalog Settings or Show Standard Dialog",
+          "Prompt User for GenBeam (getGenBeam)",
+          "Prompt User for Apex Location (_Pt0)",
+          "[Conditional Branch] pUseSecondPoint == Yes",
+          "Prompt User for Second Apex Point (if applicable)",
+          "Prompt User for Point on First Plane",
+          "Prompt User for Point on Second Plane",
+          "Store Input Points in _PtG Array",
+          "Validate GenBeam Existence",
+          "[Branch] InitializeFrom Map Check",
+          "[Branch] Coplanarity/Parallel Check (bOneCut)",
+          "Calculate Cut Geometry (Single or Double)",
+          "Apply Tool to Beam (addTool)",
+          "Draw Graphics (Display)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Method",
+            "path1": {
+              "name": "Silent/Console Execution",
+              "steps": [
+                "Check _kExecuteKey",
+                "Load catalog entry matching key",
+                "If not found, load '_LastInserted' catalog"
+              ]
+            },
+            "path2": {
+              "name": "Standard Manual Insert",
+              "steps": [
+                "Execute showDialog()",
+                "User modifies properties manually if needed"
+              ]
+            }
+          },
+          {
+            "condition": "pUseSecondPoint == '|Yes|'",
+            "path1": {
+              "name": "Defined Direction",
+              "steps": [
+                "Prompt: 'Select second apex point'",
+                "Add point to _PtG array (index 2)",
+                "Use vector between apexes to calculate cut direction"
+              ]
+            },
+            "path2": {
+              "name": "Auto-Perpendicular Direction",
+              "steps": [
+                "Skip second point prompt",
+                "Calculate direction perpendicular to beam surface automatically",
+                "Ensure _PtG array length is 2"
+              ]
+            }
+          },
+          {
+            "condition": "Map 'InitializeFrom' Present",
+            "path1": {
+              "name": "Console Conversion",
+              "steps": [
+                "Extract ptCut1, vecCut1, ptCut2, vecCut2 from Map",
+                "Calculate intersection line of planes",
+                "Generate _Pt0 and _PtG points based on intersection",
+                "Reset properties: pIsEndTool='No', pUseSecondPoint='Yes'"
+              ]
+            },
+            "path2": {
+              "name": "Standard Manual Creation",
+              "steps": [
+                "Skip initialization block",
+                "Use user-selected points stored in _PtG"
+              ]
+            }
+          },
+          {
+            "condition": "Points are Coplanar or Parallel (bOneCut)",
+            "path1": {
+              "name": "Single Cut Mode",
+              "steps": [
+                "Set bOneCut = TRUE",
+                "Calculate single normal vector (vecN)",
+                "Create single 'Cut' tool",
+                "Draw circle representation"
+              ]
+            },
+            "path2": {
+              "name": "Double Cut Mode",
+              "steps": [
+                "Set bOneCut = FALSE",
+                "Calculate two normals (vecN0, vecN1)",
+                "Calculate intersection line (vecLn)",
+                "Create 'DoubleCut' tool",
+                "Draw crossing lines representation"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Silent erase)",
+            "recovery": "Script erases instance if insertCycleCount() > 1 to prevent duplicate execution."
+          },
+          {
+            "check": "GenBeam Selection",
+            "errorMessage": "None (Silent erase/Debug msg)",
+            "recovery": "Script erases instance if _GenBeam[0] is invalid or missing. User must run script again and select a valid beam."
+          },
+          {
+            "check": "Point Input (Second Apex)",
+            "errorMessage": "None (Silent erase)",
+            "recovery": "If user cancels (Esc) during 'Select second apex point' prompt, script erases instance."
+          },
+          {
+            "check": "Point Input (Planes)",
+            "errorMessage": "None (Silent erase)",
+            "recovery": "If user cancels during 'Select point on first/second plane' prompts, script erases instance."
+          },
+          {
+            "check": "Grip Points Availability",
+            "errorMessage": "None (Silent erase/Debug msg)",
+            "recovery": "Script erases instance if _PtG.length() < 2. This ensures enough geometry exists to define a cut."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Edit Properties",
+            "how": "OPM (AutoCAD Properties Palette)",
+            "effect": "Changing 'Insert as end tool' toggles between being a length-determining tool or an internal subtraction. Changing 'Use second point' updates logic for calculating the cut direction on the next recalculation."
+          },
+          {
+            "action": "Grip Edit",
+            "how": "Drag Grip Points (_Pt0, _PtG[0], _PtG[1], _PtG[2])",
+            "effect": "Modifies the apex location or the points defining the cut planes, dynamically updating the cut geometry on the beam."
+          },
+          {
+            "action": "Move/Copy with Beam",
+            "how": "Standard AutoCAD Move/Copy commands",
+            "effect": "Script uses setEraseAndCopyWithBeams() and setKeepReferenceToGenBeamDuringCopy(), ensuring the tool moves/copies correctly with the associated timber element."
+          }
+        ]
+      },
+      "tokens_used": 6834,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbDoubleCut\n\n## Overview\nThis script applies a double cut (intersecting planes) to timber elements, allowing for complex angular geometries such as hips, valleys, or diagonal end cuts. It can function as a standard subtraction tool or as an end tool that determines the length of the beam.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for beam selection and 3D geometry. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Entities**: GenBeam (Beam, Wall, Panel, CLT, etc.)\n- **Minimum Beam Count**: 1\n- **Required Settings**: None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbDoubleCut.mcr`\n\n### Step 2: Select Timber Element\n```\nCommand Line: Select GenBeam\nAction: Click on the beam, panel, or timber element you wish to cut.\n```\n\n### Step 3: Define Apex Location\n```\nCommand Line: Select apex location of double cut.\nAction: Click in the 3D model to specify the peak point where the two cut planes will meet.\n```\n*(Note: If the property \"Use second point for direction\" is set to **Yes**, an additional prompt will appear here to define the direction line.)*\n\n### Step 4: Define First Plane\n```\nCommand Line: Select point on first plane.\nAction: Click a point that lies on the surface of the first desired cut plane (along with the apex).\n```\n\n### Step 5: Define Second Plane\n```\nCommand Line: Select point on second plane.\nAction: Click a point that lies on the surface of the second desired cut plane.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Insert as end tool | Dropdown | No | If set to **Yes**, this cut acts as the physical end of the beam, replacing other end tools in this direction and setting the element's length. If **No**, it acts as an internal subtraction. |\n| Use second point for direction | Dropdown | No | If set to **Yes**, you must manually select a second point during insertion to define the specific direction of the cut intersection. If **No**, the direction is calculated automatically perpendicular to the beam surface. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Standard Edit Options | Use grips to move the apex or plane points. Use properties to change tool behavior. |\n\n## Settings Files\n- **Filename**: N/A\n- **Location**: N/A\n- **Purpose**: This script relies on internal logic and standard catalogs rather than external settings files.\n\n## Tips\n- **Visualizing the Cut:** The script draws crossing lines at the intersection to help you visualize the double cut geometry.\n- **Grip Editing:** After insertion, select the script and drag the blue grip points to dynamically adjust the apex location or the tilt of the cut planes.\n- **Automatic Direction:** For most standard applications, leave \"Use second point for direction\" as **No** so the system calculates the optimal intersection line automatically.\n\n## FAQ\n- **Q: What happens if the two points I select for the planes are parallel?**\n  - A: The script will automatically switch to a Single Cut mode instead of a Double Cut.\n- **Q: How do I make the cut shorten the beam?**\n  - A: Change the property \"Insert as end tool\" to **Yes** in the Properties Palette.\n- **Q: The cut direction is wrong. How do I fix it?**\n  - A: Either adjust the property \"Use second point for direction\" to **Yes** and define it manually, or use the grip points to rotate the planes into the correct position."
+      },
+      "tokens_used": 5637,
+      "error": null
+    }
+  }
+}

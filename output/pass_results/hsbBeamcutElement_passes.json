@@ -1,0 +1,339 @@
+{
+  "filename": "hsbBeamcutElement.mcr",
+  "status": "completed",
+  "total_tokens": 42282,
+  "processing_time": 145.98623132705688,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.3",
+            "date": "15.11.2021",
+            "author": "Thorsten Huck",
+            "changes": "HSB-13777 when splitting the tooling beam redundant tools will be purged, tool drawn on T-Layer, partial beamcuts show X-dimension"
+          },
+          {
+            "version": "1.2",
+            "date": "29apr2020",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "HSB-5923 splitting of tool beam supported and will clone tool, HSB-5926 Image updated"
+          },
+          {
+            "version": "1.1",
+            "date": "19.nov2019",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "HSB-5907 selection improved, bySelection now also supports loose beams"
+          },
+          {
+            "version": "1.0",
+            "date": "14.nov2019",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "HSB-5907 initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7661,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses _kModelSpace in tslNew.dbCreate(), lacks sd_ prefix, creates BeamCut geometry in 3D, no #Type E or _Viewport references"
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam (Tooling beam)",
+            "Element (Optional if 'bySelection' used)"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space. Requires at least one 'tooling beam' to define the cut geometry. If 'Orientation' is not set to 'bySelection', the tooling beam must belong to an Element or an Element must be selected to filter intersecting beams.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5358,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "showDialog",
+              "promptOriginal": "Properties Dialog",
+              "condition": "_bOnInsert && sKey.length()==0",
+              "required": false
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select tooling beams|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "PrEntity",
+              "promptOriginal": "|Select beams to be milled|",
+              "condition": "_bOnInsert && nOrientation==1",
+              "required": false
+            },
+            {
+              "step": 4,
+              "function": "PrEntity",
+              "promptOriginal": "|Select element or beams to be milled|",
+              "condition": "_bOnInsert && !bHasElement && beamsBySelection.length()<1",
+              "required": false
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sOrientation",
+            "type": "PropString",
+            "displayName": "|Orientation|",
+            "defaultValue": "|All|",
+            "inputType": "dropdown",
+            "options": [
+              "|All|",
+              "|bySelection|",
+              "|Not parallel|",
+              "|Parallel|",
+              "|Not perpendicular|",
+              "|perpendicular|"
+            ],
+            "category": "|General|",
+            "description": "|Specifies the orientation of the beams which will be manipulated.|"
+          },
+          {
+            "index": 1,
+            "variable": "dGap",
+            "type": "PropDouble",
+            "displayName": "|Gap|",
+            "defaultValue": "2",
+            "inputType": "number",
+            "options": [],
+            "category": "|General|",
+            "description": "|Defines an additional gap of the beamcut in all directions|"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "../|Add Beams|",
+            "handler": "../|Add Beams|",
+            "action": "Prompts user to select beams to be added to the milling list.",
+            "alsoTriggeredBy": "TslDoubleClick"
+          },
+          {
+            "menuItem": "../|Remove Beams|",
+            "handler": "../|Remove Beams|",
+            "action": "Prompts user to select beams to be removed from the milling list.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 6756,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically applies volumetric cuts (beamcuts) to structural timber beams based on the geometry of a selected 'tooling' beam. It filters target beams based on their orientation relative to the tooling beam, allowing for efficient creation of notches, housings, or connection clearances.",
+          "category": "Hardware/Machining",
+          "typicalUseCase": "Creating complex joint geometries (e.g., a recess for a steel plate or a perpendicular beam notch) where the user defines the 'void' or 'negative space' using a temporary or existing beam, and that cut is automatically applied to intersecting structural members."
+        },
+        "parameters": [
+          {
+            "name": "sOrientation",
+            "technicalDefault": "|All|",
+            "businessMeaning": "Defines which intersecting beams will be cut based on their geometric relationship to the tooling beam. It acts as a filter to prevent accidental cutting of non-target members (e.g., only cutting perpendicular joists while ignoring parallel wall plates).",
+            "validRange": "Dropdown options: All, bySelection, Not parallel, Parallel, Not perpendicular, perpendicular",
+            "unit": "enum",
+            "affectsOutput": "Determines the set of target beams that receive the cut. For example, 'Parallel' cuts only beams running the same direction as the tool, while 'bySelection' restricts the operation to manually chosen beams."
+          },
+          {
+            "name": "dGap",
+            "technicalDefault": "2",
+            "businessMeaning": "A dimensional tolerance or clearance added uniformly around the tooling beam's profile. This ensures a loose fit for parts (like steel plates) inserted into the cut, or accounts for manufacturing tolerances.",
+            "validRange": "0 mm to 10 mm (typically)",
+            "unit": "mm",
+            "affectsOutput": "Modifies the size of the resulting cut volume. A positive value makes the cut larger than the tooling beam in all directions (Length, Width, Height), while 0 makes it an exact match to the tooling beam."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sOrientation is set to 'bySelection'",
+            "effect": "The script ignores geometric filtering logic and relies entirely on the specific beams selected during the insertion phase or added later via the 'Add Beams' context menu.",
+            "cascade": [
+              "PrEntity prompts for 'Select beams to be milled'",
+              "_Beam array contents"
+            ]
+          },
+          {
+            "trigger": "Tooling Beam does not belong to an Element",
+            "effect": "Requires user interaction to define the scope of beams to be cut (either by manual selection of beams or selection of a host Element) because the script cannot automatically deduce the construction context.",
+            "cascade": [
+              "Insertion flow prompts",
+              "sOrientation (forced to 'bySelection' if no element found)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "BeamCut",
+            "description": "A rectangular volumetric subtraction (machining operation) applied to target beams. The dimensions are derived from the tooling beam (Length, Width, Height) adjusted by the Gap parameter.",
+            "appliedTo": "Structural beams (GenBeam) that physically intersect the tooling beam and satisfy the 'Orientation' filter criteria."
+          }
+        ]
+      },
+      "tokens_used": 7101,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script insertion started (_bOnInsert).",
+          "2. Determine input source: Check if called by Catalog/Command Key or standard insertion.",
+          "3. Input Phase: If standard insertion, show Properties Dialog; otherwise load Catalog preset.",
+          "4. Selection Phase 1: Prompt user to select 'Tooling Beam(s)'.",
+          "5. Context Check: Analyze if selected Tooling Beam has a valid Element reference.",
+          "6. Selection Phase 2 (Conditional):",
+          "   - If Orientation == 'bySelection', prompt for 'Beams to be milled'.",
+          "   - If no Element reference AND no manual beams yet, prompt for 'Element or Beams to be milled'.",
+          "7. Instance Creation: Loop through tooling beams and create TSL instance (dbCreate), attaching the Element and/or target beams.",
+          "8. Script Execution (Recalc): Instance calculates geometry.",
+          "9. Validation Phase 1: Ensure Element reference exists OR manual beams were provided.",
+          "10. Beam Collection:",
+          "    - If 'bySelection' mode: Use stored _Beam array.",
+          "    - If Element mode: Retrieve all beams from Element.",
+          "11. Filtering Phase: Filter collected beams based on 'Orientation' property (Parallel, Perpendicular, etc.).",
+          "12. Tool Generation: Create BeamCut body based on Tooling Beam dimensions + Gap parameter.",
+          "13. Intersection Phase: Identify which target beams physically intersect the Tool body.",
+          "14. Application: Apply BeamCut (machining) to intersecting beams.",
+          "15. Cleanup/Purge Phase: If no intersections found, delete the TSL instance.",
+          "16. Visualization: Calculate intersection range to minimize visual clutter and draw axis lines."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "sOrientation property set to 'bySelection' (Index 1) OR Tooling Beam has no Element reference",
+            "path1": {
+              "name": "Manual Beam Selection Workflow",
+              "steps": [
+                "Script enables 'Add Beams' and 'Remove Beams' context menu triggers.",
+                "Target beams are strictly those stored in the _Beam array.",
+                "User can modify the beam list post-insertion via context menu."
+              ]
+            },
+            "path2": {
+              "name": "Element-Based Workflow",
+              "steps": [
+                "Script retrieves target beams using el.beam().",
+                "Context menu triggers for adding/removing specific beams are not active.",
+                "Filtering is applied to the entire set of beams within the element."
+              ]
+            }
+          },
+          {
+            "condition": "Intersection Check during Calculation",
+            "path1": {
+              "name": "Intersections Found",
+              "steps": [
+                "BeamCut is applied to the beams.",
+                "Visual representation (Axes) is drawn.",
+                "Instance remains in the drawing."
+              ]
+            },
+            "path2": {
+              "name": "No Intersections Found",
+              "steps": [
+                "Script reports 'no beams to be milled found'.",
+                "eraseInstance() is called.",
+                "TSL instance is deleted from the model."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Existence of Element reference or Manual Beams",
+            "errorMessage": "|Element reference not found.|",
+            "recovery": "Ensure the tooling beam is part of an Element, or switch 'Orientation' to 'bySelection' to manually pick target beams."
+          },
+          {
+            "check": "Validity of Tooling Beam Geometry",
+            "errorMessage": "|Invalid tool geometry|",
+            "recovery": "The tooling beam (plus the Gap) results in zero/negative dimensions. Resize the tooling beam."
+          },
+          {
+            "check": "Selection of Tooling Beams",
+            "errorMessage": "|Requires at least one beam.|",
+            "recovery": "Select a valid beam to define the cut shape during insertion."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Edit Properties",
+            "how": "Object Properties Palette (OPM)",
+            "effect": "Changing 'Gap' updates cut dimensions. Changing 'Orientation' re-filters which beams are cut (switching between Element/Manual modes)."
+          },
+          {
+            "action": "Add Beams",
+            "how": "Right-click Context Menu -> '../|Add Beams|' or Double-Click (TslDoubleClick)",
+            "effect": "Prompts user to select additional beams; appends them to the internal _Beam list and recalculates cuts."
+          },
+          {
+            "action": "Remove Beams",
+            "how": "Right-click Context Menu -> '../|Remove Beams|'",
+            "effect": "Prompts user to select beams; removes them from the internal _Beam list and recalculates cuts."
+          },
+          {
+            "action": "Modify Tool Geometry",
+            "how": "AutoCAD Grips/Stretch on the Tooling Beam",
+            "effect": "Script detects geometric change of the tooling beam, recalculates the cut volume, and updates intersections."
+          },
+          {
+            "action": "Split Tooling Beam",
+            "how": "hsbCAD Split functionality",
+            "effect": "Script is set to clone during beam split; new instances are created for the split segments, removing redundant tools."
+          }
+        ]
+      },
+      "tokens_used": 9658,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbBeamcutElement.mcr\n\n## Overview\nThis script automatically applies volumetric cuts (beamcuts) to structural timber beams based on the geometry of a selected \"tooling\" beam. It allows you to define complex cut shapes (like notches or recesses) using a template beam and apply them to intersecting beams with optional dimensional gaps.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script is designed for 3D model manipulation. |\n| Paper Space | No | Not applicable for detailing views. |\n| Shop Drawing | No | This is a 3D modeling tool, not a 2D annotation tool. |\n\n## Prerequisites\n- **Required Entities**: \n  - At least one \"Tooling Beam\" (a standard GenBeam used to define the cut shape).\n  - Target structural beams (GenBeam) to receive the cut.\n- **Minimum Beam Count**: 1 (the tooling beam).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command**: `TSLINSERT`\n**Action**: Browse and select `hsbBeamcutElement.mcr`, then click Open.\n\n### Step 2: Configure Properties\n**Action**: The Properties dialog appears automatically upon insertion.\n- **Orientation**: Choose how target beams are selected.\n  - `All`: Cuts all beams intersecting the tool.\n  - `bySelection`: Allows you to manually pick specific beams.\n  - `Parallel` / `Not parallel`: Filters based on beam direction.\n  - `perpendicular` / `Not perpendicular`: Filters based on angle.\n- **Gap**: Define a clearance value (default is 2mm).\n**Action**: Click OK to proceed.\n\n### Step 3: Select Tooling Beam\n```\nCommand Line: |Select tooling beams|\nAction: Click on the beam that defines the shape of the cut (the \"tool\"). Press Enter to confirm.\n```\n\n### Step 4: Select Target Beams (Conditional)\n*This step depends on the \"Orientation\" setting and whether the tooling beam belongs to an Element.*\n\n**Scenario A: Orientation set to 'bySelection'**\n```\nCommand Line: |Select beams to be milled|\nAction: Click the specific beams you want to cut. Press Enter to confirm.\n```\n\n**Scenario B: Tooling beam is loose (not in an Element) and Orientation is NOT 'bySelection'**\n```\nCommand Line: |Select element or beams to be milled|\nAction: Select the host Element or specific beams to define the scope of the operation.\n```\n\n*If the tooling beam is part of an Element and Orientation is not 'bySelection', the script automatically processes the relevant beams within that Element.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Orientation | dropdown | All | Specifies which beams to cut based on their relationship to the tooling beam. Options include All, bySelection, Parallel, Not parallel, perpendicular, Not perpendicular. |\n| Gap | number | 2 | Defines an additional clearance around the cut in all directions (mm). Useful for ensuring loose fits for steel plates or tolerances. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Add Beams | Prompts you to select additional beams to be added to the milling list. (Also available by Double-Clicking the script instance). |\n| Remove Beams | Prompts you to select beams currently in the list to remove them from the milling operation. |\n\n## Settings Files\n- No specific settings files are required for this script.\n\n## Tips\n- **Use \"bySelection\" for precision**: If you are working in a congested area and only want to cut specific beams, set Orientation to `bySelection` to avoid accidental cuts.\n- **Splitting Tool Beams**: If you split the tooling beam using standard hsbCAD splitting functions, the script will automatically clone itself to the new segments.\n- **Visualizing Cuts**: The script draws axis lines to indicate the range of the cut.\n- **Auto-Deletion**: If the script calculates that no beams intersect the tooling volume, it will automatically delete itself to keep the drawing clean.\n\n## FAQ\n\n**Q: What happens if I change the size of the tooling beam after insertion?**\n**A:** The script is dynamic. Stretching or modifying the tooling beam using AutoCAD grips will trigger an update, recalculating the cut size and intersections immediately.\n\n**Q: Why did the script instance disappear after I moved the tooling beam?**\n**A:** The script automatically purges itself if it finds no beams intersecting the tooling volume. If you moved the tool away from the target beams, the script detected \"nothing to cut\" and removed itself.\n\n**Q: Can I use this to create a recess for a steel plate?**\n**A:** Yes. Draw a beam representing the steel plate dimensions as your \"Tooling Beam\". Set the `Gap` property to 0 (or a small tolerance if needed) and apply the script. This will carve the exact shape out of the surrounding timber.\n\n**Q: The 'Orientation' filter isn't working as expected.**\n**A:** Ensure your tooling beam is part of an Element. If the tooling beam is a \"loose\" beam (no Element association), the script forces a manual selection workflow or requires you to select the Element context first."
+      },
+      "tokens_used": 5748,
+      "error": null
+    }
+  }
+}

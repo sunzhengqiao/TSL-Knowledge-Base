@@ -1,0 +1,303 @@
+{
+  "filename": "Simpson StrongTie Anchor.mcr",
+  "status": "completed",
+  "total_tokens": 51605,
+  "processing_time": 382.9740447998047,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9354,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Explicit usage of `_kModelSpace` argument in `tslCNC.dbCreate` call. No `sd_` function prefixes, `_Viewport` usage, or `#Type E` definitions found. The script creates 3D geometry (PLine, Body implied via CNC) and handles Hardware Components (`HardWrComp`) and CNC entities (`hsbCNC`), which are Model Space entities."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space containing structural elements (walls)",
+          "requiredSettings": [
+            "Simpson StrongTie Anchor.xml (searched in hsbCompany/TSL/Settings or hsbInstall)",
+            "hsbCNC.tsl (required to generate tooling operations)"
+          ]
+        }
+      },
+      "tokens_used": 6750,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10114,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the insertion and configuration of Simpson StrongTie hold-down anchors (HD/HTT/AH series) on wall elements, including 3D representation, BOM data, and automatic sheeting cutouts for timber fabrication.",
+          "category": "Hardware/Connection",
+          "typicalUseCase": "When designing timber frame walls requiring uplift resistance or hold-down brackets at ends or corners, ensuring the sheathing/paneling has the correct cutouts to accommodate the metal connector."
+        },
+        "parameters": [
+          {
+            "name": "Family (sModel/sFamily)",
+            "technicalDefault": "HTT5",
+            "businessMeaning": "Selects the specific Simpson StrongTie product model (e.g., HTT, HDA, AH) and its associated dimensions from the catalog XML.",
+            "validRange": "Any model defined in 'Simpson StrongTie Anchor.xml' (e.g., HTT5, HTT14, HDA11)",
+            "unit": "String",
+            "affectsOutput": "Updates the 3D geometry size (A, B, C), steel thickness, hole positions, and BOM catalog number."
+          },
+          {
+            "name": "Side (nSide)",
+            "technicalDefault": "Icon Side",
+            "businessMeaning": "Determines which side of the wall element (Left or Right relative to beam direction) the anchor is placed on.",
+            "validRange": "Left Side, Right Side, Icon Side, Opposite Side",
+            "unit": "Enum",
+            "affectsOutput": "Flips the anchor geometry to the opposite side of the wall and reverses the sign of the element zones for tooling."
+          },
+          {
+            "name": "Flip Mounting Side (bFlipMounting)",
+            "technicalDefault": "No",
+            "businessMeaning": "Reverses the orientation of the anchor face relative to the wall surface (e.g., turning it 180 degrees vertically or horizontally depending on the family implementation).",
+            "validRange": "Yes/No",
+            "unit": "Boolean",
+            "affectsOutput": "Mirrors the anchor geometry relative to the reference point."
+          },
+          {
+            "name": "Tooling Zone (sToolingZones[0..4])",
+            "technicalDefault": "Empty/None",
+            "businessMeaning": "Specifies the type of machining required for a specific sheeting layer (Zone 1-5) to pass the anchor through.",
+            "validRange": "None, Milling, Saw, SawNoNail, MillingNoNail",
+            "unit": "String",
+            "affectsOutput": "Generates a CNC operation (Milling or Saw) in the element's sheeting layers."
+          },
+          {
+            "name": "Tooling Width (sToolingWidths[0..4])",
+            "technicalDefault": "0",
+            "businessMeaning": "Defines the width of the cutout perpendicular to the wall beam axis.",
+            "validRange": "Typically > Anchor Width (C) to allow fitment (e.g., 10mm - 100mm)",
+            "unit": "mm",
+            "affectsOutput": "Adjusts the width of the rectangular CNC tooling path."
+          },
+          {
+            "name": "Tooling Height (sToolingHeights[0..4])",
+            "technicalDefault": "0",
+            "businessMeaning": "Defines the length of the cutout along the wall beam axis.",
+            "validRange": "Typically > Anchor Length (A) to allow fitment (e.g., 50mm - 500mm)",
+            "unit": "mm",
+            "affectsOutput": "Adjusts the height/length of the rectangular CNC tooling path."
+          },
+          {
+            "name": "Tooling Index (sToolingIndexes[0..4])",
+            "technicalDefault": "1",
+            "businessMeaning": "Selects the specific tool number from the CNC machine library to use for the cutout.",
+            "validRange": "Integer matching CNC machine configuration",
+            "unit": "Integer",
+            "affectsOutput": "Writes the specific tool number to the `hsbCNC` entity for production."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing Side (Left/Right)",
+            "effect": "Inverts the zone index for tooling",
+            "cascade": [
+              "Tooling Zone (nZone)",
+              "CNC Entity placement"
+            ]
+          },
+          {
+            "trigger": "Changing Family",
+            "effect": "Loads new dimensional map",
+            "cascade": [
+              "Geometry (dA, dB, dC)",
+              "Hardware BOM Data"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "HardWrComp",
+            "description": "Hardware component representing the Simpson StrongTie anchor for BOM and listing.",
+            "appliedTo": "The script instance (Parent Element/Beam)"
+          },
+          {
+            "type": "hsbCNC",
+            "description": "Milling or Sawing operation to cut clearance holes in the sheeting/sheathing layers.",
+            "appliedTo": "Sheet layers of the Element (Zones 1-5)"
+          },
+          {
+            "type": "PLine/Body",
+            "description": "3D geometric representation of the metal strap/anchor for visualization in the model.",
+            "appliedTo": "ModelSpace at the insertion point"
+          }
+        ]
+      },
+      "tokens_used": 9329,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Initialization",
+          "Configuration Load: Search for 'Simpson StrongTie Anchor.xml' in Company or Install folders",
+          "[Conditional] Configuration Source: Load from MapObject, XML, or Hardcoded Defaults",
+          "[Insert Mode] User Input: Prompt for insertion point and select GenBeam/Element",
+          "[Recalc Mode] State Retrieval: Restore stored insertion point and beam reference",
+          "Property Parsing: Parse string arrays for Tooling Zones, Widths, Heights, and Indexes",
+          "Geometry Setup: Calculate coordinate system (VecX, VecY, VecZ) based on beam orientation and 'Side' property",
+          "Dimension Load: Retrieve anchor dimensions (A, B, C) from the selected Family/Model map",
+          "Tooling Execution: Iterate through 5 sheeting zones to generate or update hsbCNC operations",
+          "Hardware Generation: Create or update HardWrComp entity for BOM listing",
+          "Finalize: Store vectors to Map, update visual representation, and save instance"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Configuration Availability (MapObject vs XML vs Default)",
+            "path1": {
+              "name": "MapObject Exists",
+              "steps": [
+                "Load settings from database dictionary",
+                "Set dependency on MapObject",
+                "If MapObject valid but XML missing: Add 'Export Xml' context menu trigger"
+              ]
+            },
+            "path2": {
+              "name": "MapObject Missing",
+              "steps": [
+                "Search for XML file",
+                "If XML found: Read map, create MapObject in DB",
+                "If XML not found: Generate hardcoded 'HTT5' default map, create MapObject"
+              ]
+            }
+          },
+          {
+            "condition": "Execution Mode (_bOnInsert flag)",
+            "path1": {
+              "name": "Insertion",
+              "steps": [
+                "Run getPoint() with GenBeam/Element filter",
+                "Validate user selection",
+                "Set initial insertion point and reference beam"
+              ]
+            },
+            "path2": {
+              "name": "Recalculation",
+              "steps": [
+                "Use existing _Pt0 and bmDef from instance data",
+                "Proceed to geometry and tooling updates"
+              ]
+            }
+          },
+          {
+            "condition": "Tooling Data Integrity (Per Zone)",
+            "path1": {
+              "name": "Valid Tooling Data",
+              "steps": [
+                "Calculate Zone index based on Side property",
+                "Check Zone depth and code (skip if HSB-PL09 or too thin)",
+                "Create or Update hsbCNC entity with specific tool path (Saw/Milling)"
+              ]
+            },
+            "path2": {
+              "name": "Invalid/Missing Tooling Data",
+              "steps": [
+                "Check for existing hsbCNC entity linked to this script",
+                "If found: Erase the entity and remove from internal Map"
+              ]
+            }
+          },
+          {
+            "condition": "Side Property Logic (nSide)",
+            "path1": {
+              "name": "Explicit Left/Right",
+              "steps": [
+                "Force nSide to 1 (Left)",
+                "Apply Flip Mounting modifier if active"
+              ]
+            },
+            "path2": {
+              "name": "Geometric/Icon Side",
+              "steps": [
+                "Calculate dot product between VecZ and insertion vector",
+                "Determine side based on result (1 or -1)",
+                "Apply Flip Mounting modifier if active"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Map/XML Validity",
+            "errorMessage": "Simpson StrongTie Anchor: wrong definition of the xml file 1001",
+            "recovery": "Ensure 'Simpson StrongTie Anchor.xml' exists in hsbCompany/TSL/Settings or hsbInstall, or allow script to generate defaults."
+          },
+          {
+            "check": "Beam/Element Selection",
+            "errorMessage": "(Implicit via getPoint filter) Invalid selection or selection cancelled.",
+            "recovery": "User must select a valid GenBeam or Wall Element during insertion."
+          },
+          {
+            "check": "Zone Sheet Existence",
+            "errorMessage": "(Silent) Tooling skipped for zone.",
+            "recovery": "Ensure the Element has sheeting layers defined in the zones specified in the properties."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Anchor Family/Model",
+            "how": "OPM Properties Palette (sModel dropdown)",
+            "effect": "Updates anchor dimensions (A, B, C), hole positions, and geometry."
+          },
+          {
+            "action": "Adjust Side Placement",
+            "how": "OPM Property (nSide) or Right-Click Context Menu (Icon/Opposite/Left/Right Side)",
+            "effect": "Flips anchor geometry to other side of wall and reverses tooling zone signs."
+          },
+          {
+            "action": "Configure Tooling Cutouts",
+            "how": "OPM Properties (ToolingZones, Widths, Heights strings)",
+            "effect": "Adds, modifies, or removes CNC Milling/Saw operations in specified sheeting layers."
+          },
+          {
+            "action": "Export Configuration to XML",
+            "how": "Right-Click Context Menu (Export Xml)",
+            "effect": "Writes the current internal MapObject settings to 'Simpson StrongTie Anchor.xml' for backup or sharing."
+          },
+          {
+            "action": "Flip Orientation",
+            "how": "Right-Click Context Menu (Flip Mounting Side)",
+            "effect": "Mirrors the anchor geometry relative to the reference point."
+          },
+          {
+            "action": "Relocate Anchor",
+            "how": "Grip Edit (Drag _Pt0)",
+            "effect": "Moves the anchor along the beam/wall and updates tooling positions accordingly."
+          }
+        ]
+      },
+      "tokens_used": 9876,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Simpson StrongTie Anchor.mcr\n\n## Overview\nAutomates the insertion and configuration of Simpson StrongTie hold-down anchors (HD/HTT/AH series) on wall elements. It generates 3D geometry for visualization, BOM data for listing, and automatic CNC cutouts for sheathing/sheeting layers.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in the 3D model on structural wall elements. |\n| Paper Space | No | |\n| Shop Drawing | No | This script creates physical geometry and tooling, not 2D annotations. |\n\n## Prerequisites\n- **Required Entities**: A `GenBeam` or `Wall Element` must exist in the model to attach the anchor to.\n- **Minimum Beams**: 1\n- **Required Settings Files**:\n  - `Simpson StrongTie Anchor.xml` (Located in `hsbCompany/TSL/Settings` or `hsbInstall`).\n  - *Note*: If the XML is missing, the script will load a default \"HTT5\" configuration.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: Type `TSLINSERT` in the command line or use the hsbCAD script browser, then select `Simpson StrongTie Anchor.mcr`.\n\n### Step 2: Select Wall Element\n```\nCommand Line: Select GenBeam/Element:\nAction: Click on the desired wall beam or timber element in the 3D model where the anchor should be placed.\n```\n\n### Step 3: Configure Anchor (Optional)\nOnce inserted, the anchor will appear at the selected location. Select the anchor and open the **Properties Palette** (Ctrl+1) to select the specific Simpson StrongTie model (e.g., HTT5, HDA11) and adjust dimensions.\n\n### Step 4: Adjust Tooling (Optional)\nIf the anchor passes through sheathing layers, configure the Tooling properties in the palette to generate automatic milling or sawing operations for the fabrication drawings.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Model (sModel) | Dropdown | HTT5 | Selects the specific Simpson StrongTie product family and dimensions (e.g., HTT5, HTT14). |\n| Side (nSide) | Enum | Icon Side | Sets the side of the wall for the anchor (Left/Right). \"Icon Side\" calculates it based on insertion direction. |\n| Flip Mounting Side | Boolean | No | Mirrors the anchor geometry relative to the insertion point (rotates 180 degrees). |\n| Tooling Zones | String | Empty | Defines the CNC operation for sheeting layers (e.g., \"Milling\", \"Saw\"). |\n| Tooling Widths | String | 0 | Defines the width of the cutout in the sheathing (mm). |\n| Tooling Heights | String | 0 | Defines the height/length of the cutout in the sheathing (mm). |\n| Tooling Indexes | Integer | 1 | Specifies the CNC tool number to use for the operation. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Flip Mounting Side | Mirrors the anchor geometry instantly without changing properties. |\n| Left Side / Right Side | Forces the anchor to the specific side of the wall beam. |\n| Icon Side / Opposite Side | Resets the side to depend on the insertion geometry or flips to the opposite side. |\n| Export Xml | Exports the current configuration map to the XML file (useful for backing up custom settings). |\n\n## Settings Files\n- **Filename**: `Simpson StrongTie Anchor.xml`\n- **Location**: `hsbCompany/TSL/Settings` or `hsbInstall`\n- **Purpose**: Defines the catalog of available Simpson StrongTie models, including their physical dimensions (Length A, Width B, Height C) and hole positions. If this file is missing, the script creates a default entry for the HTT5 model.\n\n## Tips\n- **Moving the Anchor**: Select the anchor in the model and drag the blue square **Grip Point** to slide it along the wall to the exact position required.\n- **Tooling Setup**: Ensure your wall element has sheeting layers defined in Zones 1-5. If the \"Tooling Zones\" property is empty, no cutouts will be generated in the CNC data.\n- **Side Logic**: If you change the \"Side\" property from Left to Right, the script automatically updates the tooling zones to match the new anchor position.\n\n## FAQ\n- **Q: I see an error \"wrong definition of the xml file 1001\".**\n  **A:** The script cannot find or read the `Simpson StrongTie Anchor.xml` file. Ensure it exists in your company settings folder or allow the script to generate a default one.\n- **Q: The anchor is visible in 3D, but there is no cutout in my sheathing.**\n  **A:** Check the Properties Palette under \"Tooling Zones\". You must enter a value (e.g., \"Saw\" or \"Milling\") and define a Width/Height greater than 0 for the cutout to be generated.\n- **Q: How do I switch from an HTT series to an HDA series?**\n  **A:** Select the anchor, open the Properties Palette (Ctrl+1), and use the dropdown next to \"Model\" to select the desired family."
+      },
+      "tokens_used": 6182,
+      "error": null
+    }
+  }
+}

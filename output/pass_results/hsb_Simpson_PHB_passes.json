@@ -1,0 +1,341 @@
+{
+  "filename": "hsb_Simpson_PHB.mcr",
+  "status": "completed",
+  "total_tokens": 32734,
+  "processing_time": 175.28721570968628,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "17/03/17",
+            "author": "bruno.bortot@hsbcad.com",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5178,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script constructs 3D geometry using Body objects, Drills, and BeamCuts. It interacts directly with a beam entity (_Beam0) via _Beam0.addTool() to modify the timber element. There are no ShopDrawing API calls (sd_*), no multipage prefixes, and no usage of _Viewport or Paper Space specific functions."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3146,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getBeam",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "PropertyDialog",
+            "trigger": "When _bOnInsert is true and _kExecuteKey is empty",
+            "title": null,
+            "dataSource": "OPM Properties (Model Type, Slot, Drills)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sType",
+            "type": "PropString",
+            "displayName": "Type",
+            "defaultValue": "PHB75",
+            "inputType": "dropdown",
+            "options": [
+              "PHB75",
+              "PHB120"
+            ],
+            "category": "Model Type",
+            "description": "Defines the Type"
+          },
+          {
+            "index": 1,
+            "variable": "sSlotAlignment",
+            "type": "PropString",
+            "displayName": "Alignment",
+            "defaultValue": "Side 1",
+            "inputType": "dropdown",
+            "options": [
+              "Side 1",
+              "Side 2",
+              "Full Depth"
+            ],
+            "category": "Slot",
+            "description": "Defines the Slot Alignment"
+          },
+          {
+            "index": 0,
+            "variable": "dDrillLength",
+            "type": "PropDouble",
+            "displayName": "Drill Depth",
+            "defaultValue": "80.0",
+            "inputType": "number",
+            "options": [],
+            "category": "Drills",
+            "description": "If Drill Depth = 0, Full depth"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6084,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates the 3D model and CNC machining for a Simpson Strong-Tie PHB column base (Post Base), connecting a timber column to a concrete foundation.",
+          "category": "Hardware / Connection",
+          "typicalUseCase": "Used when detailing a timber post that requires a specific engineered metal column base plate (PHB75 or PHB120) to anchor it to the floor, including cutting the timber for the flange and drilling bolt holes."
+        },
+        "parameters": [
+          {
+            "name": "sType",
+            "technicalDefault": "PHB75",
+            "businessMeaning": "Selects the specific Simpson Strong-Tie catalog model to be generated. This determines the physical dimensions of the base plates, the height of the side flanges, the diameter of the vertical stub, and the bolt hole pattern.",
+            "validRange": "PHB75, PHB120",
+            "unit": "Catalog ID",
+            "affectsOutput": "Changes all dimensions of the metal hardware geometry and the size/location of the slot cut into the timber."
+          },
+          {
+            "name": "sSlotAlignment",
+            "technicalDefault": "Side 1",
+            "businessMeaning": "Determines how the column base flange is positioned relative to the timber face. 'Side 1' or 'Side 2' offsets the flange to the edge of the timber, while 'Full Depth' cuts a slot through the center to accommodate the flange.",
+            "validRange": "Side 1, Side 2, Full Depth",
+            "unit": "Alignment Mode",
+            "affectsOutput": "Modifies the location and depth of the 'BeamCut' (slot) machined into the timber column to accept the vertical flange of the bracket."
+          },
+          {
+            "name": "dDrillLength",
+            "technicalDefault": "80.0",
+            "businessMeaning": "Defines the depth of the bolt holes drilled into the timber column. A value of 0 instructs the script to drill completely through the timber (through-bolting).",
+            "validRange": "0 (Through drill) to Beam Depth",
+            "unit": "mm",
+            "affectsOutput": "Sets the Z-depth of the drill operations added to the beam."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sType is changed",
+            "effect": "Updates internal dimension constants for Flange, Top Plate, Base Plate, and Stub dimensions. Also updates drill patterns (diameter, rows, columns, spacing).",
+            "cascade": [
+              "Hardware Geometry",
+              "Slot Geometry",
+              "Drill Pattern"
+            ]
+          },
+          {
+            "trigger": "dDrillLength is set to 0",
+            "effect": "Overrides the numeric value and calculates the drill depth to match the exact depth of the selected timber beam.",
+            "cascade": [
+              "Drill Depth"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "3D Body (Visual)",
+            "description": "Constructs the visual representation of the Simpson PHB bracket, including the top plate, base plate, vertical flange, and vertical stub.",
+            "appliedTo": "Model Space (representation)"
+          },
+          {
+            "type": "BeamCut",
+            "description": "Machines a slot into the timber column to accommodate the vertical flange of the bracket. The position depends on the 'Alignment' parameter. Also cuts the bottom of the beam to ensure the base plate sits flush.",
+            "appliedTo": "Selected Timber Column (_Beam0)"
+          },
+          {
+            "type": "Drill",
+            "description": "Creates vertical bolt holes in the timber column corresponding to the holes in the bracket's flange.",
+            "appliedTo": "Selected Timber Column (_Beam0)"
+          }
+        ]
+      },
+      "tokens_used": 5996,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Launch: User launches hsb_Simpson_PHB.mcr.",
+          "2. Insert Cycle Check: Script checks insertCycleCount. If > 1, instance is erased.",
+          "3. Execute Key Evaluation: Script checks _kExecuteKey for a catalog preset.",
+          "4. Property Loading Branch: If _kExecuteKey matches a catalog name, properties load from that catalog. If key exists but is invalid, it loads from |_LastInserted|. If key is empty, OPM Dialog is shown.",
+          "5. Beam Selection: User selects a timber column (GenBeam) via getBeam.",
+          "6. Point Selection: User selects an insertion point via getPoint.",
+          "7. Calculation Phase: Script calculates local coordinate vectors (X, Y, Z) based on insertion point and beam orientation.",
+          "8. Parameter Mapping: Internal dimension arrays are indexed based on the selected 'Type' (PHB75/PHB120).",
+          "9. Visual Body Creation: Constructs 3D bodies for Flange, Top Plate, Stub, and Base Plate.",
+          "10. Flange Drilling: Loops through drill rows/cols to create holes in the flange body.",
+          "11. Timber Drilling: Creates drill tools for the beam. Checks if Drill Depth == 0 to set through-drill.",
+          "12. Slot Machining: Applies a BeamCut to the timber based on 'Alignment' property (Side 1, Side 2, or Full Depth).",
+          "13. Beam Trimming: Cuts the bottom of the beam flush with the base plate.",
+          "14. Render: Draws the resulting 3D bodies in the model."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "insertCycleCount() > 1",
+            "path1": {
+              "name": "Repeat Cycle",
+              "steps": [
+                "Erase Instance",
+                "Return (Exit)"
+              ]
+            },
+            "path2": {
+              "name": "First Cycle",
+              "steps": [
+                "Continue Execution"
+              ]
+            }
+          },
+          {
+            "condition": "_kExecuteKey (Catalog/Command Key)",
+            "path1": {
+              "name": "Key Present",
+              "steps": [
+                "Set Props from Catalog Key",
+                "Skip Dialog"
+              ]
+            },
+            "path2": {
+              "name": "Key Empty",
+              "steps": [
+                "Show Dialog",
+                "Wait for User Input"
+              ]
+            }
+          },
+          {
+            "condition": "Drill Depth (dDrillLength) Value",
+            "path1": {
+              "name": "Through Drill (Value = 0)",
+              "steps": [
+                "Set drill length to Beam Depth (_Beam0.dD(vecZ))"
+              ]
+            },
+            "path2": {
+              "name": "Fixed Depth",
+              "steps": [
+                "Use input value for drill length"
+              ]
+            }
+          },
+          {
+            "condition": "Slot Alignment (sSlotAlignment)",
+            "path1": {
+              "name": "Side 1",
+              "steps": [
+                "Cut slot on -Y side",
+                "Offset = -0.5 * FlangeWidth"
+              ]
+            },
+            "path2": {
+              "name": "Side 2",
+              "steps": [
+                "Cut slot on +Y side",
+                "Offset = +0.5 * FlangeWidth"
+              ]
+            },
+            "path3": {
+              "name": "Full Depth",
+              "steps": [
+                "Cut slot centered on Y0",
+                "Offset = 0"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam Selection",
+            "errorMessage": "Implicit (Script waits for getBeam)",
+            "recovery": "User must select a valid GenBeam."
+          },
+          {
+            "check": "Point Selection",
+            "errorMessage": "Implicit (Script waits for getPoint)",
+            "recovery": "User must select a valid point."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Parameters",
+            "how": "Properties Palette (OPM)",
+            "effect": "Updating Type, Alignment, or Drill Depth recalculates geometry and machining immediately."
+          },
+          {
+            "action": "Move",
+            "how": "Grip Edit / AutoCAD Move",
+            "effect": "Relocates the insertion point, moving all hardware and associated tooling on the beam."
+          }
+        ]
+      },
+      "tokens_used": 6367,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_Simpson_PHB.mcr\n\n## Overview\nThis script generates the 3D model and CNC machining for a Simpson Strong-Tie PHB column base (Post Base). It connects a timber column to a concrete foundation by creating the necessary metal hardware representation, cutting a slot in the timber, and drilling bolt holes.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Used for detailing connections in 3D. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | Not applicable for production drawings. |\n\n## Prerequisites\n- **Required Entities**: GenBeam (Timber Column).\n- **Minimum Beam Count**: 1.\n- **Required Settings Files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_Simpson_PHB.mcr` from the list.\n\n### Step 2: Select Timber Column\n```\nCommand Line: Select a beam\nAction: Click on the timber column (GenBeam) where you want to install the post base.\n```\n\n### Step 3: Specify Insertion Point\n```\nCommand Line: Select insertion point\nAction: Click on the face of the beam to define the location of the column base.\n```\n\n### Step 4: Configure Properties (Optional)\nAfter insertion, the Properties Palette (OPM) opens automatically (or press `Ctrl+1`). Adjust the Type, Alignment, or Drill Depth if necessary. The 3D model and machining will update immediately.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Type | dropdown | PHB75 | Selects the Simpson Strong-Tie catalog model (PHB75 or PHB120). This determines the dimensions of the hardware. |\n| Alignment | dropdown | Side 1 | Determines how the column base flange is positioned relative to the timber face.<br>• **Side 1 / Side 2**: Offsets the flange to the edge of the timber.<br>• **Full Depth**: Cuts a slot through the center of the timber. |\n| Drill Depth | number | 80.0 | Defines the depth of the bolt holes drilled into the timber column (in mm). Enter `0` to drill completely through the beam (through-bolting). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Update | Recalculates the script geometry if parameters are changed via the Properties Palette. |\n| Move | Allows you to drag the insertion point to reposition the hardware on the beam. |\n\n## Settings Files\n- **Filename**: None.\n- **Location**: N/A.\n- **Purpose**: The script uses internal dimension arrays for the PHB75 and PHB120 catalogs.\n\n## Tips\n- Set **Drill Depth** to `0` to ensure the holes go all the way through the timber column for through-bolting applications.\n- Use the **Full Depth** alignment option if you need the vertical flange to sit in a centered groove within the timber.\n\n## FAQ\n- **Q: Why don't I see the metal plate after inserting?**\n  - A: Ensure you are in a 3D visual style (e.g., Conceptual or Realistic) in Model Space.\n- **Q: How do I change the bracket size after inserting?**\n  - A: Select the script instance, open the Properties Palette (Ctrl+1), and change the **Type** from PHB75 to PHB120."
+      },
+      "tokens_used": 5963,
+      "error": null
+    }
+  }
+}

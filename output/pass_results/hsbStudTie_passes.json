@@ -1,0 +1,285 @@
+{
+  "filename": "hsbStudTie.mcr",
+  "status": "completed",
+  "total_tokens": 49760,
+  "processing_time": 197.85564279556274,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 4,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl creates VUETRADE single sided stud tie connectors.\nhttps://vuetrade.com/product/single-sided-stud-ties/",
+        "versionHistory": [
+          {
+            "version": "1.4",
+            "date": "10.05.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-18650 standard display published for share and make"
+          },
+          {
+            "version": "1.3",
+            "date": "10dec20",
+            "author": "marsel.nakuci@hsbcad.com",
+            "changes": "HSB-9045: distinguish between studs attached to top plate and those attached at bottom plate"
+          },
+          {
+            "version": "1.2",
+            "date": "04dec20",
+            "author": "marsel.nakuci@hsbcad.com",
+            "changes": "HSB-9045: if beams are part of an element then use zone of the element for the side"
+          },
+          {
+            "version": "1.1",
+            "date": "03dec20",
+            "author": "marsel.nakuci@hsbcad.com",
+            "changes": "HSB-9045: implement beam mode to allow insertion at male-female beams"
+          },
+          {
+            "version": "1.0",
+            "date": "01dec20",
+            "author": "marsel.nakuci@hsbcad.com",
+            "changes": "HSB-9045: initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8389,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly uses `_kModelSpace` in `dbCreate` calls. It generates 3D geometry using `Body` and attaches hardware using `HardWrComp`. It interacts with `ElementWall` and `Beam` entities. No ShopDrawing (`sd_`) prefixes or `#Type E` pragmas are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall",
+            "Beam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7716,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10403,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically generates and places VUETRADE single-sided stud tie hardware connectors at wall stud intersections or specific male-female beam connections.",
+          "category": "Hardware",
+          "typicalUseCase": "Reinforcing wall frames by applying hurricane/seismic ties to studs where they connect to top and bottom plates, or at specific beam intersections."
+        },
+        "parameters": [
+          {
+            "name": "sDistributionStud",
+            "technicalDefault": "Every Stud",
+            "businessMeaning": "Specifies which studs in a selected wall element receive the stud tie connector.",
+            "validRange": "Every Stud, Every odd Stud, Every even Stud",
+            "unit": "Enumeration",
+            "affectsOutput": "Determines the frequency of hardware placement along the wall length in Element mode. Disabled in Beam mode."
+          },
+          {
+            "name": "sPosition",
+            "technicalDefault": "Both",
+            "businessMeaning": "Determines whether the tie connector is applied to the top plate connection, bottom plate connection, or both.",
+            "validRange": "Both, Top Plate, Bottom Plate",
+            "unit": "Enumeration",
+            "affectsOutput": "Controls the vertical placement of the connector geometry relative to the wall plates. Disabled in Beam mode."
+          },
+          {
+            "name": "sSide",
+            "technicalDefault": "Left",
+            "businessMeaning": "Defines on which side of the stud (relative to the wall's coordinate system or beam intersection) the tie is applied.",
+            "validRange": "Left, Right, Both",
+            "unit": "Enumeration",
+            "affectsOutput": "Mirrors the connector geometry to the specified side(s) of the stud."
+          },
+          {
+            "name": "sZone",
+            "technicalDefault": "1",
+            "businessMeaning": "Selects the wall zone (face) where the connector is applied. Often corresponds to interior/exterior faces of a wall element.",
+            "validRange": "1, -1, Both",
+            "unit": "Enumeration",
+            "affectsOutput": "Orients the connector normal vector towards the specified zone (Z-axis of the element's local coordinate system)."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Insertion Mode = Beams",
+            "effect": "Disables distribution and position properties, relies solely on beam intersection geometry.",
+            "cascade": [
+              "sDistributionStud",
+              "sPosition"
+            ]
+          },
+          {
+            "trigger": "Insertion Mode = Element",
+            "effect": "Enables distribution and position properties, allows automatic mapping to wall zones.",
+            "cascade": [
+              "sDistributionStud",
+              "sPosition",
+              "sZone"
+            ]
+          },
+          {
+            "trigger": "sSide = 'Both'",
+            "effect": "Doubles the quantity of hardware generated to cover both sides of the stud.",
+            "cascade": []
+          },
+          {
+            "trigger": "sZone = 'Both'",
+            "effect": "Doubles the quantity of hardware generated to cover both zones (faces) of the element.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "HardWrComp",
+            "description": "VUETRADE Single Sided Stud Ties (Model VTSTLH for Left/Zone 1, VTSTRH for Right/Zone -1). Represents the physical metal strap for BOM/lists.",
+            "appliedTo": "Linked to the specific stud beam or the 'male' beam in beam mode."
+          },
+          {
+            "type": "Body (3D Geometry)",
+            "description": "3D representation of the stud tie, modeled as a steel plate connecting the stud to the plate. Includes top plate, front plate, and side plate sections.",
+            "appliedTo": "Model Space visual representation."
+          }
+        ]
+      },
+      "tokens_used": 7571,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches the TSL script (hsbStudTie).",
+          "Script checks for command-line keys (Catalog or command execution).",
+          "If no key present, Script prompts command line: 'Select insertion mode [Element/Beams]'.",
+          "User selects Mode or presses Enter (defaults to Element).",
+          "[Branch] If Element Mode: Dialog opens showing all properties. User configures and confirms. User selects Wall Elements from screen.",
+          "[Branch] If Beams Mode: Script disables Distribution/Position properties. Dialog opens. User configures Side/Zone and confirms. User selects Male Beams, then Female Beams.",
+          "Script processes selections: Filters beams (removes duplicates), checks validity (parallelism, intersection).",
+          "Script generates TSL instances attached to the selected Elements or Beams.",
+          "Script erases the temporary 'commander' instance."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Mode Selection (Command Line)",
+            "path1": {
+              "name": "Element Mode",
+              "steps": [
+                "Input is 'E', empty, or explicit 'Element'.",
+                "Full properties enabled: sDistributionStud, sPosition, sSide, sZone.",
+                "Dialog displayed.",
+                "Entity prompt: PrEntity for ElementWall.",
+                "Instance created with Map key 'mode'=0."
+              ]
+            },
+            "path2": {
+              "name": "Beams Mode",
+              "steps": [
+                "Input is explicit 'Beams'.",
+                "Properties restricted: sDistributionStud and sPosition set to '<Disabled>' and read-only. sSide/sZone reset to defaults.",
+                "Dialog displayed.",
+                "Loop begins: Prompt for Male Beams.",
+                "Prompt for Female Beams.",
+                "Logic: Remove Female beams if already in Male selection.",
+                "Validation: Skip pairs if Male and Female are parallel.",
+                "Validation: Skip pairs if intersection is outside Female beam length.",
+                "Instance created with Map key 'mode'=2 for valid pairs."
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Availability (Right-Click)",
+            "path1": {
+              "name": "Single Selection (Left/Right or 1/-1)",
+              "steps": [
+                "Property 'sSide' is not 'Both'.",
+                "Context menu item 'Swap Side' is added.",
+                "Property 'sZone' is not 'Both'.",
+                "Context menu item 'Swap Zone' is added."
+              ]
+            },
+            "path2": {
+              "name": "Dual Selection ('Both')",
+              "steps": [
+                "Property 'sSide' is 'Both'.",
+                "'Swap Side' menu item is hidden.",
+                "Property 'sZone' is 'Both'.",
+                "'Swap Zone' menu item is hidden."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam Parallelism (Beams Mode)",
+            "errorMessage": "None displayed to user.",
+            "recovery": "Script silently skips the specific Male/Female pair. User must ensure selected beams are not parallel."
+          },
+          {
+            "check": "Beam Intersection (Beams Mode)",
+            "errorMessage": "None displayed to user.",
+            "recovery": "Script silently skips the specific pair if the Male beam axis does not physically intersect the Female beam body. User must ensure geometric overlap."
+          },
+          {
+            "check": "Selection Count (Beams Mode)",
+            "errorMessage": "Loop breaks if no beams selected.",
+            "recovery": "User is returned to the prompt or loop ends. User must select at least one Male and one Female beam to generate connectors."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Property Modification",
+            "how": "AutoCAD Properties Palette (OPM)",
+            "effect": "Changing 'Distribution', 'Plates', 'Side', or 'Zone' updates the geometry immediately. In Beam mode, Distribution/Plates remain disabled."
+          },
+          {
+            "action": "Swap Side",
+            "how": "Right-click Context Menu -> 'Swap Side'",
+            "effect": "Toggles the 'Side' property between Left and Right. Updates geometry and Hardware Model (VTSTLH vs VTSTRH)."
+          },
+          {
+            "action": "Swap Zone",
+            "how": "Right-click Context Menu -> 'Swap Zone'",
+            "effect": "Toggles the 'Zone' property between '1' and '-1'. Flips the connector to the opposite face of the wall/beam."
+          }
+        ]
+      },
+      "tokens_used": 10445,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbStudTie\n\n## Overview\nThis script automatically generates and places VUETRADE single-sided stud tie connectors on wall frames. It supports applying these connectors to entire wall elements (based on stud layout) or to specific beam intersections.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script runs exclusively in the 3D model. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | Does not generate 2D drawings or details. |\n\n## Prerequisites\n- **Required Entities**: Wall Elements (`ElementWall`) or structural Beams.\n- **Minimum Beams**: 0 (Wall Element mode); 1 Male and 1 Female beam (Beam mode).\n- **Required Settings**: None specific.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or via the hsbCAD toolbar) → Select `hsbStudTie.mcr`\n\n### Step 2: Select Insertion Mode\n```\nCommand Line: Select insertion mode [Element/Beams]:\nAction: Press Enter for default (Element) or type \"Beams\" and press Enter.\n```\n\n### Step 3A: Element Mode (Default)\n1. The properties dialog appears. Configure the distribution, position, and side settings.\n2. Click OK to confirm.\n3. **Prompt**: `Select elements:`\n4. **Action**: Click on the Wall Elements in the model to apply the ties.\n5. Press Enter to finish selection.\n\n### Step 3B: Beams Mode\n1. The properties dialog appears (options are limited to Side and Zone).\n2. Click OK to confirm.\n3. **Prompt**: `Select male beams:`\n4. **Action**: Select the primary beams (e.g., studs) and press Enter.\n5. **Prompt**: `Select female beams:`\n6. **Action**: Select the secondary beams (e.g., plates) intersecting the male beams and press Enter.\n7. The script automatically validates intersections and places the connectors.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Distribution | Dropdown | Every Stud | Determines which studs receive the tie (Every, Odd, or Even). Only available in Element mode. |\n| Position | Dropdown | Both | Sets the vertical placement of the tie (Both, Top Plate, or Bottom Plate). Only available in Element mode. |\n| Side | Dropdown | Left | Defines the side of the stud relative to the wall axis (Left, Right, or Both). |\n| Zone | Dropdown | 1 | Selects the wall face/zone where the tie is applied (1, -1, or Both). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Swap Side | Toggles the connector between the Left and Right sides. (Only visible if \"Side\" is not set to Both). |\n| Swap Zone | Toggles the connector between Zone 1 and Zone -1 (e.g., Interior to Exterior face). (Only visible if \"Zone\" is not set to Both). |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script relies on internal logic and standard hsbCAD catalogs; no external settings file is required.\n\n## Tips\n- **Beam Mode Logic**: When using Beam mode, ensure the male and female beams actually intersect. The script will silently skip pairs that are parallel or do not overlap.\n- **Quantity Calculation**: Setting \"Side\" or \"Zone\" to \"Both\" will double the number of hardware components generated.\n- **Catalog References**: The script automatically assigns the correct VUETRADE model codes (VTSTLH for Left, VTSTRH for Right) to the BOM.\n\n## FAQ\n- **Q: Why didn't the connector appear on my beam in Beam mode?**\n  **A:** The script requires the beams to physically intersect and not be parallel. Check if the male beam axis passes through the female beam body.\n- **Q: Can I use this for shop drawings?**\n  **A:** No, this script is designed for 3D model representation and BOM data generation only.\n- **Q: How do I apply ties to only the top plate of a wall?**\n  **A:** Use Element mode, select the wall, and change the \"Position\" property to \"Top Plate\"."
+      },
+      "tokens_used": 5236,
+      "error": null
+    }
+  }
+}

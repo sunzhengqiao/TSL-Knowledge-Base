@@ -1,0 +1,278 @@
+{
+  "filename": "hsb_SIP-SetPanelMaterial.mcr",
+  "status": "completed",
+  "total_tokens": 21064,
+  "processing_time": 710.6459589004517,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "08.06.2012",
+            "author": "CS",
+            "changes": ""
+          },
+          {
+            "version": "1.1",
+            "date": "26.08.2015",
+            "author": "CS",
+            "changes": ""
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2620,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select Element() objects in the drawing and modifies Sip properties (setMaterial). No ShopDrawing specific patterns (#Type E, sd_ prefix) or Viewport handling found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Sip"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D environment where Elements exist)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2760,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "showDialogOnce",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": false
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect Element",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "Properties Dialog",
+            "trigger": "showDialogOnce() call on insert",
+            "title": null,
+            "dataSource": "Script properties (sMaterial)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sMaterial",
+            "type": "PropString",
+            "displayName": "Material Name",
+            "defaultValue": "SIP",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3357,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Batch updates the material assignment for all Structural Insulated Panels (SIPs) within a selected building element to a specified material name.",
+          "category": "Utility/Data Management",
+          "typicalUseCase": "A user needs to change the material specification of all SIPs in a wall or roof assembly (e.g., from a standard OSB SIP to a Magnesium Oxide SIP) after initial design, without editing each panel individually."
+        },
+        "parameters": [
+          {
+            "name": "sMaterial",
+            "technicalDefault": "SIP",
+            "businessMeaning": "The name of the material definition (from the project's material catalog) that should be assigned to the SIP panels. This defines properties like density, name, and potentially cost.",
+            "validRange": "Must correspond to an existing Material Name in the hsbCAD material database.",
+            "unit": "String",
+            "affectsOutput": "Updates the 'Material' property of the targeted Sip entities. This affects data export (BOM/CAM), labels, and weight calculations. It typically does not alter geometric dimensions unless the specific material definition drives the thickness calculation."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Sip",
+            "description": "The script updates the material property of existing Sip entities; it does not create new geometry.",
+            "appliedTo": "All Sip entities found within the single Element selected during script insertion."
+          }
+        ]
+      },
+      "tokens_used": 3965,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script execution begins",
+          "[Insertion Mode] Check if script is being inserted (_bOnInsert)",
+          "[Insertion Mode] Check insertCycleCount to prevent duplicate executions",
+          "[Insertion Mode] If first run, show Properties Dialog for user input (sMaterial)",
+          "[Insertion Mode] Prompt user to select a single Element entity",
+          "[Insertion Mode] Validate Element selection and store reference",
+          "[Calculation Mode] Check if stored Element reference exists",
+          "[Calculation Mode] Retrieve all Sip entities contained within the Element",
+          "[Calculation Mode] Iterate through all found Sip entities",
+          "[Calculation Mode] Assign the specified Material Name (sMaterial) to each valid Sip",
+          "Script instance is erased and execution terminates"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Is the script being inserted? (_bOnInsert)",
+            "path1": {
+              "name": "Insertion Mode",
+              "steps": [
+                "Check insertCycleCount",
+                "Show Dialog (if valid cycle)",
+                "Select Element",
+                "Store Element and wait for recalculation"
+              ]
+            },
+            "path2": {
+              "name": "Calculation Mode (Post-Insert)",
+              "steps": [
+                "Check for stored Element",
+                "Get Sip entities",
+                "Update Materials",
+                "Erase Instance"
+              ]
+            }
+          },
+          {
+            "condition": "Is insertCycleCount > 1?",
+            "path1": {
+              "name": "Duplicate Cycle Detected",
+              "steps": [
+                "Erase Instance",
+                "Return immediately"
+              ]
+            },
+            "path2": {
+              "name": "Valid First Cycle",
+              "steps": [
+                "Proceed to Dialog and Selection"
+              ]
+            }
+          },
+          {
+            "condition": "Is Element selection valid?",
+            "path1": {
+              "name": "Valid Selection",
+              "steps": [
+                "Store Element in _Element array",
+                "Proceed to Calculation Mode"
+              ]
+            },
+            "path2": {
+              "name": "Invalid/Canceled Selection",
+              "steps": [
+                "_Element remains empty",
+                "Script calculates empty state and erases itself"
+              ]
+            }
+          },
+          {
+            "condition": "Does the Element contain any Sip entities?",
+            "path1": {
+              "name": "Sips Found",
+              "steps": [
+                "Iterate through Sip array",
+                "Update Material properties",
+                "Finish"
+              ]
+            },
+            "path2": {
+              "name": "No Sips Found",
+              "steps": [
+                "Erase Instance",
+                "Return immediately"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Duplicate execution check (insertCycleCount)",
+            "errorMessage": "None (Silent fail)",
+            "recovery": "Script ensures only the first insertion cycle runs."
+          },
+          {
+            "check": "Element existence (_Element.length() > 0)",
+            "errorMessage": "None (Silent fail)",
+            "recovery": "Script erases itself if no element was selected during insertion."
+          },
+          {
+            "check": "SIP existence within Element (sipAll.length() > 0)",
+            "errorMessage": "None (Silent fail)",
+            "recovery": "Script erases itself if the selected element contains no SIP entities."
+          },
+          {
+            "check": "SIP entity validity (sp.bIsValid())",
+            "errorMessage": "None (Silent skip)",
+            "recovery": "Invalid SIP entities in the array are skipped during iteration."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Material Name via OPM",
+            "how": "Select the script instance in AutoCAD (if it persisted), or via context menu if 'Edit Script' was available (Note: Script self-erases, so direct post-insertion editing of this specific instance is impossible. The script is a 'fire-and-forget' utility.",
+            "effect": "Changing properties after erase is not applicable. To apply a new material, the user must re-insert and run the script again."
+          }
+        ]
+      },
+      "tokens_used": 3608,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SIP-SetPanelMaterial\n\n## Overview\nThis script allows you to batch-update the material assignment for all Structural Insulated Panels (SIPs) contained within a selected building element. It is useful for quickly changing material specifications (e.g., from OSB to Magnesium Oxide) for an entire wall or roof assembly without editing individual panels.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in the 3D model where Elements exist. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | This script edits model data, not drawing views. |\n\n## Prerequisites\n- **Required Entities**: An Element (e.g., a wall or roof) that contains Sip entities.\n- **Minimum Beam Count**: 0.\n- **Required Settings**: None.\n- **Material Database**: The Material Name you enter must exist in your hsbCAD material catalog.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the AutoCAD command line.\n2.  Browse to and select `hsb_SIP-SetPanelMaterial.mcr`.\n\n### Step 2: Configure Material\nThe script properties dialog will appear automatically upon insertion.\n```\nDialog: hsbCAD Properties\nAction: Enter the desired Material Name (e.g., \"SIP_MgO\") in the \"Material Name\" field.\n```\n*Note: Ensure this name matches exactly with a material defined in your project material list.*\n\n### Step 3: Select Element\n```\nCommand Line: Select Element\nAction: Click on the building element (Wall/Roof) that contains the SIP panels you wish to update.\n```\nThe script will immediately process the element, update the materials, and then remove itself from the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Material Name | text | SIP | The name of the material to assign to all SIPs in the selected element. This must match an existing material in the hsbCAD database. |\n\n## Right-Click Menu Options\n*None. This script is a \"fire-and-forget\" utility that erases itself immediately after running to avoid cluttering the drawing.*\n\n## Settings Files\n*No external settings files are used by this script.*\n\n## Tips\n- **Verification**: After running the script, select a Sip panel within the element and check the AutoCAD Properties Palette to verify the \"Material\" field has updated.\n- **Batching**: To apply different materials to different walls, simply run the script multiple times.\n- **Case Sensitivity**: Ensure the material name spelling matches your catalog exactly (check via the hsbCAD Material Manager if unsure).\n\n## FAQ\n- **Q: The script disappeared after I selected the element. Did it fail?**\n  - A: No. This is normal behavior. The script automatically erases itself after completing the update to keep your drawing clean.\n- **Q: Nothing happened when I ran the script.**\n  - A: Check that you selected an Element which actually contains Sip entities. If the element is empty or contains only beams, the script will exit silently.\n- **Q: Can I undo this?**\n  - A: Yes, use the standard AutoCAD `UNDO` command to revert the changes if the script produced unwanted results."
+      },
+      "tokens_used": 4754,
+      "error": null
+    }
+  }
+}

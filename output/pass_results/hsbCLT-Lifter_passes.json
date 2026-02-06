@@ -1,0 +1,311 @@
+{
+  "filename": "hsbCLT-Lifter.mcr",
+  "status": "completed",
+  "total_tokens": 45533,
+  "processing_time": 623.7479593753815,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8875,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly uses `_kModelSpace` in the `dbCreate` function call for the dialog instance. There is no presence of `_Viewport`, `_kPaperSpace`, `sd_` prefixes, or `#Type E` structures typical of ShopDrawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space (Modeler)",
+          "requiredSettings": [
+            "XML Settings file (located at constructed path `sPath+sFolder+sFileName`)"
+          ]
+        }
+      },
+      "tokens_used": 6337,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": [
+            {
+              "prompt": "Are you sure to overwrite existing settings? [No/Yes]",
+              "options": [
+                "No",
+                "Yes"
+              ]
+            }
+          ]
+        },
+        "dialogs": [
+          {
+            "type": "SelectOption",
+            "trigger": "Context menu 'Configure Secondary Lifting Device' is selected.",
+            "title": "Secondary Lifting Device",
+            "dataSource": "Filtered families from XML settings (mapSecondaries) that support the opposite association strategy.",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "Tool Description Settings",
+            "handler": "Tool Description Settings",
+            "action": "Opens a dialog to configure the format, MapName, and KeyName for tool description exports.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Configure Secondary Lifting Device",
+            "handler": "Configure Secondary Lifting Device",
+            "action": "Opens a selection dialog to assign a secondary lifting device to the current family.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Import Settings",
+            "handler": "Import Settings",
+            "action": "Imports configuration from the XML settings file found at the standard path.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "Export Settings",
+            "handler": "Export Settings",
+            "action": "Exports the current configuration to the XML settings file, prompting for overwrite confirmation if the file exists.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "hsbCLT-Lifter.xml",
+            "searchPaths": [
+              "Company\\Tsl\\Settings",
+              "HsbInstall\\Content\\General\\Tsl\\Settings"
+            ],
+            "purpose": "Stores lifting device families, tool parameters, format configurations, and secondary device associations.",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 6491,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the insertion, configuration, and machining of lifting hardware (anchors, straps, bolts) for CLT panels, including data exports for production.",
+          "category": "Hardware / Automation",
+          "typicalUseCase": "Placing lifting anchors on CLT wall or floor panels during the design phase to ensure safe transport, and generating the required drill holes and CAM data."
+        },
+        "parameters": [
+          {
+            "name": "sFormatTool",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The format string template used to generate the tool description (name) for production data exports (e.g., CAM lists or labels).",
+            "validRange": "String tokens (e.g., '%Family', '%Number') dependent on the specific ERP/CAM export requirements.",
+            "unit": "String",
+            "affectsOutput": "Changes the text/name displayed in production reports, DataLink exports, and shop drawings labels. Does not affect geometry."
+          },
+          {
+            "name": "sMapXName",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The name of the Map structure used in DataLink or XML exports to group the tool description data.",
+            "validRange": "String identifier (alphanumeric, no spaces typically).",
+            "unit": "String",
+            "affectsOutput": "Determines the parent node or category under which the tool description is stored in export files."
+          },
+          {
+            "name": "sKeyName",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The specific attribute key within the export map that holds the tool description value.",
+            "validRange": "String identifier (e.g., 'ToolName', 'Designation').",
+            "unit": "String",
+            "affectsOutput": "Identifies the data field in the export file that contains the tool description."
+          },
+          {
+            "name": "sSecondaryFamily",
+            "technicalDefault": "\"<None>\" or empty",
+            "businessMeaning": "The name of a secondary lifting device family (e.g., a loose pin or temporary anchor) that is automatically inserted whenever the primary lifting device is used.",
+            "validRange": "Names of families defined in the XML settings file that support the opposite association strategy, or '<None>'.",
+            "unit": "Selection",
+            "affectsOutput": "Causes the generation of additional metal parts and associated machining for the secondary device at the insertion point of the primary device."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing the Primary Lifting Device (via context menu or initial insert)",
+            "effect": "Updates the list of available 'Secondary Lifting Devices' to only show those compatible with the new primary device's association logic.",
+            "cascade": [
+              "sSecondaryFamily"
+            ]
+          },
+          {
+            "trigger": "Modifying Tool Description Settings",
+            "effect": "Updates the internal MapObject and exports the new settings to the XML configuration file.",
+            "cascade": [
+              "sFormatTool",
+              "sMapXName",
+              "sKeyName"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "MetalPart",
+            "description": "The physical 3D representation of the lifting hardware (anchors, straps, etc.) and any secondary hardware.",
+            "appliedTo": "The selected CLT panel (GenBeam)."
+          },
+          {
+            "type": "Drill / Bore",
+            "description": "Holes required to physically install the lifting hardware into the timber panel.",
+            "appliedTo": "The selected CLT panel (GenBeam)."
+          },
+          {
+            "type": "Machining / Cutout",
+            "description": "Specific recesses or cutouts (e.g., for countersunk anchors) needed for the hardware to fit flush.",
+            "appliedTo": "The selected CLT panel (GenBeam)."
+          },
+          {
+            "type": "MapObject / Data",
+            "description": "Non-graphical data stored on the script instance for export to production files (hsbView/CAM).",
+            "appliedTo": "The TSL Instance."
+          }
+        ]
+      },
+      "tokens_used": 9016,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched via Ribbon command, Lisp execution, or double-click.",
+          "Script attempts to locate the XML settings file (hsbCLT-Lifter.xml) in Company or Install directories.",
+          "Settings are loaded into internal memory. MapObject (MO) is read if it exists.",
+          "If executed via Ribbon (Insert), `_bOnInsert` is true.",
+          "User is prompted to select a GenBeam (CLT Panel) using `getGenBeam`.",
+          "Instance is linked to the selected GenBeam.",
+          "Main Calculation Loop:",
+          "   - Analyze Panel Geometry (RealBody, thickness, surfaces).",
+          "   - Determine default Lifting Device Family based on association (Wall vs Floor) and catalog rules.",
+          "   - Validate Panel Thickness against Family Min/Max settings (v8.4).",
+          "   - Generate MetalPart geometry (Body) for the device.",
+          "   - Calculate and Apply Machining (Drills, Bores, Cutouts).",
+          "   - Generate Secondary Device if `sSecondaryFamily` is set.",
+          "   - Update MapObject with DataLink export data and tool descriptions.",
+          "Graphics are created in ModelSpace.",
+          "Script finishes and waits for modifications or context triggers."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Context of Execution (Manual vs Lisp)",
+            "path1": {
+              "name": "Manual Insertion",
+              "steps": [
+                "User invokes command.",
+                "Prompt to select single GenBeam.",
+                "Script creates instance and runs calculation."
+              ]
+            },
+            "path2": {
+              "name": "Programmatic/Lisp Insertion",
+              "steps": [
+                "Script receives execute key with parameters or pre-selection.",
+                "Script processes input coordinates/selections.",
+                "Potentially handles batch processing of multiple panels without prompts."
+              ]
+            }
+          },
+          {
+            "condition": "User Context Menu Interaction",
+            "path1": {
+              "name": "Configure Tool Description",
+              "steps": [
+                "Select 'Tool Description Settings'.",
+                "Show Dialog with Format/Map/Key fields.",
+                "Update internal MapObject and XML file on 'Ok'.",
+                "Recalculate script."
+              ]
+            },
+            "path2": {
+              "name": "Configure Secondary Device",
+              "steps": [
+                "Select 'Configure Secondary Lifting Device'.",
+                "Filter families for opposite association.",
+                "Show selection dialog.",
+                "Update settings with chosen secondary family.",
+                "Recalculate script to add secondary hardware."
+              ]
+            },
+            "path3": {
+              "name": "Import/Export Settings",
+              "steps": [
+                "Select 'Import' or 'Export'.",
+                "Import: Read XML, update MO, report success.",
+                "Export: Check file existence, prompt for overwrite if needed, write XML, report success."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Panel Thickness Compatibility",
+            "errorMessage": "Families are filtered out silently or via logic if 'MinThickness' or 'MaxThickness' (v8.4) do not match the selected GenBeam.",
+            "recovery": "User must select a different Lifting Device family that supports the current panel thickness."
+          },
+          {
+            "check": "Settings File Availability",
+            "errorMessage": "If XML file is missing, the script may fail to load families or start with an empty configuration.",
+            "recovery": "Ensure `hsbCLT-Lifter.xml` exists in the expected `Tsl\\Settings` folder."
+          },
+          {
+            "check": "Overwriting Settings (Export)",
+            "errorMessage": "Prompt: 'Are you sure to overwrite existing settings? [No/Yes]'",
+            "recovery": "User must input 'Yes' to proceed with overwrite, or 'No' to cancel."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Move Hardware",
+            "how": "Grip Edit (Drag insertion point).",
+            "effect": "Updates the position of the hardware and associated machining on the panel."
+          },
+          {
+            "action": "Modify Properties",
+            "how": "AutoCAD Properties Palette (OPM).",
+            "effect": "Changes to offsets or parameters trigger a recalc, updating geometry."
+          },
+          {
+            "action": "Change Device Family",
+            "how": "Context menu or OPM (if exposed).",
+            "effect": "Swaps the hardware type and recalculates machining rules based on the new family."
+          }
+        ]
+      },
+      "tokens_used": 8570,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-Lifter\n\n## Overview\nAutomates the insertion, configuration, and machining of lifting hardware (anchors, straps, bolts) for CLT panels. It manages drill holes, cutouts, and generates production data exports for safe transport and assembly.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for script execution. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required Entities**: One (1) GenBeam (typically a CLT Wall or Floor panel).\n- **Required Settings**: `hsbCLT-Lifter.xml` must be present in the `Company\\Tsl\\Settings` or `HsbInstall\\Content\\General\\Tsl\\Settings` folder.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse and select `hsbCLT-Lifter.mcr` from the file list.\n\n### Step 2: Select CLT Panel\n```\nCommand Line: Select GenBeam:\nAction: Click on the CLT panel (GenBeam) you wish to add lifting hardware to.\n```\n*Note: The script will automatically determine the appropriate lifting device family based on whether the selected panel is a Wall or a Floor.*\n\n### Step 3: Verify and Configure\nAction: Once the script runs, check the 3D model for the inserted hardware and machining.\n- If the hardware is not visible, check if your panel thickness matches the family requirements (see Tips).\n- Use the **Grip Point** to adjust the position of the hardware on the panel.\n- Use the **Right-Click Menu** to change the device family or configure export settings.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | *Configuration for this script is handled via the Right-Click Context Menu rather than the Properties Palette.* |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Tool Description Settings | Opens a dialog to configure the format string, Map Name, and Key Name used for tool description exports (e.g., for labels or CAM lists). |\n| Configure Secondary Lifting Device | Opens a selection dialog to assign a secondary lifting device (e.g., a loose pin) that is automatically inserted along with the primary device. |\n| Import Settings | Reloads configuration from the `hsbCLT-Lifter.xml` file. Useful for restoring standard settings. |\n| Export Settings | Saves the current configuration (families, formats, etc.) to the `hsbCLT-Lifter.xml` file. You will be prompted to confirm if you wish to overwrite existing settings. |\n\n## Settings Files\n- **Filename**: `hsbCLT-Lifter.xml`\n- **Location**: `Company\\Tsl\\Settings` or `HsbInstall\\Content\\General\\Tsl\\Settings`\n- **Purpose**: Stores the catalog of available lifting device families, their machining parameters (drills, cutouts), thickness limits, and tool description formatting rules.\n\n## Tips\n- **Panel Thickness**: The script automatically filters lifting devices based on the thickness of the selected GenBeam. If a device does not appear, it may be because the panel is too thin or too thick for that specific family.\n- **Moving Hardware**: Use the insertion point grip to drag the lifting hardware along the face of the panel. The machining (holes/cutouts) will update automatically.\n- **Secondary Devices**: Use the \"Configure Secondary Lifting Device\" option if your workflow requires inserting a second piece of hardware (like a pin) whenever a primary anchor is placed.\n\n## FAQ\n- **Q: Why didn't any lifting hardware appear after I ran the script?**\n  - A: Check if the `hsbCLT-Lifter.xml` file exists in your settings folder. Also, verify that your panel thickness matches the `MinThickness` and `MaxThickness` defined in the XML for the available families.\n\n- **Q: How do I change the name format for the production export list?**\n  - A: Right-click the script instance and select **Tool Description Settings**. Here you can define the format string (e.g., `%Family-%Number`) and the Map/Key names for the export.\n\n- **Q: Can I use this for floor panels and wall panels?**\n  - A: Yes. The script analyzes the selected GenBeam to determine if it is a Wall or Floor and selects the appropriate default lifting device based on the XML settings."
+      },
+      "tokens_used": 6244,
+      "error": null
+    }
+  }
+}

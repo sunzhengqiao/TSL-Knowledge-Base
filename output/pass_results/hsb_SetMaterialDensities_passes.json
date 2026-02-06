@@ -1,0 +1,311 @@
+{
+  "filename": "hsb_SetMaterialDensities.mcr",
+  "status": "completed",
+  "total_tokens": 24478,
+  "processing_time": 178.65633296966553,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.3",
+            "date": "23.06.2021",
+            "author": "Marsel Nakuci",
+            "changes": "HSB-10308: change dll path"
+          },
+          {
+            "version": "1.0",
+            "date": "24.04.2012",
+            "author": null,
+            "changes": "First version"
+          },
+          {
+            "version": "1.1",
+            "date": "11.06.2012",
+            "author": null,
+            "changes": "Add default density"
+          },
+          {
+            "version": "1.2",
+            "date": "16.01.2015",
+            "author": null,
+            "changes": "Moved to general folder"
+          }
+        ],
+        "settingsFiles": [
+          "Materials.xml"
+        ],
+        "dependencies": []
+      },
+      "tokens_used": 4224,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No usage of sd_* or Multipage* prefixes; no usage of _Viewport; no #Type E or _Entity[]; script executes immediately on insert and erases itself, indicating a utility script rather than a drawing generator."
+        },
+        "prerequisites": {
+          "requiredEntities": [],
+          "minimumBeams": 0,
+          "requiredSpace": "Runs in current AutoCAD space (typically Model Space) to update settings/data.",
+          "requiredSettings": [
+            "Materials.xml",
+            "hsbMaterialDensityTable.dll or hsbMaterialTable.dll"
+          ]
+        }
+      },
+      "tokens_used": 2077,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getPoint",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": false
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ExternalDotNetForm",
+            "trigger": "On Insert (if XML exists and DLL is found)",
+            "title": null,
+            "dataSource": "hsbMaterialDensityTable.dll or hsbMaterialTable.dll",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          },
+          {
+            "type": "ShowNotice",
+            "trigger": "DLL not found or path invalid",
+            "title": null,
+            "dataSource": "Internal script logic",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          },
+          {
+            "type": "ShowNotice",
+            "trigger": "DLL function returns a result message",
+            "title": null,
+            "dataSource": "DotNet mapOut result string",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": [
+          {
+            "filename": "Materials.xml",
+            "searchPaths": [
+              "_kPathHsbCompany\\Abbund\\Materials.xml"
+            ],
+            "purpose": "Stores material density mappings. If missing, script creates a default file with preset values (STEEL, CLS, LVL, MDF, OSB, etc.).",
+            "required": false
+          }
+        ]
+      },
+      "tokens_used": 3075,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A utility script that ensures the existence of a material density configuration file and launches an external interface to edit material density values (e.g., for weight calculations).",
+          "category": "Utilities / Configuration",
+          "typicalUseCase": "Run when setting up a new hsbCAD company environment, or when material weight calculations are incorrect/missing, to define densities for timber types (CLS, LVL) and sheet materials (OSB, MDF)."
+        },
+        "parameters": [
+          {
+            "name": "MATERIAL",
+            "technicalDefault": "STEEL, CLS, LVL, MDF, OSB, PLASTERBOARD, WEYROC, CABERDEK, DEFAULT",
+            "businessMeaning": "The label or name assigned to a specific type of construction material (e.g., 'CLS' for Canadian Lumber Standard). This must match the Material names assigned to elements in the model for the density to apply correctly.",
+            "validRange": "Any string consistent with the project's naming conventions.",
+            "unit": "String (Text)",
+            "affectsOutput": "Determines which density value is retrieved during weight calculations for specific beams or sheets."
+          },
+          {
+            "name": "DENSITY",
+            "technicalDefault": "1000 (Steel), 550 (CLS), 600 (LVL), 900 (MDF), 720 (OSB), 950 (Plasterboard), 750 (Weyroc/Caberdek)",
+            "businessMeaning": "The physical mass density of the material, typically defined as mass per unit volume. This is critical for structural engineering, logistics, and cost estimation.",
+            "validRange": "300 kg/m³ (light timber) to 7850 kg/m³ (steel). Standard timber usually ranges 400–700 kg/m³.",
+            "unit": "kg/m³ (inferred from context)",
+            "affectsOutput": "Changes the calculated 'Weight' property of elements (beams, walls, sheets) within the hsbCAD model. Does not change geometry."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Missing Materials.xml file",
+            "effect": "Script automatically generates a new XML file with hardcoded default densities.",
+            "cascade": [
+              "MATERIAL",
+              "DENSITY"
+            ]
+          },
+          {
+            "trigger": "hsbMaterialDensityTable.dll is found",
+            "effect": "External UI window is launched, allowing the user to modify MATERIAL and DENSITY values via the map.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Settings File (XML)",
+            "description": "Creates or updates the 'Materials.xml' file located in the company folder, which acts as a lookup table for material weights.",
+            "appliedTo": "Global Environment (referenced by other scripts/calculations)."
+          }
+        ]
+      },
+      "tokens_used": 5180,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script execution triggered via command line or menu insert.",
+          "2. System checks if script is in insert cycle (_bOnInsert).",
+          "3. If first insertion cycle, sets insertion point and continues; otherwise, script instance is erased.",
+          "4. Script locates or creates the configuration file 'Materials.xml' in the company Abbund folder.",
+          "5. If 'Materials.xml' is missing, a default file is generated using a Map populated with standard materials (STEEL, CLS, LVL, etc.) and their densities.",
+          "6. Script locates the required .NET DLL interface file. Checks primary path (hsbMaterialDensityTable.dll) first, then falls back to legacy path (hsbMaterialTable.dll) if needed.",
+          "7. Script prepares input Map containing the XML file path.",
+          "8. Script calls the external .NET function (LoadMaterialTable) to launch the Material Density dialog.",
+          "9. External UI allows user to view and edit material densities.",
+          "10. Script receives output Map from DLL.",
+          "11. Script validates the output Map for a 'Result' string or data integrity.",
+          "12. If valid results exist, a report notice displays the returned message.",
+          "13. Script instance erases itself from the drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Check insertion cycle (insertCycleCount)",
+            "path1": {
+              "name": "First Cycle",
+              "steps": [
+                "Set _Pt0 to current point.",
+                "Continue execution."
+              ]
+            },
+            "path2": {
+              "name": "Subsequent Cycle",
+              "steps": [
+                "Erase current instance.",
+                "Return immediately."
+              ]
+            }
+          },
+          {
+            "condition": "Check for existing configuration file (Materials.xml)",
+            "path1": {
+              "name": "File Missing",
+              "steps": [
+                "Initialize Maps for default materials (STEEL, CLS, LVL, MDF, OSB, PLASTERBOARD, WEYROC, CABERDEK, DEFAULT).",
+                "Set default densities for each material.",
+                "Write map structure to 'Materials.xml'."
+              ]
+            },
+            "path2": {
+              "name": "File Exists",
+              "steps": [
+                "Proceed to load external interface.",
+                "Pass existing file path to DLL."
+              ]
+            }
+          },
+          {
+            "condition": "Check for DLL availability",
+            "path1": {
+              "name": "Primary DLL Found",
+              "steps": [
+                "Use hsbMaterialDensityTable.dll path.",
+                "Use Type 'hsbCad.Tsl.Insertion.MapTransaction'."
+              ]
+            },
+            "path2": {
+              "name": "Primary DLL Missing (Fallback)",
+              "steps": [
+                "Switch path to legacy folder 'Content\\General\\MaterialTable\\hsbMaterialTable.dll'.",
+                "Switch Type to 'hsbSoft.Tsl.Insertion.MapTransaction'."
+              ]
+            }
+          },
+          {
+            "condition": "Validate DLL Output (mapOut)",
+            "path1": {
+              "name": "Valid Output",
+              "steps": [
+                "Retrieve 'Result' string from map.",
+                "Display result message via reportNotice."
+              ]
+            },
+            "path2": {
+              "name": "Invalid/Empty Output",
+              "steps": [
+                "Display error: 'No Valid dll or path not found'."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "DLL file existence (primary and legacy paths).",
+            "errorMessage": "No Valid dll or path not found",
+            "recovery": "Ensure hsbCAD installation is correct and hsbMaterialDensityTable.dll (or legacy hsbMaterialTable.dll) exists in the Utilities folder structure."
+          },
+          {
+            "check": "Return map integrity from DLL call (contains 'Result' key).",
+            "errorMessage": "No Valid dll or path not found (if map is empty or missing key)",
+            "recovery": "Verify the .NET DLL is compatible and not blocked by antivirus or permission issues."
+          },
+          {
+            "check": "Write permissions for company folder (for XML creation).",
+            "errorMessage": "(Implicit failure in writeToXmlFile)",
+            "recovery": "Ensure user has write access to _kPathHsbCompany\\Abbund\\."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 4825,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SetMaterialDensities.mcr\n\n## Overview\nThis utility script manages the material density settings used for weight calculations in hsbCAD. It ensures a default configuration file exists and launches a dialog interface allowing you to view and edit the density values (kg/m³) for various materials such as timber, steel, and sheet goods.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This is the primary execution environment. |\n| Paper Space | No | Not supported in Paper Space. |\n| Shop Drawing | No | This is a configuration utility, not a drawing generator. |\n\n## Prerequisites\n- **Required Entities:** None.\n- **Minimum Beam Count:** 0.\n- **Required Settings Files:** \n    - `Materials.xml` (Auto-generated in the company folder if missing).\n    - `hsbMaterialDensityTable.dll` (or the legacy `hsbMaterialTable.dll`).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_SetMaterialDensities.mcr`\n```\nCommand Line: (Click insertion point)\nAction: Click anywhere in the Model Space to activate the script.\n```\n\n### Step 2: Edit Material Densities\n```\nAction: The Material Density Table dialog will appear automatically.\n1. Review the list of Materials (e.g., STEEL, CLS, LVL, MDF, OSB).\n2. Edit the Density value (in kg/m³) for any material as required.\n3. Save or Close the dialog to apply changes.\n```\n*Note: The script will erase itself automatically once the dialog is closed.*\n\n## Properties Panel Parameters\nThis script does not expose persistent parameters in the Properties Palette (OPM). Configuration is handled entirely through the external dialog launched upon execution.\n\n| Concept | Type | Description |\n|-----------|------|-------------|\n| Material | String | The name of the material (e.g., CLS, LVL). This must match the material names assigned to your beams/sheets in the model. |\n| Density | Number (Double) | The physical density of the material in kg/m³. Used to calculate the weight of elements. |\n\n## Right-Click Menu Options\nNone. This script runs immediately upon insertion and erases itself, so no context menu options are available.\n\n## Settings Files\n- **Filename**: `Materials.xml`\n- **Location**: `<Company Folder>\\Abbund\\Materials.xml`\n- **Purpose**: Stores the mapping between Material Names and their corresponding Density values. If this file is missing when the script runs, it will be automatically created with default values (e.g., STEEL: 1000, CLS: 550, LVL: 600).\n\n## Tips\n- **Default Values:** If you run this script for the first time, check the generated defaults to ensure they match your local timber specifications.\n- **Weight Calculations:** Use this script if your element weight reports seem incorrect; the issue is likely due to incorrect density values in this XML file.\n- **Legacy Support:** The script automatically searches for the modern DLL (`hsbMaterialDensityTable.dll`) first, but will fall back to a legacy version if the newer one is not found.\n\n## FAQ\n- **Q: Why does the script disappear after I run it?**\n  - A: This is a \"utility\" script designed to perform a setup task and then clean up after itself. The settings are saved in the XML file, not in the drawing entity.\n- **Q: I see an error \"No Valid dll or path not found\". What do I do?**\n  - A: Ensure your hsbCAD installation is intact and that `hsbMaterialDensityTable.dll` exists in your hsbCAD Utilities or General folder.\n- **Q: How do I add a new material type?**\n  - A: You can typically add new rows or edit the XML directly, though the provided dialog is the safest way to manage existing entries. Ensure the Name matches exactly what is used in your hsbCAD catalog."
+      },
+      "tokens_used": 5097,
+      "error": null
+    }
+  }
+}

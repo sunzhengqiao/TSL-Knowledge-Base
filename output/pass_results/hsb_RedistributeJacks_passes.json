@@ -1,0 +1,362 @@
+{
+  "filename": "hsb_RedistributeJacks.mcr",
+  "status": "completed",
+  "total_tokens": 48707,
+  "processing_time": 322.4067404270172,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "12.01.2011",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.1",
+            "date": "13.01.2011",
+            "author": "",
+            "changes": "Change Jacks Distribution"
+          },
+          {
+            "version": "1.3",
+            "date": "18.01.2011",
+            "author": "",
+            "changes": "Analise if the top beam it's not cover by a flat beam on top of the panel"
+          },
+          {
+            "version": "1.4",
+            "date": "09.02.2011",
+            "author": "",
+            "changes": "Fix issue witn module information not going to some of the Jacks"
+          },
+          {
+            "version": "1.5",
+            "date": "04.04.2011",
+            "author": "",
+            "changes": "Added functionality for distributing from left, right and centre"
+          },
+          {
+            "version": "1.6",
+            "date": "04.04.2011",
+            "author": "",
+            "changes": "Extra Jacks Bugfix when size is set to 0"
+          },
+          {
+            "version": "1.7",
+            "date": "23.08.2011",
+            "author": "",
+            "changes": "Added check for beam array"
+          },
+          {
+            "version": "1.8",
+            "date": "06.02.2012",
+            "author": "",
+            "changes": "Bugfix issue when there was a packer overlaping the header"
+          },
+          {
+            "version": "1.9",
+            "date": "16.02.2012",
+            "author": "",
+            "changes": "Bugfix with the tolerance around the openings"
+          },
+          {
+            "version": "1.10",
+            "date": "13.11.2012",
+            "author": "",
+            "changes": "Remove blocking that could be between jacks"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8814,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses `PrEntity` to select `Element` objects during insertion and interacts directly with `ElementWallSF`, `Opening`, and `Beam` entities. It modifies the construction model using `dbCreate`, `dbErase`, and `assignToElementGroup`. No Shop Drawing (`sd_*`), Paper Space (`_Viewport`), or 2D drawing APIs are used."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Opening",
+            "Beam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space containing Wall Elements (ElementWallSF) with Openings",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7635,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\"\\n\"+T(\"Select a set of elements\")",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "Property Dialog (showDialogOnce)",
+            "trigger": "When _kExecuteKey is empty during insertion",
+            "title": "hsb_RedistributeJacks (Default)",
+            "dataSource": "OPM Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sDistribution",
+            "type": "PropString",
+            "displayName": "Select Distribution",
+            "defaultValue": "From Left",
+            "inputType": "dropdown",
+            "options": [
+              "From Left",
+              "Even",
+              "From Right"
+            ],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "dNewSpacing",
+            "type": "PropDouble",
+            "displayName": "Spacing",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "Spacing between jacks. If set to 0 the wall spacing will be used."
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 8907,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Redistributes jack studs around wall openings (windows/doors) based on user-defined rules and spacing, removing existing jacks and blocking within the affected area.",
+          "category": "Framing",
+          "typicalUseCase": "When a wall element's jack stud layout around an opening needs to be standardized, re-spaced, or adjusted to specific design preferences (Left justified, Centered, or Right justified) without manually deleting and redrawing beams."
+        },
+        "parameters": [
+          {
+            "name": "sDistribution",
+            "technicalDefault": "From Left",
+            "businessMeaning": "Determines the alignment logic for the new jack studs within the opening width. 'From Left' aligns the first jack to the left edge and spaces subsequent jacks to the right. 'Even' centers the jacks around the opening center. 'From Right' aligns the first jack to the right edge and spaces subsequent jacks to the left.",
+            "validRange": "From Left, Even, From Right",
+            "unit": "enum",
+            "affectsOutput": "Changes the X-coordinate placement of the generated Jack beams relative to the opening's centerline or edges."
+          },
+          {
+            "name": "dNewSpacing",
+            "technicalDefault": "0",
+            "businessMeaning": "The center-to-center distance between jack studs. If set to 0, the script defaults to the standard wall spacing defined in the Element properties.",
+            "validRange": "0 (Default Wall Spacing) or >300mm (Typical stud spacing: 400mm, 600mm)",
+            "unit": "mm",
+            "affectsOutput": "Calculates the number of jack studs to insert and the distance between them. If the value is very small, many studs may be generated; if too large, few studs may be generated."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dNewSpacing set to 0",
+            "effect": "The spacing value is overridden by the Element's default 'spacingBeam' property.",
+            "cascade": []
+          },
+          {
+            "trigger": "sDistribution set to 'Even'",
+            "effect": "The calculation logic shifts to determining the center of the opening and offsetting studs symmetrically from that center point based on the spacing.",
+            "cascade": [
+              "dNewSpacing"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "GenBeam (Jack Studs)",
+            "description": "New jack studs are created (Types: _kSFJackUnderOpening and _kSFJackOverOpening). Existing jacks and blocking in the affected zone are erased.",
+            "appliedTo": "Selected Wall Elements (ElementWallSF), specifically around Openings."
+          }
+        ]
+      },
+      "tokens_used": 7824,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script (hsb_RedistributeJacks).",
+          "If _bOnInsert is true: Check execution key. If empty, show properties dialog (showDialogOnce).",
+          "Prompt user to select a set of Wall Elements (PrEntity).",
+          "If selection is successful, store elements in _Element array and exit insertion.",
+          "Script restarts (_bOnInsert false). Check if elements exist. If not, erase instance and exit.",
+          "Iterate through each selected Element.",
+          "Get Element Coordinate System (CS) and define Vector directions (X, Y, Z).",
+          "Collect all Openings within the Element. If no openings, skip to next element.",
+          "Collect all Beams within the Element. If no beams, skip to next element.",
+          "Filter beams into lists: Horizontal beams (Headers/Sills), Bottom Jacks, Top Jacks, and Blocking.",
+          "Iterate through each Opening.",
+          "Define processing zones (Bottom, Top, and Extended Gap) using PlaneProfiles.",
+          "Identify and erase Blocking beams within the extended vertical processing zone.",
+          "Analyze existing Bottom Jacks intersecting the opening bottom zone.",
+          "If Bottom Jacks found: Capture properties (Width, Height, Length, Module, Color) from first intersecting jack, then erase all intersecting Bottom Jacks.",
+          "If Bottom Jacks NOT found: Analyze existing Top Jacks intersecting the opening top zone.",
+          "If Top Jacks found: Capture properties (Width, Height, Length, Module, Color) from first intersecting jack (do not erase yet).",
+          "Calculate effective distribution width based on Gap Side settings and Extra Jack requirements.",
+          "Calculate number of new studs based on Spacing (dNewSpacing or Element default).",
+          "Generate coordinate points (ptNewJacks) for the new studs based on 'Select Distribution' property (From Left, Even, From Right) and Extra Jack logic.",
+          "If original Bottom Jacks were found: Create new Bottom Jacks at calculated points, checking for overlap with horizontal beams.",
+          "If original Top Jacks were found (checked previously): Erase existing Top Jacks.",
+          "Project Bottom Jack points vertically up to the Top Jack centerline.",
+          "Create new Top Jacks at projected points, checking for overlap with horizontal beams.",
+          "Repeat for all Openings in the Element.",
+          "Repeat for all selected Elements.",
+          "Erase script instance from drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Detection of Existing Jacks (Bottom vs Top)",
+            "path1": {
+              "name": "Bottom Jacks Found",
+              "steps": [
+                "Detect intersecting Bottom Jacks (_kSFJackUnderOpening).",
+                "Extract geometric data (Width, Height, Length, Module, Color).",
+                "Erase Bottom Jacks.",
+                "Calculate new jack positions.",
+                "Regenerate Bottom Jacks at new positions.",
+                "Regenerate Top Jacks based on Bottom Jack data."
+              ]
+            },
+            "path2": {
+              "name": "No Bottom Jacks (Top Jacks Fallback)",
+              "steps": [
+                "Check for intersecting Top Jacks (_kSFJackOverOpening).",
+                "Extract geometric data from Top Jacks.",
+                "Calculate new jack positions.",
+                "Regenerate Bottom Jacks using Top Jack data.",
+                "Erase existing Top Jacks.",
+                "Regenerate Top Jacks at new positions."
+              ]
+            }
+          },
+          {
+            "condition": "Distribution Strategy (sDistribution)",
+            "path1": {
+              "name": "From Left (nDistribution == 0)",
+              "steps": [
+                "Calculate distance between edges.",
+                "Determine number of studs.",
+                "Check for overlap at the left edge.",
+                "Place studs starting from Right edge moving Left."
+              ]
+            },
+            "path2": {
+              "name": "Even (nDistribution == 1)",
+              "steps": [
+                "Calculate distance and number of studs.",
+                "Determine if count is Odd or Even.",
+                "If Odd: Place one stud at center, others spaced outwards.",
+                "If Even: Place first pair at +/- half spacing from center, others spaced outwards."
+              ]
+            },
+            "path3": {
+              "name": "From Right (nDistribution == 2)",
+              "steps": [
+                "Calculate distance between edges.",
+                "Determine number of studs.",
+                "Check for overlap at the right edge.",
+                "Place studs starting from Left edge moving Right."
+              ]
+            }
+          },
+          {
+            "condition": "Extra Jacks Configuration (OpeningSF properties)",
+            "path1": {
+              "name": "Extra Jacks Enabled (bExtraBeamsBottom == true)",
+              "steps": [
+                "Shift effective start/end points inward.",
+                "Add specific points to ptExtraJacks array for the inner edges.",
+                "Create custom sized beams if dSideBeamBottom is > 0."
+              ]
+            },
+            "path2": {
+              "name": "Standard Jacks",
+              "steps": [
+                "Use full effective width for distribution.",
+                "No extra points added to ptExtraJacks."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "Script erases itself if no elements are selected.",
+            "recovery": "Select valid Wall Elements and run script again."
+          },
+          {
+            "check": "Existence of Openings",
+            "errorMessage": "Silent skip. If opWindows.length < 1, loop continues to next element.",
+            "recovery": "Ensure selected Wall Elements contain Openings."
+          },
+          {
+            "check": "Existence of Existing Jacks",
+            "errorMessage": "Silent skip. If no Top or Bottom jacks are found intersecting the opening zone, no regeneration occurs (nFlag remains false).",
+            "recovery": "Ensure openings have existing jack studs to define the generation parameters."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 9666,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_RedistributeJacks.mcr\n\n## Overview\nThis script automatically recalculates and redistributes jack studs around wall openings (windows and doors) based on a specified spacing and alignment pattern. It removes existing jack studs and blocking within the affected area and regenerates them to match the new configuration.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D Wall Elements containing Openings. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | This is a model generation/editing script. |\n\n## Prerequisites\n- **Required entities**: Wall Elements (`ElementWallSF`) with existing Openings (windows/doors) and existing Jack Studs.\n- **Minimum beam count**: The element must contain at least one existing Jack Stud (Top or Bottom) to copy properties from; otherwise, the opening is skipped.\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_RedistributeJacks.mcr`\n\n### Step 2: Configure Properties (Optional)\nUpon insertion, the Properties Palette will display.\n- **Action**: Adjust the \"Select Distribution\" and \"Spacing\" parameters as needed.\n- **Action**: Close the Properties Palette to proceed.\n\n### Step 3: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the Wall Elements (walls with openings) you wish to update. Press Enter to confirm selection.\n```\n\n### Step 4: Execution\n- The script will automatically process the selected elements, delete the old jacks/blocking, and insert the new jack layout based on your settings. The script instance will then erase itself.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Select Distribution | dropdown | From Left | Determines the alignment of the jack studs relative to the opening. Options: <br> - **From Left**: Aligns the first jack to the left edge.<br> - **Even**: Centers the jacks around the opening.<br> - **From Right**: Aligns the first jack to the right edge. |\n| Spacing | number | 0 | The center-to-center distance between jack studs in millimeters. If set to **0**, the script uses the default spacing defined in the Wall Element properties. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu items are defined for this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Existing Jacks Required**: The script copies width, height, material, and module information from existing jacks. Ensure there is at least one jack stud under or over the opening before running the script.\n- **Default Spacing**: Leave the \"Spacing\" property as `0` to automatically match the new jacks to the wall's standard stud spacing.\n- **Blocking Removal**: The script automatically removes blocking beams located between the jacks in the processing zone.\n- **Extra Jacks**: If your opening settings (in hsbCAD) specify \"Extra Jacks\" (e.g., side trimmers), the script accounts for these by placing custom-sized beams at the inner edges and distributing standard jacks between them.\n\n## FAQ\n- **Q: Why did the script skip my opening?**\n  **A**: The script requires existing Top or Bottom Jacks to determine the size and material of the new studs. If the opening has no jacks currently, the script will skip it.\n  \n- **Q: Can I use this to fix spacing in curved walls?**\n  **A**: Yes, as long as the entity is a valid Wall Element (`ElementWallSF`) with an identifiable Coordinate System, the script will calculate positions correctly.\n\n- **Q: What happens if my specified spacing is too large for the opening?**\n  **A**: The script will calculate the maximum number of studs that fit based on the spacing. It may generate fewer studs than expected or just the edge jacks depending on the distribution logic selected."
+      },
+      "tokens_used": 5861,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,317 @@
+{
+  "filename": "hsbCLT-ArticleManager.mcr",
+  "status": "completed",
+  "total_tokens": 46546,
+  "processing_time": 764.5845069885254,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8998,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses _kModelSpace in Group().collectEntities calls. Targets Sip and MasterPanel entities which are 3D model elements. No Paper Space (_Viewport) or ShopDrawing (sd_*, #Type E) specific code patterns found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sip",
+            "MasterPanel"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing structural timber panels.",
+          "requiredSettings": [
+            "CLT-ArticleManager.xml (located in company\\tsl\\settings or _kPathHsbInstall)",
+            "SurfaceQualityStyle catalog entries",
+            "Excel file (optional, for 'Import Excel Articles' trigger) with specific columns: Thickness, Quality 1, Quality 2, Components"
+          ]
+        }
+      },
+      "tokens_used": 5464,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select panels|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getString",
+              "promptOriginal": "|Are you sure to overwrite existing settings?| [|No|]/[|Yes|]",
+              "condition": "_kExecuteKey == '|Export Settings|'",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sArticle",
+            "type": "PropString",
+            "displayName": "|Article|",
+            "defaultValue": "",
+            "inputType": "dropdown",
+            "options": [],
+            "category": null,
+            "description": null,
+            "visibility": "Hidden on Insert"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "|Import Excel Articles|",
+            "handler": "|Import Excel Articles|",
+            "action": "Imports article definitions from an Excel file using the hsbExcelToMap utility.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Export Settings|",
+            "handler": "|Export Settings|",
+            "action": "Exports the current article settings to an XML file.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "CLT-ArticleManager.xml",
+            "searchPaths": [
+              "_kPathHsbCompany\\TSL\\Settings\\",
+              "_kPathHsbInstall\\Content\\General\\TSL\\Settings\\"
+            ],
+            "purpose": "Stores default and custom article definitions (Thickness, Quality, Components, etc.).",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 8964,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Assigns and manages layer composition data (materials, grades, thickness) for CLT (Cross Laminated Timber) panels.",
+          "category": "Data Management / CLT Configuration",
+          "typicalUseCase": "Used to attach specific build-up definitions (e.g., '5-layer panel, 120mm total') to structural timber panels so that this data can be used in labels, lists, or export to production machines."
+        },
+        "parameters": [
+          {
+            "name": "sArticle",
+            "technicalDefault": "",
+            "businessMeaning": "Selects the specific pre-defined panel construction (Article) from the catalog to apply to the selected panel. This determines the total thickness, surface quality, and the specific make-up of individual timber layers.",
+            "validRange": "Valid string keys defined in 'CLT-ArticleManager.xml' or imported via Excel",
+            "unit": "String",
+            "affectsOutput": "Writes the 'CLT_ArticleData' SubMapX to the entity, which includes detailed lists of layers, their individual thicknesses, materials, grades, and grain alignment."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects 'sArticle' from the dropdown",
+            "effect": "The script retrieves the article definition (Thickness, Quality 1, Quality 2, Component string) and writes the detailed layer data to the panel's SubMapX.",
+            "cascade": [
+              "CLT_ArticleData.ComponentDescription",
+              "CLT_ArticleData.Layer",
+              "CLT_ArticleData.Material"
+            ]
+          },
+          {
+            "trigger": "Panel Style or Thickness changes (on Recalc)",
+            "effect": "The script attempts to match the new panel properties against the article catalog. If the current article no longer matches (e.g., thickness differs), it may display an error or clear the article data.",
+            "cascade": [
+              "sArticle",
+              "CLT_ArticleData"
+            ]
+          },
+          {
+            "trigger": "Context Menu: Import Excel Articles",
+            "effect": "Reloads the internal catalog map from an external Excel file, updating the available options in the 'sArticle' dropdown.",
+            "cascade": [
+              "mapArticles",
+              "sArticle"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "SubMapX (Custom Data)",
+            "description": "Appends a custom attribute map named 'CLT_ArticleData' to the panel entity containing structured arrays of component definitions (Thickness, Grade, Material, Alignment, Index).",
+            "appliedTo": "Sip (Structural Insulated Panel) or MasterPanel entities selected during insertion."
+          }
+        ]
+      },
+      "tokens_used": 8169,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User executes command (e.g., hsb_ScriptInsert).",
+          "Script prompts user to select structural panels (Sip or MasterPanel).",
+          "User selects one or more panels.",
+          "Script instances are created and attached to each selected panel.",
+          "Script executes initial calculation (Recalc).",
+          "Script retrieves panel geometric properties (Thickness, Top/Bottom Surface Quality, Style Name).",
+          "Script generates a unique 'Family Key' based on these properties.",
+          "Script filters the internal Article Catalog (loaded from XML or Excel) for matching entries.",
+          "[Conditional Branch] Match Found vs. No Match Found.",
+          "Script populates the 'Article' property dropdown in the Properties Palette.",
+          "User selects a specific Article from the dropdown.",
+          "Script parses the Article definition (Layers, Components, Grades, Materials).",
+          "Script writes the detailed construction data to the panel entity as 'CLT_ArticleData' SubMapX.",
+          "[Conditional Branch] If panel is a Sip, script attempts to propagate data to parent MasterPanel."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Entity Type during Insert",
+            "path1": {
+              "name": "Sip Selected",
+              "steps": [
+                "Cast entity to Sip class.",
+                "Get insertion point from sip.ptCen().",
+                "Create TSL instance using beam-based attachment."
+              ]
+            },
+            "path2": {
+              "name": "MasterPanel Selected",
+              "steps": [
+                "Cast entity to MasterPanel class.",
+                "Calculate PlaneProfile from shape.",
+                "Determine insertion point via profile midpoint.",
+                "Create TSL instance using entity-based attachment."
+              ]
+            }
+          },
+          {
+            "condition": "Catalog Matching Status",
+            "path1": {
+              "name": "Match Found",
+              "steps": [
+                "Populate 'sArticle' property with valid options.",
+                "Draw no visual error (clean display).",
+                "Proceed to write SubMapX if an article is selected."
+              ]
+            },
+            "path2": {
+              "name": "No Match / Empty Catalog",
+              "steps": [
+                "Display solid fill over panel envelope (50% transparency).",
+                "Draw warning text at panel center (e.g., 'No article definitions found').",
+                "Remove 'CLT_ArticleData' SubMapX from entity if it exists."
+              ]
+            }
+          },
+          {
+            "condition": "Excel Import Trigger",
+            "path1": {
+              "name": "Valid Excel Structure",
+              "steps": [
+                "hsbExcelToMap utility parses file.",
+                "Map 'Article[]' is updated with new data.",
+                "Internal MapObject is updated and saved.",
+                "Script refreshes (Loop 2)."
+              ]
+            },
+            "path2": {
+              "name": "Invalid Excel Structure",
+              "steps": [
+                "Map 'Article[]' remains empty.",
+                "Script reports error: 'Import not successful'.",
+                "Script lists required fields (Thickness, Quality 1, etc.)."
+              ]
+            }
+          },
+          {
+            "condition": "Export Settings Trigger",
+            "path1": {
+              "name": "File Exists",
+              "steps": [
+                "Prompt user via getString: 'Are you sure to overwrite existing settings?'.",
+                "Wait for Yes/No input.",
+                "If Yes, overwrite XML file."
+              ]
+            },
+            "path2": {
+              "name": "File Does Not Exist",
+              "steps": [
+                "Create directory structure if missing.",
+                "Write XML file directly."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Reference Entity Validity",
+            "errorMessage": "Invalid reference. Tool will be deleted",
+            "recovery": "Select a valid Sip or MasterPanel entity when inserting the script."
+          },
+          {
+            "check": "Article Catalog Availability",
+            "errorMessage": "No article definitions found. Please use context command to import definitions from an excel file.",
+            "recovery": "Use Context Menu -> 'Import Excel Articles' or ensure 'CLT-ArticleManager.xml' exists in the settings folder."
+          },
+          {
+            "check": "Geometry/Quality Match",
+            "errorMessage": "Could not find matching data (followed by Thickness/Quality details)",
+            "recovery": "Modify panel thickness or surface qualities to match a defined article, or add a new article definition to the catalog."
+          },
+          {
+            "check": "Excel Column Headers",
+            "errorMessage": "Import not successful. Required fields are: Thickness, Quality 1, Quality 2, Components",
+            "recovery": "Ensure the Excel sheet contains these exact column headers."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Article Assignment",
+            "how": "OPM (Object Properties Manager) dropdown 'Article'",
+            "effect": "Updates the 'CLT_ArticleData' SubMapX on the panel with new layer/material info. If successful, removes visual error display."
+          },
+          {
+            "action": "Update Catalog from Excel",
+            "how": "Right-click Context Menu -> 'Import Excel Articles'",
+            "effect": "Launches Excel selection dialog, parses data, updates internal MapObject, and refreshes available article options for all panels using this script."
+          },
+          {
+            "action": "Export Current Settings",
+            "how": "Right-click Context Menu -> 'Export Settings'",
+            "effect": "Saves the currently loaded Article definitions (MapObject) to 'CLT-ArticleManager.xml' in the company folder."
+          },
+          {
+            "action": "Modify Panel Geometry",
+            "how": "Grip edit or stretch the panel",
+            "effect": "Triggers script recalculation. Script checks if the new Thickness/Quality still matches the assigned Article. If not, displays error and clears data."
+          }
+        ]
+      },
+      "tokens_used": 9573,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-ArticleManager\n\n## Overview\nAssigns and manages CLT (Cross Laminated Timber) layer composition data—such as materials, grades, and thickness—to structural timber panels. It allows users to attach specific \"Article\" definitions to panels so that detailed build-up information is available for labels, lists, and production data export.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Works on 3D model elements. |\n| Paper Space | No | Not designed for layout views. |\n| Shop Drawing | No | Not intended for 2D drawing generation. |\n\n## Prerequisites\n- **Required Entities**: Structural panels of type `Sip` or `MasterPanel`.\n- **Minimum Beam Count**: N/A (Targets panels).\n- **Required Settings**:\n    - `CLT-ArticleManager.xml` (Default catalog located in `company\\tsl\\settings` or install folder).\n    - Surface Quality Styles defined in the catalog.\n    - (Optional) Excel file for bulk importing articles.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `hs_ScriptInsert` → Select `hsbCLT-ArticleManager.mcr` from the list.\n\n### Step 2: Select Panels\n```\nCommand Line: Select panels\nAction: Click on one or more structural timber panels (Sip or MasterPanel) in the model to which you want to assign CLT data. Press Enter to confirm selection.\n```\n\n### Step 3: Assign Article\n```\nAction: With the panel(s) selected, open the Properties Palette (Ctrl+1). Locate the \"Article\" property dropdown. Select the desired article definition from the list that matches your panel's thickness and surface qualities.\n```\n\n### Step 4: Verify Assignment\n```\nAction: Check the visual feedback. If the assignment is successful, the panel should appear normal. If the panel displays a solid fill with a warning (e.g., \"Could not find matching data\"), the catalog may be missing a definition matching your panel's specific geometry or quality.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Article | dropdown | (Empty) | Selects the specific pre-defined panel construction (Article) from the catalog. This determines the total thickness, surface quality, and the specific make-up of individual timber layers. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Import Excel Articles | Opens a file dialog to select an Excel file. Parses the file to update the internal article catalog with new definitions (requires columns: Thickness, Quality 1, Quality 2, Components). |\n| Export Settings | Saves the currently loaded article definitions (catalog) to `CLT-ArticleManager.xml` in the company settings folder. If the file exists, you will be prompted to confirm overwriting. |\n\n## Settings Files\n- **Filename**: `CLT-ArticleManager.xml`\n- **Location**: `_kPathHsbCompany\\TSL\\Settings\\` or `_kPathHsbInstall\\Content\\General\\TSL\\Settings\\`\n- **Purpose**: Stores the article catalog, including definitions for Thickness, Quality 1, Quality 2, and Component strings.\n\n## Tips\n- **Visual Errors**: If your panel turns transparent red/filled after assigning the script, it means no article in the catalog matches the panel's thickness or surface qualities. Use the \"Import Excel Articles\" context menu option to load the correct data.\n- **Bulk Updates**: You can select multiple panels and run the script simultaneously. If they share the same geometric properties, you can update them all at once via the Properties Palette.\n- **Data Usage**: The data written by this script is stored in the entity's `SubMapX` under the key `CLT_ArticleData`. This can be referenced in Lists/Labels to show individual layer thicknesses or materials.\n\n## FAQ\n- **Q: I see a red overlay over my panel saying \"No article definitions found.\" What do I do?**\n  A: The script cannot find a catalog entry that matches your panel's specific Thickness and Surface Qualities. Use the Right-Click menu -> \"Import Excel Articles\" to load your specific catalog, or ensure your Surface Quality Styles match the XML definitions exactly.\n- **Q: What format should the Excel import file have?**\n  A: The Excel file must contain the specific column headers: `Thickness`, `Quality 1`, `Quality 2`, and `Components`.\n- **Q: Can I use this on regular beams?**\n  A: No, this script is designed specifically for CLT panels (`Sip` and `MasterPanel` entities)."
+      },
+      "tokens_used": 5378,
+      "error": null
+    }
+  }
+}

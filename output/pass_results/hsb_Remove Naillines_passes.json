@@ -1,0 +1,206 @@
+{
+  "filename": "hsb_Remove Naillines.mcr",
+  "status": "completed",
+  "total_tokens": 17821,
+  "processing_time": 445.93443417549133,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "02.09.2009",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version for UK Content"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": [
+          "hsb_Apply Naillines to Elements"
+        ]
+      },
+      "tokens_used": 3297,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select ElementWallSF (3D entity) and accesses el.nailLine() and el.tslInstAttached(). It iterates over the _Element array. No 'sd_' drawing functions, 'Sheet' entities, or '_Viewport' usage found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWallSF"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2657,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select one or More Elements",
+              "condition": "_bOnInsert && insertCycleCount()<=1",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 1847,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Removes all nail line layouts and the specific TSL instances responsible for generating them from selected wall elements.",
+          "category": "Management",
+          "typicalUseCase": "Used when a user wants to strip existing nail configurations from a set of walls, typically to apply a different nailing pattern or to clean up the model for export."
+        },
+        "parameters": [
+          {
+            "name": "_Element",
+            "technicalDefault": "Empty Set",
+            "businessMeaning": "The collection of Wall Elements (ElementWallSF) selected by the user to be stripped of nail lines.",
+            "validRange": "1 to N valid ElementWallSF entities",
+            "unit": "Count (Entities)",
+            "affectsOutput": "Determines which elements in the model will have their nail lines deleted and the associated 'hsb_Apply Naillines to Elements' script instances removed."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "NailLine (Deletion)",
+            "description": "All nail line objects associated with the selected elements are permanently deleted from the model database.",
+            "appliedTo": "Selected Wall Elements"
+          },
+          {
+            "type": "TslInst (Deletion)",
+            "description": "The script specifically searches for and deletes attached TSL instances named 'hsb_Apply Naillines to Elements' to prevent automatic regeneration of the nail lines.",
+            "appliedTo": "Selected Wall Elements"
+          }
+        ]
+      },
+      "tokens_used": 3338,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script starts and checks _bOnInsert flag.",
+          "If running for the first time (insertCycleCount <= 1), display prompt 'Select one or More Elements' using PrEntity.",
+          "User selects ElementWallSF entities.",
+          "Script stores selected elements in _Element array and returns (insertion phase ends).",
+          "Script re-executes or continues processing.",
+          "Script checks if _Element array is empty.",
+          "If not empty, iterate through each element in the _Element array.",
+          "For each valid element, retrieve all associated NailLine objects.",
+          "Delete (dbErase) all found NailLine objects.",
+          "Retrieve all attached TSL instances (TslInst) for the element.",
+          "Iterate through attached TSL instances to find instances named 'hsb_Apply Naillines to Elements'.",
+          "Delete (dbErase) the specific TSL instances if found.",
+          "Complete loop for all selected elements.",
+          "Script erases its own instance (eraseInstance) and returns."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "State of script execution (_bOnInsert flag and insert cycle count)",
+            "path1": {
+              "name": "Insertion Phase",
+              "steps": [
+                "Check if insertCycleCount > 1",
+                "If yes, erase instance and exit immediately.",
+                "If no, prompt user to select elements.",
+                "Store selection and return."
+              ]
+            },
+            "path2": {
+              "name": "Execution Phase",
+              "steps": [
+                "Check if _Element array is empty.",
+                "If empty, erase instance and exit.",
+                "If populated, process nail lines and TSL instances."
+              ]
+            }
+          },
+          {
+            "condition": "Validity of Selected Element",
+            "path1": {
+              "name": "Valid Element",
+              "steps": [
+                "Access nailLine() array.",
+                "Loop and dbErase() nail lines.",
+                "Access tslInstAttached() array.",
+                "Loop and dbErase() specific TSL instance."
+              ]
+            },
+            "path2": {
+              "name": "Invalid Element",
+              "steps": [
+                "Skip to next element in the array."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity selection via PrEntity",
+            "errorMessage": "None explicit in code, but PrEntity requires selection of ElementWallSF.",
+            "recovery": "User must select valid wall elements when prompted."
+          },
+          {
+            "check": "_Element array population",
+            "errorMessage": "None explicit.",
+            "recovery": "If user cancels selection or selects nothing, the script self-erases."
+          },
+          {
+            "check": "Element Validity (el.bIsValid())",
+            "errorMessage": "None explicit.",
+            "recovery": "Script automatically skips invalid entities found in the selection set."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 2911,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_Remove Naillines\n\n## Overview\nThis script removes all nail line layouts and the specific TSL instances responsible for generating them from selected wall elements. It is useful for clearing existing nail configurations to prepare for a new pattern or to clean up the model for export.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Select 3D Wall Elements (ElementWallSF) here. |\n| Paper Space | No | This script does not function in layout views. |\n| Shop Drawing | No | This script is for model modification, not detailing. |\n\n## Prerequisites\n- **Required entities**: One or more Wall Elements (`ElementWallSF`) must exist in the model.\n- **Minimum beam count**: 1 Wall Element must be selected.\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse to and select `hsb_Remove Naillines.mcr`.\n\n### Step 2: Select Elements\n```\nCommand Line: Select one or More Elements\nAction: Click on the wall elements you wish to clean up. Press Enter or Right-Click to confirm selection.\n```\n*(Note: Once confirmed, the script will immediately process the elements and remove itself from the drawing.)*\n\n## Properties Panel Parameters\nThis script has no editable parameters in the Properties Palette. It executes immediately based on user selection.\n\n## Right-Click Menu Options\nThis script does not add any custom options to the Right-Click context menu.\n\n## Settings Files\nNone required.\n\n## Tips\n- **Thorough Cleanup**: This script deletes both the visible nail lines and the invisible script instances (`hsb_Apply Naillines to Elements`) attached to the walls. This prevents the nail lines from automatically regenerating if the model updates.\n- **Self-Cleaning**: The script automatically deletes its own instance from the project tree after finishing, keeping your project data clean.\n- **Validation**: The script skips any invalid elements found in your selection set, so you do not need to filter your selection perfectly.\n\n## FAQ\n- **Q: Can I use this on beams or roofs?**\n  - A: No, this script is designed specifically for Wall Elements (`ElementWallSF`).\n- **Q: Will this delete the wall geometry?**\n  - A: No, it only removes the nail lines and the associated generator scripts. The physical wall remains unchanged.\n- **Q: Why did nothing happen after I ran the script?**\n  - A: This usually means the selected elements did not have any nail lines or generator scripts attached to them."
+      },
+      "tokens_used": 3771,
+      "error": null
+    }
+  }
+}

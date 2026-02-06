@@ -1,0 +1,247 @@
+{
+  "filename": "hsbStudSheetJoint.mcr",
+  "status": "completed",
+  "total_tokens": 49056,
+  "processing_time": 276.991206407547,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8821,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly creates new TSL instances using `_kModelSpace` in `tslNew.dbCreate()`. No `sd_` prefix, `_Viewport` usage, or `#Type E` properties detected. Logic operates on `Element`, `GenBeam`, and `Sheeting` objects within the model."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Sheeting"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "Painter definitions containing 'hsbStudSheetJoint'",
+            "Catalog entries for script parameters"
+          ]
+        }
+      },
+      "tokens_used": 7073,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"showDialog\",\n        \"promptOriginal\": null,\n        \"condition\": \"_bOnInsert && _kExecuteKey.length()==0\",\n        \"required\": true\n      },\n      {\n        \"step\": 2,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"Select elements\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [],\n  \"opmProperties\": [\n    {\n      \"index\": 0,\n      \"variable\": \"dWidth\",\n      \"type\": \"PropDouble\",\n      \"displayName\": \"Width\",\n      \"defaultValue\": 0,\n      \"inputType\": \"number\",\n      \"options\": [],\n      \"category\": \"General\",\n      \"description\": \"Defines the Width\"\n    },\n    {\n      \"index\": 0,\n      \"variable\": \"sZone\",\n      \"type\": \"PropString\",\n      \"displayName\": \"Zones\",\n      \"defaultValue\": \"\",\n      \"inputType\": \"text\",\n      \"options\": [],\n      \"category\": \"General\",\n      \"description\": \"Defines the Zones where the Sheeting will be redistributed \\nZones must be separated with ';'\"\n    },\n    {\n      \"index\": 1,\n      \"variable\": \"sExtrusionProfile\",\n      \"type\": \"PropString\",\n      \"displayName\": \"Extrusion Profile\",\n      \"defaultValue\": \"<Deactivated>\",\n      \"inputType\": \"dropdown\",\n      \"options\": [\n        \"Dynamic list from ExtrProfile (Excludes 'Rectangular' and 'Round')\"\n      ],\n      \"category\": \"General\",\n      \"description\": \"Defines the ExtrusionProfile\"\n    },\n    {\n      \"index\": 3,\n      \"variable\": \"sPainterBeam\",\n      \"type\": \"PropString\",\n      \"displayName\": \"Studs\",\n     "
+      },
+      "tokens_used": 9533,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically creates or adjusts backing studs at the locations of sheathing joints within wall elements to provide nailing support.",
+          "category": "Framing/Wall Generation",
+          "typicalUseCase": "Used during wall detailing to ensure that seams between plywood or OSB sheets are backed by structural timber studs, either by moving existing studs or adding new ones."
+        },
+        "parameters": [
+          {
+            "name": "dWidth",
+            "technicalDefault": "0",
+            "businessMeaning": "The cross-sectional width (thickness) of the backing studs to be generated or modified. A value of 0 indicates the script should use the existing stud width or an extrusion profile.",
+            "validRange": "0 to 300 mm (0 = Use Existing/Profile)",
+            "unit": "mm",
+            "affectsOutput": "Determines the thickness of the generated beam geometry. If set to 0, the script relies on existing geometry or the Extrusion Profile parameter."
+          },
+          {
+            "name": "sZone",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Specifies the material layers (zones) of the wall element where the sheathing sheet joints should be detected. Joint lines in these zones trigger stud placement.",
+            "validRange": "Zone indices (e.g., '0', '1', '0;1')",
+            "unit": "text",
+            "affectsOutput": "Filters which sheet joints are considered for stud generation. Incorrect zones will result in no studs being created."
+          },
+          {
+            "name": "sExtrusionProfile",
+            "technicalDefault": "\"<Deactivated>\"",
+            "businessMeaning": "Selects a specific cross-sectional profile (e.g., I-Joist, Solid Timber) for the generated studs instead of a simple rectangular width.",
+            "validRange": "List of available Extrusion Profiles (excluding 'Rectangular' and 'Round')",
+            "unit": "catalog",
+            "affectsOutput": "Defines the 3D geometry shape of the new stud. Only active if Width is set to 0."
+          },
+          {
+            "name": "sPainterBeam",
+            "technicalDefault": "\"<Disabled>\"",
+            "businessMeaning": "Identifies which existing beams in the wall are considered 'studs' that can be modified or moved, versus other beams that should be avoided.",
+            "validRange": "List of Painter Definitions containing 'hsbStudSheetJoint'",
+            "unit": "painter",
+            "affectsOutput": "Controls which existing beams are modified/shifted and which are treated as obstructions. If disabled, the script may not identify existing studs correctly."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "dWidth is set > 0",
+            "effect": "sExtrusionProfile is ignored for the new beam creation.",
+            "cascade": [
+              "sExtrusionProfile"
+            ]
+          },
+          {
+            "trigger": "dWidth is set to 0",
+            "effect": "The script attempts to apply the geometry defined in sExtrusionProfile. If sExtrusionProfile is deactivated, it uses the width of existing context beams.",
+            "cascade": [
+              "sExtrusionProfile"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Beam (Stud)",
+            "description": "New vertical beams are created at sheet joint locations, or existing studs are moved/resized to align with joints.",
+            "appliedTo": "Selected Wall Elements (Zone 0)"
+          },
+          {
+            "type": "Beam (Blocking/Horisontal)",
+            "description": "Existing horizontal beams connected to the modified studs are stretched/updated to maintain connections.",
+            "appliedTo": "Wall Beams intersecting the modified studs"
+          }
+        ]
+      },
+      "tokens_used": 8722,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch: Script starts via command or catalog insertion.",
+          "2. Silent or Dialog Check: If executed via key (_kExecuteKey), properties are loaded from the catalog matching that key (or last inserted). Otherwise, the Properties Dialog (showDialog) is displayed for user input.",
+          "3. Catalog Painter Initialization: If on insert, the script scans catalog entries for painter definition streams. Valid painters missing in the current project are automatically created from these streams.",
+          "4. Entity Selection: User is prompted to select Elements ('Select elements'). The script validates that at least one element is selected.",
+          "5. Instance Generation: For each selected element, a new script instance is created in ModelSpace, bound to that element. The 'insert' instance is then erased.",
+          "6. Execution (Recalculation): The new script instance runs in 'calculation' mode.",
+          "7. Input Validation: Checks if exactly one Element is linked. If not, the script reports an error ('one element is needed') and erases itself.",
+          "8. Zone Parsing: Parses the 'Zones' string property. Converts the semicolon-separated string into an array of integer zone indices to search for sheet joints.",
+          "9. Joint Detection: Retrieves all sheeting joints for the specified zones within the element.",
+          "10. Stud Identification: Identifies existing studs using the specified Painter Definition ('Studs'). It collects both 'modifiable' studs and all other studs to define collision areas.",
+          "11. Iteration Loop: Loops through every detected sheet joint point.",
+          "12. Collision/Creation Logic (Branching): For each joint point, the script attempts to place a backing stud.",
+          "   a. Try 1: Check if a modifiable stud exists at the exact position. If yes, update its dimensions/profile.",
+          "   b. Try 2: If no stud exists, try to create a new one with the desired width/profile at the joint.",
+          "   c. Try 3: If the new profile collides with existing studs/openings, try to displace it along the wall X-axis to find a clear spot.",
+          "   d. Try 4: If displaced profile still collides, retry using the existing stud's width (if desired width was larger) to minimize collision.",
+          "   e. Fail: If all attempts fail, no stud is created for that specific joint.",
+          "13. Horizontal Beam Update: After processing all joints, the script identifies horizontal beams (blocking/plates) connected to the modified or new studs.",
+          "14. Stretch Dynamic: These horizontal beams are stretched dynamically to maintain their connections to the moved or resized studs.",
+          "15. Cleanup: The script instance erases itself, leaving only the modified geometry (new/moved studs and stretched beams)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Mode on Insert",
+            "path1": {
+              "name": "Silent/Key Execution",
+              "steps": [
+                "Check if _kExecuteKey has length > 0",
+                "Load properties from catalog matching key (or LastInserted)",
+                "Skip Dialog"
+              ]
+            },
+            "path2": {
+              "name": "Standard Execution",
+              "steps": [
+                "Check if _kExecuteKey is empty",
+                "Call showDialog() to prompt user for properties",
+                "User clicks OK"
+              ]
+            }
+          },
+          {
+            "condition": "Width Parameter (dWidth)",
+            "path1": {
+              "name": "Custom Width (> 0)",
+              "steps": [
+                "Use dWidth as the thickness for the stud.",
+                "Ignore Extrusion Profile parameter."
+              ]
+            },
+            "path2": {
+              "name": "Zero Width / Profile Mode (0)",
+              "steps": [
+                "Attempt to use the Extrusion Profile defined in sExtrusionProfile.",
+                "If Profile is deactivated or fails, attempt to match width of existing context beams."
+              ]
+            }
+          },
+          {
+            "condition": "Collision Detection during Stud Placement",
+            "path1": {
+              "name": "Clear Path",
+              "steps": [
+                "Create stud at exact joint coordinate.",
+                "Apply dimensions/profile."
+              ]
+            },
+            "path2": {
+              "name": "Collision Detected",
+              "steps": [
+                "Calculate displacement vector along wall X-axis.",
+                "Check if displacement results in clear space.",
+                "If clear, create displaced stud.",
+                "If not clear, check if 'Width > Existing Width' to attempt narrowing.",
+                "If narrowing works, create stud with smaller width.",
+                "If all fail, skip joint."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection Count",
+            "errorMessage": "hsbStudSheetJoint one element is needed",
+            "recovery": "Select exactly one Wall Element and re-run the script or trigger recalculation."
+          },
+          {
+            "check": "Insert Cycle",
+            "errorMessage": "None (Silent exit)",
+            "recovery": "N/A - Prevents duplicate instance creation."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Properties (Width, Zones, Profile)",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changes will not take effect unless the script instance is deleted and the command is run again, or if the TSL is linked to an element update trigger (though this script appears to be a one-shot generator as it erases itself)."
+          },
+          {
+            "action": "Delete Generated Beams",
+            "how": "Standard CAD Delete command",
+            "effect": "Removes the backing studs added by the script."
+          },
+          {
+            "action": "Manual Move/Edit",
+            "how": "Grip Edit / Move Command",
+            "effect": "User can manually adjust the position of the studs if the automatic displacement was unsatisfactory."
+          }
+        ]
+      },
+      "tokens_used": 8872,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbStudSheetJoint.mcr\n\n## Overview\nThis script automatically creates or adjusts backing studs (nailing backers) at the locations of sheathing joints within wall elements. It ensures that seams between plywood or OSB sheets are fully supported by structural timber, either by moving existing studs or adding new ones.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script creates and modifies geometry directly in the 3D model. |\n| Paper Space | No | This script does not generate 2D drawings or details. |\n| Shop Drawing | No | This is a model generation tool. |\n\n## Prerequisites\n- **Required Entities**: Wall Elements with Sheathing (Sheeting) applied.\n- **Minimum Beam Count**: 0 (The script can create new beams if none exist).\n- **Required Settings**: \n  - Painter definitions containing the string 'hsbStudSheetJoint' must exist in your project catalogs.\n  - Catalog entries for script parameters (if running via specific execute keys).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbStudSheetJoint.mcr` from the file dialog.\n\n### Step 2: Configure Parameters\n- **If executed manually**: A dialog may appear, or you must set properties in the Properties Palette before selection.\n- **Set Zones**: Enter the index number of the material layer containing the sheathing (e.g., `0` or `0;1`).\n- **Set Width/Profile**: Define the size or shape of the backing studs (leave Width as `0` to use an extrusion profile).\n- **Select Painter**: Choose the Painter Definition that identifies your wall studs.\n\n### Step 3: Select Elements\n```\nCommand Line: Select elements\nAction: Click on the Wall Element(s) you wish to process. Press Enter to confirm.\n```\n*Note: The script will process the sheathing joints in the selected elements.*\n\n### Step 4: Generation\nThe script runs automatically:\n1. It detects sheet joints in the specified zones.\n2. It attempts to place or move studs to align with these joints.\n3. It stretches any horizontal beams connected to the moved studs.\n4. The script instance deletes itself upon completion, leaving only the new geometry.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Width | Number | 0 | Defines the thickness of the backing stud. Set to `0` to use the Extrusion Profile or existing stud width. |\n| Zones | Text | \"\" | Defines the material layers (zones) to check for sheathing joints. Separate multiple zones with a semicolon (e.g., `0;1`). |\n| Extrusion Profile | Dropdown | <Deactivated> | Selects a specific cross-sectional profile (e.g., I-Joist) for the studs. Only active if Width is `0`. |\n| Studs | Dropdown/Painter | <Disabled> | Identifies which existing beams are considered \"studs\" that can be moved or modified. |\n\n## Right-Click Menu Options\n| Menu Item | Description |\n|-----------|-------------|\n| *None* | This script acts as a \"one-time\" command generator. Once executed, the script instance erases itself. Standard AutoCAD/hsbCAD edit options apply to the resulting beams. |\n\n## Settings Files\n- **Filename**: Catalog Entries (embedded in hsbCAD catalogs)\n- **Location**: Project or hsbCAD Standard Catalogs\n- **Purpose**: Stores default values for Width, Zones, and the Painter Definition filters used to identify studs.\n\n## Tips\n- **Zone Identification**: If the script does not create any studs, check the **Zones** parameter. Ensure the number matches the material layer index where your sheathing is applied in the element construct.\n- **Collision Handling**: The script is smart enough to shift a stud slightly along the wall if the exact joint location is blocked by another component (like a door or window frame). It will try to find the nearest clear spot.\n- **Existing Studs**: Use the **Studs** (Painter) parameter to tell the script which beams it is allowed to move. If set to `<Disabled>`, it may only add new studs without modifying the existing frame.\n- **Profile Usage**: For complex wall setups, set **Width** to `0` and select an **Extrusion Profile** to match the exact timber type of your wall frame.\n\n## FAQ\n- **Q: Why did the script not add any studs?**\n  - A: Check the **Zones** parameter. It likely does not match the layer index of the sheathing. Also, ensure the element actually has sheathing assigned to it.\n- **Q: Can I undo the changes?**\n  - A: Yes, use the standard AutoCAD `UNDO` command immediately after running the script.\n- **Q: What happens if a joint lines up exactly with a window opening?**\n  - A: The script detects the collision. It will attempt to shift the stud position to the side to avoid the opening. If it cannot find a clear spot, no stud will be created for that specific joint."
+      },
+      "tokens_used": 6035,
+      "error": null
+    }
+  }
+}

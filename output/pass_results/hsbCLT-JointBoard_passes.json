@@ -1,0 +1,272 @@
+{
+  "filename": "hsbCLT-JointBoard.mcr",
+  "status": "completed",
+  "total_tokens": 45383,
+  "processing_time": 350.5548858642578,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8810,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script operates on 3D panels (Elements) and GenBeams, utilizing insert/split logic (HSB_PANELTSLSPLITLOCATION) and grip creation. No ShopDrawing (sd_) or Multipage prefixes are present. No _Viewport or #Type E patterns found. The functionality is purely geometric (3D modeling)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5125,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9499,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Manages the connection between CLT (Cross Laminated Timber) panels, allowing for dimensional gaps, alignment adjustments, and the conversion of the connection geometry into structural beams (joint boards) for manufacturing.",
+          "category": "Framing/Connection",
+          "typicalUseCase": "Used when joining multiple wall or floor panels where a specific joint detail (spacer, connection board, or simply a gap) is required to manage tolerances or structural loads."
+        },
+        "parameters": [
+          {
+            "name": "Gap Panel",
+            "technicalDefault": "0.0",
+            "businessMeaning": "The distance maintained between the connected panels. This can represent a construction tolerance, an expansion gap, or a reveal.",
+            "validRange": "0.0 to 50.0",
+            "unit": "mm",
+            "affectsOutput": "Physically separates the panel elements at the joint edge by the specified amount."
+          },
+          {
+            "name": "GroupName",
+            "technicalDefault": "JointBoard",
+            "businessMeaning": "The specific group name assigned to the generated joint board beams to organize them in the model tree or for filtering in exports.",
+            "validRange": "Any valid string",
+            "unit": "string",
+            "affectsOutput": "Assigns the group attribute to the resulting beams (when 'Create beams' is used), facilitating batch selection or BIM data management."
+          },
+          {
+            "name": "General\\Version",
+            "technicalDefault": "2",
+            "businessMeaning": "Legacy version tracker for the settings map structure to ensure backward compatibility when upgrading the script.",
+            "validRange": "Integer (Internal)",
+            "unit": "count",
+            "affectsOutput": "None. This is a metadata flag used by the script logic to parse settings correctly."
+          },
+          {
+            "name": "GeneralMapObject\\Version",
+            "technicalDefault": "2",
+            "businessMeaning": "Current version identifier for the settings object, used to manage data structure updates.",
+            "validRange": "Integer (Internal)",
+            "unit": "count",
+            "affectsOutput": "None. Internal use only."
+          },
+          {
+            "name": "GripModeCreation",
+            "technicalDefault": "false",
+            "businessMeaning": "Toggles the creation of interactive 'grips' (visual handles) on the joint geometry for immediate graphical editing during insertion.",
+            "validRange": "true/false",
+            "unit": "boolean",
+            "affectsOutput": "If true, adds draggable grips to the joint board representation; if false, relies on property inputs."
+          },
+          {
+            "name": "Alignment",
+            "technicalDefault": "Left",
+            "businessMeaning": "Dictates the lateral position of the joint board relative to the panels (e.g., flush with the reference panel, centered, or flush with the opposite panel).",
+            "validRange": "Reference Side, Center, Opposite Side, Higher Quality, Lower Quality",
+            "unit": "enum",
+            "affectsOutput": "Shifts the joint board geometry laterally to align with the chosen edge or center point."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Importing Settings",
+            "effect": "Overwrites current parameter values (Gap, GroupName, Alignment, etc.) with those stored in the external XML file.",
+            "cascade": [
+              "Gap Panel",
+              "GroupName",
+              "Alignment"
+            ]
+          },
+          {
+            "trigger": "Triggering 'Create beams'",
+            "effect": "Uses the 'GroupName' parameter to organize the new elements and effectively freezes the connection geometry as physical beams.",
+            "cascade": [
+              "GroupName",
+              "Alignment"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "GenBeam",
+            "description": "Structural timber beams representing the joint boards, created via the custom command to solidify the connection.",
+            "appliedTo": "The space between the connected CLT panels."
+          },
+          {
+            "type": "Graphical Preview (Body/PlaneProfile)",
+            "description": "A visual representation of the joint board within the TSL instance, showing gaps and chamfers before beam conversion.",
+            "appliedTo": "The TSL instance attached to the panel edges."
+          },
+          {
+            "type": "Grip Points",
+            "description": "Interactive graphical controls for resizing or moving the joint board geometry.",
+            "appliedTo": "The graphical preview (if GripModeCreation is enabled)."
+          }
+        ]
+      },
+      "tokens_used": 6939,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User executes the TSL insert command.",
+          "2. User selects Panels (Single or Multiple).",
+          "3. User picks points to define the joint edge or split line.",
+          "4. Script calculates the joint geometry based on Gap Panel and Alignment settings.",
+          "5. Script generates a graphical preview (Body) of the joint board.",
+          "6. Script attaches the instance to the reference panel edge.",
+          "7. User can trigger 'Create beams' to convert geometry into physical GenBeam entities."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Number of Panels Selected on Insert",
+            "path1": {
+              "name": "Single Panel Selected",
+              "steps": [
+                "User selects 1 panel.",
+                "User picks 2 points defining the split line or edge.",
+                "Branch A: Points define a split -> Panel is split, tool assigned to new edge.",
+                "Branch B: Points on existing edge -> Tool assigned to edge without splitting."
+              ]
+            },
+            "path2": {
+              "name": "Multiple Panels Selected",
+              "steps": [
+                "User selects multiple panels (Reference panel must be selected first).",
+                "User picks a point near the edge to join.",
+                "Script assigns tool to the reference panel and links adjacent panels."
+              ]
+            }
+          },
+          {
+            "condition": "Export Settings Trigger",
+            "path1": {
+              "name": "Configuration File Exists",
+              "steps": [
+                "Script detects existing file.",
+                "Script prompts user: 'Are you sure to overwrite existing settings?'.",
+                "User confirms 'Yes' -> File is overwritten.",
+                "User confirms 'No' -> Export aborted."
+              ]
+            },
+            "path2": {
+              "name": "Configuration File Missing",
+              "steps": [
+                "Script checks directory structure.",
+                "Directory created if missing.",
+                "New configuration file written."
+              ]
+            }
+          },
+          {
+            "condition": "Grip Mode Creation Setting",
+            "path1": {
+              "name": "Enabled",
+              "steps": [
+                "Script sets 'General\\GripModeCreation' to true.",
+                "Future inserts/updates will generate interactive stretch grips."
+              ]
+            },
+            "path2": {
+              "name": "Disabled",
+              "steps": [
+                "Script sets 'General\\GripModeCreation' to false.",
+                "Geometry relies solely on Property Palette parameters."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "XML Export Overwrite",
+            "errorMessage": "Command line prompt: 'Are you sure to overwrite existing settings? [No/Yes]'",
+            "recovery": "User must type 'Y' or 'N' (depending on language) to confirm or cancel the write operation."
+          },
+          {
+            "check": "Directory Existence (Export)",
+            "errorMessage": "Implicit check in code: `makeFolder` returns false if path cannot be created.",
+            "recovery": "Script attempts to create the folder; if it fails, the subsequent file write will fail and report 'Failed to write to [path]'."
+          },
+          {
+            "check": "Settings Map Integrity (Import)",
+            "errorMessage": "No specific error handling shown, but `mapSetting.readFromXmlFile` requires a valid XML structure.",
+            "recovery": "If map length is 0 after read, the import is effectively ignored (no update applied)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Create Beams",
+            "how": "Context Menu (Right-click) -> 'Create beams'",
+            "effect": "Replaces the TSL graphical preview with actual GenBeam entities. Assigns them to the specified GroupName. Deactivates hardware output. Running again deletes previous beams and regenerates them."
+          },
+          {
+            "action": "Set Group Name",
+            "how": "Context Menu -> 'GroupName'",
+            "effect": "Opens a .NET Dialog ('GetText') to input a string. Updates the 'GroupName' property in the settings map to organize generated beams."
+          },
+          {
+            "action": "Toggle Grip Mode Creation",
+            "how": "Context Menu -> 'Grip Mode Creation on/off'",
+            "effect": "Toggles the boolean setting `bGripModeCreation`. Affects whether graphical grips appear on the next insert or recalculation."
+          },
+          {
+            "action": "Import Settings",
+            "how": "Context Menu -> 'Import Settings'",
+            "effect": "Reads parameters (Gap, Alignment, GroupName, etc.) from the external XML file located at `_kPathHsbInstall +\\Company\\hsbCLT-JointBoard.xml` and applies them to the instance."
+          },
+          {
+            "action": "Export Settings",
+            "how": "Context Menu -> 'Export Settings'",
+            "effect": "Writes the current instance parameters to the external XML file, preserving settings for future use or sharing with other users."
+          },
+          {
+            "action": "Modify Geometry Properties",
+            "how": "Properties Palette (OPM)",
+            "effect": "Changing 'Gap Panel', 'Alignment', or Chamfer properties triggers a recalculation, updating the joint board size and position instantly."
+          }
+        ]
+      },
+      "tokens_used": 9585,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-JointBoard\n\n## Overview\nThis script manages the connection between CLT (Cross Laminated Timber) panels, allowing for dimensional gaps, alignment adjustments, and the conversion of the connection geometry into structural beams (joint boards) for manufacturing.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for 3D panel modeling and beam generation. |\n| Paper Space | No | Not applicable. |\n| Shop Drawing | No | This is a detailing/modeling script only. |\n\n## Prerequisites\n- **Required Entities**: CLT Panels (Elements).\n- **Minimum Beam Count**: 0 (The script creates new beams; existing beams are not required to run).\n- **Required Settings**: None required to run, but an XML configuration file can be used for presets.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command:** `TSLINSERT` → Select `hsbCLT-JointBoard.mcr`\n\n### Step 2: Select Panels and Define Location\nThe script behaves differently depending on how many panels you select initially.\n\n**Option A: Single Panel**\n```\nCommand Line: Select element\nAction: Click on a single CLT panel.\n```\n```\nCommand Line: Define split line / [Select edge]\nAction: Pick two points to draw a split line across the panel OR select an existing edge.\n```\n*Result:* The panel is split if a line was drawn, and the tool is assigned to the new edge. If an edge was selected, the tool is assigned directly to that edge.\n\n**Option B: Multiple Panels**\n```\nCommand Line: Select elements\nAction: Select multiple panels. **Important:** Select the reference panel (the one you want to modify) first.\n```\n```\nCommand Line: Select point near edge\nAction: Click near the edge where the reference panel meets the adjacent panel.\n```\n*Result:* The tool is assigned to the reference panel and linked to the adjacent panel.\n\n### Step 3: Adjust Geometry\nOnce placed, a blue preview of the joint board appears.\n- **Properties Palette:** Change `Gap Panel` to set the distance between elements.\n- **Properties Palette:** Change `Alignment` to shift the joint board (e.g., Center, Left, or flush with specific sides).\n\n### Step 4: Create Physical Beams\n```\nAction: Right-click the script instance → \"Create beams\"\n```\n*Result:* The preview geometry is converted into physical GenBeam entities assigned to the specified Group Name.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Gap Panel | Double | 0.0 mm | The distance maintained between the connected panels (construction tolerance or expansion gap). |\n| GroupName | String | JointBoard | The group name assigned to the generated beams for organization in the model tree. |\n| Alignment | Enum | Left | Lateral position of the joint board relative to the panels. Options include Reference Side, Center, Opposite Side, Higher Quality, or Lower Quality. |\n| GripModeCreation | Boolean | false | If enabled, creates interactive \"grips\" (handles) on the joint for graphical editing. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Create beams | Converts the current preview geometry into physical structural beams (GenBeams). Running this again deletes previous beams and regenerates them. |\n| GroupName | Opens a dialog to quickly change the group name assigned to the generated beams. |\n| Grip Mode Creation on/off | Toggles the visibility of graphical handles (grips) for resizing the joint board. |\n| Import Settings | Loads configuration parameters (Gap, Alignment, etc.) from the standard XML file. |\n| Export Settings | Saves the current configuration parameters to the standard XML file for future use. |\n\n## Settings Files\n- **Filename**: `hsbCLT-JointBoard.xml`\n- **Location**: `hsbInstall\\Company\\`\n- **Purpose**: Stores and retrieves presets for the script (Gap size, Alignment, GroupName) to ensure consistency across projects or users.\n\n## Tips\n- **Reference Selection:** When joining multiple panels, always select the \"main\" or \"reference\" panel first. The script uses the selection order to determine which panel holds the instance.\n- **Splitting:** You can use this script to split a panel and immediately apply a joint treatment in one operation by drawing a split line during insertion.\n- **Visual Checks:** Use the `Gap Panel` parameter to visually verify spacing before converting the preview into physical beams.\n- **Batching:** Use the `GroupName` parameter to filter all generated joint boards in the model tree for exporting or numbering.\n\n## FAQ\n- **Q: Can I change the joint size after creating the beams?**\n  **A:** No, once \"Create beams\" is executed, the geometry becomes standard GenBeams. To change dimensions, edit the TSL instance properties and run \"Create beams\" again (this will delete and replace the old beams).\n- **Q: What happens if I select the wrong panel first?**\n  **A:** The script will attach to the wrong element. Delete the instance and re-insert, ensuring the correct panel is selected first.\n- **Q: How do I share my settings with a colleague?**\n  **A:** Right-click the instance and select \"Export Settings\". Send the generated XML file (located in your Company folder) to your colleague, who can then use \"Import Settings\"."
+      },
+      "tokens_used": 5425,
+      "error": null
+    }
+  }
+}

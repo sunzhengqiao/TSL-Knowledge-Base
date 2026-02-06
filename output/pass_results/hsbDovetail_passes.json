@@ -1,0 +1,338 @@
+{
+  "filename": "hsbDovetail.mcr",
+  "status": "completed",
+  "total_tokens": 50623,
+  "processing_time": 957.1790227890015,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9246,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script operates on GenBeam entities (getGenBeam, GenBeam methods) and uses 3D geometric tools (Dove, Cut, Body) to modify timber elements in the model. There are no 'sd_' prefixes, '_Viewport' references, or '_Entity[]' arrays that characterize Shop Drawing or Paper Space scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5543,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [],\n  \"opmProperties\": [\n    {\n      \"index\": null,\n      \"variable\": \"sConnection\",\n      \"type\": \"PropString\",\n      \"displayName\": \"Connection\",\n      \"defaultValue\": \"T-Connection\",\n      \"inputType\": \"dropdown\",\n      \"options\": [\n        \"T-Connection\",\n        \"End-End\",\n        \"Parallel Connection\"\n      ],\n      \"category\": \"Connection\",\n      \"description\": \"Defines the connection type\"\n    },\n    {\n      \"index\": null,\n      \"variable\": \"sType\",\n      \"type\": \"PropString\",\n"
+      },
+      "tokens_used": 9935,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates integral Dovetail or Butterfly (loose key) timber connections between beams or panels, supporting single and duplex (double) configurations.",
+          "category": "Joinery/Timber Framing",
+          "typicalUseCase": "Joining timber beams with traditional dovetail tenons or creating slotted connections for loose butterfly keys in heavy timber framing."
+        },
+        "parameters": [
+          {
+            "name": "sConnection",
+            "technicalDefault": "T-Connection",
+            "businessMeaning": "Defines the geometric relationship between the two connected elements.",
+            "validRange": "T-Connection, End-End, Parallel Connection",
+            "unit": "enum",
+            "affectsOutput": "Determines the calculation logic for intersection points and valid orientation of the joint (e.g., forces Butterfly type for Parallel connections)."
+          },
+          {
+            "name": "sType",
+            "technicalDefault": "Dovetail",
+            "businessMeaning": "Selects the joinery method: an integral tenon cut into the beam or a slot for a loose key.",
+            "validRange": "Dovetail, Butterfly",
+            "unit": "enum",
+            "affectsOutput": "Switches between generating a solid tenon (Dovetail) or a mortise/slot for a loose piece (Butterfly). Controls visibility of other parameters like Angle and Keyhole dimensions."
+          },
+          {
+            "name": "dXWidth",
+            "technicalDefault": "45",
+            "businessMeaning": "The length of the dovetail tenon or slot along the beam's axis.",
+            "validRange": "20 - 200 mm",
+            "unit": "mm",
+            "affectsOutput": "Scales the length of the cut material. Larger widths provide more shear surface but require more timber length."
+          },
+          {
+            "name": "dZDepth",
+            "technicalDefault": "28",
+            "businessMeaning": "The depth of the cut perpendicular to the beam face (penetration depth).",
+            "validRange": "10 - 300 mm (usually < beam width)",
+            "unit": "mm",
+            "affectsOutput": "Determines how deep the tool cuts into the timber stock."
+          },
+          {
+            "name": "dAdditionalDepth",
+            "technicalDefault": "0",
+            "businessMeaning": "Extra depth clearance for the mortise in Butterfly connections.",
+            "validRange": "0 - 50 mm",
+            "unit": "mm",
+            "affectsOutput": "Deepens the slot beyond the key thickness to allow for movement or tolerances in loose key connections."
+          },
+          {
+            "name": "dOffset",
+            "technicalDefault": "0",
+            "businessMeaning": "Vertical shift of the joint relative to the reference edge (bottom/center).",
+            "validRange": "-BeamHeight/2 to BeamHeight/2",
+            "unit": "mm",
+            "affectsOutput": "Moves the entire joint up or down the face of the beam."
+          },
+          {
+            "name": "dAngle",
+            "technicalDefault": "10",
+            "businessMeaning": "The taper angle of the dovetail sides (slope).",
+            "validRange": "5 - 20 degrees",
+            "unit": "degrees",
+            "affectsOutput": "Changes the slope of the tenon sides. Hidden for standard Dovetail type, used for Butterfly."
+          },
+          {
+            "name": "dOffsetX",
+            "technicalDefault": "0",
+            "businessMeaning": "Horizontal shift of the joint along the beam's length axis.",
+            "validRange": "Any length offset",
+            "unit": "mm",
+            "affectsOutput": "Slides the joint position along the beam. Only available for Parallel connections."
+          },
+          {
+            "name": "dRotation",
+            "technicalDefault": "0",
+            "businessMeaning": "Rotates the joint definition by 180 degrees.",
+            "validRange": "0, 180",
+            "unit": "degrees",
+            "affectsOutput": "Flips the orientation of the connection (e.g., swapping wide/narrow ends if applicable). Available for Butterfly when Offset is 0."
+          },
+          {
+            "name": "dInterDistance",
+            "technicalDefault": "0",
+            "businessMeaning": "Spacing between two dovetails in a Duplex (double) configuration.",
+            "validRange": "> dXWidth (0 disables duplex)",
+            "unit": "mm",
+            "affectsOutput": "If > 0, generates two separate dovetails instead of one. Only available for Dovetail type."
+          },
+          {
+            "name": "dHeightKey",
+            "technicalDefault": "0",
+            "businessMeaning": "Height of the loose butterfly key slot.",
+            "validRange": "0 = Auto, -1 = Disabled, >0 = Specific height",
+            "unit": "mm",
+            "affectsOutput": "Defines the vertical size of the mortise for the loose key. Only available for Butterfly type."
+          },
+          {
+            "name": "dWidthKey",
+            "technicalDefault": "0",
+            "businessMeaning": "Width (minor axis) of the loose butterfly key slot.",
+            "validRange": "0 = Auto, >0 = Specific width",
+            "unit": "mm",
+            "affectsOutput": "Defines the thickness of the material removed for the key. Only available for Butterfly type."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sConnection set to Parallel Connection",
+            "effect": "Forces Type to Butterfly and enables Horizontal Offset.",
+            "cascade": [
+              "sType",
+              "dOffsetX"
+            ]
+          },
+          {
+            "trigger": "sType set to Dovetail",
+            "effect": "Hides Angle, Rotation, and Keyhole parameters. Enables Interdistance (Duplex).",
+            "cascade": [
+              "dAngle",
+              "dRotation",
+              "dHeightKey",
+              "dWidthKey",
+              "dInterDistance"
+            ]
+          },
+          {
+            "trigger": "sType set to Butterfly",
+            "effect": "Hides Interdistance. Enables Angle, Additional Depth, and Keyhole parameters.",
+            "cascade": [
+              "dInterDistance",
+              "dAngle",
+              "dAdditionalDepth",
+              "dHeightKey",
+              "dWidthKey"
+            ]
+          },
+          {
+            "trigger": "dOffset > 0",
+            "effect": "Hides Rotation parameter.",
+            "cascade": [
+              "dRotation"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Machining/Cuts",
+            "description": "Integral dovetail tenons (male) and mortises (female) or slots for loose keys (butterfly).",
+            "appliedTo": "Two selected GenBeams or Panels."
+          },
+          {
+            "type": "Modeling Representation",
+            "description": "Visual 3D representation of the joint (often in blue/preview colors) in the model.",
+            "appliedTo": "The script instance location between beams."
+          }
+        ]
+      },
+      "tokens_used": 9497,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script (hsbDovetail.mcr)",
+          "Prompt: Select first GenBeam (Male element)",
+          "Prompt: Select second GenBeam (Female element)",
+          "System detects geometric relationship (Parallel vs. Intersecting/End-End)",
+          "Set default properties based on detection (e.g., Parallel forces Butterfly type)",
+          "Prompt: Specify insertion point (with Jigging preview enabled)",
+          "Validate intersection/overlap between beams",
+          "Calculate coordinate system (vecX, vecY, vecZ) based on connection type",
+          "Generate tooling bodies (Dove or Butterfly slots) and apply to beams",
+          "Visualize joint (Blue preview for Dovetail, Tool body for Butterfly)",
+          "Finish insertion"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Geometric detection of selected beams",
+            "path1": {
+              "name": "Parallel Connection",
+              "steps": [
+                "Force 'sConnection' to 'Parallel Connection'",
+                "Force 'sType' to 'Butterfly'",
+                "Enable 'dOffsetX' (Horizontal offset)",
+                "Execute Parallel-specific coordinate math",
+                "Validate beams are truly parallel (Error if not)"
+              ]
+            },
+            "path2": {
+              "name": "Intersecting / End-End Connection",
+              "steps": [
+                "Set 'sConnection' to 'T-Connection' or 'End-End' (Defaults to T-Connection)",
+                "Enable 'sType' selection (Dovetail or Butterfly)",
+                "Disable 'dOffsetX'",
+                "Execute standard intersection math (extract common profiles)",
+                "Validate common area is sufficient for tool width"
+              ]
+            }
+          },
+          {
+            "condition": "Property 'sType' selection",
+            "path1": {
+              "name": "Dovetail",
+              "steps": [
+                "Hide 'dAngle', 'dRotation', 'dAdditionalDepth', Keyhole parameters",
+                "Enable 'dInterDistance' (Duplex)",
+                "Generate integral tenon and mortise using Dove tools",
+                "Apply 'Cut' tools to clean ends"
+              ]
+            },
+            "path2": {
+              "name": "Butterfly",
+              "steps": [
+                "Hide 'dInterDistance'",
+                "Enable 'dAngle', 'dAdditionalDepth', Keyhole parameters",
+                "Generate slots for loose key",
+                "Display tool body in 3D"
+              ]
+            }
+          },
+          {
+            "condition": "Execution Mode (Recalculate vs. Jig)",
+            "path1": {
+              "name": "Jig Mode (Insertion)",
+              "steps": [
+                "Listen for mouse movement",
+                "Update dynamic preview based on cursor position",
+                "Handle specific 'JigRotate' command if active"
+              ]
+            },
+            "path2": {
+              "name": "Recalc Mode (Edit)",
+              "steps": [
+                "Re-fetch beam handles from map",
+                "Recalculate geometry based on current properties",
+                "Re-apply tools to beams",
+                "Handle specific triggers (e.g., Rotate, Grip Drag)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Beam Parallelism (when sConnection is 'Parallel Connection')",
+            "errorMessage": "Beams must be parallel. Tool will be deleted",
+            "recovery": "Select different beams or change connection type property"
+          },
+          {
+            "check": "Common Intersection Area",
+            "errorMessage": "Could not find common range. Tool will be deleted",
+            "recovery": "Move beams closer together or adjust insertion point/grip"
+          },
+          {
+            "check": "Plane Validity",
+            "errorMessage": "Invalid plane. Tool will be deleted",
+            "recovery": "Ensure beams are not co-linear or degenerate"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Move Joint",
+            "how": "Grip Point Drag (_Pt0)",
+            "effect": "Slides the dovetail along the beam axis within valid intersection boundaries."
+          },
+          {
+            "action": "Rotate Joint",
+            "how": "Context Menu (Right-click) -> 'Rotate'",
+            "effect": "Toggles dRotation between 0 and 180 degrees (flipping orientation)."
+          },
+          {
+            "action": "Edit Dimensions",
+            "how": "Object Properties Palette (OPM)",
+            "effect": "Updates Width, Depth, Offsets, and Angles instantly."
+          },
+          {
+            "action": "Change Configuration",
+            "how": "Object Properties Palette (OPM)",
+            "effect": "Switching between Dovetail/Butterfly or Connection types triggers geometry recalculation and tool regeneration."
+          }
+        ]
+      },
+      "tokens_used": 10391,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbDovetail.mcr\n\n## Overview\nCreates integral Dovetail or Butterfly (loose key) timber connections between beams or panels. The script supports T-Connections, End-End joints, and Parallel connections, including options for single or double dovetails.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Primary environment for creating 3D joints. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required Entities**: Two GenBeams (timber elements).\n- **Minimum Beam Count**: 2\n- **Required Settings**: None (Uses internal script properties).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbDovetail.mcr`\n\n### Step 2: Select First Element\n```\nCommand Line: Select first beam:\nAction: Click on the primary timber beam (usually the \"male\" part or the beam you want to cut the tenon into).\n```\n\n### Step 3: Select Second Element\n```\nCommand Line: Select second beam:\nAction: Click on the secondary timber beam (the \"female\" part or intersecting beam).\n```\n\n### Step 4: Position Joint\n```\nCommand Line: Specify insertion point:\nAction: Move your cursor to position the dovetail along the beam intersection. A blue preview (for Dovetail) or tool body (for Butterfly) will follow your cursor. Click to confirm placement.\n```\n*Note: The script automatically detects if the beams are Parallel or Intersecting and adjusts the connection type accordingly.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Connection | dropdown | T-Connection | Defines the geometric relationship: T-Connection, End-End, or Parallel Connection. |\n| Type | dropdown | Dovetail | Selects the joinery method. **Dovetail** creates an integral tenon. **Butterfly** creates a slot for a loose key. (Forced to Butterfly in Parallel mode). |\n| X-Width | number | 45 mm | The length of the dovetail tenon or slot along the beam's axis. |\n| Z-Depth | number | 28 mm | The depth of the cut perpendicular to the beam face (penetration depth). |\n| Additional Depth | number | 0 mm | Extra depth clearance for the mortise in Butterfly connections. |\n| Offset | number | 0 mm | Vertical shift of the joint relative to the reference edge (bottom/center). |\n| Angle | number | 10 deg | The taper angle of the dovetail sides (slope). Used primarily for Butterfly types. |\n| Offset X | number | 0 mm | Horizontal shift of the joint along the beam's length. Only active for Parallel connections. |\n| Rotation | number | 0 | Rotates the joint definition (usually swaps wide/narrow ends). Available when Offset is 0. |\n| Inter Distance | number | 0 mm | Spacing between two dovetails for a Duplex (double) configuration. Enter 0 for a single dovetail. |\n| Height Key | number | 0 mm | Height of the loose butterfly key slot. 0 = Auto calculation. Active only for Butterfly type. |\n| Width Key | number | 0 mm | Width (minor axis) of the loose butterfly key slot. 0 = Auto calculation. Active only for Butterfly type. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Rotate | Flips the joint orientation (toggles between 0° and 180°). |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script relies entirely on Properties Palette parameters and does not require external XML settings files.\n\n## Tips\n- **Parallel Connections**: If you select two parallel beams, the script automatically switches to the \"Butterfly\" type to create a slotted connection for a loose key.\n- **Double Dovetails**: To create two tenons side-by-side, set the **Inter Distance** property to a value greater than 0.\n- **Adjusting Position**: After insertion, select the joint and drag the visible grip point to slide the dovetail along the beam.\n- **Geometry Limits**: If the script fails or deletes itself, check that the beams actually overlap or intersect sufficiently to fit the defined Width.\n\n## FAQ\n- **Q: Why is the \"Type\" property locked or grayed out?**\n  A: This usually happens when **Connection** is set to \"Parallel Connection\". This geometry type forces the \"Butterfly\" style automatically.\n  \n- **Q: How do I create a loose key instead of a tenon?**\n  A: Change the **Type** property in the Properties Palette to \"Butterfly\". This changes the toolpath to cut a slot rather than shape the beam end.\n\n- **Q: The script gave an error \"Tool will be deleted\". Why?**\n  A: This typically means the selected beams do not have a common intersection area large enough for the defined **X-Width**, or they are not parallel when a Parallel connection was requested. Move the beams closer together or reduce the X-Width."
+      },
+      "tokens_used": 6011,
+      "error": null
+    }
+  }
+}

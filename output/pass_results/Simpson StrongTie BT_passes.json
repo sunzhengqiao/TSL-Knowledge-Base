@@ -1,0 +1,366 @@
+{
+  "filename": "Simpson StrongTie BT.mcr",
+  "status": "completed",
+  "total_tokens": 56954,
+  "processing_time": 394.02904868125916,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10002,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script operates on GenBeam entities using getGenBeam(), generates 3D geometry (PLine, addHole, addTool), and assigns HardWrComp. No 'sd_' prefixes, _Viewport usage, or #Type E declarations found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": [
+            "TslUtilities.dll"
+          ]
+        }
+      },
+      "tokens_used": 7455,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"getGenBeam\",\n        \"promptOriginal\": \"|Select female beam|\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      },\n      {\n        \"step\": 2,\n        \"function\": \"getGenBeam\",\n        \"promptOriginal\": \"|Select male beam|\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [\n    {\n      \"type\": \"SelectFromList\",\n      \"trigger\": \"During insertion (after beam selection) if TslUtilities is available\",\n      \"title\": \"|Select Family|\",\n      \"dataSource\": \"sFamilies array: ['BT', 'BT4', 'BTALU', 'BTC', 'BTN', 'TU']\",\n      \"features\": {\n        \"searchable\": false,\n        \"multiSelect\": false\n      }\n    },\n    {\n      \"type\": \"SelectFromList\",\n      \"trigger\": \"After Family selection if TslUtilities is available\",\n      \"title\": \"|Select Model|\",\n      \"dataSource\": \"Specific model array based on selected family ("
+      },
+      "tokens_used": 10685,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Inserts and configures Simpson Strong-Tie BT (and related families) concealed beam hangers to connect two timber beams (typically joists to carriers), including automatic hardware generation and machining operations.",
+          "category": "Hardware",
+          "typicalUseCase": "Connecting a joist (male) to a supporting beam (female) using a concealed metal hanger like the Simpson Strong-Tie BT series."
+        },
+        "parameters": [
+          {
+            "name": "Female Beam (bmFemales)",
+            "technicalDefault": "User Selection (getGenBeam)",
+            "businessMeaning": "The primary supporting timber element that receives the connector, typically the carrier or main beam.",
+            "validRange": "Any valid GenBeam in the model",
+            "unit": "Entity",
+            "affectsOutput": "Determines the location and orientation of the machined slots or holes for the hanger's flange."
+          },
+          {
+            "name": "Male Beam (bmMales/bm0)",
+            "technicalDefault": "User Selection (getGenBeam)",
+            "businessMeaning": "The secondary timber element that is supported by the connector, typically the joist or purlin.",
+            "validRange": "Any valid GenBeam in the model",
+            "unit": "Entity",
+            "affectsOutput": "Determines the height of the hanger, the length of the pegs, and the drilling operations on the beam end."
+          },
+          {
+            "name": "sFamily",
+            "technicalDefault": "Selected via Dialog ('BT', 'BT4', 'BTALU', 'BTC', 'BTN', 'TU')",
+            "businessMeaning": "The product family of the Simpson Strong-Tie connector (e.g., standard BT, BT4 with higher load capacity, Aluminum ALU, Concrete Concrete, etc.).",
+            "validRange": "Specific list of supported families",
+            "unit": "String",
+            "affectsOutput": "Changes the geometry generation logic, available models, material, and default offsets/spacing for the specific product line."
+          },
+          {
+            "name": "sThisModel",
+            "technicalDefault": "Selected via Dialog (depends on family, e.g., 'BT280', 'BTC120')",
+            "businessMeaning": "The specific catalog model number of the connector, defining its dimensions (Height A, Width B, Depth C).",
+            "validRange": "Specific list of models for the chosen family",
+            "unit": "String",
+            "affectsOutput": "Directly sets the physical size of the 3D body, the size of the required slots, and the length of the associated fasteners."
+          },
+          {
+            "name": "dA, dB, dC",
+            "technicalDefault": "From catalog data based on sThisModel",
+            "businessMeaning": "The key dimensions of the connector: Height (A), Width/Depth (B), and Thickness/Flange depth (C).",
+            "validRange": "Manufacturer specific catalog ranges (approx. 90mm to 3000mm for A)",
+            "unit": "mm",
+            "affectsOutput": "Scales the 3D representation of the metal part and the geometry of the cutouts in the wood."
+          },
+          {
+            "name": "sMountings (nHWAssignment)",
+            "technicalDefault": "1 (Plant)",
+            "businessMeaning": "Defines the assembly stage of the hardware for production lists (Partial Plant, Plant, On-Site).",
+            "validRange": "0, 1, 2 (corresponding to specific strings)",
+            "unit": "Index",
+            "affectsOutput": "Updates the 'Notes' field in hardware lists (BOM) to indicate where the connector should be mounted."
+          },
+          {
+            "name": "Drill Alignment (nDrillAlignment)",
+            "technicalDefault": "0",
+            "businessMeaning": "Controls whether pegs/nails are drilled perpendicular to the beam surface or aligned with the connector face (useful for non-orthogonal connections).",
+            "validRange": "Integer (0, 1, ... depending on logic)",
+            "unit": "Index/Enum",
+            "affectsOutput": "Rotates the drill vectors for the side fasteners."
+          },
+          {
+            "name": "bShowBadge",
+            "technicalDefault": "true",
+            "businessMeaning": "Toggles the visibility of the 2D symbol/badge representing the connector in plan views.",
+            "validRange": "0 (No) or 1 (Yes)",
+            "unit": "Boolean",
+            "affectsOutput": "Shows or hides the plan view markers (Lines/Text)."
+          },
+          {
+            "name": "Peg Length (dL)",
+            "technicalDefault": "Calculated based on beam width (bm0.dD(vecYTFlat))",
+            "businessMeaning": "Length of the through-bolts or pegs (STD12x) used to secure the hanger to the female beam.",
+            "validRange": "Manufacturer standard lengths (e.g., 60, 80, 100mm)",
+            "unit": "mm",
+            "affectsOutput": "Determines the depth of the drilling operation and the specific hardware part number generated."
+          },
+          {
+            "name": "Nail Quantity (nDiamA)",
+            "technicalDefault": "From catalog data",
+            "businessMeaning": "The number of nails (CNA4.0x50) required to secure the connector to the male beam (joist).",
+            "validRange": "0 to ~50 depending on model",
+            "unit": "Count",
+            "affectsOutput": "Determines the number of drill holes in the male beam and the quantity in the hardware list."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of 'sFamily' (e.g., 'BT', 'TU')",
+            "effect": "Updates the available list of 'sThisModel' options and default geometric constants (dXDrillAs, dSlotplateVerticalOffsets, etc.).",
+            "cascade": [
+              "sThisModel",
+              "dA",
+              "dB",
+              "dC",
+              "Slot geometry"
+            ]
+          },
+          {
+            "trigger": "Selection of 'sThisModel'",
+            "effect": "Sets dimensions dA, dB, dC, and hole counts (nDiamA, nDiamB) based on catalog lookup.",
+            "cascade": [
+              "dA",
+              "dB",
+              "dC",
+              "nDiamA",
+              "nDiamB"
+            ]
+          },
+          {
+            "trigger": "Change in Male Beam Width",
+            "effect": "Recalculates 'Peg Length' to select the next smallest standard length.",
+            "cascade": [
+              "Peg Length (dL)",
+              "Sub-component Article Number"
+            ]
+          },
+          {
+            "trigger": "Right-click menu 'Flip Drill Face' / 'Cycle Drill Face'",
+            "effect": "Modifies 'nDrillAlignment' to change drill vector orientation.",
+            "cascade": [
+              "Drill Vectors"
+            ]
+          },
+          {
+            "trigger": "Male Beam is a Dummy",
+            "effect": "Sets hardware quantity (nQty) to 0, effectively removing fasteners from the production list while keeping the connector.",
+            "cascade": [
+              "Hardware Quantity",
+              "Peg Quantity"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "3D Body (PLine/Prism)",
+            "description": "The visual representation of the metal connector hanger.",
+            "appliedTo": "Model Space (attached to the TSL instance)"
+          },
+          {
+            "type": "Machining (Slot/OpHoling)",
+            "description": "Slots in the female beam to accommodate the hanger flanges. May include holes for specific fastener configurations.",
+            "appliedTo": "Female Beam (GenBeam)"
+          },
+          {
+            "type": "Machining (Drilling)",
+            "description": "Through-holes for nails on the male beam side and through-holes/pegs on the female beam side.",
+            "appliedTo": "Male Beam and Female Beam (GenBeams)"
+          },
+          {
+            "type": "Plan View Markers (Text/Line)",
+            "description": "2D symbols in plan view to indicate the presence and type of connector.",
+            "appliedTo": "Model Space (linked to TSL instance)"
+          },
+          {
+            "type": "Hardware Components (HardWrComp)",
+            "description": "BOM entries for the Connector (Main), Pegs (STD12x...), and Nails (CNA4.0x50).",
+            "appliedTo": "Production Lists / Reports"
+          }
+        ]
+      },
+      "tokens_used": 10253,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Started via Command",
+          "User prompted to select Female Beam (Carrier)",
+          "User prompted to select Male Beam (Joist)",
+          "System calculates beam dimensions and intersection geometry",
+          "[Conditional] TslUtilities SelectFromList: Select Family (BT, BT4, etc.)",
+          "[Conditional] TslUtilities SelectFromList: Select Specific Model (e.g., BT280) - Auto-selection based on dimensions attempted first",
+          "Retrieve catalog dimensions (Height A, Width B, Depth C) and hole counts for selected model",
+          "Calculate Peg Length (STD12x): Compare beam width vs standard sizes (60-200mm), select next smallest",
+          "Generate 3D Body: Create Prism based on dA, dB, dC",
+          "Apply Machining to Female Beam: Create Slot/OpHoling for flanges",
+          "Apply Machining to Male Beam: Create Drills for nails (CNA4.0x50)",
+          "Apply Machining to Female Beam: Create Drills for Pegs (STD12x...)",
+          "[Conditional] Generate Plan View Markers (Lines/Text) if bShowBadge is true",
+          "Generate Hardware List (BOM): Create Main Component, Pegs, and Nails entries with Mounting notes",
+          "Script Instance Created / Updated"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Male Beam Entity Status (Dummy vs Real)",
+            "path1": {
+              "name": "Real Beam",
+              "steps": [
+                "Calculate Hardware Quantities (nQty) based on model catalog",
+                "Add Pegs and Nails to Hardware List",
+                "Generate drilling operations on the beam end"
+              ]
+            },
+            "path2": {
+              "name": "Dummy Beam",
+              "steps": [
+                "Set Hardware Quantity (nQty) to 0",
+                "Exclude fasteners from BOM",
+                "Skip drilling operations on the dummy geometry"
+              ]
+            }
+          },
+          {
+            "condition": "bDoubleConnector (Post & Beam Configuration)",
+            "path1": {
+              "name": "Single Connector",
+              "steps": [
+                "Generate 1 Metal Body",
+                "Peg Length calculated on 1.0 * beam width",
+                "Peg Qty = 1 * nDiamB"
+              ]
+            },
+            "path2": {
+              "name": "Double Connector",
+              "steps": [
+                "Generate 2 Metal Bodies (logic implied for opposite sides)",
+                "Peg Length calculated on 0.5 * beam width (through-drilled)",
+                "Peg Qty = 2 * nDiamB"
+              ]
+            }
+          },
+          {
+            "condition": "Drill Alignment Mode (nDrillAlignment)",
+            "path1": {
+              "name": "Standard (0)",
+              "steps": [
+                "Drill vectors calculated perpendicular to beam surface"
+              ]
+            },
+            "path2": {
+              "name": "Aligned (1+)",
+              "steps": [
+                "Drill vectors rotated to align with connector face (for angled connections)"
+              ]
+            }
+          },
+          {
+            "condition": "Badge Visibility (bShowBadge)",
+            "path1": {
+              "name": "Visible",
+              "steps": [
+                "Execute PLine/Text generation commands",
+                "Add MarkerLines to Female Beam"
+              ]
+            },
+            "path2": {
+              "name": "Hidden",
+              "steps": [
+                "Skip PLine/Text generation block"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Valid GenBeam Selection",
+            "errorMessage": "Prompt re-appears or script exits if selection is cancelled/invalid.",
+            "recovery": "Select a valid beam entity in Model Space."
+          },
+          {
+            "check": "Model Catalog Availability",
+            "errorMessage": "If selected model string doesn't exist in internal arrays (e.g., data corruption), dimension lookups fail (returns 0).",
+            "recovery": "Re-select a valid model via Properties Palette or context menu."
+          },
+          {
+            "check": "Beam Width for Pegs",
+            "errorMessage": "If beam width is smaller than minimum peg length (60mm), logic might fail or select inappropriate size.",
+            "recovery": "Ensure beam geometry is physically compatible with connector dimensions."
+          },
+          {
+            "check": "TslUtilities.dll Availability",
+            "errorMessage": "Dialogs for Family/Model selection do not appear during insertion.",
+            "recovery": "Ensure TslUtilities is loaded; script relies on default values or properties palette for configuration."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Connector Model/Family",
+            "how": "Properties Palette (OPM)",
+            "effect": "Triggers recalculation of dimensions (dA, dB, dC), updates 3D body size, and modifies slot/drill geometry."
+          },
+          {
+            "action": "Flip / Cycle Drill Face",
+            "how": "Right-click Context Menu",
+            "effect": "Increments `nDrillAlignment` property, rotating the drilling vectors on the female beam."
+          },
+          {
+            "action": "Show / Hide Badge",
+            "how": "Right-click Context Menu ('Hide Badge' / 'Show Badge')",
+            "effect": "Toggles `bShowBadge` property, adds or removes plan view representation markers."
+          },
+          {
+            "action": "Set Mounting Stage",
+            "how": "Right-click Context Menu ('Partial Assembly Plant', 'Plant', 'Construction Site')",
+            "effect": "Updates `nHWAssignment` property, modifying the 'Notes' field in the Hardware List (BOM)."
+          },
+          {
+            "action": "Toggle Drill Through",
+            "how": "Right-click Context Menu ('Drill not through')",
+            "effect": "Toggles `bSingleHoleDrill`, changing hole depth from through to blind."
+          }
+        ]
+      },
+      "tokens_used": 11699,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Simpson StrongTie BT\n\n## Overview\nThis script inserts and configures Simpson Strong-Tie BT series concealed beam hangers to connect two timber beams (typically a joist to a carrier). It automatically generates the 3D metal connector, applies the necessary machining (slots and holes) to the wood, and adds all components to the hardware list.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script is intended for 3D model detailing. |\n| Paper Space | No | Not designed for layout or paper space. |\n| Shop Drawing | No | This is a model generation script, not a drawing generator. |\n\n## Prerequisites\n- **Required Entities**: Two GenBeam entities (a Female/Carrier beam and a Male/Joist beam).\n- **Minimum Beam Count**: 2\n- **Required Settings**: `TslUtilities.dll` (Required for the selection dialogs during insertion).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` (or `TSL`)\nAction: Select `Simpson StrongTie BT.mcr` from the file dialog.\n\n### Step 2: Select the Supporting Beam\n```\nCommand Line: Select female beam\nAction: Click on the main carrier or support beam (the beam that holds the hanger).\n```\n\n### Step 3: Select the Supported Beam\n```\nCommand Line: Select male beam\nAction: Click on the joist or secondary beam that sits inside the hanger.\n```\n\n### Step 4: Select Connector Family\n```\nDialog: Select Family\nAction: Choose the product family (e.g., BT, BT4, BTALU) from the list.\nNote: This dialog appears if TslUtilities.dll is loaded.\n```\n\n### Step 5: Select Specific Model\n```\nDialog: Select Model\nAction: Choose the specific catalog size (e.g., BT280) based on the required dimensions.\nNote: The script may attempt to auto-select a size based on beam dimensions before showing this list.\n```\n\n### Step 6: Generation\nAction: The script generates the connector body, cuts slots in the female beam, drills holes in both beams, and adds the hardware to the BOM.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Family | String | BT | The product family of the connector (e.g., BT, BT4, ALU). Changing this updates the available models. |\n| Model | String | BT280 | The specific catalog number defining the physical dimensions of the connector. |\n| A (Height) | Double | (Calculated) | The height dimension of the connector derived from the selected model. |\n| B (Width) | Double | (Calculated) | The width/depth dimension of the connector. |\n| C (Thickness) | Double | (Calculated) | The depth or flange thickness of the connector. |\n| Mounting | Int | 1 (Plant) | Determines the assembly stage for production lists (Plant, Partial, On-Site). |\n| Drill Alignment | Int | 0 | Controls the orientation of the drill vectors (Standard vs. Aligned). |\n| Show Badge | Bool | True | Toggles the visibility of the 2D symbol/markers in plan view. |\n| Peg Length | Double | (Auto) | The length of the STD12x bolts calculated based on the female beam width. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Flip Drill Face / Cycle Drill Face | Rotates the alignment of the drill holes on the female beam. Useful for non-standard angles. |\n| Hide Badge / Show Badge | Toggles the 2D plan view representation of the connector. |\n| Partial Assembly Plant / Plant / Construction Site | Sets the 'Notes' field in the hardware list to indicate where the connector should be installed. |\n| Drill not through | Toggles the drilling operation between a through-hole and a blind hole. |\n\n## Settings Files\n- **Filename**: N/A (Internal Catalog)\n- **Location**: Internal Script Arrays\n- **Purpose**: The script contains internal arrays for dimensions and models (BT, BT4, etc.). No external XML file is required for standard operation.\n\n## Tips\n- **Quick Edit**: After insertion, you can change the Model or Family directly from the Properties Palette (Ctrl+1) to resize the connector without re-running the command.\n- **Dummy Beams**: If you insert the connector on a \"Dummy\" beam (a placeholder beam), the script will automatically exclude fasteners (nails/pegs) from the hardware list while keeping the connector body.\n- **Peg Length**: The script automatically calculates the correct length for the through-bolts (STD12x) based on the width of the female beam. You generally do not need to manually adjust this unless you have specific requirements.\n- **Visibility**: If your plan views are too cluttered, right-click the connector instance and select \"Hide Badge\".\n\n## FAQ\n- **Q: The selection dialogs did not appear when I ran the script. Why?**\n  A: Ensure `TslUtilities.dll` is loaded in your hsbCAD environment. Without it, the script skips the dialogs and relies on default values or property edits later.\n- **Q: Can I use this for concrete beams?**\n  A: Yes, select the \"BTC\" (Concrete) family in the Family selection dialog to access models designed for concrete connections.\n- **Q: The holes are drilling in the wrong direction.**\n  A: Right-click the connector instance and select \"Flip Drill Face\" or \"Cycle Drill Face\" to rotate the drill vectors."
+      },
+      "tokens_used": 6860,
+      "error": null
+    }
+  }
+}

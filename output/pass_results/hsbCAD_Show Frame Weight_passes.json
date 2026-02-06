@@ -1,0 +1,392 @@
+{
+  "filename": "hsbCAD_Show Frame Weight.mcr",
+  "status": "completed",
+  "total_tokens": 43064,
+  "processing_time": 263.0426676273346,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "09.04.2008",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "First version"
+          },
+          {
+            "version": "1.1",
+            "date": "30.10.2009",
+            "author": null,
+            "changes": "Added materials and material weights."
+          },
+          {
+            "version": "1.2",
+            "date": "25.02.2009",
+            "author": null,
+            "changes": "Remove the make Upper from Extrusion Profiles."
+          },
+          {
+            "version": "1.3",
+            "date": "01.03.2011",
+            "author": null,
+            "changes": "Add OSB to the materials."
+          },
+          {
+            "version": "1.4",
+            "date": "05.10.2011",
+            "author": null,
+            "changes": "Add 9MM SHEATHING to the materials."
+          },
+          {
+            "version": "1.5",
+            "date": "07.02.2012",
+            "author": null,
+            "changes": "Add Fermacell, plywood and mineral wool. Also excluded any beams in other zones except 0 for frame weight"
+          },
+          {
+            "version": "1.6",
+            "date": "26.09.2012",
+            "author": null,
+            "changes": "Add support for materials when they are been set by another TSL."
+          },
+          {
+            "version": "1.7",
+            "date": "08.10.2012",
+            "author": null,
+            "changes": "Add support for materials when they are been set by another TSL."
+          },
+          {
+            "version": "1.8",
+            "date": "19.11.2012",
+            "author": null,
+            "changes": "Calculate the weight of windows if they have a property set call \"OpeningExtraData\" and the key \"Weight\"."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7204,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly prompts the user to select a viewport during insert using `getViewport()` and stores it in `_Viewport`. The execution logic checks `if( _Viewport.length()==0 )` to ensure a viewport is present. It retrieves the model data via `vp.element()`. These are definitive patterns of a Paper Space (Layout) annotation script."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "Element"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Paper Space (Layout) containing a Viewport displaying a valid hsbCAD Element.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6443,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getPoint",
+              "promptOriginal": "Pick a Point",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getViewport",
+              "promptOriginal": "Select a viewport",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sDimStyle",
+            "type": "PropString",
+            "displayName": "Dimstyle",
+            "defaultValue": "_DimStyles",
+            "inputType": "dropdown",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "nColor",
+            "type": "PropInt",
+            "displayName": "Set Color",
+            "defaultValue": "1",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "dBmWeight",
+            "type": "PropDouble",
+            "displayName": "Weight for Standard Beams (Kg/m3)",
+            "defaultValue": "450",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "dTextOffset",
+            "type": "PropDouble",
+            "displayName": "Text Offset",
+            "defaultValue": "5",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 7324,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Calculates the total weight of a timber frame element (beams, sheets, and openings) based on material densities and dimensions, then displays the result as text annotation in Paper Space.",
+          "category": "Annotation / Estimation",
+          "typicalUseCase": "Generating a weight label on an elevation or plan layout view of a wall or floor panel to assist with structural calculations, logistics, and transport planning."
+        },
+        "parameters": [
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "_DimStyles",
+            "businessMeaning": "Specifies the drafting standard (text style, height, font) to be used for the weight annotation label to ensure consistency with other drawings.",
+            "validRange": "Any valid Dimension Style name existing in the current CAD drawing.",
+            "unit": "String (Name)",
+            "affectsOutput": "Visual appearance (font size, font face) of the displayed weight text."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "1",
+            "businessMeaning": "Defines the display color (AutoCAD Color Index) of the weight text.",
+            "validRange": "0 to 256 (Standard AutoCAD colors). 1 is typically Red.",
+            "unit": "Integer (ACI)",
+            "affectsOutput": "Color of the text entity in the layout."
+          },
+          {
+            "name": "dBmWeight",
+            "technicalDefault": "450",
+            "businessMeaning": "The density of standard timber beams (in kg/m³) used for weight calculation when specific engineered profiles are not matched. This effectively sets the assumed material type (e.g., Spruce, Pine) for standard structural members.",
+            "validRange": "300 - 800 (Typical softwood ranges from ~400-500, hardwoods 600-800).",
+            "unit": "Kg/m³",
+            "affectsOutput": "Increases or decreases the calculated 'Frame Weight' for all standard beams not defined in the internal profile list."
+          },
+          {
+            "name": "dTextOffset",
+            "technicalDefault": "5",
+            "businessMeaning": "The vertical distance between the lines of text in the annotation (e.g., between 'Frame Weight' and 'Total Weight').",
+            "validRange": "1 - 20 mm depending on text height and drawing scale.",
+            "unit": "Drawing Units (mm)",
+            "affectsOutput": "Spacing of the multi-line text output to prevent overlap or unreadability."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Annotation (Text/Dimension)",
+            "description": "Creates a text label in Paper Space displaying the calculated Frame Weight, Total Weight (including sheets/openings), and a list of included materials.",
+            "appliedTo": "Paper Space Layout (at the user-selected point)."
+          }
+        ]
+      },
+      "tokens_used": 7210,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Execution / Insertion",
+          "2. Check Insert Cycle Count: If > 1, erase instance and exit (ensures clean state).",
+          "3. Display Properties Dialog (showDialogOnce) for initial user configuration.",
+          "4. Prompt user to pick an insertion point (Pick a Point) stored in _Pt0.",
+          "5. Prompt user to select a viewport (Select a viewport) stored in _Viewport.",
+          "6. [Recalculation] Check if Viewport array is empty. If yes, erase instance and exit.",
+          "7. Retrieve Element from selected Viewport. If invalid, exit silently.",
+          "8. Scan for attached TSL instance 'FrameUK_SetWallMaterials'. If found, parse custom material definitions (Name/Thickness) from its Map.",
+          "9. Retrieve all Sheets, GenBeams, and Beams from the Element.",
+          "10. Categorize Beams: Separate GenBeams (assumed Zone 0) from standard Beams. Identify remaining Beams as 'Other Zones'.",
+          "11. Loop through all Sheets: Calculate weight. (Branch: Match internal material list OR match custom TSL materials).",
+          "12. Loop through Zone 0 Beams: Calculate weight. (Branch: Match specific profile linear weight OR use standard volumetric density).",
+          "13. Generate Shadow Profile for structural beams (TopPlate, Studs, etc.) to calculate Batten Area.",
+          "14. Loop through Other Zone Beams: Calculate weight (added to total but excluded from 'Frame Weight' display).",
+          "15. Calculate Extra Material Weight: (Branch: If Batten material use Batten Area, otherwise use Element Net Area).",
+          "16. Loop through Openings: Check for 'OpeningExtraData' Property Set. If 'Weight' key exists, add to total.",
+          "17. Format results and generate display strings.",
+          "18. Draw Text Labels in Paper Space at _Pt0: Frame Weight, Total Weight, and Material List (if applicable)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Beam Profile Match",
+            "path1": {
+              "name": "Specific Profile Found",
+              "steps": [
+                "Look up beam name in 'sBeamProfile' array.",
+                "Calculate weight using: Solid Length * Linear Weight Factor (kg/m)."
+              ]
+            },
+            "path2": {
+              "name": "Standard/Unknown Profile",
+              "steps": [
+                "Assume standard timber density.",
+                "Calculate weight using: Volume * 'dBmWeight' property (kg/m³)."
+              ]
+            }
+          },
+          {
+            "condition": "Beam Zone Assignment",
+            "path1": {
+              "name": "Zone 0 Beams (GenBeams)",
+              "steps": [
+                "Weight added to 'Frame Weight' display variable.",
+                "Profile contributed to Batten Area calculation."
+              ]
+            },
+            "path2": {
+              "name": "Other Zones",
+              "steps": [
+                "Weight calculated separately.",
+                "Excluded from 'Frame Weight' display.",
+                "Included in final 'Total Weight'."
+              ]
+            }
+          },
+          {
+            "condition": "Sheet Material Source",
+            "path1": {
+              "name": "Internal Hardcoded List",
+              "steps": [
+                "Match sheet name (Uppercase) against 'sSheetName' array.",
+                "Calculate weight: Volume * Hardcoded Density."
+              ]
+            },
+            "path2": {
+              "name": "External TSL Definition",
+              "steps": [
+                "Match sheet name against 'FrameUK_SetWallMaterials' map.",
+                "Calculate weight: Area * Thickness * Density from Map."
+              ]
+            }
+          },
+          {
+            "condition": "Extra Material Geometry Type",
+            "path1": {
+              "name": "Battens",
+              "steps": [
+                "Identified by token 'BATTENS' in material name.",
+                "Calculate Area using 'dAreaForBattens' (Derived from beam shadow profiles)."
+              ]
+            },
+            "path2": {
+              "name": "General Sheeting/Insulation",
+              "steps": [
+                "Calculate Area using 'dElArea' (Element Netto Profile area)."
+              ]
+            }
+          },
+          {
+            "condition": "Opening Data Presence",
+            "path1": {
+              "name": "Weight Data Found",
+              "steps": [
+                "Read 'Weight' from 'OpeningExtraData' Property Set.",
+                "Set flag 'nOpenings' to true.",
+                "Update Total Weight label to 'Total weight includes openings'."
+              ]
+            },
+            "path2": {
+              "name": "No Data",
+              "steps": [
+                "Ignore opening weight.",
+                "Standard Total Weight label used."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Viewport Selection",
+            "errorMessage": "None (Script deletes self silently if _Viewport.length() == 0).",
+            "recovery": "Re-run the script command and ensure a viewport is selected."
+          },
+          {
+            "check": "Element Validity",
+            "errorMessage": "None (Script exits silently if !vp.element().bIsValid()).",
+            "recovery": "Ensure the selected viewport contains a valid hsbCAD Element (Wall/Floor)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Update Visual Properties",
+            "how": "OPM (Object Properties Palette)",
+            "effect": "Changing 'sDimStyle' updates text font/size. Changing 'nColor' updates text color. Changing 'dTextOffset' updates spacing between text lines."
+          },
+          {
+            "action": "Update Calculation Standard",
+            "how": "OPM",
+            "effect": "Changing 'dBmWeight' updates the density used for any beams not in the specific profile list, recalculating the total weight."
+          },
+          {
+            "action": "Move Label",
+            "how": "Grip Edit (Drag _Pt0)",
+            "effect": "Moves the entire weight annotation block in Paper Space."
+          },
+          {
+            "action": "Refresh Data",
+            "how": "Update Model / Right-click Recalc",
+            "effect": "Re-scans the Element for new sheets, beams, or changed material properties in the attached TSL."
+          }
+        ]
+      },
+      "tokens_used": 9128,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCAD_Show Frame Weight\n\n## Overview\nThis script calculates the total weight of a timber frame element (including beams, sheets, and materials) based on material densities and dimensions. It displays the calculated weight as a text annotation in your Paper Space layout, useful for logistics and transport planning.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | This script is intended for Layouts. |\n| Paper Space | Yes | The script must be inserted into a Layout tab. |\n| Shop Drawing | No | This is an annotation script, not a detailing tool. |\n\n## Prerequisites\n- **Required Entities:** A Viewport in Paper Space displaying a valid hsbCAD Element (Wall or Floor).\n- **Minimum Beam Count:** 0 (Works with empty elements, though weight will be 0).\n- **Required Settings:** None. However, for accurate sheet material weights, the script supports the external TSL `FrameUK_SetWallMaterials` if present.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: Type `TSLINSERT` in the command line, select `hsbCAD_Show Frame Weight.mcr` from the list, or click the associated toolbar button.\n\n### Step 2: Pick Insertion Point\n```\nCommand Line: Pick a Point\nAction: Click anywhere in the Paper Space layout where you want the weight label to appear.\n```\n\n### Step 3: Select Viewport\n```\nCommand Line: Select a viewport\nAction: Click on the viewport border that displays the wall/floor element you wish to analyze.\n```\n\n### Step 4: Configure (Optional)\nUpon first insertion, a properties dialog may appear asking you to confirm the dimension style and weight settings.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Dimstyle | dropdown | _DimStyles | Selects the text style used for the annotation (e.g., font size, font type). |\n| Set Color | number | 1 (Red) | Sets the AutoCAD color index for the weight text (e.g., 1=Red, 2=Yellow, 7=White). |\n| Weight for Standard Beams (Kg/m³) | number | 450 | The density used to calculate the weight of standard timber beams that are not specifically defined in the script's internal profile list. |\n| Text Offset | number | 5 | The vertical spacing (in drawing units) between the lines of text in the label. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Refreshes the weight calculation. Use this if the model geometry changes or if material properties are updated in the source TSL. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A (Uses internal logic and standard hsbCAD Element data).\n\n## Tips\n- **Material Definitions:** The script recognizes specific engineered profiles and standard timbers. Ensure your material naming conventions match the script's internal list (e.g., \"OSB\", \"PLYWOOD\") or use the `FrameUK_SetWallMaterials` TSL for custom definitions.\n- **Zone 0 vs. Others:** The script distinguishes between \"Frame Weight\" (calculated from Zone 0 beams) and \"Total Weight\" (which includes other zones and extras).\n- **Window Weights:** If you want window weights included in the total, ensure your window catalog or TSL assigns a Property Set named `OpeningExtraData` containing a key called `Weight`.\n\n## FAQ\n- Q: The weight text is too small or the wrong font.\n- A: Change the **Dimstyle** property in the Properties Palette to match a dimension style defined in your drawing with your desired text settings.\n\n- Q: The calculated weight seems incorrect for my specific timber type.\n- A: Update the **Weight for Standard Beams (Kg/m³)** property. The default is 450 (Spruce/Pine), but if you are using Hardwood or GLULAM, adjust this value accordingly.\n\n- Q: Does this include the weight of nails/screws?\n- A: No, this script calculates the weight of the raw timber and sheet materials only. It does not account for fasteners or hardware.\n\n- Q: Why does the label say \"Total weight includes openings\"?\n- A: The script detected Property Set data on windows/doors in the element containing weight information and has added it to the total."
+      },
+      "tokens_used": 5755,
+      "error": null
+    }
+  }
+}

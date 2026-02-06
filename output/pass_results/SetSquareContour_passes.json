@@ -1,0 +1,282 @@
+{
+  "filename": "SetSquareContour.mcr",
+  "status": "completed",
+  "total_tokens": 33018,
+  "processing_time": 891.9924871921539,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "15.05.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-17620 showing all zones if dwg does not contain any elements"
+          },
+          {
+            "version": "1.0",
+            "date": "12.05.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-17620 initial version to cut beams of an element to its minimal square contour"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5282,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly collects entities using Group().collectEntities(..., _kModelSpace). It iterates through Element objects and their Beam sub-components. It performs geometric modifications by calling b.addToolStatic(Cut(...)) on beams, which alters the 3D geometry. It also accesses 3D coordinate systems (vecX, vecY, vecZ) and calculates shadow profiles on a Plane. No paper space entities (_Viewport, _kPaperSpace) or shop drawing specific variables (sd_*) are used."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing Elements to process",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4376,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sPainter",
+            "type": "PropString",
+            "displayName": "|Painter|",
+            "defaultValue": null,
+            "inputType": "dropdown",
+            "options": [
+              "<Dynamic: Painters from 'SetSquareContour' folder or Zones -5 to 5>"
+            ],
+            "category": "|General|",
+            "description": "|Defines the painter to filter the items to be cut square.||Default painter definitions will be created in folder TSL\\SetSquareContour.|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6775,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Squares off the ends of specific beams within an element to their minimal bounding rectangular length, effectively removing complex or angled cuts.",
+          "category": "Machining/Framing",
+          "typicalUseCase": "Simplifying wall or roof elements to a basic rectangular 'box' state, or correcting beams with unintended complex intersections by cutting them back to their straightest possible form."
+        },
+        "parameters": [
+          {
+            "name": "sPainter",
+            "technicalDefault": "First available painter in 'SetSquareContour' folder, or 'Zone 0' if none exist",
+            "businessMeaning": "Defines the filter criteria to select which beams within the element will be squared off. It allows users to target specific structural parts (e.g., only studs or top plates) or specific construction zones rather than processing the whole element.",
+            "validRange": "Existing Painter names (e.g., 'Stud', 'Plate'), or dynamic Zone entries (Zone -5 to Zone 5)",
+            "unit": "String (Selection List)",
+            "affectsOutput": "Determines which specific beams receive the square cuts. Beams not matching the painter definition are left untouched."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of 'sPainter'",
+            "effect": "If a 'Zone X' option is selected and no physical painter definition exists for it, the script automatically generates a temporary painter definition to filter the beams correctly.",
+            "cascade": [
+              "Beam Selection Set",
+              "Generated Cuts"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Cut (Static Saw Cut)",
+            "description": "Two orthogonal cuts applied to the start and end of the filtered beams. The cut positions are calculated based on the shadow projection of the beam's current envelope, ensuring the beam becomes a straight rectangular block defined by its maximum extents.",
+            "appliedTo": "Beams within the selected Elements that match the 'sPainter' criteria."
+          }
+        ]
+      },
+      "tokens_used": 5116,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initialization",
+          "2. Painter Collection Scan: Search for painters in 'SetSquareContour' or 'TSL\\SetSquareContour' folders",
+          "3. Zone Collection Scan: Iterate ModelSpace elements to find active zones (-5 to 5)",
+          "4. Property Definition: Populate 'Painter' dropdown with found painters and available zones",
+          "5. OnInsert Execution",
+          "6. [Conditional] Check if MapIO (Element Plugin Creation)",
+          "7. Display Property Dialog (User selects sPainter)",
+          "8. Command Line Prompt: PrEntity for Element Selection",
+          "9. Validation: Check if Elements were selected",
+          "10. Painter Definition Loading: Retrieve selected PainterDefinition",
+          "11. [Conditional] Dynamic Painter Creation: If 'Zone X' selected and invalid, create temporary PainterDefinition",
+          "12. Processing Loop: Iterate through selected Elements",
+          "13. Beam Filtering: Filter beams based on PainterDefinition (or select all if invalid)",
+          "14. Inner Beam Loop: Iterate through filtered beams",
+          "15. Geometry Check: Test if beam is already square (bIsCutStraight)",
+          "16. [Conditional] Square Check: If straight, skip beam",
+          "17. Contour Calculation: Calculate shadow profile on Element's XY plane",
+          "18. Cut Application: Apply static cuts at start and end of minimal bounding box",
+          "19. Script Termination: Erase script instance"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Painter List Source",
+            "path1": {
+              "name": "Specific Folder Found",
+              "steps": [
+                "Painters found in 'SetSquareContour' or 'TSL\\SetSquareContour'",
+                "Populate dropdown with these specific painters"
+              ]
+            },
+            "path2": {
+              "name": "Fallback to All Painters",
+              "steps": [
+                "No painters found in specific folders",
+                "Scan all system painters",
+                "Add Zone entries (-5 to 5)",
+                "Populate dropdown with combined list"
+              ]
+            }
+          },
+          {
+            "condition": "MapIO / Plugin Execution",
+            "path1": {
+              "name": "MapIO Mode",
+              "steps": [
+                "_bOnMapIO is true",
+                "Load properties from Map",
+                "Show Dialog",
+                "Update Map with new properties",
+                "Exit early (return)"
+              ]
+            },
+            "path2": {
+              "name": "Standard Insertion",
+              "steps": [
+                "Run standard insertion logic",
+                "Prompt for Entity selection",
+                "Proceed to processing"
+              ]
+            }
+          },
+          {
+            "condition": "Painter Validity",
+            "path1": {
+              "name": "Dynamic Painter Required",
+              "steps": [
+                "Selected sPainter is a 'Zone X' string",
+                "PainterDefinition is invalid (does not exist)",
+                "Script creates PainterDefinition via dbCreate()",
+                "Set filter to 'Equals(ZoneIndex, X)'",
+                "Use new definition to filter beams"
+              ]
+            },
+            "path2": {
+              "name": "Existing Painter Used",
+              "steps": [
+                "Selected sPainter matches existing definition",
+                "Load existing definition",
+                "Use definition to filter beams"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Geometry",
+            "path1": {
+              "name": "Already Square",
+              "steps": [
+                "bIsCutStraight(0) AND bIsCutStraight(1) is true",
+                "Skip beam (continue loop)"
+              ]
+            },
+            "path2": {
+              "name": "Needs Squaring",
+              "steps": [
+                "Beam has complex or angled cuts",
+                "Calculate shadow profile",
+                "Order points along Beam X-axis",
+                "Apply Cut tools at extents"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection",
+            "errorMessage": "Implicit (No explicit message box, script just erases)",
+            "recovery": "User must re-run command and select valid Elements."
+          },
+          {
+            "check": "Shadow Profile Geometry",
+            "errorMessage": "Implicit (Code checks if pts.length > 3)",
+            "recovery": "If profile has insufficient points, no cuts are applied."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Script Self-Deletion",
+            "how": "Automatic execution of eraseInstance()",
+            "effect": "The TSL instance is removed from the drawing. The modified beams (with new static cuts) remain as the only trace of the operation."
+          },
+          {
+            "action": "Geometry Modification",
+            "how": "b.addToolStatic(Cut(...))",
+            "effect": "Start and end of beams are squared off. The cuts are static and not parametrically linked to the script after deletion."
+          }
+        ]
+      },
+      "tokens_used": 6579,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# SetSquareContour\n\n## Overview\nThis script squares off the ends of beams within selected Elements, reducing them to their minimal rectangular length. It effectively removes complex or angled cuts from specific beams based on a Painter or Zone filter.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script operates on Elements and Beams in the 3D model. |\n| Paper Space | No | Not designed for 2D layout or detailing views. |\n| Shop Drawing | No | Does not process shop drawing entities. |\n\n## Prerequisites\n- **Required Entities:** Elements containing Beams (e.g., walls, roofs).\n- **Minimum Beam Count:** 1 Element containing at least 1 beam.\n- **Required Settings:** None (Optional Painter files can be placed in `TSL\\SetSquareContour` for custom lists).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `SetSquareContour.mcr`\n\n### Step 2: Configure Properties (Dialog)\nUpon launching, a properties dialog or palette appears.\n```\nAction: Select a 'Painter' from the dropdown list.\nOptions: Choose a specific construction part (e.g., \"Stud\", \"Plate\") or a logical Zone (e.g., \"Zone 0\").\nNote: This selection determines which beams inside the element will be squared off.\n```\n\n### Step 3: Select Elements\n```\nCommand Line: Select elements\nAction: Click on the Elements in the Model Space that you wish to process.\nPress Enter to confirm selection.\n```\n\n### Step 4: Automatic Processing\nThe script calculates the minimal bounding box for the filtered beams, applies static saw cuts to square the ends, and then automatically removes itself from the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Painter | dropdown | First available Painter / Zone 0 | Defines the filter criteria to select which beams will be cut square. You can select specific Painters (e.g., Rim Joist) or use Zones (-5 to 5) to filter beams by their construction index. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| *None* | This script does not add custom items to the right-click context menu. |\n\n## Settings Files\n- **Folder**: `TSL\\SetSquareContour` (or `SetSquareContour`)\n- **Purpose**: If you place custom Painter definition files in this folder, they will appear in the 'Painter' dropdown list. If the folder is empty or missing, the script defaults to listing all available Painters plus generic Zones.\n\n## Tips\n- **Self-Deleting Script:** The script instance is automatically erased from your drawing immediately after processing. Do not look for it in the model afterwards; only the modified beams will remain.\n- **Zone Filtering:** If you haven't created specific Painter files, use the \"Zone X\" options (e.g., \"Zone -1\", \"Zone 0\") to quickly target beams based on their zone index without needing configuration files.\n- **Undo:** You can use the standard AutoCAD `UNDO` command to revert the cuts if the result is not as expected.\n- **Performance:** Beams that are already perfectly square are automatically skipped by the script to save processing time.\n\n## FAQ\n- **Q: Why didn't the script cut all the beams in my wall?**\n  A: Check the **Painter** property you selected. The script only processes beams that match the selected Painter or Zone. Ensure the beams you want to modify are assigned to that specific category.\n- **Q: Can I use this script on a single beam?**\n  A: The script requires selecting an **Element**. If you need to square a single beam, ensure it is part of an element or select the element containing it.\n- **Q: Where do the \"Zone\" options come from?**\n  A: These are built-in logical filters provided by the script (Zone -5 to Zone 5). They allow you to filter beams by their internal zone index without needing external Painter files."
+      },
+      "tokens_used": 4890,
+      "error": null
+    }
+  }
+}

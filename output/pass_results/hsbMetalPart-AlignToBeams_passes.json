@@ -1,0 +1,266 @@
+{
+  "filename": "hsbMetalPart-AlignToBeams.mcr",
+  "status": "completed",
+  "total_tokens": 26684,
+  "processing_time": 425.0435552597046,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3309,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script utilizes 3D geometric operations such as realBody(), shadowProfile(), PlaneProfile, and transformBy(). It employs PrEntity for selection and operates on Beam and MassGroup classes. No Shop Drawing (sd_*) or Paper Space (_Viewport) specific APIs are used."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "MassGroup",
+            "Beam",
+            "EcsMarker"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "The script must be inserted into or associated with a parent MassGroup in the 3D model.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3508,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select Beam(s)|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "_Pt0",
+            "type": "Point3d",
+            "displayName": "Pt0",
+            "defaultValue": "Center of parent MassGroup",
+            "inputType": "point",
+            "options": [],
+            "category": null,
+            "description": "Origin point, updated to mass group center on recalc or prop change"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2909,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically aligns and rotates pre-positioned child components (such as metal plates or brackets) to match the orientation of specific structural beams based on maximum geometric overlap.",
+          "category": "Assembly Automation / Hardware",
+          "typicalUseCase": "Used when metal plates or sub-assemblies have been imported or roughly placed within a parent assembly and need to be adjusted to perfectly match the slope and rotation of the timber beams they intersect."
+        },
+        "parameters": [
+          {
+            "name": "_Pt0",
+            "technicalDefault": "Center of parent MassGroup (mgParent.realBody().ptCen())",
+            "businessMeaning": "The geometric reference origin of the parent assembly. It acts as a handle to verify the script's association with the correct parent group and triggers the alignment update when modified.",
+            "validRange": "Automatically calculated based on parent geometry",
+            "unit": "mm",
+            "affectsOutput": "Updating this property triggers a recalculation of the parent group's center and forces a re-evaluation of the alignment logic for all child parts."
+          },
+          {
+            "name": "Beam Selection (Command Line)",
+            "technicalDefault": "User Selection (Prompt: '|Select Beam(s)|')",
+            "businessMeaning": "The target structural members that define the correct orientation for the child parts. The script searches for the beam that has the largest surface overlap with each child part.",
+            "validRange": "Any valid Beam entities in the drawing",
+            "unit": "N/A (Entity Selection)",
+            "affectsOutput": "Determines the final rotation and alignment of the child MassGroups. Changing the selection set changes which beams dictate the orientation of the parts."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Change of Parent MassGroup geometry",
+            "effect": "Updates _Pt0 and recalculates alignment relative to new parent size/shape",
+            "cascade": [
+              "_Pt0"
+            ]
+          },
+          {
+            "trigger": "Modification of _Pt0",
+            "effect": "Resets _Pt0 to the parent's center and re-runs the alignment check",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "MassGroup",
+            "description": "Transforms (rotates/translates) existing child MassGroups containing EcsMarkers to align with the coordinate system of the selected target beams.",
+            "appliedTo": "Child MassGroups found within the script's parent MassGroup that contain EcsMarkers."
+          }
+        ]
+      },
+      "tokens_used": 5988,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script initialization triggered by insertion or recalculation.",
+          "2. [Insertion Only] Check insertCycleCount; erase instance if count > 1.",
+          "3. [Insertion Only] Prompt user to select target Beam entities using PrEntity.",
+          "4. [Insertion Only] Capture the parent MassGroup entity.",
+          "5. Validate the parent MassGroup is valid and at least one beam was selected.",
+          "6. [Validation Fail] Erase script instance and exit.",
+          "7. [Validation Pass] Update internal origin point (_Pt0) to parent MassGroup center.",
+          "8. Iterate through all entities within the parent MassGroup to find child MassGroups.",
+          "9. Filter children to identify those containing an EcsMarker (used for local coordinate reference).",
+          "10. For each valid child, project its shadow onto a plane defined by its EcsMarker.",
+          "11. Iterate through selected beams, projecting their envelopes onto the same plane.",
+          "12. Calculate the intersection area between the child shadow and each beam shadow.",
+          "13. Assign the child to the beam index with the maximum overlapping area.",
+          "14. Perform conflict resolution: If multiple children target the same beam, discard alignment for the child with the smaller overlap area.",
+          "15. Calculate the target Coordinate System (rotation/translation) from the selected beam.",
+          "16. Apply transformation (align) to the child MassGroup.",
+          "17. Finalize execution (Script remains in drawing for future updates)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion cycle count check",
+            "path1": {
+              "name": "Duplicate Insertion",
+              "steps": [
+                "EraseInstance()",
+                "Return immediately"
+              ]
+            },
+            "path2": {
+              "name": "First Run",
+              "steps": [
+                "Proceed to Beam selection prompt"
+              ]
+            }
+          },
+          {
+            "condition": "Entity and Selection Validation",
+            "path1": {
+              "name": "Invalid Context",
+              "steps": [
+                "Detect missing parent MassGroup or empty Beam selection",
+                "EraseInstance()",
+                "Exit script"
+              ]
+            },
+            "path2": {
+              "name": "Valid Context",
+              "steps": [
+                "Update _Pt0 property",
+                "Proceed to child entity collection"
+              ]
+            }
+          },
+          {
+            "condition": "Geometric Overlap Comparison (Loop)",
+            "path1": {
+              "name": "Larger Area Found",
+              "steps": [
+                "Update dArea",
+                "Store current beam index as best candidate"
+              ]
+            },
+            "path2": {
+              "name": "Smaller or Equal Area",
+              "steps": [
+                "Ignore current beam",
+                "Retain previous best candidate"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Assignment Conflict (Winner-takes-all)",
+            "path1": {
+              "name": "Conflict Detected (Smaller overlap)",
+              "steps": [
+                "Set bOk flag to false",
+                "Skip alignment for this child part"
+              ]
+            },
+            "path2": {
+              "name": "Best Candidate (No conflict or Largest overlap)",
+              "steps": [
+                "Construct target Coordinate System from Beam",
+                "Transform child MassGroup to align"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Parent MassGroup Validity",
+            "errorMessage": "(None shown silently)",
+            "recovery": "Script erases itself. User must ensure the script is inserted into a valid MassGroup hierarchy."
+          },
+          {
+            "check": "Beam Selection Count",
+            "errorMessage": "(None shown silently)",
+            "recovery": "Script erases itself if user cancels selection or selects 0 beams. User must re-insert and select at least one beam."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Update Origin Point",
+            "how": "Modify '_Pt0' property in OPM (Properties Palette)",
+            "effect": "Resets internal point to parent center and triggers recalculation of alignment logic."
+          },
+          {
+            "action": "Geometry Modification",
+            "how": "Modify geometry of Parent MassGroup, Child parts, or Target Beams",
+            "effect": "Triggers _bOnRecalc; script re-evaluates overlaps and adjusts alignment automatically."
+          }
+        ]
+      },
+      "tokens_used": 6434,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbMetalPart-AlignToBeams\n\n## Overview\nAutomatically aligns and rotates child components (such as metal plates or brackets) within a parent assembly to match the exact orientation of selected structural beams based on their geometric overlap.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D model entities (MassGroups and Beams). |\n| Paper Space | No | Not designed for 2D drawings or layout views. |\n| Shop Drawing | No | Does not generate shop drawing details. |\n\n## Prerequisites\n- **Parent Entity**: A parent MassGroup must exist in the model.\n- **Child Components**: Child MassGroups containing the parts to be aligned must exist inside the parent MassGroup.\n- **Reference Markers**: Child MassGroups must contain an `EcsMarker` to define their local coordinate system.\n- **Target Beams**: At least one structural Beam must be available in the model to serve as the alignment target.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT`\nAction: Browse to and select `hsbMetalPart-AlignToBeams.mcr`.\n\n### Step 2: Insert into Parent Group\nAction: Select the parent MassGroup in the model that contains the metal parts or sub-assemblies you wish to align.\n*Note: The script must be inserted as a child of the main assembly group.*\n\n### Step 3: Select Target Beams\n```\nCommand Line: |Select Beam(s)|\nAction: Click on the structural beams that define the correct orientation/slope for your parts.\n```\n*Note: You can select multiple beams. The script will calculate which beam best fits each part based on surface area overlap.*\n\n### Step 4: Automatic Alignment\nAction: The script automatically adjusts the position and rotation of the child MassGroups.\n*Note: If a child part overlaps significantly with a selected beam, it will snap to that beam's coordinate system.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Pt0 | Point | Center of Parent Group | Defines the reference origin point. Modifying this point (e.g., moving it slightly) forces the script to re-calculate and re-align all parts to the beams. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu items are added by this script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script does not use external settings files.\n\n## Tips\n- **Conflict Resolution**: If two metal parts overlap the same beam, the script will prioritize the part with the larger surface area. The part with the smaller overlap may not move.\n- **Updating Alignment**: If you modify the beams or the parent group geometry, manually change the `Pt0` property in the Properties Palette to trigger an update of the alignment.\n- **EcsMarker**: Ensure your metal part sub-assemblies include an EcsMarker. Without this marker, the script cannot determine how to orient the part.\n- **Validation**: If the script disappears immediately after insertion, check that you selected at least one beam and that the parent MassGroup is valid.\n\n## FAQ\n- **Q: Why did the script delete itself after I ran it?**\n  A: This usually happens if no beams were selected during the prompt, or if the script was not inserted into a valid parent MassGroup. Re-insert the script and ensure you make a valid selection.\n\n- **Q: Some of my parts did not move. Why?**\n  A: A part will only align if it has geometric overlap with a selected beam. Ensure the part is physically intersecting or touching the target beam. Also, verify the child part contains an EcsMarker.\n\n- **Q: How do I undo the alignment?**\n  A: Use the standard AutoCAD `UNDO` command to revert the script execution."
+      },
+      "tokens_used": 4536,
+      "error": null
+    }
+  }
+}

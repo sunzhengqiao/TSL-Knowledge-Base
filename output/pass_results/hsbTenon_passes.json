@@ -1,0 +1,350 @@
+{
+  "filename": "hsbTenon.mcr",
+  "status": "completed",
+  "total_tokens": 49490,
+  "processing_time": 259.8192307949066,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "11.05.2022",
+            "author": "Thorsten Huck",
+            "changes": "HSB-15220 initial version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7447,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script manipulates 3D geometry using Body and Mortise classes, performs boolean operations (intersectWith), and defines 3D spatial properties (XWidth, ZDepth, Rotation). No sd_ prefixes or paper space specific APIs (_Viewport) found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6716,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10025,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates mortise (through hole) or housing (slot) joints to connect two beams or a beam and a panel, supporting various geometric configurations and tolerances.",
+          "category": "Framing/Joinery",
+          "typicalUseCase": "A carpenter needs to connect a perpendicular beam (e.g., a purlin or joist) to a main beam (e.g., a rafter or top plate) using a traditional mortise and tenon joint, or create a slot for a panel infill."
+        },
+        "parameters": [
+          {
+            "name": "sConnection",
+            "technicalDefault": "T-Connection",
+            "businessMeaning": "Defines the geometric relationship between the two selected beams. 'T-Connection' implies a beam intersecting the side of another, while 'End-End' implies beams meeting end-to-end or butting collinearly.",
+            "validRange": "T-Connection, End-End",
+            "unit": "Enum",
+            "affectsOutput": "Switches the calculation logic for intersection points and alignment vectors between the Male and Female beams."
+          },
+          {
+            "name": "sType",
+            "technicalDefault": "Mortise, not round",
+            "businessMeaning": "Specifies the specific joinery style: 'Mortise' cuts a hole for a tenon, while 'House' (Housing) cuts a slot/groove on the surface. Also controls corner rounding (sharp, round, rounded) and relief cuts.",
+            "validRange": "Mortise variants, House variants",
+            "unit": "Enum",
+            "affectsOutput": "Changes the profile shape (e.g., adding radii to corners or creating reliefs for expansion/clearance)."
+          },
+          {
+            "name": "dYOffsetA",
+            "technicalDefault": "0",
+            "businessMeaning": "Offsets the start of the cut along the length of the beam (positive direction). Used to shift the joint away from the center point.",
+            "validRange": "-500 to 500 mm",
+            "unit": "mm",
+            "affectsOutput": "Slidesthe mortise/housing position along the beam's axis."
+          },
+          {
+            "name": "dYOffsetB",
+            "technicalDefault": "0",
+            "businessMeaning": "Offsets the end of the cut along the length of the beam (negative direction). Acts as a positional tolerance or shift on the opposite side.",
+            "validRange": "-500 to 500 mm",
+            "unit": "mm",
+            "affectsOutput": "Slides the end position of the mortise/housing, effectively changing the length or position of the cut."
+          },
+          {
+            "name": "dXWidth",
+            "technicalDefault": "45",
+            "businessMeaning": "The width of the cut. Ideally matches the width of the mating timber (tenon) plus any required clearance.",
+            "validRange": "20 to 300 mm (Typical timber sizes)",
+            "unit": "mm",
+            "affectsOutput": "Determines the lateral dimension of the slot/hole."
+          },
+          {
+            "name": "dZDepth",
+            "technicalDefault": "28",
+            "businessMeaning": "The depth of the cut perpendicular to the beam face. For through-mortises, this equals the beam width. For housings, it is usually a partial depth.",
+            "validRange": "10 to 300 mm",
+            "unit": "mm",
+            "affectsOutput": "Controls how deep the tool penetrates into the material."
+          },
+          {
+            "name": "dExplicitRadius",
+            "technicalDefault": "0",
+            "businessMeaning": "Defines a custom corner radius when Type is set to 'Mortise, explicit radius'. Allows non-standard rounding.",
+            "validRange": "0 to 100 mm",
+            "unit": "mm",
+            "affectsOutput": "Rounds the corners of the cut profile by the specified value."
+          },
+          {
+            "name": "dGapLength",
+            "technicalDefault": "0",
+            "businessMeaning": "Clearance gap along the length of the joint (makes the slot longer than the tenon) to allow for glue expansion or easier assembly.",
+            "validRange": "0 to 10 mm",
+            "unit": "mm",
+            "affectsOutput": "Extends the length of the cut by the specified amount."
+          },
+          {
+            "name": "dGapWidth",
+            "technicalDefault": "0",
+            "businessMeaning": "Clearance gap along the width of the joint (makes the slot wider than the tenon) for assembly tolerance.",
+            "validRange": "0 to 5 mm",
+            "unit": "mm",
+            "affectsOutput": "Increases the width of the cut by twice the amount (centered)."
+          },
+          {
+            "name": "dGapDepth",
+            "technicalDefault": "0",
+            "businessMeaning": "Clearance gap along the depth (makes the slot deeper) to ensure the mating part fits fully without bottoming out.",
+            "validRange": "0 to 10 mm",
+            "unit": "mm",
+            "affectsOutput": "Increases the depth of the cut."
+          },
+          {
+            "name": "dOffsetX",
+            "technicalDefault": "0",
+            "businessMeaning": "Lateral shift of the cut center relative to the beam axis or intersection point.",
+            "validRange": "-200 to 200 mm",
+            "unit": "mm",
+            "affectsOutput": "Moves the slot/hole sideways along the beam face."
+          },
+          {
+            "name": "dRotation",
+            "technicalDefault": "0",
+            "businessMeaning": "Rotates the cut profile around the insertion axis. Used for skewed connections where beams do not meet at 90 degrees.",
+            "validRange": "-90 to 90 degrees",
+            "unit": "degrees",
+            "affectsOutput": "Rotates the rectangular/slot profile to align with a skewed mating beam."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sType set to 'Mortise, explicit radius'",
+            "effect": "Activates the use of dExplicitRadius to define the corner geometry.",
+            "cascade": [
+              "dExplicitRadius"
+            ]
+          },
+          {
+            "trigger": "Context Menu 'Set vertical/plump/horizontal alignment'",
+            "effect": "Automatically calculates and sets the dRotation value to align with World or Workplane axes.",
+            "cascade": [
+              "dRotation"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Mortise/Cut",
+            "description": "A void operation (boolean subtraction) on the female beam creating a mortise or housing.",
+            "appliedTo": "Female Beam (the beam selected second or the beam receiving the connection)."
+          }
+        ]
+      },
+      "tokens_used": 9261,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Execution Start",
+          "Initialize Constants, Properties, and Variables",
+          "Context Root Check: '_bOnJig' Active?",
+          "  [True] -> Handle Jig Preview (Rotate or Split) -> Update dynamic visual -> Return",
+          "  [False] -> Continue to Entity Selection",
+          "Check '_bOnInsert' (First Run):",
+          "  [True] -> Prompt User to Select Male Beam(s) (GenBeam)",
+          "  [True] -> Prompt User to Select Female Element (GenBeam or Element)",
+          "  [True] -> Calculate Intersection/Connection Geometry",
+          "Determine Connection Type (sConnection):",
+          "  'T-Connection' -> Calculate vectors based on perpendicular intersection",
+          "  'End-End' -> Calculate vectors based on end-to-end alignment",
+          "Process Geometry based on 'sType' (Mortise/House variants):",
+          "  Generate PlaneProfile (shape) based on Width, Depth, Offsets, and Gaps",
+          "  Apply Corner radii or relief cuts based on subtype (e.g., 'Mortise, round' vs 'House, relief cut')",
+          "Context Root Check: '_kExecuteKey' Triggers",
+          "  'Flip Direction' -> Invert Y-axis vectors -> Recalculate",
+          "  'Join' -> Prompt to select new Male beams -> Add to collection -> Recalculate",
+          "  'Rotate' / 'Set vertical/plumb/horizontal alignment' -> Update 'dRotation' property -> Recalculate",
+          "Apply Cut to Female Element:",
+          "  Create Mortise/CuttingBody from PlaneProfile",
+          "  Perform Boolean Intersection/Subtraction on Female Body",
+          "Generate Visual Representation (Display Phase):",
+          "  Draw Coordinate Axes and Preview Profile",
+          "  Map 'shape' for Grip Editing if parallel condition met",
+          "End of Script"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Beam Selection Mode (On Insert)",
+            "path1": {
+              "name": "New Insertion",
+              "steps": [
+                "Reset Properties to Default",
+                "User selects Male Beams (e.g., Joists)",
+                "User selects Female Beam (e.g., Rafter)",
+                "Script detects geometry and sets initial 'Connection' type (T vs End-End)"
+              ]
+            },
+            "path2": {
+              "name": "Recalculation (Update)",
+              "steps": [
+                "Read existing properties from Map",
+                "Retrieve references to previously selected beams",
+                "Re-run geometry logic based on current property values",
+                "Update cuts without user selection prompts"
+              ]
+            }
+          },
+          {
+            "condition": "Connection Type (sConnection Property)",
+            "path1": {
+              "name": "T-Connection",
+              "steps": [
+                "Calculates intersection points on the side of the Female beam",
+                "Aligns the cut perpendicular to the Female beam's axis",
+                "Typical usage: Purlin to Rafter"
+              ]
+            },
+            "path2": {
+              "name": "End-End Connection",
+              "steps": [
+                "Calculates alignment based on the end points of the beams",
+                "Aligns the cut collinear or end-to-end with the Female beam",
+                "Typical usage: Scarf joints or splicing"
+              ]
+            }
+          },
+          {
+            "condition": "Geometry Alignment (Context Menu Triggers)",
+            "path1": {
+              "name": "Manual Rotation",
+              "steps": [
+                "User executes 'Flip Direction' or Jig interaction",
+                "Script calculates new vector angles",
+                "Updates 'dRotation' property"
+              ]
+            },
+            "path2": {
+              "name": "Automatic Alignment",
+              "steps": [
+                "User executes 'Set vertical/plumb/horizontal alignment'",
+                "Script forces 'dRotation' to match World Z or Workplane axes",
+                "Overwrites any previous manual rotation value"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Selection Validity",
+            "errorMessage": "(Implicit by prompt failure) User fails to select valid GenBeam or Element.",
+            "recovery": "Script prompts again or exits if selection is cancelled."
+          },
+          {
+            "check": "Geometric Constraints (Width/Depth vs Material)",
+            "errorMessage": "(Implicit) Calculated dimensions exceed physical beam dimensions.",
+            "recovery": "User adjusts 'Width' (dXWidth) or 'Depth' (dZDepth) properties in the palette."
+          },
+          {
+            "check": "Epsilon Comparison (Rotation)",
+            "errorMessage": "None explicit, but floating point math uses dEps (0.1mm) to determine zero values.",
+            "recovery": "N/A (Internal calculation safeguard)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Dimensions",
+            "how": "OPM Properties Palette (Width, Depth, Offsets, Gaps)",
+            "effect": "Script recalculates immediately to resize the mortise/housing cut."
+          },
+          {
+            "action": "Change Joint Style",
+            "how": "OPM Properties Palette (Type dropdown: Mortise/House variants)",
+            "effect": "Changes the profile shape (e.g., adding radii, changing from through mortise to housing)."
+          },
+          {
+            "action": "Adjust Rotation/Alignment",
+            "how": "Right-click Context Menu (Set vertical/plumb/horizontal) or OPM (Rotation property)",
+            "effect": "Rotates the cut profile around the insertion axis to align with global coordinates or specific angles."
+          },
+          {
+            "action": "Flip Direction",
+            "how": "Right-click Context Menu ('Flip Direction')",
+            "effect": "Inverts the cut direction (swaps positive/negative Y offset logic)."
+          },
+          {
+            "action": "Add Beams to Joint",
+            "how": "Right-click Context Menu ('Join')",
+            "effect": "Prompts user to select additional Male beams to receive the same cut configuration."
+          },
+          {
+            "action": "Grip Edit",
+            "how": "Click and drag graphical grip in CAD viewport (if 'bIsParallel' condition met)",
+            "effect": "Moves the cut profile dynamically along the beam axis."
+          }
+        ]
+      },
+      "tokens_used": 9713,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbTenon.mcr\n\n## Overview\nThis script creates mortise (through hole) or housing (slot) joints to connect two beams or a beam and a panel. It supports various geometric configurations, dimensional tolerances, and rotation adjustments to accommodate traditional timber framing joinery.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for 3D geometry manipulation. |\n| Paper Space | No | Script does not support 2D layout entities. |\n| Shop Drawing | No | Designed for 3D model generation only. |\n\n## Prerequisites\n- **Required entities**: At least two structural entities (GenBeams or Elements).\n- **Minimum beam count**: 2 (One Male beam/reference, one Female beam/receiver).\n- **Required settings**: None specific (uses internal defaults).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbTenon.mcr` from the file list.\n\n### Step 2: Select Male Beams\n```\nCommand Line: Select Male Beam(s)\nAction: Click on the beam(s) that will insert into the joint (e.g., the purlin or joist). Press Enter to confirm selection.\n```\n\n### Step 3: Select Female Element\n```\nCommand Line: Select Female Element\nAction: Click on the main beam or panel that will receive the cut (e.g., the rafter or top plate).\n```\n\n### Step 4: Adjust Joint Configuration\n```\nAction: The initial cut is generated based on the intersection.\n- Open the Properties Palette (Ctrl+1) to adjust dimensions (Width, Depth, Offsets).\n- Right-click the script instance in the model to access alignment options (Flip, Rotate, Join).\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sConnection | dropdown | T-Connection | Defines the relationship: **T-Connection** (perpendicular) or **End-End** (collinear/end-to-end). |\n| sType | dropdown | Mortise, not round | Select joint style: **Mortise** (through hole) or **House** (slot/groove). Options include corner radii and relief cuts. |\n| dYOffsetA | number | 0 mm | Offsets the start of the cut along the beam length (positive direction). |\n| dYOffsetB | number | 0 mm | Offsets the end of the cut along the beam length (negative direction). |\n| dXWidth | number | 45 mm | The width of the cut. Ideally matches the width of the mating timber plus clearance. |\n| dZDepth | number | 28 mm | The depth of the cut perpendicular to the beam face. |\n| dExplicitRadius | number | 0 mm | Custom corner radius used only when `sType` is set to \"Mortise, explicit radius\". |\n| dGapLength | number | 0 mm | Extra length clearance for glue expansion or easier assembly. |\n| dGapWidth | number | 0 mm | Extra width clearance for assembly tolerance. |\n| dGapDepth | number | 0 mm | Extra depth clearance to ensure the mating part fits fully. |\n| dOffsetX | number | 0 mm | Lateral shift of the cut center relative to the beam axis. |\n| dRotation | number | 0 degrees | Rotates the cut profile around the insertion axis. Useful for skewed connections. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Flip Direction | Inverts the cut direction along the beam axis (swaps the positive/negative Y offset logic). |\n| Join | Prompts you to select additional Male beams to add to the current joint configuration. |\n| Set vertical/plumb/horizontal alignment | Automatically calculates and applies a rotation to align the cut with World Z or Workplane axes. |\n| Rotate | Allows manual rotation of the cut profile via dynamic input. |\n\n## Settings Files\nNo specific external settings files are required for this script.\n\n## Tips\n- **Grip Editing**: If the cut is aligned parallel to the beam, you can click and drag the graphical grip in the CAD viewport to slide the joint along the beam.\n- **Tolerances**: Use the **Gap** properties (Length, Width, Depth) if you need extra room for glue or easier assembly on site.\n- **Troubleshooting Orientation**: If the cut is not facing the correct side of the beam, use the **Flip Direction** option in the right-click menu.\n\n## FAQ\n- **Q: How do I create a mortise with rounded corners?**\n  A: Change the `sType` property in the Properties Palette to \"Mortise, round\" or \"Mortise, rounded\".\n- **Q: The joint is not cutting deep enough.**\n  A: Increase the `dZDepth` value in the Properties Palette.\n- **Q: Can I connect a beam to a wall panel?**\n  A: Yes. Select the beam as the \"Male\" entity and the wall panel (Element) as the \"Female\" entity during the insertion steps."
+      },
+      "tokens_used": 6328,
+      "error": null
+    }
+  }
+}

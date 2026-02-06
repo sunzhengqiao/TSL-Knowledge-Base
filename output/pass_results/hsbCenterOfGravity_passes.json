@@ -1,0 +1,188 @@
+{
+  "filename": "hsbCenterOfGravity.mcr",
+  "status": "completed",
+  "total_tokens": 47710,
+  "processing_time": 260.1811218261719,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9292,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "Both",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": true,
+          "isMultipageScript": false,
+          "detectionEvidence": "Code contains checks for 'bHasSDV' (Shop Drawing View) and manipulates 'entMultipage'. It performs coordinate transformations using 'ms2ps' (Model Space to Paper Space). History comments confirm 'insert in layout improved', 'paperspace behaviour enhanced', and 'add shopdraw support'."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Element",
+            "3DSolid"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space, Paper Space (via Viewport), or Shopdrawing View context",
+          "requiredSettings": [
+            "hsbMaterialTable.dll",
+            "materials.xml (for density/weight calculation)"
+          ]
+        }
+      },
+      "tokens_used": 7341,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10020,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Calculates and annotates the Center of Gravity (COG) and total weight of timber beams, panels, or assemblies for logistics and lifting planning.",
+          "category": "ShopDrawing / Annotation",
+          "typicalUseCase": "Determining the precise lifting point on a prefab wall or roof panel to ensure balance during crane installation on the construction site."
+        },
+        "parameters": [
+          {
+            "name": "sText",
+            "technicalDefault": "\"@(Weight) kg\"",
+            "businessMeaning": "The text label template displayed next to the COG marker. Allows dynamic placeholders for Weight, Name, or other properties.",
+            "validRange": "Any string (often \"@(Weight) kg\" or \"@(ElementName)\")",
+            "unit": "Text",
+            "affectsOutput": "Updates the text label content adjacent to the COG symbol."
+          },
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "\"mm-2\"",
+            "businessMeaning": "The dimensioning style used for coordinate display (e.g., precision, unit format).",
+            "validRange": "Valid hsbCAD dimension style names",
+            "unit": "String",
+            "affectsOutput": "Formatting of the coordinate offset dimensions (e.g. '500 mm' vs '0.5 m')."
+          },
+          {
+            "name": "dTextHeight",
+            "technicalDefault": "2.5",
+            "businessMeaning": "The height of the annotation text in the drawing.",
+            "validRange": "1.5 to 10.0 (depending on drawing scale)",
+            "unit": "mm (drawing units)",
+            "affectsOutput": "Size of the text label."
+          },
+          {
+            "name": "dThisSize",
+            "technicalDefault": "10.0",
+            "businessMeaning": "The physical size of the COG symbol (circle or rhombus) drawn on the element.",
+            "validRange": "5.0 to 50.0",
+            "unit": "mm",
+            "affectsOutput": "Diameter or width of the graphical marker."
+          },
+          {
+            "name": "bDrawCircle",
+            "technicalDefault": "true",
+            "businessMeaning": "Toggles the COG symbol style to a Circle.",
+            "validRange": "true / false",
+            "unit": "Boolean",
+            "affectsOutput": "Draws a circular marker with crosshairs if true."
+          },
+          {
+            "name": "bDrawRhomb",
+            "technicalDefault": "false",
+            "businessMeaning": "Toggles the COG symbol style to a Rhombus (Diamond).",
+            "validRange": "true / false",
+            "unit": "Boolean",
+            "affectsOutput": "Draws a diamond-shaped marker if true."
+          },
+          {
+            "name": "bAddCoordinate",
+            "technicalDefault": "false",
+            "businessMeaning": "Displays the offset dimensions from the COG to the element's bounding box.",
+            "validRange": "true / false",
+            "unit": "Boolean",
+            "affectsOutput": "Adds dimension lines showing X and Y distances from the center to the edges."
+          },
+          {
+            "name": "nTransparency",
+            "technicalDefault": "0",
+            "businessMeaning": "The transparency level of the filled COG symbol.",
+            "validRange": "0 (Solid) to 100 (Invisible)",
+            "unit": "Percentage",
+            "affectsOutput": "Allows underlying geometry to be seen through the marker."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "1 (Red)",
+            "businessMeaning": "The display color of the COG symbol and text.",
+            "validRange": "0 to 255 (AutoCAD Color Index)",
+            "unit": "Color Index",
+            "affectsOutput": "Visual highlighting of the marker."
+          },
+          {
+            "name": "bShowDependecies",
+            "technicalDefault": "false",
+            "businessMeaning": "Debugging mode that draws lines connecting the COG to the center of every calculated sub-component.",
+            "validRange": "true / false",
+            "unit": "Boolean",
+            "affectsOutput": "Draws temporary leader lines to visualize which parts are included in the mass calculation."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "bAddCoordinate is enabled",
+            "effect": "Requires sDimStyle to be valid to format the measurements correctly.",
+            "cascade": [
+              "sDimStyle"
+            ]
+          },
+          {
+            "trigger": "bDrawCircle is enabled",
+            "effect": "Typically disables bDrawRhombus to avoid overlapping symbols.",
+            "cascade": [
+              "bDrawRhomb"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Annotation Geometry",
+            "description": "2D PLine, PlaneProfile, and Text entities representing the COG symbol and dimensions in Model/Paper Space.",
+            "appliedTo": "Viewport or Model Space context of the selected Element/Beam."
+          },
+          {
+            "type": "MapX Data (ExtendedProperties)",
+            "description": "Writes the calculated 'Weight' (Double) and 'ptCen' (Point3d) to the entity's extended properties.",
+            "appliedTo": "The Element or GenBeam the script is attached to."
+          },
+          {
+            "type": "MapX Data (ProtectArea)",
+            "description": "Creates a protection profile in the Shopdrawing multipage context to prevent other annotations from overlapping the COG label.",
+            "appliedTo": "Shop Drawing View (SDV)."
+          }
+        ]
+      },
+      "tokens_used": 8492,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7970,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCenterOfGravity.mcr\n\n## Overview\nCalculates and annotates the Center of Gravity (COG) and total weight of timber beams, panels, or assemblies. It is primarily used for logistics planning and determining lifting points on construction elements.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Calculates based on the actual 3D geometry. |\n| Paper Space | Yes | Automatically transforms coordinates for viewports. |\n| Shop Drawing | Yes | Integrates with Shop Drawing Views (SDV) for production drawings. |\n\n## Prerequisites\n- **Required entities:** GenBeam, Element, or 3DSolid.\n- **Minimum beam count:** 1 (The script must be attached to a single element to calculate its properties).\n- **Required settings:**\n  - `hsbMaterialTable.dll` (loaded by hsbCAD).\n  - `materials.xml` (Must contain valid density values for the materials used in the element).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbCenterOfGravity.mcr` from the list.\n\n### Step 2: Select Element\n```\nCommand Line: Select Element/Beam:\nAction: Click on the timber wall, roof panel, or beam you wish to analyze.\n```\n\n### Step 3: Configure Insertion\n```\nCommand Line: Specify insertion point or [Properties]:\nAction: Click in the drawing to place the script reference.\n```\n*Note: The COG marker will automatically snap to the calculated center of gravity; the insertion point only determines the script's reference location.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sText | String | @(Weight) kg | The text label template displayed next to the COG. Use `@(Weight)` to insert the calculated value dynamically. |\n| sDimStyle | String | mm-2 | The dimension style used to format the offset measurements (e.g., precision and units). |\n| dTextHeight | Double | 2.5 | Height of the annotation text in drawing units (mm). |\n| dThisSize | Double | 10.0 | Physical size of the COG symbol (circle or rhombus diameter). |\n| bDrawCircle | Boolean | true | If true, draws a circular marker with crosshairs at the COG. |\n| bDrawRhomb | Boolean | false | If true, draws a rhombus (diamond) marker at the COG. |\n| bAddCoordinate | Boolean | false | If true, adds dimension lines showing the X and Y offset from the COG to the element edges. |\n| nTransparency | Integer | 0 | Transparency level of the filled COG symbol (0 = Solid, 100 = Invisible). |\n| nColor | Integer | 1 | Color of the COG symbol and text (1 = Red, based on AutoCAD Color Index). |\n| bShowDependecies | Boolean | false | Debug mode. If true, draws lines connecting the COG to the center of all sub-components included in the calculation. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Updates the COG position and weight if the element geometry or material properties change. |\n| Edit Properties | Opens the script properties in the palette to adjust text, size, or visual settings. |\n\n## Settings Files\n- **Filename**: `materials.xml`\n- **Location**: `hsbCAD\\Company` or `hsbCAD\\General` folder.\n- **Purpose**: Defines the density (kg/m³) for different wood grades. The script calculates weight based on the material assigned to the beam/element volume.\n\n## Tips\n- **Zero Weight?:** If the script calculates `0 kg`, check if the material assigned to the element has a density defined in the `materials.xml`.\n- **Custom Labels:** You can customize the `sText` parameter to include element names, e.g., `Wall @(ElementName): @(Weight) kg`.\n- **Visual Clarity:** In crowded shop drawings, enable `nTransparency` or change `nColor` to ensure the COG marker is visible but does not obscure critical joinery details.\n\n## FAQ\n- **Q: Can I use this script to calculate the weight of an entire house assembly?**\n- **A:** This script is designed to calculate the COG of the specific element it is attached to (e.g., one wall panel). To calculate a full assembly, you would typically use a different aggregate tool or attach the script to a top-level assembly element.\n- **Q: Why does the marker appear in the wrong place in a Layout viewport?**\n- **A:** Ensure the viewport is active and the script is associated with the element visible in that view. The script attempts to transform coordinates automatically, but extreme rotations or non-standard UCS settings may require a manual Recalculate.\n- **Q: What is the difference between Circle and Rhombus markers?**\n- **A:** This is purely cosmetic. Use different markers to distinguish between different calculation methods or phases if required by your engineering standards."
+      },
+      "tokens_used": 4595,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,337 @@
+{
+  "filename": "hsbCLT-FastenerLine.mcr",
+  "status": "completed",
+  "total_tokens": 50230,
+  "processing_time": 542.4108293056488,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9060,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly passes _kModelSpace to Group().collectEntities() and tslDialog.dbCreate(). No usage of _Viewport, sd_ prefix, or #Type E with _Entity[] typically found in Paper Space scripts. Logic operates on 3D geometric entities (Sip/Panels, PLine, Vector3d, PlaneProfile)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sip"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model space with Structural Insulated Panels (Sip).",
+          "requiredSettings": [
+            "FastenerAssembly/FastenerManager.dll",
+            "Utilities/DialogService/TslUtilities.dll"
+          ]
+        }
+      },
+      "tokens_used": 7221,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9785,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the distribution and placement of fasteners (screws/nails) along panel edges or lines, supporting various spacing rules and hardware catalogs for CLT construction.",
+          "category": "Hardware",
+          "typicalUseCase": "Engineer or detailer defining screw patterns for floor-to-wall or wall-to-wall connections, ensuring correct edge distances and spacing according to engineering rules."
+        },
+        "parameters": [
+          {
+            "name": "mode",
+            "technicalDefault": "0 (Fixed)",
+            "businessMeaning": "Defines the algorithm for distributing fasteners: 'Fixed' uses a maximum spacing, 'Even' forces a specific quantity, and 'Fixed, last odd' ensures the final gap handles remainders.",
+            "validRange": "0 (Fixed), 1 (Even), 2 (Fixed, last odd)",
+            "unit": "Enum",
+            "affectsOutput": "Determines whether the spacing is a driver or a result, altering the X-coordinates of every fastener in the row."
+          },
+          {
+            "name": "interdistance",
+            "technicalDefault": "600",
+            "businessMeaning": "The maximum allowable center-to-center distance between consecutive fasteners.",
+            "validRange": "40mm to 2000mm (Typical: 100mm - 600mm)",
+            "unit": "mm",
+            "affectsOutput": "Directly controls the density of fasteners in 'Fixed' modes. Fewer fasteners if increased, more if decreased."
+          },
+          {
+            "name": "nQuantity",
+            "technicalDefault": "1",
+            "businessMeaning": "The exact number of fasteners to place in the row.",
+            "validRange": "1 to 100",
+            "unit": "Count",
+            "affectsOutput": "In 'Even' mode, this divides the length to determine spacing. Overrides interdistance logic."
+          },
+          {
+            "name": "dOffsetStart",
+            "technicalDefault": "50",
+            "businessMeaning": "The required clear distance from the start of the panel edge to the center of the first fastener (edge distance).",
+            "validRange": "10mm to 300mm",
+            "unit": "mm",
+            "affectsOutput": "Moves the start of the pattern inward from the corner or endpoint."
+          },
+          {
+            "name": "dOffsetEnd",
+            "technicalDefault": "50",
+            "businessMeaning": "The required clear distance from the end of the panel edge to the center of the last fastener (edge distance).",
+            "validRange": "10mm to 300mm",
+            "unit": "mm",
+            "affectsOutput": "Moves the end of the pattern inward from the corner or endpoint."
+          },
+          {
+            "name": "radius",
+            "technicalDefault": "50",
+            "businessMeaning": "Search radius used to detect intersecting or adjacent panels (T-connections or overlaps) relative to the current edge.",
+            "validRange": "1mm to 1000mm",
+            "unit": "mm",
+            "affectsOutput": "Determines which neighbor panels are detected for connection validity. If too small, connected panels might be ignored."
+          },
+          {
+            "name": "mapFasteners",
+            "technicalDefault": "Empty Map",
+            "businessMeaning": "The collection of hardware properties (Article Number, Dimensions, Material) selected from the Fastener Database.",
+            "validRange": "Valid Fastener Database Entries",
+            "unit": "Map",
+            "affectsOutput": "Defines the specific 3D representation and BOM data of the generated fasteners."
+          },
+          {
+            "name": "sPainters",
+            "technicalDefault": "\"Wall\", \"Floor\", or Custom",
+            "businessMeaning": "Filter criteria to identify which structural elements (e.g., vertical walls vs. horizontal floors) the rule applies to.",
+            "validRange": "Painter Definition Names",
+            "unit": "String",
+            "affectsOutput": "Restricts the script to only process panels matching the specific orientation or classification."
+          },
+          {
+            "name": "vecDirection",
+            "technicalDefault": "Calculated Normal",
+            "businessMeaning": "The vector direction in which the fastener is driven (insertion angle).",
+            "validRange": "Any 3D Vector",
+            "unit": "Vector3d",
+            "affectsOutput": "Sets the rotation and entry point of the fastener geometry."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "mode is set to 0 (Fixed)",
+            "effect": "'interdistance' becomes the primary driver; 'nQuantity' is ignored/calculated.",
+            "cascade": [
+              "interdistance",
+              "nQuantity"
+            ]
+          },
+          {
+            "trigger": "mode is set to 1 (Even)",
+            "effect": "'nQuantity' becomes the primary driver; 'interdistance' is calculated to fit the count.",
+            "cascade": [
+              "nQuantity",
+              "interdistance"
+            ]
+          },
+          {
+            "trigger": "Fastener Selection (FastenerManager)",
+            "effect": "Updates diameter and length properties in the 'mapFasteners' structure.",
+            "cascade": [
+              "mapFasteners"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Hardware (MetalPart)",
+            "description": "Screws, nails, or bolts placed at calculated intervals along the panel edge.",
+            "appliedTo": "Structural Insulated Panels (Sip) or CLT Panels."
+          }
+        ]
+      },
+      "tokens_used": 7758,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Launch Script: Initializes constants, color schemes, and checks for required DLLs (FastenerManager, TslUtilities).",
+          "2. Environment Scan: Collects Structural Insulated Panels (Sip) from ModelSpace.",
+          "3. Settings Persistence Check: Queries the database for an existing 'hsbCLT-FastenerLineSettings' entity.",
+          "4. [Conditional] Settings Load: If the settings entity exists, its 'Detail[]' map is loaded. If not, a new map structure is prepared.",
+          "5. Painter Management: Ensures default 'Floor' and 'Wall' painter definitions exist in the catalog, creating them if necessary.",
+          "6. UI Generation: Dynamically constructs the dialog properties based on the loaded 'Details' and 'Rules' maps.",
+          "7. User Interaction (Main Dialog): User selects a Detail (category), a Rule (logic), and edits geometric parameters (Spacing, Offsets).",
+          "8. [Conditional] User Action (Add Rule): User selects 'Add Rule' -> Sub-dialog opens -> User defines Selection Method, Distribution Mode, and Hardware -> Rule added to map.",
+          "9. [Conditional] User Action (Remove Rule): User selects 'Remove Rule' -> List displayed -> User selects Rule -> Rule removed from map.",
+          "10. [Conditional] User Action (Fastener Manager): User selects 'Show Fastener Manager' -> External DLL dialog opens -> Hardware properties saved to 'mapFasteners'.",
+          "11. [Conditional] Import/Export: User triggers Import/Export -> XML file is read/written to update the 'mapSetting'.",
+          "12. Commit Settings: On OK, the 'mapSetting' (containing all rules) is written to the 'hsbCLT-FastenerLineSettings' entity in the drawing database.",
+          "13. Recalculation Trigger: Script resets execution loops to apply new settings.",
+          "14. Iteration: Script iterates through every active Detail and Rule in the saved settings.",
+          "15. Target Filtering: For each rule, filters ModelSpace entities based on Painter (Wall/Floor) and Selection Method (Line, Coplanar, T-Connection).",
+          "16. Edge Calculation: Determines the specific panel edges or geometry segments to receive fasteners.",
+          "17. Position Algorithm: Calculates X-coordinates for fasteners based on the Mode (Fixed, Even, Fixed Last Odd), Offsets, and Edge length.",
+          "18. Hardware Generation: Creates HardWrComp entities at calculated coordinates using rotation vectors and properties from 'mapFasteners'.",
+          "19. Completion: Script finishes execution, displaying the generated fasteners in the 3D model."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Mode of Distribution (int 'mode')",
+            "path1": {
+              "name": "Mode 0 (Fixed)",
+              "steps": [
+                "Read 'interdistance' property.",
+                "Divide edge length by 'interdistance' to determine quantity.",
+                "Apply 'dOffsetStart' and 'dOffsetEnd'."
+              ]
+            },
+            "path2": {
+              "name": "Mode 1 (Even)",
+              "steps": [
+                "Read 'nQuantity' property.",
+                "Calculate spacing = (Length - Offsets) / (nQuantity - 1).",
+                "Distribute fasteners exactly at 'nQuantity' points."
+              ]
+            },
+            "path3": {
+              "name": "Mode 2 (Fixed, last odd)",
+              "steps": [
+                "Read 'interdistance'.",
+                "Place fasteners at 'interdistance' intervals.",
+                "Calculate remainder and adjust the final gap to handle odd measurements."
+              ]
+            }
+          },
+          {
+            "condition": "Connection/Selection Method",
+            "path1": {
+              "name": "byLine",
+              "steps": [
+                "Prompts user to select a PLine or uses a predefined vector.",
+                "Projects fasteners along this arbitrary line."
+              ]
+            },
+            "path2": {
+              "name": "Coplanar Connection",
+              "steps": [
+                "Detects panels coplanar to the target panel.",
+                "Calculates fastener line along the shared or adjacent edge."
+              ]
+            },
+            "path3": {
+              "name": "Wall T-Connection",
+              "steps": [
+                "Identifies perpendicular panels (T-junctions) within a specific 'radius'.",
+                "Filters for 'Wall' orientation panels.",
+                "Aligns fasteners to the intersecting edge."
+              ]
+            },
+            "path4": {
+              "name": "Wall-Floor Connection",
+              "steps": [
+                "Identifies connections between Wall and Floor panels.",
+                "Handles the specific geometry of floor-to-wall junctions."
+              ]
+            }
+          },
+          {
+            "condition": "Trigger Execution Key",
+            "path1": {
+              "name": "Add/Edit Rule",
+              "steps": [
+                "Map 'DialogMode' set to 1 or 2.",
+                "Run specific dialog logic for rule definition.",
+                "Update internal Map structures."
+              ]
+            },
+            "path2": {
+              "name": "Import Settings",
+              "steps": [
+                "Read XML file path.",
+                "Load XML into 'mapSetting'.",
+                "Update Entity."
+              ]
+            },
+            "path3": {
+              "name": "Export Settings",
+              "steps": [
+                "Prompt for overwrite confirmation.",
+                "Write 'mapSetting' to XML file."
+              ]
+            },
+            "path4": {
+              "name": "Standard Recalculation",
+              "steps": [
+                "Execute geometry generation logic.",
+                "Update Hardware positions."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Existence of FastenerManager DLL",
+            "errorMessage": "None explicitly shown, but 'bEnableFastenerManager' flag prevents 'Show Fastener Manager' trigger from being added if DLL is missing.",
+            "recovery": "Install or restore the 'FastenerAssembly\\FastenerManager.dll' in the hsbCAD install path."
+          },
+          {
+            "check": "Painter Validity",
+            "errorMessage": "None explicit, but script attempts to create 'Wall' and 'Floor' painters if they are missing during initialization.",
+            "recovery": "Ensure valid Panel entities exist in the model to successfully auto-create these painters."
+          },
+          {
+            "check": "Export Overwrite",
+            "errorMessage": "Prompt: 'Are you sure to overwrite existing settings?'",
+            "recovery": "User must input 'Y' or 'Yes' to proceed with overwriting the XML file."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Fastener Pattern",
+            "how": "Properties Palette (OPM) or Double-Click",
+            "effect": "Re-opens the main dialog, allowing changes to spacing, offsets, distribution mode, or hardware. Updates the 3D fasteners immediately upon OK."
+          },
+          {
+            "action": "Add New Connection Rule",
+            "how": "Right-click Context Menu -> 'Add Rule'",
+            "effect": "Launches the rule creation wizard to add a new logic pattern (e.g., different spacing or hardware) to the current configuration."
+          },
+          {
+            "action": "Remove Connection Rule",
+            "how": "Right-click Context Menu -> 'Remove Rule'",
+            "effect": "Displays a list of active rules; removing one deletes it from the configuration and removes associated fasteners."
+          },
+          {
+            "action": "Manage Hardware Catalog",
+            "how": "Right-click Context Menu -> 'Show Fastener Manager'",
+            "effect": "Opens the external FastenerManager dialog to modify the hardware database mappings used by the script."
+          },
+          {
+            "action": "Save/Load Configuration",
+            "how": "Right-click Context Menu -> 'Export/Import Settings'",
+            "effect": "Serializes the current setup (rules, hardware, offsets) to an XML file for backup or sharing between projects."
+          }
+        ]
+      },
+      "tokens_used": 9795,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-FastenerLine.mcr\n\n## Overview\nAutomates the distribution and placement of fasteners (screws, nails, or bolts) along panel edges for CLT construction. It allows users to define complex engineering rules for spacing, edge distances, and hardware selection based on panel types (e.g., Walls or Floors).\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for detecting Structural Insulated Panels (Sip) and generating hardware. |\n| Paper Space | No | Not supported. |\n| Shop Drawing | No | Not supported. |\n\n## Prerequisites\n- **Required Entities**: Structural Insulated Panels (Sip) or CLT Panels must exist in the model.\n- **Minimum Beams**: None.\n- **Required Settings**: \n  - `FastenerAssembly/FastenerManager.dll` (for hardware catalog).\n  - `Utilities/DialogService/TslUtilities.dll` (for UI dialogs).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbCLT-FastenerLine.mcr`\n\n### Step 2: Initial Configuration\n```\nDialog: Fastener Line Configuration\nAction: The script scans the model for existing settings. If this is the first run, it initializes default \"Wall\" and \"Floor\" painter definitions.\n```\n\n### Step 3: Define or Select a Rule\n```\nDialog: Main Configuration Window\nAction: \n1. Select a \"Detail\" (Category) or create a new one.\n2. Select a \"Rule\" (Connection Logic) such as \"Wall T-Connection\" or \"Wall-Floor Connection\".\n3. Adjust geometric parameters:\n   - Set 'Mode' to Fixed (max spacing) or Even (specific quantity).\n   - Enter 'Interdistance' (spacing between fasteners).\n   - Enter 'Offset Start' and 'Offset End' (edge distances).\n```\n\n### Step 4: Select Hardware\n```\nDialog: Fastener Selection\nAction: Select the specific screw or nail from the catalog. If the desired hardware is missing, click the \"Fastener Manager\" button to browse or import new parts.\n```\n\n### Step 5: Apply and Generate\n```\nDialog: Main Configuration Window\nAction: Click OK. The script saves these rules to the drawing database and automatically generates the fasteners on all panels matching your criteria.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Mode | Enum | Fixed | Method of distribution: **Fixed** (max spacing), **Even** (specific count), or **Fixed, last odd** (handle remainders). |\n| Interdistance | Number | 600 mm | Center-to-center distance between fasteners (used in Fixed modes). |\n| Quantity | Number | 1 | Exact number of fasteners to place (used in Even mode). |\n| Offset Start | Number | 50 mm | Distance from the start of the edge to the first fastener center. |\n| Offset End | Number | 50 mm | Distance from the end of the edge to the last fastener center. |\n| Radius | Number | 50 mm | Search distance to detect intersecting or adjacent panels (e.g., for T-connections). |\n| Painter | String | Wall/Floor | Filter that determines which panel type (orientation) the rule applies to. |\n| Vector Direction | Vector | Calculated | The direction in which the fastener is driven/inserted. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Add Rule | Opens a sub-dialog to create a new connection rule (e.g., a different spacing for floor panels) and add it to the configuration. |\n| Remove Rule | Displays a list of active rules. Selecting one removes it from the configuration and deletes associated fasteners. |\n| Show Fastener Manager | Opens the external Fastener Manager dialog to manage hardware mappings, dimensions, and material properties. |\n| Import Settings | Loads a previously saved configuration from an XML file. Useful for applying standard office settings to a new project. |\n| Export Settings | Saves the current configuration (all rules and hardware settings) to an XML file for backup or sharing. |\n\n## Settings Files\n- **Filename**: `UserDefined.xml` (or custom filename chosen by user)\n- **Location**: Project folder or Company Standards path\n- **Purpose**: Stores the complete configuration of fastener rules (spacings, offsets, hardware assignments) allowing for consistent application across different projects.\n\n## Tips\n- **Mode Selection**: Use **Fixed** mode when engineering specifications require a maximum spacing (e.g., \"screws max 600mm o.c.\"). Use **Even** mode when architectural constraints dictate a specific look or count.\n- **Troubleshooting Detections**: If fasteners are not appearing on a T-connection, increase the **Radius** parameter in the rule properties. The search radius might be too small to detect the intersecting panel.\n- **Painter Management**: Ensure your panels are correctly classified as \"Wall\" or \"Floor\" in the model properties, as the script uses these filters to apply the correct rules automatically.\n\n## FAQ\n- **Q: Why are no fasteners generating?**\n  A: Check if the \"Painter\" filter in your rule matches the actual classification of your panels in the model. Also, verify that the \"Radius\" is large enough to detect adjacent panels if using connection-based rules.\n- **Q: How do I switch between screws and nails?**\n  A: Right-click the script instance and select \"Show Fastener Manager\". Update the hardware mapping in the catalog, then return to the script properties to re-select the updated hardware.\n- **Q: Can I use this for lines instead of panels?**\n  A: Yes, provided the \"Selection Method\" in the rule configuration is set to \"byLine\". This allows placing fasteners along arbitrary Polylines or vector paths."
+      },
+      "tokens_used": 6611,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,198 @@
+{
+  "filename": "hsb_NotchStuds.mcr",
+  "status": "completed",
+  "total_tokens": 39464,
+  "processing_time": 288.99854922294617,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 6663,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select Element() objects. It manipulates 3D geometry using BeamCut, Body operations, and CoordSys. No ShopDrawing (#Type E), Viewport, or SD-specific classes are used."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space containing Elements with Beams",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4120,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "showDialogOnce",
+              "promptOriginal": null,
+              "condition": "_bOnInsert && _kExecuteKey==\"\"",
+              "required": false
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "Select a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dOffset",
+            "type": "PropDouble",
+            "displayName": "Tolerance",
+            "defaultValue": 1,
+            "inputType": "number",
+            "options": null,
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "sCode",
+            "type": "PropString",
+            "displayName": "Beam Code",
+            "defaultValue": "H",
+            "inputType": "text",
+            "options": null,
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "sFilterBeams",
+            "type": "PropString",
+            "displayName": "Exclude studs with beam code",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": null,
+            "category": null,
+            "description": "Separate multiple entries by ;"
+          },
+          {
+            "index": 2,
+            "variable": "sModules",
+            "type": "PropString",
+            "displayName": "Set notch beams as modules",
+            "defaultValue": "No",
+            "inputType": "dropdown",
+            "options": [
+              "No",
+              "Yes"
+            ],
+            "category": null,
+            "description": "This will set all the beams that are notch as a module and will add the Label 'N' to them."
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6324,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically notches wall studs around header beams (identified by code) to allow for flush intersections or openings in timber frame panels.",
+          "category": "Framing",
+          "typicalUseCase": "Used during wall panel detailing to cut out sections of studs where window or door headers intersect them, ensuring structural clearance."
+        },
+        "parameters": [
+          {
+            "name": "sCode",
+            "technicalDefault": "H",
+            "businessMeaning": "The identifier (Beam Code) used to detect Header beams. The script treats any beam with this code as the 'obstacle' that other studs must be notched around.",
+            "validRange": "Any valid Beam Code string present in the project (e.g., 'HDR', 'HEAD', 'H').",
+            "unit": "String",
+            "affectsOutput": "Defines which beams act as the cutting tools. Only beams matching this code will trigger notches on intersecting perpendicular beams."
+          },
+          {
+            "name": "dOffset",
+            "technicalDefault": "1",
+            "businessMeaning": "Construction tolerance added to the cut dimensions. This ensures the notch is slightly larger than the header to account for material tolerances, swelling, or fitment issues.",
+            "validRange": "0 mm to 10 mm",
+            "unit": "mm",
+            "affectsOutput": "Increases the width and height of the notch cut into the stud. The value is automatically doubled if stacked headers are detected."
+          },
+          {
+            "name": "sFilterBeams",
+            "technicalDefault": "",
+            "businessMeaning": "An exclusion list of Beam Codes. Beams with these codes will be ignored by the script and will NOT be notched, even if they intersect a header.",
+            "validRange": "Semicolon-separated list of Beam Codes (e.g., 'BLOCK;POST;CRIPPLE').",
+            "unit": "String (List)",
+            "affectsOutput": "Prevents the application of BeamCut tools to specific beams defined in the list."
+          },
+          {
+            "name": "sModules",
+            "technicalDefault": "No",
+            "businessMeaning": "Determines whether the notched studs should be grouped into a specific production module and tagged for shop drawings.",
+            "validRange": "No, Yes",
+            "unit": "Option",
+            "affectsOutput": "If 'Yes', assigns a unique Module name to the notched stud, adds an 'N' label, and sets the display color to Magenta (6). Does not affect geometry."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Multiple header beams are detected stacked on top of each other (based on sCode)",
+            "effect": "The effective tolerance of dOffset is doubled to account for the cumulative alignment tolerance of multiple beams.",
+            "cascade": [
+              "dOffset"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Notch / BeamCut",
+            "description": "A rectangular volumetric cut removed from the stud to clear the header beam, including the specified tolerance.",
+            "appliedTo": "Vertical or perpendicular beams (studs) that intersect with beams identified by 'sCode' and are not in the 'sFilterBeams' list."
+          },
+          {
+            "type": "Beam Properties",
+            "description": "Modifications to metadata for production tracking. Flat studs (height < width) have their code prefixed with 'X' and set to Red (1). Notched studs (if sModules=Yes) are set to Magenta (6), Label 'N', and assigned a Module.",
+            "appliedTo": "The specific studs that receive a cut."
+          }
+        ]
+      },
+      "tokens_used": 7252,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"Launch Script: User executes hsb_NotchStuds.mcr\",\n    \"Initialization: Set sequence number, define units (mm), and initialize Properties (sCode, dOffset, sFilterBeams, sModules)\",\n    \"Property Initialization: Load properties from catalog if '_bOnDbCreated' is true\",\n    \"Insertion Check: If '_bOnInsert' is false, skip to Validation step\",\n    \"Insertion Cycle Handling: Check 'insertCycleCount()'. If greater than 1, erase instance and exit to prevent re-running on updates\",\n    \"Execution Key Check: If '_kExecuteKey' is empty, call 'showDialogOnce()' to display configuration dialog to user\",\n    \"Entity Selection: Prompt user 'Select a set of elements' using 'PrEntity'\",\n    \"Selection Confirmation: If user cancels or provides empty selection, script ends\",\n    \"Storage: Append selected Elements to '_Element' array and Exit insertion routine\",\n    \"Validation: Check if '_Element.length()' is 0. If so, erase instance and exit\",\n    \"Filter Parsing: Parse 'sFilterBeams' string into a string array ('sBeamFilter') using semicolon delimiters\",\n    \"Loop through Elements: Iterate through each Element in '_Element'\",\n    \"Coordinate System: Extract Element coordinate system (Origin, X, Y, Z vectors)\",\n    \"Beam Collection: Retrieve all Beams ('bmAll') within the current Element\",\n    \"Categorization: Split Beams into 'bmWithTool' (matching 'sCode') and 'bmNoBlocking' (others not in 'sFilterBeams')\",\n    \"Orientation Filter: Filter 'bmNoBlocking' into 'bmVer' (perpendicular to Element X) and 'bmHor' (perpendicular to Element Y)\",\n    \"Vertical Beam Check: If 'bmVer.length() < 1', skip to next Element. Set 'nErase' flag to true if studs exist\",\n    \"Header Analysis: Collect centers of 'bmWithTool' headers. Calculate 'dExtraOffset' based on header count (dOffset for single, dOffset*2 for multiple stacked headers)\",\n    \"Notching Loop: Iterate through each Header beam in 'bmWithTool'\",\n    \"Tool Creation: Create a 'BeamCut' tool using header dimensions and calculated offset (dExtraOffset)\",\n    \"Intersection: Find beams in 'bmVer' that intersect the tool ('bdCut.filterGenBeamsIntersect')\",\n    \"Apply Cut: Apply 'bmCut' to intersecting beams via 'addToolStatic'\",\n    \"Flat Stud Check: For each cut beam, check if height (dD vz) < width (dD vx). If true, prefix Beam Code with 'X' and set Color to Red (1)\",\n    \"Notch Collection: Add successfully cut beams to 'bmNotch' array\",\n    \"Module/Label Processing: If 'bModule' (sModules) is Yes, analyze tools on 'bmNotch' beams\",\n    \"Label Assignment: If an 'AnalysedBeamCut' exists, set Label to 'N'\",\n    \"Module Assignment: If beam has no Module, generate unique name from Instance Handle + Index, set Module, and set Color to Magenta (6)\",\n    \"Next Element: Continue to next Element in the loop\",\n    \"Cleanup: If '_bOnElementConstructed' is true or 'nErase' flag is true, erase the script instance from the model\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Insertion Cycle Check\",\n      \"path1\": {\n        \"name\": \"Cycle > 1 (Update/Recalc)\",\n        \"steps\": [\n          \"Erase Instance\",\n          \"Return (Exit)\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Cycle = 1 (New Insert)\",\n        \"steps\": [\n          \"Continue to Execution Key Check\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Execution Key ('_kExecuteKey')\",\n      \"path1\": {\n        \"name\": \"Key is Empty (Manual Insert)\",\n        \"steps\": [\n          \"Call showDialogOnce()\",\n          \"Show Property Dialog\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Key is Present (Scripted/Direct Call)\",\n        \"steps\": [\n          \"Skip Dialog\",\n          \"Proceed to Selection\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"User Selection ('PrEntity.go()')\",\n      \"path1\": {\n        \"name\": \"Valid Selection\",\n        \"steps\": [\n          \"Append Elements to '_Element'\",\n          \"Proceed to Main Logic\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Cancelled/Empty\",\n        \"steps\": [\n          \"Return (Exit without action)\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Element Content Validation ('_Element.length()')\",\n      \"path1\": {\n        \"name\": \"Elements Present\",\n        \"steps\": [\n          \"Proceed to Beam Processing\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"No Elements\",\n        \"steps\": [\n          \"Erase Instance\",\n          \"Exit\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Beam Code Filtering\",\n      \"path1\": {\n        \"name\": \"Matches sCode (Header)\",\n        \"steps\": [\n          \"Add to bmWithTool (Cutters)\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Matches sFilterBeams (Excluded)\",\n        \"steps\": [\n          \"Ignore completely\"\n        ]\n      },\n      \"path3\": {\n        \"name\": \"Other (Studs)\",\n        \"steps\": [\n          \"Add to bmNoBlocking (To be cut)\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Vertical Beams Exist ('bmVer.length()')\",\n      \"path1\": {\n        \"name\": \"Vertical Beams Found\",\n        \"steps\": [\n          \"Set nErase = TRUE\",\n          \"Process Notching\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"No Vertical Beams\",\n        \"steps\": [\n          \"Continue to Next Element\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Header Count / Stacking\",\n      \"path1\": {\n        \"name\": \"Single Header\",\n        \"steps\": [\n          \"Set dExtraOffset = dOffset\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Multiple Headers (Stacked)\",\n        \"steps\": [\n          \"Set dExtraOffset = dOffset * 2\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Stud Geometry (Flat vs Square)\",\n      \"path1\": {\n        \"name\": \"Height < Width (Flat)\",\n        \"steps\": [\n          \"Prefix BeamCode with 'X'\",\n          \"Set Color to Red (1)\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"Height >= Width (Square/Deep)\",\n        \"steps\": [\n          \"No geometry code change\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Module Settings ('sModules')\",\n      \"path1\": {\n        \"name\": \"Yes (Grouping)\",\n        \"steps\": [\n          \"Analyze tools for 'AnalysedBeamCut'\",\n          \"If cut found: Set Label 'N'\",\n          \"If Module empty: Set unique Module name\",\n          \"Set Color to Magenta (6)\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"No\",\n        \"steps\": [\n          \"Skip Module/Label logic\"\n        ]\n      }\n    }\n  ],\n  \"validationRules\": [\n    {\n      \"check\": \"Insert Cycle Count\",\n      \"errorMessage\": null,\n      \"recovery\": \"Automatic. Script erases itself silently to prevent duplicate runs on updates.\"\n    },\n    {\n      \"check\": \"Element Selection\",\n      \"errorMessage\": null,\n      \"recovery\": \"User must retry script insertion and select at least one Element.\"\n    },\n    {\n      \"check\": \"Presence of Beams matching 'sCode' (Headers)\",\n      \"errorMessage\": null,\n      \"recovery\": \"If no headers found, 'bmWithTool' is empty, loop finishes without action, script erases itself.\"\n    },\n    {\n      \"check\": \"Presence of Vertical Beams ('bmVer')\",\n      \"errorMessage\": null,\n      \"recovery\": \"If no vertical beams found, script continues to next element or exits. No error message shown.\"\n    }\n  ],\n  \"postInsertionActions\": [\n    {\n      \"action\": \"Change Beam Codes\",\n      \"how\": \"OPM (Object Properties Palette)\",\n      \"effect\": \"Changing 'sCode' changes which beams are treated as headers. Changing 'sFilterBeams' changes which studs are excluded.\"\n    },\n    {\n      \"action\": \"Adjust Tolerance\",\n      \"how\": \"OPM - 'Tolerance' property\",\n      \"effect\": \"Updates 'dOffset'. Recalculation updates the size of the notch gaps immediately.\"\n    },\n    {\n      \"action\": \"Toggle Modules\",\n      \"how\": \"OPM - 'Set notch beams as modules' dropdown\",\n      \"effect\": \"Switching to 'Yes' will retroactively assign Modules, Label 'N', and Color 6 to notched beams. Switching to 'No' does not remove these attributes (logic"
+      },
+      "tokens_used": 8154,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_NotchStuds.mcr\n\n## Overview\nAutomatically detects header beams within selected wall elements and notches intersecting studs to provide clearance. This tool is essential for detailing wall panels with window or door openings, ensuring proper fitment with optional construction tolerances.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in the 3D model environment. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | Not applicable for shop drawing generation. |\n\n## Prerequisites\n- **Required Entities**: Elements containing Beams (e.g., wall panels with both studs and headers).\n- **Minimum Beam Count**: Elements must contain at least one beam designated as a Header and one perpendicular stud.\n- **Required Settings**: None required externally; all settings are handled via Properties.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_NotchStuds.mcr` from the file dialog.\n\n### Step 2: Configure Settings (Optional)\n```\nDialog: Show Dynamic Dialog\nAction: Adjust parameters such as Header Code and Tolerance if needed, then click OK.\nNote: This dialog may only appear during the initial insertion or specific execution modes.\n```\n\n### Step 3: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the wall elements (panels) in the model that contain the headers and studs you wish to process. Press Enter to confirm selection.\n```\n\n### Step 4: Processing\nThe script will automatically identify headers, cut the studs, and then erase itself from the model.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Tolerance | Number | 1 mm | The additional gap added to the notch dimensions. If multiple headers are stacked, this value is doubled. |\n| Beam Code | Text | H | The code used to identify Header beams. Only beams with this code will act as cutting tools. |\n| Exclude studs with beam code | Text | (Empty) | A list of beam codes to ignore. Separate multiple codes with a semicolon (e.g., `BLOCK;POST`). Beams with these codes will not be cut. |\n| Set notch beams as modules | Dropdown | No | If set to \"Yes\", notched beams are assigned a unique Module name, labeled \"N\", and colored Magenta for production tracking. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script instance erases itself immediately after execution, leaving no active right-click menu options. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Script Self-Deletion**: The script automatically erases itself from the model after running. This is normal behavior to prevent duplicate processing.\n- **Visual Feedback**:\n  - **Flat Studs**: If a stud is flat (height < width), it is colored **Red** and its code is prefixed with 'X'.\n  - **Notched Modules**: If \"Set notch beams as modules\" is \"Yes\", processed studs turn **Magenta** and receive Label 'N'.\n- **Stacked Headers**: The script automatically detects if multiple headers are stacked on top of each other and doubles the tolerance to ensure a clean fit.\n\n## FAQ\n- **Q: Why can't I find the script in my model after running it?**\n- **A:** The script is designed to run once and then delete itself. The modifications (notches and color changes) remain on the beams, but the script instance is removed.\n  \n- **Q: How do I undo the changes?**\n- **A:** Use the standard AutoCAD `UNDO` command immediately after running the script if the results are not as expected.\n\n- **Q: My studs aren't being cut.**\n- **A:** Check your \"Beam Code\" property. The beams you want to cut *with* (headers) must match this code exactly. Also, ensure the studs you want to cut are not listed in the \"Exclude studs with beam code\" property."
+      },
+      "tokens_used": 6951,
+      "error": null
+    }
+  }
+}

@@ -1,134 +1,82 @@
-# hsbMetalPlate
+# hsbMetalPlate.mcr
 
 ## Overview
+This script creates and inserts standardized metal connection plates (splines) at the intersections of 2 or 3 timber beams. It automatically generates the 3D geometry of the plate and adds the hardware data to the Bill of Materials (BOM).
 
-**hsbMetalPlate** is a TSL script that creates metal connector plates to join 2 or 3 timber beams (GenBeams) at their common faces. The plates are placed at the intersection of coplanar beam faces and can be configured with various manufacturer products from an XML catalog.
+## Usage Environment
+| Space | Supported | Notes |
+|-------|-----------|-------|
+| Model Space | Yes | This script operates in the 3D model to create physical connections. |
+| Paper Space | No | Not applicable for layout views. |
+| Shop Drawing | No | The geometry is created in the model, not directly on drawings. |
 
-| Property | Value |
-|----------|-------|
-| Script Type | O (Object) |
-| Beams Required | 0 (at insertion), 2-3 (for operation) |
-| Version | 1.0 |
-| Author | Marsel Nakuci |
-| Date | 12.05.2021 |
+## Prerequisites
+- **Required Entities**: GenBeams (Timber beams).
+- **Minimum Beam Count**: 2 (or 3, depending on the Type setting).
+- **Required Settings**: `MetalPlateCatalog.xml` must exist in the company or install settings folder.
 
-## Description
+## Usage Steps
 
-This tool automatically detects where selected beams share a common plane and places a metal connector plate at that location. It supports:
-
-- **2-beam connections**: Standard plate connection between two intersecting or adjacent beams
-- **3-beam connections**: Corner or junction connections where three beams meet at a common plane
-
-The script reads product specifications (length, width, material) from an external XML catalog file (`MetalPlateCatalog.xml`) and automatically registers the placed plate as a hardware component in the model.
-
-## Properties
-
-### Component Selection
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Manufacturer | String (dropdown) | --- | Select the plate manufacturer from available options in the catalog |
-| Family | String (dropdown) | --- | Select the product family within the chosen manufacturer |
-| Product | String (dropdown) | --- | Select the specific product/model to use |
-
-### Insertion Mode
-
-| Property | Type | Options | Description |
-|----------|------|---------|-------------|
-| Mode | String (dropdown) | Single, Multiple | **Single**: Click to place plates one at a time with visual preview. **Multiple**: Automatically distribute plates to all valid connection points facing the view direction |
-
-### Alignment
-
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| Face | String (dropdown) | View Direction | Controls which beam faces receive plates: **View Direction** (faces toward camera), **Normal to View Direction**, or **All** |
-| Side | String (dropdown) | One | Place plate on **One** side or **Both** sides of the connection |
-| Offset Length | Double | 0 mm | Offset distance along the plate length direction |
-| Offset Width | Double | 0 mm | Offset distance along the plate width direction |
-| Rotate | Double | 0 | Rotation angle for the plate orientation |
-
-### Connection Type
-
-| Property | Type | Options | Description |
-|----------|------|---------|-------------|
-| Type | String (dropdown) | 2 Genbeams, 3 Genbeams | Choose whether to create connections for 2-beam or 3-beam joints |
-
-## Usage Workflow
-
-### Step 1: Launch the Script
-Run the script using the command:
-```
-(hsb_ScriptInsert "hsbMetalPlate")
-```
+### Step 1: Launch Script
+Command: `TSLINSERT` → Select `hsbMetalPlate.mcr`
 
 ### Step 2: Select Beams
-When prompted with "Select Genbeams", select two or more timber beams that share a common planar face where you want to place connector plates.
+```
+Command Line: Select Genbeams
+Action: Select the timber beams you wish to connect (e.g., select 2 beams for a corner joint or 3 for a T-junction). Press Enter to confirm selection.
+```
 
-### Step 3: Configure the Plate
-A dialog appears for product selection:
-1. **Choose Manufacturer** - Select from available manufacturers in the catalog
-2. **Choose Family** - Select the product family
-3. **Choose Product** - Select the specific plate model
+### Step 3: Place Plate
+```
+Action: Move your cursor over the intersection of the selected beams.
+- The script will highlight valid intersection points dynamically.
+- Click once to select the specific intersection point where you want the plate placed.
+```
 
-### Step 4: Place the Plate
+### Step 4: Adjust Properties
+```
+Action: With the plate selected, open the Properties Palette (Ctrl+1).
+- Select the **Manufacturer** (e.g., Simpson, Meko).
+- Select the **Family** and **Product** (this sets the physical size of the plate).
+- Adjust alignment (Face, Side) or offsets if needed.
+```
 
-**Single Mode:**
-- A visual preview shows potential connection locations
-- Click on a highlighted area to place a plate at that location
-- Use the command line keyword option to toggle between 2-beam and 3-beam connection types
-- Press ESC to finish placement
+## Properties Panel Parameters
 
-**Multiple Mode:**
-- Plates are automatically placed at all valid connection points
-- Only faces aligned with your current view direction receive plates
-- Useful for batch placement across many connections
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Manufacturer | dropdown | --- | Selects the plate manufacturer. Updates the available families. |
+| Family | dropdown/text | | Selects the product series (updates available products). |
+| Product | dropdown/text | | Selects the specific plate model. Determines geometry size and thickness. |
+| Mode | dropdown | Single | Choose between inserting at one intersection (`Single`) or all found valid intersections (`Multiple`). |
+| Face | dropdown | View Direction | Sets the orientation relative to your current view (View Direction, Normal to View, All). |
+| Side | dropdown | One | Sets whether to insert one plate (`One`) or two plates sandwiching the joint (`Both`). |
+| Type | dropdown | 2 Genbeams | Defines the joint topology: connection of 2 beams or 3 beams. |
+| Offset Length | number | 0 | Shifts the plate along its length axis relative to the joint center. |
+| Offset Width | number | 0 | Shifts the plate along its width axis relative to the joint center. |
+| Rotate | number | 0 | Rotates the plate on the plane (degrees). |
 
-### Step 5: Adjust Properties (Optional)
-After placement, select the plate and modify properties in the Properties Palette:
-- Adjust offsets to fine-tune position
-- Change the side setting to add plates on both faces
-- Rotate the plate if needed
+## Right-Click Menu Options
 
-## Context Menu Commands
+| Menu Item | Description |
+|-----------|-------------|
+| Swap Side | Flips the metal plate to the opposite side of the joint. |
 
-| Command | Description |
-|---------|-------------|
-| **Swap Side** | Flips the plate to the opposite side of the connection. Only available when "Side" is set to "One" |
+## Settings Files
+- **Filename**: `MetalPlateCatalog.xml`
+- **Location**: `_kPathHsbCompany\TSL\Settings` or `_kPathHsbInstall\Content\General\TSL\Settings`
+- **Purpose**: Defines the library of available metal plates, including dimensions, thicknesses, and manufacturer details.
 
-## Settings File
+## Tips
+- **Dynamic Updates**: After insertion, you can change the Product in the properties palette to resize the plate without deleting and re-running the script.
+- **Fine-tuning**: Use the Offset Length and Offset Width properties to slide the plate into the exact position without moving the script itself.
+- **Visual Confirmation**: If the plate appears on the "back" side of the beam, use the **Swap Side** right-click option to flip it to the front.
+- **Catalog Management**: If the Manufacturer dropdown is empty, check your `MetalPlateCatalog.xml` file location.
 
-The script reads product data from an XML catalog file:
-- **Company location**: `[Company Path]\TSL\Settings\MetalPlateCatalog.xml`
-- **Default location**: `[Install Path]\Content\General\TSL\Settings\MetalPlateCatalog.xml`
-
-The catalog structure supports multiple manufacturers, each with multiple product families, each containing multiple products with their dimensions.
-
-## Hardware Registration
-
-Each placed plate is automatically registered as a hardware component with:
-- Manufacturer name
-- Family (used as article number)
-- Product model name
-- Material specification
-- Dimensions (length, width, thickness)
-- Link to the associated beam group
-- Category: "Connector"
-- Quantity based on Side setting (1 or 2)
-
-## Technical Notes
-
-- The script uses `envelopeBody()` for performance when analyzing beam geometry
-- Plate placement requires beams to have coplanar faces within tolerance
-- The visual preview (jig) shows potential plate locations in green, with hover highlighting in yellow
-- When using Multiple mode, only connections facing the current view direction are processed
-- A hyperlink to manufacturer documentation is automatically attached if specified in the catalog
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| "Could not find manufacturer data" | Verify the MetalPlateCatalog.xml file exists in the Settings folder |
-| "2 GenBeams needed" | Ensure at least 2 beams are associated with the script instance |
-| "Plane vector not defined" | This indicates an internal state error; try reinserting the script |
-| No valid connection points shown | Beams may not have coplanar faces; check beam geometry alignment |
-| Version mismatch warning | The catalog file version differs from the drawing; consider updating |
+## FAQ
+- **Q: Why did the script delete itself immediately after I selected the beams?**
+  A: This usually happens if the `MetalPlateCatalog.xml` file is missing or cannot be found. Ensure the settings file is in the correct directory.
+- **Q: Can I use this for non-standard intersection angles?**
+  A: Yes, the script calculates the intersection plane based on the actual geometry of the selected beams, but you may need to use the Rotate property to align specific plate shapes.
+- **Q: How do I insert a plate on both sides of the beams automatically?**
+  A: Set the **Side** property to `Both` in the Properties Palette before or after insertion.

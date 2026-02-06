@@ -1,0 +1,293 @@
+{
+  "filename": "hsbCLT-CreateStockPanels.mcr",
+  "status": "completed",
+  "total_tokens": 47999,
+  "processing_time": 389.2424907684326,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9309,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly collects entities using '_kModelSpace' in filterTslsByName. No usage of _Viewport, _kPaperSpace, or sd_ prefixes. It processes GenBeam/Sip geometry and draws visuals using a local origin (vecLoc), consistent with ModelSpace TSL behavior."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam (Masterpanels)",
+            "Sip (Stock panels to be generated)"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "hsbCLT-CreateStockPanels.xml (Configuration)",
+            "Stock Definition Table (Excel via hsbExcelToMap)"
+          ]
+        }
+      },
+      "tokens_used": 5748,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getGenBeam (Implicit)",
+              "promptOriginal": "Select masterpanels",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "External Utility (hsbExcelToMap)",
+            "trigger": "Execution of function importSizeGrid (Command: |Import Stock Sizes|)",
+            "title": "hsbExcelToMap",
+            "dataSource": "Excel File selected via external utility",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "|Import Stock Sizes|",
+            "handler": "|Import Stock Sizes|",
+            "action": "Triggers importSizeGrid to load stock definitions via hsbExcelToMap",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Import Settings|",
+            "handler": "|Import Settings|",
+            "action": "Imports tool configuration settings",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Export Settings|",
+            "handler": "|Export Settings|",
+            "action": "Exports tool configuration settings",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "hsbCLT-CreateStockPanels.xml",
+            "searchPaths": [
+              "_kPathHsbCompany\\TSL\\Settings",
+              "_kPathHsbInstall\\Content\\General\\TSL\\Settings"
+            ],
+            "purpose": "Stores tool configuration, tool data, and stock map definitions",
+            "required": false
+          }
+        ]
+      },
+      "tokens_used": 9825,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically generates production-ready stock panels (CLT plates) from architectural master panels by finding optimal cutting patterns based on a predefined stock size table.",
+          "category": "Manufacturing/Optimization",
+          "typicalUseCase": "Used in the planning phase to break down large architectural floor or wall panels into smaller, transportable, and manufacturable standard stock sizes, minimizing waste."
+        },
+        "parameters": [
+          {
+            "name": "dXOffsetLocation",
+            "technicalDefault": "U(20000)",
+            "businessMeaning": "The horizontal distance from the model origin where the graphical preview of the stock panels is drawn.",
+            "validRange": "10000 to 100000 (depending on project scale)",
+            "unit": "mm",
+            "affectsOutput": "Determines the screen location of the preview visualization. Does not affect physical geometry generation."
+          },
+          {
+            "name": "dToolDiams[] (via ToolData Map)",
+            "technicalDefault": "Imported from Settings",
+            "businessMeaning": "The diameter of the cutting saw blade or CNC tool used to cut the panels.",
+            "validRange": "6mm to 20mm (typical CNC saw sizes)",
+            "unit": "mm",
+            "affectsOutput": "Defines the kerf (width of material removed) between adjacent stock panels. Larger diameters increase the spacing between cut pieces."
+          },
+          {
+            "name": "dGaps[] (via ToolData Map)",
+            "technicalDefault": "Imported from Settings",
+            "businessMeaning": "The additional safety clearance or expansion gap required between cut panels.",
+            "validRange": "0mm to 10mm",
+            "unit": "mm",
+            "affectsOutput": "Adds extra spacing between panels beyond the tool diameter. Prevents binding during assembly or allows for dimensional tolerances."
+          },
+          {
+            "name": "Stock Map (dXSizes, dYSizes, dValues)",
+            "technicalDefault": "Imported via Excel/hsbExcelToMap",
+            "businessMeaning": "The lookup table defining available stock panel dimensions and their cost/usage priority.",
+            "validRange": "Defined by manufacturer/stock list (e.g., 2500x12500mm)",
+            "unit": "mm / Integer codes",
+            "affectsOutput": "Determines which standard sizes the script attempts to fit the master panel into. The 'Value' column controls preference (20-30: Standard Stock, >30: Splitting patterns)."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Import of Stock Sizes (Excel/hsbExcelToMap)",
+            "effect": "Populates the internal dXSizes, dYSizes, and dValues arrays which are strictly required for the geometric calculation of cuts.",
+            "cascade": [
+              "dXSizes",
+              "dYSizes",
+              "dValues"
+            ]
+          },
+          {
+            "trigger": "Import of Settings (XML)",
+            "effect": "Loads ToolData which provides the kerf (dToolDiams) and gap (dGaps) values.",
+            "cascade": [
+              "dToolDiams",
+              "dGaps"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Sip (Structural Insulated Panel / CLT Plate)",
+            "description": "Generated stock panels that fit within the boundaries of the selected Masterpanel, respecting tool diameters and gaps.",
+            "appliedTo": "Model Space (created at Masterpanel location or offset depending on logic)"
+          },
+          {
+            "type": "Opening",
+            "description": "If 'bAddOpeningToMaster' is true, the subtractions are added as openings to the original GenBeam/Masterpanel.",
+            "appliedTo": "Input GenBeam (Masterpanel)"
+          }
+        ]
+      },
+      "tokens_used": 7595,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User inserts script into Model Space",
+          "Script loads default configuration from hsbCLT-CreateStockPanels.xml",
+          "User selects a Masterpanel (GenBeam) to process",
+          "Script initializes stock data arrays (Sizes, Values, Tool Diameters) from Settings",
+          "Script analyzes Masterpanel geometry (including existing openings)",
+          "Script attempts to fit rectangles based on Stock Map definitions into the Masterpanel area",
+          "Script identifies valid 'Stock Panels' (Value 20-30) and 'Split Shapes' (Value 30-40)",
+          "Script generates Sip entities for the valid stock panel shapes",
+          "Script subtractions are either applied to Masterpanel (as openings) or displayed visually",
+          "Script finishes execution and visualizes the result"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Stock Map Data Availability",
+            "path1": {
+              "name": "Data Available",
+              "steps": [
+                "Script populates dXSizes, dYSizes, and dValues arrays",
+                "Nesting algorithm runs to find fitting panels",
+                "Production proceeds normally"
+              ]
+            },
+            "path2": {
+              "name": "Data Missing/Empty",
+              "steps": [
+                "Arrays remain empty",
+                "Calculation loop yields zero valid shapes",
+                "Script reports error 'No valid shapes detected'",
+                "Script erases itself unless in Debug mode"
+              ]
+            }
+          },
+          {
+            "condition": "Stock Pattern Value (from Excel/Settings)",
+            "path1": {
+              "name": "Standard Stock (Value 20-30)",
+              "steps": [
+                "Shape is added to ppShapes array",
+                "Used directly to create a final Sip entity"
+              ]
+            },
+            "path2": {
+              "name": "Split Pattern (Value 30-40)",
+              "steps": [
+                "Shape is added to ppSplitShapes array",
+                "Script attempts to further sub-divide this shape into standard stock sizes",
+                "If sub-division fails or no valid fit, shape might be discarded"
+              ]
+            }
+          },
+          {
+            "condition": "Masterpanel Opening Setting (bAddOpeningToMaster)",
+            "path1": {
+              "name": "True",
+              "steps": [
+                "Calculated subtractions are added as Openings to the source GenBeam",
+                "Masterpanel geometry updates to show cutouts"
+              ]
+            },
+            "path2": {
+              "name": "False",
+              "steps": [
+                "Subtractions are only visualized (drawn) or ignored",
+                "Source GenBeam geometry remains unchanged"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Presence of Stock Definitions",
+            "errorMessage": "No valid shapes detected for [Masterpanel Number]",
+            "recovery": "Right-click script instance -> Select 'Import Stock Sizes' -> Load valid Excel configuration file"
+          },
+          {
+            "check": "Masterpanel Geometry Validity",
+            "errorMessage": "Script erases or fails to generate",
+            "recovery": "Ensure selected GenBeam has a closed, non-zero area profile"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Update Stock Sizes",
+            "how": "Right-click Context Menu -> |Import Stock Sizes|",
+            "effect": "Opens hsbExcelToMap utility to load new dimensions/costs, triggers immediate recalculation of panels"
+          },
+          {
+            "action": "Update Tool Configuration",
+            "how": "Right-click Context Menu -> |Import Settings|",
+            "effect": "Reloads XML file containing saw diameters, gaps, and other processing parameters, triggers recalculation"
+          },
+          {
+            "action": "Export Configuration",
+            "how": "Right-click Context Menu -> |Export Settings|",
+            "effect": "Saves current parameters (Kerf, Gaps) to the XML file for future use or sharing"
+          }
+        ]
+      },
+      "tokens_used": 9750,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-CreateStockPanels.mcr\n\n## Overview\nThis script automates the generation of production-ready CLT stock panels from architectural master panels. It optimizes the cutting layout based on a predefined stock size table, minimizing material waste and ensuring panels fit within transportable and manufacturable dimensions.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be inserted into Model Space. |\n| Paper Space | No | Not supported for layout views. |\n| Shop Drawing | No | This is a pre-production/modeling tool, not a detailing script. |\n\n## Prerequisites\n- **Required Entities**: At least one GenBeam (Masterpanel) in the model.\n- **Minimum Beam Count**: 1 (You select the specific masterpanel upon insertion).\n- **Required Settings**:\n  - `hsbCLT-CreateStockPanels.xml`: Configuration file (usually found in `Company\\TSL\\Settings` or `Install\\Content\\General\\TSL\\Settings`).\n  - **Stock Definitions**: An Excel file containing available panel sizes and priorities, loaded via the right-click menu.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command**: `TSLINSERT`\n**Action**: Browse and select `hsbCLT-CreateStockPanels.mcr`.\n\n### Step 2: Select Masterpanel\n```\nCommand Line: Select masterpanels\nAction: Click on the GenBeam element (architectural masterpanel) you wish to sub-divide into stock panels.\n```\n*Note: Once selected, the script will attempt to calculate the stock panels immediately. If this is the first run or settings are missing, the script may display an error.*\n\n### Step 3: Import Stock Data (If needed)\nIf the script reports \"No valid shapes detected\" or fails to generate panels:\n1. Select the script instance in the drawing.\n2. Right-click and choose **|Import Stock Sizes|**.\n3. Select your predefined Excel file containing the stock dimensions.\n4. The script will recalculate automatically.\n\n### Step 4: Update Tool Settings (Optional)\nIf you need to adjust saw blade diameters (kerf) or gaps:\n1. Select the script instance.\n2. Right-click and choose **|Import Settings|** to load an XML configuration, or edit the `hsbCLT-CreateStockPanels.xml` file manually.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| *None* | *N/A* | *N/A* | This script does not expose user-editable parameters in the standard AutoCAD Properties Palette. Configuration is handled via Settings files and the Right-Click Context Menu. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| |Import Stock Sizes| | Opens the hsbExcelToMap utility to load stock dimensions, costs, and priorities from an Excel file. Required for the script to function. |\n| |Import Settings| | Loads tool configuration (saw diameters, gaps) and other parameters from the XML settings file. |\n| |Export Settings| | Saves the current tool configuration (saw diameters, gaps) to the XML settings file for backup or sharing. |\n\n## Settings Files\n- **Filename**: `hsbCLT-CreateStockPanels.xml`\n- **Location**: `_kPathHsbCompany\\TSL\\Settings` or `_kPathHsbInstall\\Content\\General\\TSL\\Settings`\n- **Purpose**: Stores tool data (saw blade diameters, clearance gaps) and general script behavior settings.\n\n- **Filename**: Excel File (User Defined)\n- **Location**: Selected by user via |Import Stock Sizes|\n- **Purpose**: Defines the \"Stock Map\" (dXSizes, dYSizes). Contains the dimensions of available raw panels and their priority values (20-30 for standard stock, 30-40 for splitting patterns).\n\n## Tips\n- **Stock Values**: In your Excel file, use values between 20-30 for standard stock sizes. Use values >30 if you want the script to treat those dimensions as \"split patterns\" to be further subdivided.\n- **Visualization**: The script generates the resulting stock panels as `Sip` entities. Ensure your layer filters are set to visualize these entities.\n- **First Run**: Always run **|Import Stock Sizes|** immediately after inserting the script if you have not done so previously in the project, otherwise the script will likely fail to find valid shapes.\n\n## FAQ\n- **Q: Why did the script erase itself immediately after insertion?**\n  A: This usually happens if no valid stock shapes are detected. Ensure you have imported the Stock Sizes via the right-click menu and that your selected Masterpanel is large enough to fit at least one stock size defined in your Excel file.\n\n- **Q: How do I change the gap size between cut panels?**\n  A: The gap size is defined in the `hsbCLT-CreateStockPanels.xml` file. You can edit this file directly and restart the script, or use **|Import Settings|** if you have a prepared XML file.\n\n- **Q: Does this script cut the original Masterpanel?**\n  A: The script generates new `Sip` entities representing the cuts. Depending on the internal setting `bAddOpeningToMaster`, it may also add openings to the source GenBeam, but the primary output is the new stock panels."
+      },
+      "tokens_used": 5772,
+      "error": null
+    }
+  }
+}

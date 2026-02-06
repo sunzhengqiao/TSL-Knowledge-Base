@@ -1,0 +1,332 @@
+{
+  "filename": "TirolerSchloss.mcr",
+  "status": "completed",
+  "total_tokens": 49238,
+  "processing_time": 642.8346116542816,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "07.06.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-17520 plan display unified, connection replacement supports detection of Klingschrot"
+          },
+          {
+            "version": "1.0",
+            "date": "25.05.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-17520 initial version of log connection of type TirolerSchloss"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7469,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script modifies 3D geometry using ElementLog and Beam entities. It uses b.addTool() to modify beam geometry (TirolerSchloss connection), calculates geometric intersections with PlaneProfile, and explicitly sets bForceModelSpace=true in the dbCreate call. No sd_ prefix, viewport handling, or export logic found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementLog"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7367,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10314,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the creation of a 'Tiroler Schloss' (specific log wall corner connection) between two intersecting log walls, applying a dovetail-style notch to individual logs.",
+          "category": "Joinery/LogConstruction",
+          "typicalUseCase": "Used when detailing the corners of a log house (ElementLog walls) to create a weather-tight, interlocking corner joint typical of traditional timber construction."
+        },
+        "parameters": [
+          {
+            "name": "dBaseHeight",
+            "technicalDefault": "0",
+            "businessMeaning": "Sets the vertical starting elevation (Z-level) for the corner connection along the wall.",
+            "validRange": "0 to Wall Height",
+            "unit": "mm",
+            "affectsOutput": "Determines the lowest log where the corner notch machining is applied."
+          },
+          {
+            "name": "dEndHeight",
+            "technicalDefault": "0",
+            "businessMeaning": "Sets the vertical ending elevation (Z-level) for the connection. A value of 0 implies the connection runs to the top of the intersecting walls automatically.",
+            "validRange": "0 (Auto) or positive millimeter value",
+            "unit": "mm",
+            "affectsOutput": "Defines the upper limit of the machining area; logs above this height remain uncut."
+          },
+          {
+            "name": "dVerticalOffset",
+            "technicalDefault": "0",
+            "businessMeaning": "Moves the entire connection geometry up or down vertically.",
+            "validRange": "-50mm to 50mm",
+            "unit": "mm",
+            "affectsOutput": "Shifts the notch position on the logs, useful for aligning the corner joint with floor levels or finished surfaces."
+          },
+          {
+            "name": "dGap",
+            "technicalDefault": "0",
+            "businessMeaning": "Specifies the clearance distance between the two intersecting log surfaces.",
+            "validRange": "0mm to 10mm",
+            "unit": "mm",
+            "affectsOutput": "Reduces the volume of the notch, creating a space between the walls. Used for insulation tapes or to prevent wood compression issues."
+          },
+          {
+            "name": "dDovetailAngle",
+            "technicalDefault": "8",
+            "businessMeaning": "The angle of the dovetail flanks relative to the vertical.",
+            "validRange": "5° to 15°",
+            "unit": "degrees",
+            "affectsOutput": "Alters the slope of the interlocking profile. Steeper angles (higher value) lock tighter but are harder to assemble; shallower angles assemble easier."
+          },
+          {
+            "name": "dOffsetThis",
+            "technicalDefault": "0",
+            "businessMeaning": "Defines the width of the seat cut (horizontal flat surface) on the primary wall.",
+            "validRange": "-20mm to 50mm",
+            "unit": "mm",
+            "affectsOutput": "Changes the geometry of the notch cut on the primary wall. Negative values force an undercut/relief cut."
+          },
+          {
+            "name": "dOffsetOther",
+            "technicalDefault": "0",
+            "businessMeaning": "Defines the width of the seat cut or tapering on the secondary wall.",
+            "validRange": "-20mm to 50mm",
+            "unit": "mm",
+            "affectsOutput": "Changes the geometry of the notch cut on the secondary wall."
+          },
+          {
+            "name": "sType",
+            "technicalDefault": "Convex",
+            "businessMeaning": "Selects the geometric style of the corner joint profile.",
+            "validRange": "Convex, Concave, Diagonal",
+            "unit": "enum",
+            "affectsOutput": "Switches the machining algorithm to produce either a bulged (convex), hollowed (concave), or planar angled (diagonal) corner profile."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sType is set to 'Diagonal'",
+            "effect": "The label and description of 'dOffsetOther' change to 'Tapering', indicating a diagonal cut rather than a seat cut.",
+            "cascade": [
+              "dOffsetOther"
+            ]
+          },
+          {
+            "trigger": "sType is NOT 'Diagonal'",
+            "effect": "'dOffsetOther' functions as 'Seat depth' and permits negative values to trigger additional beam cuts.",
+            "cascade": [
+              "dOffsetOther"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Machining Tool (TirolerSchloss)",
+            "description": "A 3D subtractive volume (dovetail notch) added to individual log beams to form the corner connection.",
+            "appliedTo": "Log elements (Beams) contained within the two selected intersecting ElementLog walls."
+          }
+        ]
+      },
+      "tokens_used": 7966,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Launch: User executes the TirolerSchloss command.",
+          "2. OnInsert Execution: Script detects insertion state (_bOnInsert).",
+          "3. Configuration: Checks for Catalog Execution Key. If found, applies preset; otherwise, opens Dialog (showDialog).",
+          "4. Entity Selection: Prompts user to select Log Wall elements (ElementLog) via command line.",
+          "5. Distribution Mode (Mode 1): Script iterates through selected walls to find intersecting couples.",
+          "6. Geometry Check: Validates that walls are not parallel and intersect with sufficient area.",
+          "7. Instance Creation: Creates a new script instance (Mode 2) for every valid intersecting corner found.",
+          "8. Self-Deletion: The original Mode 1 instance erases itself.",
+          "9. Machining Mode (Mode 2): The new instances process specific corner connections.",
+          "10. Element Sorting: Sorts the two intersecting walls to determine the 'half log' priority and applies 'Swap' if requested.",
+          "11. Log Iteration: Identifies logs (Beams) within the calculated vertical range (Base/End Height).",
+          "12. Tool Application: Applies the TirolerSchloss subtractive tool to logs unless they are in the 'Removals' list.",
+          "13. Visual Update: Updates plan/model display based on the calculated geometry."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution during Insert Phase",
+            "path1": {
+              "name": "Standard Insert",
+              "steps": [
+                "Check insertCycleCount > 1 (Erase if duplicate)",
+                "Show Properties Dialog",
+                "Prompt for Wall Selection",
+                "Set Mode to 1 (Distribution)"
+              ]
+            },
+            "path2": {
+              "name": "Catalog Insert",
+              "steps": [
+                "Apply Catalog Properties",
+                "Prompt for Wall Selection",
+                "Set Mode to 1 (Distribution)"
+              ]
+            }
+          },
+          {
+            "condition": "Execution Mode",
+            "path1": {
+              "name": "Mode 1: Distribution",
+              "steps": [
+                "Loop through selected ElementLog pairs",
+                "Check for intersection and non-parallelism",
+                "Create child instances (Mode 2)",
+                "Erase parent instance"
+              ]
+            },
+            "path2": {
+              "name": "Mode 2: Machining",
+              "steps": [
+                "Process two specific walls",
+                "Sort elements (Half log logic)",
+                "Apply machining tools to beams",
+                "Handle removal/exclusion lists"
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Trigger: Swap Walls",
+            "path1": {
+              "name": "Swapped",
+              "steps": [
+                "Set '_Map.setInt(\"swap\", 1)'",
+                "Exchange elements[0] and elements[1]",
+                "Recalculate geometry"
+              ]
+            },
+            "path2": {
+              "name": "Default",
+              "steps": [
+                "Use default sorting (based on dFirstLog)",
+                "Recalculate geometry"
+              ]
+            }
+          },
+          {
+            "condition": "Type Property (sType)",
+            "path1": {
+              "name": "Diagonal",
+              "steps": [
+                "Change label of 'dOffsetOther' to 'Tapering'",
+                "Use diagonal machining algorithm"
+              ]
+            },
+            "path2": {
+              "name": "Convex/Concave",
+              "steps": [
+                "Change label of 'dOffsetOther' to 'Seat depth'",
+                "Use standard seat cut algorithm"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script automatically erases duplicate instances (insertCycleCount > 1)."
+          },
+          {
+            "check": "Element Validity",
+            "errorMessage": "None (Silent)",
+            "recovery": "Skips any elements in the selection set that are not valid ElementLogs."
+          },
+          {
+            "check": "Wall Parallelism",
+            "errorMessage": "None (Silent)",
+            "recovery": "In Mode 1, the script skips pairs of walls that are parallel (isParallelTo), preventing connection creation."
+          },
+          {
+            "check": "Intersection Area",
+            "errorMessage": "None (Silent)",
+            "recovery": "In Mode 1, the script only creates a connection if the intersecting area is greater than 2mm x 2mm (pow(U(2),2))."
+          },
+          {
+            "check": "Element Count for Mode 2",
+            "errorMessage": "None (Silent)",
+            "recovery": "Mode 2 processing only executes if exactly 2 elements are present (`elements.length()==2`)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Dimensions",
+            "how": "OPM (Object Properties Model / Properties Palette)",
+            "effect": "Updating parameters (e.g., dBaseHeight, dDovetailAngle, dGap) triggers a recalculation and updates the tool geometry immediately."
+          },
+          {
+            "action": "Swap Walls",
+            "how": "Right-click Context Menu -> 'Swap Walls'",
+            "effect": "Toggles the priority of the two connected walls, changing which wall is milled vs which defines the boundary."
+          },
+          {
+            "action": "Exclude Logs",
+            "how": "Right-click Context Menu -> 'Remove Logs from Connection'",
+            "effect": "Selecting individual beams removes them from the machining process (stored in 'Log[]' map), effectively restoring that specific log to its original state."
+          },
+          {
+            "action": "Restore Logs",
+            "how": "Right-click Context Menu -> 'Restore all logs of Connection'",
+            "effect": "Clears the exclusion list, reapplying the TirolerSchloss tool to all logs in the intersection."
+          },
+          {
+            "action": "Grip Edit",
+            "how": "Drag Grip Points",
+            "effect": "Moving grips likely adjusts the vertical range (Base/End Height) or position of the connection (Script sets _kGripPointDrag trigger)."
+          }
+        ]
+      },
+      "tokens_used": 10299,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# TirolerSchloss.mcr\n\n## Overview\nAutomates the creation of \"Tiroler Schloss\" (dovetail-style) corner joints between intersecting log walls in 3D model space. It calculates geometric intersections and applies a specific notch machining to individual logs within defined height ranges.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in 3D environment to calculate intersections. |\n| Paper Space | No | Not supported for layout generation. |\n| Shop Drawing | No | This is a model generation/detailing script. |\n\n## Prerequisites\n- **Required Entities**: At least two `ElementLog` (Log Wall) entities that physically intersect.\n- **Minimum Beam Count**: 2 intersecting walls.\n- **Required Settings**: None specific (uses script properties).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `TirolerSchloss.mcr` from the list.\n\n### Step 2: Configure Connection\n```\nDialog: \"Tiroler Schloss\" Properties\nAction: Adjust parameters such as Dovetail Angle, Gap, and Joint Type (Convex/Concave/Diagonal). Click OK to confirm.\n```\n*Note: If run from a catalog, defaults may be applied automatically.*\n\n### Step 3: Select Log Walls\n```\nCommand Line: \"Select ElementLog entities:\"\nAction: Click on the log walls you wish to connect. You can select multiple walls at once to process all corners in a group. Press Enter to finish selection.\n```\n\n### Step 4: Processing\nThe script automatically detects intersections between the selected walls. It creates a new script instance at each valid corner and applies the machining tools to the logs.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sType | dropdown | Convex | Shape of the corner profile (Convex, Concave, or Diagonal). |\n| dBaseHeight | number | 0 | Vertical start elevation (Z-level) for the connection. |\n| dEndHeight | number | 0 | Vertical end elevation. Set to 0 to run the connection to the top of the wall automatically. |\n| dVerticalOffset | number | 0 | Moves the entire connection geometry up or down. Useful for aligning with floor levels. |\n| dGap | number | 0 | Clearance distance between the two intersecting log surfaces (for insulation or wood compression). |\n| dDovetailAngle | number | 8 | Angle of the dovetail flanks in degrees. |\n| dOffsetThis | number | 0 | Width of the seat cut (horizontal flat surface) on the primary wall. |\n| dOffsetOther | number | 0 | Seat depth on the secondary wall (Label changes to \"Tapering\" if Type is Diagonal). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Swap Walls | Switches the priority of the two connected walls. Use this if the notch is cut on the wrong side of the intersection. |\n| Remove Logs from Connection | Select individual beams to exclude them from the machining process (e.g., to keep a log full length for a window opening). |\n| Restore all logs of Connection | Re-includes all previously excluded logs back into the machining process. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script relies entirely on Properties Panel inputs and does not require external settings files.\n\n## Tips\n- **Batch Processing**: You can select more than two walls during insertion. The script will automatically find all valid corners among the selection set.\n- **Floor Alignment**: If your walls start at floor level but you need the notch to align with the finished floor, use the `dVerticalOffset` property to shift the cut without moving the walls.\n- **Avoiding Clashes**: Use the \"Remove Logs from Connection\" context menu option to prevent the notch from cutting into logs that contain door or window frames.\n- **Joint Geometry**: If logs are difficult to assemble, try reducing the `dDovetailAngle` (e.g., to 6°). If the joint is too loose, increase the angle.\n\n## FAQ\n- **Q: Why didn't the script create a connection between two specific walls?**\n  **A**: The script requires walls to physically intersect with a minimum overlap area. Ensure the walls are not parallel and actually cross each other in the 3D model.\n- **Q: How do I make the connection stop at a specific height instead of going to the top?**\n  **A**: Set the `dEndHeight` property to your desired Z-value (in mm). Setting it to 0 tells the script to go all the way to the top.\n- **Q: The \"Diagonal\" type looks weird. What happened?**\n  **A**: When `sType` is set to \"Diagonal\", the `dOffsetOther` parameter changes behavior to act as a tapering value. Adjust this parameter to flatten or steepen the diagonal cut."
+      },
+      "tokens_used": 5823,
+      "error": null
+    }
+  }
+}

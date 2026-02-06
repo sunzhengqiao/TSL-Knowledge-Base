@@ -1,0 +1,236 @@
+{
+  "filename": "hsb_SetFloorElementDescriptionFromCatalog.mcr",
+  "status": "completed",
+  "total_tokens": 21830,
+  "processing_time": 163.9106068611145,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2473,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script prompts user to select ElementRoof entities (3D construction elements) using PrEntity. It interacts directly with ElementRoof methods like getListOfCatalogNames and setValuesFromCatalog. The dbCreate call passes _kModel. No references to Viewports, Sheets, or SD_ prefixes."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "ElementRoof"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "hsbCAD Model environment where Elements are defined",
+          "requiredSettings": [
+            "hsb_SetBeamNameFloor TSL script (referenced in dbCreate)",
+            "Catalog definitions defined for the selected Elements"
+          ]
+        }
+      },
+      "tokens_used": 2799,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sCatalogName",
+            "type": "PropString",
+            "displayName": "Catalog Name",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3898,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Applies a specific construction catalog definition to selected floor or roof elements in the 3D model.",
+          "category": "Data Management / Configuration",
+          "typicalUseCase": "Updating the construction setup (e.g., material grade, layering rules) for a group of floor or roof panels to match a standard catalog entry without manually editing each element's properties."
+        },
+        "parameters": [
+          {
+            "name": "sCatalogName",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The identifier of the specific construction catalog entry to apply. This maps to predefined sets of construction rules (materials, layers, dimensions) stored in the hsbCAD database.",
+            "validRange": "Any text string that matches an existing catalog name defined for the specific Element type (Floor or Roof) in the current hsbCAD environment.",
+            "unit": "Text",
+            "affectsOutput": "Updates the internal properties of the selected Elements (e.g., layer structure, materials) to match the catalog definition. Also triggers the insertion of the 'hsb_SetBeamNameFloor' script for further processing."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Script execution with a non-empty `sCatalogName`",
+            "effect": "The script searches the selected Element's available catalog list for a case-insensitive match to `sCatalogName`.",
+            "cascade": [
+              "Element construction properties",
+              "hsb_SetBeamNameFloor script instance"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "TSL Instance",
+            "description": "An instance of the script 'hsb_SetBeamNameFloor' is created and attached to the selected elements.",
+            "appliedTo": "The ElementRoof entities selected during insertion."
+          }
+        ]
+      },
+      "tokens_used": 3653,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script is launched via command or catalog.",
+          "Property dialog opens (showDialogOnce) prompting user to input 'Catalog Name'.",
+          "User confirms the dialog.",
+          "Command line prompt requests selection of a set of ElementRoof entities.",
+          "User selects elements and presses Enter (or Esc to cancel).",
+          "Script validates the selection count (if 0, script erases self).",
+          "Loop begins for each selected element.",
+          "Script checks if element is valid (skips if invalid).",
+          "Script inserts a new instance of 'hsb_SetBeamNameFloor' attached to the current element.",
+          "Script determines if the element is a Floor or Roof.",
+          "Script retrieves the list of valid catalog names for that element type.",
+          "Script compares the user-input 'Catalog Name' against the list (case-insensitive).",
+          "If a match is found, the catalog values are applied to the element.",
+          "Loop repeats for next element.",
+          "After processing all elements, the script instance erases itself."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Check",
+            "path1": {
+              "name": "Subsequent Run",
+              "steps": [
+                "Script detects insertCycleCount() > 1",
+                "Script immediately erases itself",
+                "Process stops"
+              ]
+            },
+            "path2": {
+              "name": "First Run",
+              "steps": [
+                "Script continues to prompt for input"
+              ]
+            }
+          },
+          {
+            "condition": "Element Selection",
+            "path1": {
+              "name": "No Selection",
+              "steps": [
+                "User cancels PrEntity prompt or selects nothing",
+                "_Element array length is 0",
+                "Script erases itself",
+                "Process stops"
+              ]
+            },
+            "path2": {
+              "name": "Selection Made",
+              "steps": [
+                "Entities are added to _Element array",
+                "Processing loop begins"
+              ]
+            }
+          },
+          {
+            "condition": "Catalog Name Match",
+            "path1": {
+              "name": "Match Found",
+              "steps": [
+                "User input (sCatalogName) matches an entry in the element's catalog list",
+                "elRoof.setValuesFromCatalog is executed",
+                "Element construction properties are updated"
+              ]
+            },
+            "path2": {
+              "name": "No Match",
+              "steps": [
+                "User input does not match any available catalog",
+                "Catalog assignment is skipped for this element",
+                "Loop continues to next element"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Validity",
+            "errorMessage": "None (Silent)",
+            "recovery": "If a selected object is not a valid ElementRoof (bIsValid returns false), the script simply skips that object and continues to the next one in the selection set."
+          },
+          {
+            "check": "Catalog Existence",
+            "errorMessage": "None (Silent)",
+            "recovery": "If the entered 'Catalog Name' does not exist in the element's specific catalog list (Floor vs Roof), the update is skipped. The user must ensure the spelling matches the catalog definitions exactly (ignoring case)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None Available",
+            "how": "N/A",
+            "effect": "The script calls eraseInstance() immediately after processing, so it does not persist in the drawing. It cannot be modified via OPM or context menus after execution. To make changes, the user must run the script again."
+          }
+        ]
+      },
+      "tokens_used": 4639,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SetFloorElementDescriptionFromCatalog.mcr\n\n## Overview\nThis script allows you to batch-apply a specific construction catalog configuration (such as layering and material rules) to selected floor or roof elements in the 3D model. It automatically updates the elements to match a named catalog entry and attaches a beam naming script to them for further processing.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be run in the 3D model where Elements are defined. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | Not intended for manufacturing views. |\n\n## Prerequisites\n- **Required entities:** Floor or Roof elements (`ElementRoof`) must exist in the model.\n- **Minimum beam count:** 0 (This script operates on Elements/panels).\n- **Required settings:** The script `hsb_SetBeamNameFloor` must be present in your hsbCAD environment. Valid catalog definitions must exist in your database for the selected element types.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_SetFloorElementDescriptionFromCatalog.mcr`\n\n### Step 2: Specify Catalog Name\n```\nDialog / Properties Palette:\nAction: Enter the name of the Catalog Definition you wish to apply (e.g., \"StandardFloor200\").\nNote: Spelling must match your database definitions (capitalization is ignored).\n```\n\n### Step 3: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the floor or roof elements you want to update. You can select multiple elements.\nAction: Press Enter to confirm the selection.\n```\n\n### Step 4: Completion\nThe script processes the selected elements. It applies the catalog properties, inserts the `hsb_SetBeamNameFloor` script onto the elements, and then erases itself from the drawing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Catalog Name | Text | (Empty) | The name of the construction catalog entry to apply. This must match an existing catalog name for Floor or Roof elements in your hsbCAD database. |\n\n## Right-Click Menu Options\nNone. The script executes immediately upon insertion and erases itself. It does not remain in the drawing to be edited later.\n\n## Settings Files\n- **Filename**: None specific.\n- **Note**: This script relies on the standard hsbCAD Catalogs and the TSL script `hsb_SetBeamNameFloor.mcr` being available in the search path.\n\n## Tips\n- **Batch Processing:** You can select multiple floor or roof elements in a single selection set to apply the same catalog configuration to all of them at once.\n- **Silent Failures:** If you enter a Catalog Name that does not exist for the specific element type you selected, the script will skip that element without showing an error. Ensure the name is spelled correctly.\n- **Associated Script:** Running this will automatically attach the `hsb_SetBeamNameFloor` script to your elements. Be aware that this may affect naming or numbering downstream.\n\n## FAQ\n- **Q: I ran the script, but the element properties didn't change.**\n  A: Verify that the \"Catalog Name\" you entered matches exactly with a catalog defined in your database. The match is case-insensitive, but typos will cause the update to be skipped silently.\n- **Q: Can I use this on walls?**\n  A: No, this script is specifically designed for Floor and Roof elements (`ElementRoof` type).\n- **Q: Why can't I find the script in the drawing after I run it?**\n  A: This is a utility script designed to run once (\"fire and forget\"). It automatically removes itself from the drawing after processing to prevent clutter. Simply run the command again if you need to make more changes."
+      },
+      "tokens_used": 4368,
+      "error": null
+    }
+  }
+}

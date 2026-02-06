@@ -1,0 +1,273 @@
+{
+  "filename": "mapIO_ElementConnection.mcr",
+  "status": "completed",
+  "total_tokens": 34373,
+  "processing_time": 270.53572273254395,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.6",
+            "date": "08.03.2024",
+            "author": "Marsel Nakuci",
+            "changes": "HSB-21589: Add small tolerance when investigating type 9"
+          },
+          {
+            "version": "1.5",
+            "date": "12may15",
+            "author": "th@hsbCAD.de",
+            "changes": "new types panel wall corner male/female"
+          },
+          {
+            "version": "1.4",
+            "date": "11may15",
+            "author": "th@hsbCAD.de",
+            "changes": "bugfix sip wall connection"
+          },
+          {
+            "version": "1.3",
+            "date": "03apr13",
+            "author": "th@hsbCAD.de",
+            "changes": "Connections more tolerant if wall intersections are drawn with small inaccuracy"
+          },
+          {
+            "version": "1.2",
+            "date": "04.07.2011",
+            "author": "th@hsbCAD.de",
+            "changes": "new connection types introduced"
+          },
+          {
+            "version": "1.1",
+            "date": "16.06.2011",
+            "author": "th@hsbCAD.de",
+            "changes": "new connection types introduced"
+          },
+          {
+            "version": "1.0",
+            "date": "14.01.2010",
+            "author": "th@hsbCAD.de",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 5820,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script is designed for MapIO execution (`_bOnMapIO`), reading and writing to the `_Map` object. It operates on `ElementWall` entities cast from `Entity` objects retrieved from the map or manual insertion. It analyzes 3D geometric properties (`ptOrg`, `vecX/Y/Z`, `plOutlineWall`). It lacks ShopDrawing indicators (`sd_` prefix, `_Entity[]`) and Paper Space indicators (`_Viewport`)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementWall"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5104,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getElement",
+              "promptOriginal": "",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getElement",
+              "promptOriginal": "",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "getPoint",
+              "promptOriginal": "",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5898,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically analyzes and classifies the geometric connection type between two wall elements (e.g., corner, T-junction, mitre) to support downstream fabrication and assembly processes.",
+          "category": "Analysis/Logic",
+          "typicalUseCase": "Used within the MapIO process (during element export or processing) to automatically determine how two wall panels connect so that correct machining, nesting, or assembly labels can be applied."
+        },
+        "parameters": [
+          {
+            "name": "dEps",
+            "technicalDefault": "0.1 mm",
+            "businessMeaning": "A small tolerance value used to detect if points are touching or if lines are parallel. It accounts for minor drawing inaccuracies in the 3D model.",
+            "validRange": "0.1 mm - 5.0 mm",
+            "unit": "mm",
+            "affectsOutput": "If set too low, valid connections might be ignored. If set too high, distinct connections might be incorrectly identified as touching or overlapping."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Data Map (Properties)",
+            "description": "Stores the calculated connection properties ('Side', 'Type', 'ptLoc', 'ptOnThis', 'ptOnOther') back into the Map object. These values are integers (0-12) representing specific connection types like 'Corner Male', 'T Female', or 'Mitre'.",
+            "appliedTo": "The input wall elements passed via the MapIO stream ('thisElement' and 'otherElement')."
+          }
+        ]
+      },
+      "tokens_used": 4499,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Initialize script units (mm) and geometric tolerance (dEps).",
+          "2. Determine execution context: Insert Mode vs. MapIO/Debug Mode.",
+          "3. [Insert Mode] Prompt user to select two elements and a reference point, then return.",
+          "4. [MapIO Mode] Retrieve 'thisElement' and 'otherElement' from the Map object.",
+          "5. Validate that at least 2 elements are present; otherwise report error and erase instance.",
+          "6. Cast elements to ElementWall and verify their validity (bIsValid).",
+          "7. Determine wall sub-types (ElementWallSF, ElementLog, or generic ElementWallSip).",
+          "8. Extract geometric properties (Origin, Vectors X/Y/Z, Outline PLine) for both walls.",
+          "9. Project the 'Other' wall outline onto the 'This' wall's coordinate plane.",
+          "10. Analyze vertices to find coincident points (points on 'This' vs points on 'Other') within tolerance.",
+          "11. Classify connection type based on point counts and vector parallelism.",
+          "12. Calculate the connection location (ptLoc) and relative Side (signum) based on the midpoint.",
+          "13. Write resulting properties (Side, Type, Location, Intersection Points) to the Map object.",
+          "14. Set 'okStatus' to true and output a report notice to the command line."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script Execution Context",
+            "path1": {
+              "name": "Manual Insert",
+              "steps": [
+                "Prompt for Element 1",
+                "Prompt for Element 2",
+                "Prompt for Point",
+                "Exit Script"
+              ]
+            },
+            "path2": {
+              "name": "MapIO / Debug",
+              "steps": [
+                "Read Entities from _Map",
+                "Enable Debug Reporting if requested",
+                "Proceed to Geometric Analysis"
+              ]
+            }
+          },
+          {
+            "condition": "Wall Vector Alignment (Non-Parallel)",
+            "path1": {
+              "name": "Standard Corner/T/Mitre (2/1, 1/2, 2/0, 0/2, 2/2 pts)",
+              "steps": [
+                "Compare counts of points on This vs Other contours",
+                "Assign Types: Corner Male (0), Corner Female (1), T Male (2), T Female (3), or Mitre (4)"
+              ]
+            },
+            "path2": {
+              "name": "Ambiguous/Special (1/1 pts)",
+              "steps": [
+                "Check if both walls are SIP type (Type 3)",
+                "If SIP: Calculate Z-angle; 90° = Corner SIP (11/12), else Open Mitre (8)",
+                "If Standard: Check for Open Mitre (8) via boundary projection",
+                "If not Open Mitre: Test intersections to assign Incomplete T Male (6) or Female (7)"
+              ]
+            }
+          },
+          {
+            "condition": "Zero Coincident Points or Open Mitre Detected",
+            "path1": {
+              "name": "No Overlap",
+              "steps": [
+                "Intersection area is effectively zero",
+                "Type remains Unknown ( -1 ) or Open Mitre ( 8 )"
+              ]
+            },
+            "path2": {
+              "name": "Significant Overlap (SIP Connections)",
+              "steps": [
+                "Calculate PLine intersection area",
+                "If Area > Tolerance: Check width and position",
+                "Assign Sip-T (9) or Sip Sloped (10)"
+              ]
+            }
+          },
+          {
+            "condition": "Parallel Walls",
+            "path1": {
+              "name": "Touching Parallel",
+              "steps": [
+                "Points detected on contours",
+                "Assign Type: Parallel (5)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Count",
+            "errorMessage": "[ScriptName] |2 Elements needed|",
+            "recovery": "Script calls eraseInstance() and stops. User must provide two elements."
+          },
+          {
+            "check": "Element Validity",
+            "errorMessage": "[ScriptName] has no valid wall elements.",
+            "recovery": "Script stops, sets Map 'okStatus' to false. Data flow is interrupted for this pair."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 8251,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# mapIO_ElementConnection.mcr\n\n## Overview\nThis script automatically analyzes the geometric relationship between two wall elements to determine their connection type (e.g., corner, T-junction, or mitre). It is primarily designed to run within the MapIO process to ensure correct fabrication data and connection properties are assigned during export.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script analyzes 3D wall geometry in the model. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | This script operates on 3D model elements, not 2D drawings. |\n\n## Prerequisites\n- **Required Entities**: 2 Wall Elements (`ElementWall`).\n- **Minimum Beam Count**: 2\n- **Required Settings**: None\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `mapIO_ElementConnection.mcr` from the file dialog.\n\n### Step 2: Select First Wall\n```\nCommand Line: [Select Element]\nAction: Click on the first wall element you wish to analyze.\n```\n\n### Step 3: Select Second Wall\n```\nCommand Line: [Select Element]\nAction: Click on the second wall element that connects to the first one.\n```\n\n### Step 4: Specify Location\n```\nCommand Line: [Specify Point]\nAction: Click a point near the intersection or connection area of the two walls.\n```\n\n### Step 5: Execution\nThe script will calculate the connection type. If run manually, it may report results to the command line. If run via MapIO, it updates the element data silently for downstream processing.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not expose user-editable parameters in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | No specific context menu items are added by this script. |\n\n## Settings Files\n- **Filename**: N/A\n- **Location**: N/A\n- **Purpose**: No external settings files are used by this script.\n\n## Tips\n- **Drawing Accuracy**: Ensure your wall elements intersect or touch accurately in the 3D model. The script uses a small tolerance (0.1 mm) to detect connections, but large gaps will prevent correct classification.\n- **MapIO Automation**: While you can insert this script manually to check a connection, it is most effective when triggered automatically by the MapIO export process to batch-process all wall connections in a project.\n- **Entity Types**: The script handles standard walls, SIP walls, and log walls, adjusting the connection logic (Corner vs. T-junction vs. Mitre) based on the specific wall types selected.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I selected the elements?**\n  - A: The script is designed to perform its analysis and then erase itself from the drawing once the logic is complete, especially if it detects an error (like fewer than 2 elements) or finishes successfully in a MapIO context.\n- **Q: What connection types can this script identify?**\n  - A: It can identify various types including Corner Male/Female, T-junction Male/Female, Mitre connections, Parallel connections, and specific SIP wall joints.\n- **Q: Can I change the tolerance for detecting touching walls?**\n  - A: The tolerance is hard-coded (0.1 mm) to maintain consistency across the project. You must ensure your model geometry meets this standard."
+      },
+      "tokens_used": 4801,
+      "error": null
+    }
+  }
+}

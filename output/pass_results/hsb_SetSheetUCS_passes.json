@@ -1,0 +1,182 @@
+{
+  "filename": "hsb_SetSheetUCS.mcr",
+  "status": "completed",
+  "total_tokens": 21252,
+  "processing_time": 155.6434121131897,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5348,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Prompt uses `PrEntity(..., Element())` to select 3D elements directly. The script iterates through `_Element` and modifies `Sheet` objects using `setXAxisDirectionInXYPlane`, which alters 3D geometry properties. No `_Viewport`, `sd_` prefixes, or shop drawing specific entities are used. The script self-erases (`eraseInstance()`) after processing."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Sheet"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2835,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select a set of elements|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 2164,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically aligns the X-axis direction of sheet materials (like floor decking or panels) to match the X-axis of the supporting structural elements.",
+          "category": "Framing",
+          "typicalUseCase": "Used after importing or modeling to ensure floor sheets are oriented correctly relative to the floor beams/walls for machining or exporting purposes."
+        },
+        "parameters": [
+          {
+            "name": "ssE",
+            "technicalDefault": "User selected (Prompted)",
+            "businessMeaning": "The set of structural elements (e.g., beams, walls) whose associated sheet materials need to be re-oriented.",
+            "validRange": "N/A (Selection set)",
+            "unit": "Selection",
+            "affectsOutput": "Determines which elements are scanned for sheets to update. Only sheets contained within or linked to these elements will be processed."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects elements via ssE",
+            "effect": "Script iterates through sheets belonging to these elements and modifies their coordinate systems.",
+            "cascade": [
+              "shAll"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Sheet",
+            "description": "The geometric orientation (Vector X) of the sheet is updated to match the Vector X of the parent element, provided the sheet plane is parallel to the element plane.",
+            "appliedTo": "Sheets associated with the selected elements."
+          }
+        ]
+      },
+      "tokens_used": 2298,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script insertion triggered.",
+          "Check insert cycle count (internal integrity check).",
+          "Prompt user to select a set of structural elements.",
+          "Store selected elements in internal list.",
+          "Begin main execution loop for each selected element.",
+          "Retrieve all Sheet entities associated with the current element.",
+          "Calculate vector geometry (X and Z vectors) for the element and current sheet.",
+          "Check if Sheet Z-vector is parallel to Element Z-vector (dot product > 0.99).",
+          "If parallel, update Sheet X-axis direction to match Element X-axis direction.",
+          "Report the number of sheets modified for the current element to the command line.",
+          "Loop until all elements and sheets are processed.",
+          "Erase script instance and exit."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Check insert cycle count (`insertCycleCount()`)",
+            "path1": {
+              "name": "Cycle > 1",
+              "steps": [
+                "Erase script instance immediately.",
+                "Stop execution."
+              ]
+            },
+            "path2": {
+              "name": "Cycle = 1 (First Run)",
+              "steps": [
+                "Proceed to user prompt.",
+                "Prompt for Element selection."
+              ]
+            }
+          },
+          {
+            "condition": "Geometric Alignment Check (`abs(csEnt.vecZ().dotProduct(vz)) > 0.99`)",
+            "path1": {
+              "name": "Parallel Planes",
+              "steps": [
+                "Execute `sh.setXAxisDirectionInXYPlane(vx)`.",
+                "Increment modification counter."
+              ]
+            },
+            "path2": {
+              "name": "Non-Parallel Planes",
+              "steps": [
+                "Skip current sheet.",
+                "Preserve current sheet orientation."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection (`ssE.go()`)",
+            "errorMessage": "None (implicit failure)",
+            "recovery": "If the user cancels the prompt or selects nothing, the script appends no elements, processes nothing, and erases itself silently."
+          },
+          {
+            "check": "Sheet Existence",
+            "errorMessage": "None",
+            "recovery": "If a selected element contains no sheets, the loop for that element completes without errors or changes."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "Script Self-Erasure",
+            "effect": "The script automatically calls `eraseInstance()` at the end of execution, removing itself from the drawing. The changes made to the sheet geometries are permanent."
+          }
+        ]
+      },
+      "tokens_used": 4340,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SetSheetUCS.mcr\n\n## Overview\nThis script automatically aligns the local orientation (X-axis) of sheet materials (such as floor decking or cladding) to match the X-axis of their parent structural elements. It is typically used to ensure floor sheets run in the same direction as the floor beams or walls.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D model elements and sheets. |\n| Paper Space | No | Not applicable for 2D layout views. |\n| Shop Drawing | No | This script modifies the 3D model geometry, not drawing views. |\n\n## Prerequisites\n- **Required entities**: Structural Elements (e.g., Beams, Walls) and associated Sheet entities (e.g., Floors, Roofing).\n- **Minimum beam count**: N/A (You must select at least one element containing sheets).\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the command line.\n2. Browse to and select `hsb_SetSheetUCS.mcr`.\n3. Click **Open**.\n\n### Step 2: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Select the beams or walls that contain the sheet materials you want to re-orient. Press Enter or Space to confirm selection.\n```\n\n### Step 3: Processing\nThe script will automatically scan the selected elements, identify any attached sheets, and align their orientation. The script instance will erase itself from the drawing automatically once finished.\n\n## Properties Panel Parameters\nThere are no editable properties in the Properties Palette for this script.\n\n## Right-Click Menu Options\nThere are no custom right-click menu options for this script.\n\n## Settings Files\nNo external settings files are used by this script.\n\n## Tips\n- **Parallel Planes Only**: The script only updates sheets that are parallel to the parent element (e.g., a flat floor sheet on a flat floor beam). If a sheet is perpendicular to the element, its orientation will not be changed.\n- **Batch Processing**: You can select multiple elements (walls and beams) in a single selection set to process the entire floor or roof layout at once.\n- **Self-Cleaning**: The script removes itself from the drawing immediately after running. Do not look for the script instance to edit it later; simply run the `TSLINSERT` command again if you need to make further changes.\n\n## FAQ\n- **Q: Why did some of my sheets not rotate?**\n  **A:** The script checks if the sheet's plane is parallel to the element's plane. If the sheet is vertical on a horizontal element (or vice versa), the script assumes the orientation is intentional and does not modify it.\n- **Q: Do I need to select the sheets individually?**\n  **A:** No. Simply select the parent structural elements (beams or walls). The script will find all associated sheets automatically.\n- **Q: Can I undo this action?**\n  **A:** Yes, you can use the standard AutoCAD `UNDO` command to revert the changes if the result is not as expected."
+      },
+      "tokens_used": 4267,
+      "error": null
+    }
+  }
+}

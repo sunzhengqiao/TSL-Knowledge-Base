@@ -1,0 +1,205 @@
+{
+  "filename": "hsbNailing.mcr",
+  "status": "completed",
+  "total_tokens": 46197,
+  "processing_time": 284.16341376304626,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9181,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script operates on Element entities (likely wall/panel elements) to generate ElemNail and NailLine objects. It uses functions like el.addTool() and nl.dbCreate() which modify 3D production data. No 'sd_' functions, Viewport handling, or 2D drawing generation logic were found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "GenBeam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space (Script must be attached to an Element, e.g., a Wall)",
+          "requiredSettings": [
+            "Catalog entries for hsbNailing (hsbNailing-Lath, hsbNailing-Sheet, hsbNailing-Stud)",
+            "External settings file (optional, for genbeam name filter)"
+          ]
+        }
+      },
+      "tokens_used": 7129,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "Release Naillines",
+            "handler": "_kExecuteKey",
+            "action": "Converts temporary nail tools (ElemNail) into individual NailLine entities (dbCreate) and erases the script instance.",
+            "alsoTriggeredBy": "Double-Click (TslDoubleClick)"
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 8083,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9632,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initialization: Define constants, check for debug mode, and load translation strings.",
+          "2. Mode Determination: Read 'mode' integer from internal map (0=Setup, 1=Insert, 2..5=Specific Nailing Logic).",
+          "3. Entity Attachment: Script attaches to a selected Element (Wall/Panel).",
+          "4. Configuration Check (If Mode 0/1): If catalog entries are missing, prompt user to create configuration (Press Enter to start wizard).",
+          "5. Data Collection: Gather Element properties, extract sub-elements (Beams/Sheets), and read external settings (if any).",
+          "6. Filtering & Geometry Processing: Apply filters based on Wall code, Element type, exposure, material, and color. Calculate nailable areas based on the specific mode (Lath, Sheet, Stud, or StudGrid).",
+          "7. Nail Calculation: Generate line segments (LineSegs) representing nail positions based on spacing, offsets, and distribution rules.",
+          "8. Sawline Intersection: Split calculated nail segments wherever sawlines are defined on the element.",
+          "9. Purging: Remove duplicate segments and segments shorter than 50mm.",
+          "10. Execution Path Check: Determine if the 'Release Naillines' trigger or Double-Click event occurred.",
+          "11. Final Output:",
+          "    - [Release Mode]: Create physical 'NailLine' entities in the database, then erase the script instance.",
+          "    - [Standard Mode]: Create/Update 'ElemNail' tools attached to the element for visualization and scheduling."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script Mode (Internal Property)",
+            "path1": {
+              "name": "Setup/Insert Mode (0 or 1)",
+              "steps": [
+                "If catalog is empty, launch configuration wizard on 'Enter'.",
+                "Select target elements.",
+                "Create specific instances (Lath, Sheet, Stud) based on catalog configuration."
+              ]
+            },
+            "path2": {
+              "name": "Production Mode (2-5)",
+              "steps": [
+                "Execute geometry logic specific to the mode (e.g., 'Nail on Sheet' vs 'Nail on Stud Grid').",
+                "Filter beams/materials.",
+                "Calculate specific nail line coordinates."
+              ]
+            }
+          },
+          {
+            "condition": "User Action on Insertion",
+            "path1": {
+              "name": "Press Enter",
+              "steps": [
+                "Accept default or launch configuration.",
+                "Attach script to Element."
+              ]
+            },
+            "path2": {
+              "name": "Press Esc",
+              "steps": [
+                "Cancel script.",
+                "No changes made."
+              ]
+            }
+          },
+          {
+            "condition": "Finalization Trigger",
+            "path1": {
+              "name": "Release Naillines (Context Menu or Double-Click)",
+              "steps": [
+                "Set bCreate = true.",
+                "dbCreate() NailLine entities.",
+                "eraseInstance() the script."
+              ]
+            },
+            "path2": {
+              "name": "Standard Recalculation",
+              "steps": [
+                "Set bCreate = false.",
+                "el.addTool() ElemNail objects.",
+                "Keep script instance active."
+              ]
+            }
+          },
+          {
+            "condition": "Calculation Result",
+            "path1": {
+              "name": "Segments Found",
+              "steps": [
+                "Generate nail tools/lines."
+              ]
+            },
+            "path2": {
+              "name": "No Segments Found",
+              "steps": [
+                "Display debug warning.",
+                "Erase instance (unless in debug mode)."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Catalog Configuration",
+            "errorMessage": "No catalog entries found.",
+            "recovery": "User must press Enter during insertion to run the configuration wizard and create required entries (hsbNailing-Lath, -Sheet, etc.)."
+          },
+          {
+            "check": "Element Selection",
+            "errorMessage": "Script requires an Element to function.",
+            "recovery": "Ensure a valid Element (e.g., Wall) is selected before running the script."
+          },
+          {
+            "check": "Filter Matching",
+            "errorMessage": "No nail segments generated (geometry doesn't match criteria).",
+            "recovery": "Modify Element properties (Wall Code, Material, etc.) or adjust the Catalog entry filter criteria to match the model."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Release Naillines",
+            "how": "Right-click context menu 'Release Naillines' or Double-Click the script instance.",
+            "effect": "Commits the nail design: converts temporary tools into permanent NailLine entities and deletes the script instance."
+          },
+          {
+            "action": "Edit Properties (OPM)",
+            "how": "Select the Element and edit properties in the palette (if exposed).",
+            "effect": "Triggers a recalculation of the nail pattern based on new property values."
+          },
+          {
+            "action": "Model Modification",
+            "how": "Modify the Element geometry (e.g., move a stud, resize a sheet).",
+            "effect": "The TSL recalculates and updates the nail positions automatically."
+          }
+        ]
+      },
+      "tokens_used": 7945,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbNailing.mcr\n\n## Overview\nThis script automates the calculation and placement of nail lines on timber elements (such as walls or panels). It supports multiple nailing modes (e.g., Lath, Sheet, Stud) to generate temporary nail markers which can then be converted into permanent physical NailLine entities for production.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script must be attached to an Element (Wall/Panel). |\n| Paper Space | No | Not applicable for 2D drawings. |\n| Shop Drawing | No | This script operates on 3D production data. |\n\n## Prerequisites\n- **Required Entities**: An existing Element (e.g., a Wall or Panel).\n- **Minimum Beam Count**: 0 (Script operates on the Element level).\n- **Required Settings**: Catalog entries for `hsbNailing` must exist (e.g., `hsbNailing-Lath`, `hsbNailing-Sheet`, `hsbNailing-Stud`).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbNailing.mcr` from the list.\n\n### Step 2: Select Target Element\n```\nCommand Line: Select Element:\nAction: Click on the Wall or Panel you wish to apply nailing to.\n```\n\n### Step 3: Configuration Check\n```\nCommand Line: [Optional Prompt if Catalog is missing]\nAction: \n- If the catalog is empty, you will be prompted. Press **Enter** to launch the Configuration Wizard and create the required catalog entries.\n- If the catalog exists, the script will attach automatically based on the current mode (Setup, Insert, or specific nailing logic).\n```\n\n### Step 4: Review Nailing\nThe script calculates the nailing pattern based on the Element's geometry, material, and the specific catalog mode. It displays temporary nail markers (ElemNail tools) on the element.\n\n### Step 5: Finalize Nailing\n```\nAction: Right-click the script instance and select \"Release Naillines\" OR Double-click the script.\nResult: The temporary markers are converted into permanent NailLine entities in the database, and the script instance is deleted.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not expose user-editable properties in the Properties palette. Configuration is handled via Catalog entries. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Release Naillines | Converts the temporary nail calculation (ElemNail tools) into actual NailLine entities and removes the script instance from the element. |\n\n## Settings Files\n- **Filename**: Variable (Optional external settings).\n- **Location**: Company or Install path.\n- **Purpose**: Used to provide filters for GenBeam names (optional configuration).\n\n## Tips\n- **First-Time Use**: If the script does nothing when attached, ensure the `hsbNailing` catalog entries are created by running the Configuration Wizard (Press Enter during insertion if prompted, or check your Catalog).\n- **Modifications**: If you change the Element geometry (e.g., move a stud or resize a sheet), the script will automatically recalculate the nail positions.\n- **Finalizing**: Remember to \"Release Naillines\" (Double-click) when you are satisfied with the layout. This commits the data to the model for production.\n\n## FAQ\n- **Q: No nail lines appear after inserting the script.**\n  - A: This usually means the catalog configuration is missing or the Element properties (Code, Material) do not match the filters in the catalog. Re-insert the script and check if you are prompted to configure the catalog.\n- **Q: How do I change the nailing pattern or spacing?**\n  - A: The pattern logic and spacing are determined by the specific Catalog entry used (e.g., `hsbNailing-Sheet` vs `hsbNailing-Lath`). You may need to edit these settings in the Catalog or run the Configuration Wizard again.\n- **Q: Can I undo the nailing?**\n  - A: You can use the standard AutoCAD Undo command (`Ctrl+Z`) immediately after using \"Release Naillines\" to revert the creation of NailLines."
+      },
+      "tokens_used": 4227,
+      "error": null
+    }
+  }
+}

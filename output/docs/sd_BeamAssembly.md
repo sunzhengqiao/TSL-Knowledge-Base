@@ -1,102 +1,63 @@
-# sd_BeamAssembly
+# sd_BeamAssembly.mcr
 
-## Description
+## Overview
+This script automatically calculates and generates dimension requests for a beam assembly, including the main timber beam and any connected hardware or tools. It is used to prepare precise geometric boundaries for Front, Left, and Top views within the Shop Drawing generation process.
 
-**sd_BeamAssembly** is a Shop Drawing TSL script that generates dimension requests for beam assembly views in hsbCAD. This script is designed to work with the shop drawing generation engine, creating automatic dimensioning for beams and their connected tools (such as metal parts and other TSL instances) across multiple standard views: Front, Left, and Top.
+## Usage Environment
+| Space | Supported | Notes |
+|-------|-----------|-------|
+| Model Space | Yes | Used to insert and assign the script to a specific beam. |
+| Paper Space | No | The script runs during the generation calculation, not directly in layout view. |
+| Shop Drawing | Yes | This is the primary context; it interacts with the Shop Drawing Engine to define view extents. |
 
-The script collects all entities connected to a beam (including metal part collections and TSL tools with volume), calculates extreme points for each view direction, and creates dimension request points that the shop drawing engine uses to generate proper dimensioning.
+## Prerequisites
+- **Required Entities**: A single structural Beam.
+- **Minimum Beam Count**: 1.
+- **Required Settings**: None.
 
-## Script Type
+## Usage Steps
 
-| Property | Value |
-|----------|-------|
-| Type | E (Element-based) |
-| Beams Required | 1 |
-| Grip Points | 0 |
-| Environment | Paper Space / Shop Drawing |
+### Step 1: Launch Script
+Command: `TSLINSERT` → Select `sd_BeamAssembly.mcr` from the list.
 
-## Properties
+### Step 2: Select Beam
+```
+Command Line: Select beam:
+Action: Click on the structural timber beam in the model that you wish to detail.
+```
 
-This script does not expose any user-configurable properties in the Properties Palette (OPM). All parameters are internally calculated based on the associated beam geometry and connected tools.
+### Step 3: Select Reference Point
+```
+Command Line: Select point near tool:
+Action: Click a point in the model space near the assembly (e.g., to the left of the beam). 
+Note: This point determines the origin for sorting dimensions, effectively setting the reading direction (Left-to-Right vs. Right-to-Left).
+```
 
-### Internal Variables
+### Step 4: Completion
+The script instance is attached to the beam. It will automatically calculate dimension requests when the Shop Drawing generation process is executed.
 
-| Variable | Type | Description |
-|----------|------|-------------|
-| `bReportViews` | Boolean | Debug flag for view reporting (default: false) |
-| `bReportOptions` | Boolean | Debug flag for options reporting (default: false) |
-| `dEps` | Double | Tolerance value for volume checks (0.001 mm) |
+## Properties Panel Parameters
 
-## Usage Workflow
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| _Beam0 | Entity | null | The target structural beam to be detailed. Change this to apply the script to a different beam. |
+| _Pt0 | Point | 0,0,0 | The reference point used to sort dimension points. Moving this point changes the order in which dimensions are displayed in the drawing. |
 
-### Insertion
+## Right-Click Menu Options
+No custom context menu options are defined for this script. Modifications are made via the Properties Palette.
 
-1. Run the script from the TSL menu or command line
-2. Select a beam when prompted with "Select beam"
-3. Click a point near the tool area when prompted with "Select point near tool"
-4. The script attaches to the selected beam
+## Settings Files
+No external settings files are required for this script.
 
-### Automatic Execution
+## Tips
+- **Control Dimension Direction**: The location of the `_Pt0` (Reference Point) relative to the beam controls the "reading direction" of the dimensions. If you want dimensions to read from left to right, place the reference point to the left of the beam assembly.
+- **Connected Tools**: The script automatically detects and includes connected MetalParts and TSL instances in the dimension calculation, provided they have physical volume.
+- **Troubleshooting**: If the script instance disappears from the model, it usually means the target beam was deleted or became invalid.
 
-This script is primarily designed to be called automatically by the hsbCAD Shop Drawing Engine:
-
-- When generating shop drawings, the engine passes the beam via the `_Entity` array
-- The script then processes the beam and all its connected tools
-- Dimension requests are generated for three standard views
-
-### View Generation
-
-The script automatically creates dimension requests for three orthogonal views based on the beam's local coordinate system:
-
-| View | X-Axis | Y-Axis | Description |
-|------|--------|--------|-------------|
-| Front View | Beam X | -Beam Y | Primary elevation view |
-| Left View | Beam Y | Beam Z | Side profile view |
-| Top View | Beam Z | Beam X | Plan view from above |
-
-### Dimension Request Processing
-
-For each view, the script:
-
-1. Collects all connected entities (metal parts, TSL tools with volume)
-2. Calculates extreme vertices in X and Y directions of the view
-3. Creates `DimRequestPoint` objects with:
-   - Parent key grouping: "Dim sd_BeamAssembly"
-   - Stereotype: "Extremes"
-   - Cumulative text formatting
-4. Adds dimension requests to the shop drawing engine collector
-
-## Context Commands
-
-This script does not define any context menu commands. It operates automatically when attached to a beam and is processed by the shop drawing generation system.
-
-## Technical Notes
-
-### Entity Detection
-
-The script recognizes and includes the following entity types in dimension calculations:
-
-- **MetalPartCollectionEnt**: Hardware and metal connector collections
-- **TslInst**: TSL instances that have a real body with volume greater than the tolerance threshold
-
-### Multipage Support
-
-The script stores extreme point data (`ptMin`, `ptMax`) to a multipage map when a valid collector entity exists. This allows other shop drawing scripts to access the beam boundary information for coordinated layout.
-
-### Dependencies
-
-- Requires a valid beam entity (either from direct selection or via `_Entity` array from shop drawing engine)
-- Works in conjunction with the hsbCAD Shop Drawing Engine
-- May interact with other `sd_*` scripts for coordinated dimensioning
-
-## Error Handling
-
-If no valid beam is found:
-- Displays message: "No beam found. Instance erased!"
-- Automatically erases the script instance
-
-## Related Scripts
-
-- Other `sd_*` prefix scripts for shop drawing generation
-- Shop drawing controller scripts that manage the generation process
-- Dimension TSL scripts that process the generated `DimRequest` objects
+## FAQ
+- **Q: Why are some of my connected tools not being dimensioned?**
+  **A:** The script filters out tools that do not have a significant physical volume (realBody volume check). Ensure your tools have 3D geometry.
+- **Q: Can I change which beam is being detailed after inserting the script?**
+  **A:** Yes. Select the script instance in Model Space, open the Properties Palette (Ctrl+1), and click the `_Beam0` field to select a different beam.
+- **Q: How do I reverse the order of the dimensions on the drawing?**
+  **A:** Select the script instance and change the `_Pt0` (Reference Point) property in the Properties Palette to the opposite side of the beam assembly.

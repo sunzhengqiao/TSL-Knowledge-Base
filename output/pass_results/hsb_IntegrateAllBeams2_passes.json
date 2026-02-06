@@ -1,0 +1,273 @@
+{
+  "filename": "hsb_IntegrateAllBeams2.mcr",
+  "status": "completed",
+  "total_tokens": 48954,
+  "processing_time": 416.6844255924225,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"header\": {\n    \"type\": null,\n    \"numBeamsReq\": null,\n    \"keywords\": [],\n    \"majorVersion\": 1,\n    \"minorVersion\": 4,\n    \"dxaOut\": null,\n    \"implInsert\": null\n  },\n  \"description\": \"This TSL inserts T milling between male and female beams of an element\\nThe \\\"T\\\" connection will be created by the TSL \\\"hsbT-Connection\\\"\\nMale and female beams are filtered by painter definitions\\nSelected painter definition will be saved in the stream"
+      },
+      "tokens_used": 9175,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script explicitly uses `_kModelSpace` in the `dbCreate` call during the `_bOnInsert` block. It prompts the user to select `Element` entities and operates on `GenBeam` objects within those elements. There are no references to 'sd_*', 'Multipage*', '_Viewport', or '#Type E' structures typical of Paper Space or Shop Drawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "Painter definitions for filtering Male and Female beams (if used)"
+          ]
+        }
+      },
+      "tokens_used": 5677,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"T(\\\"|Select elements|\\\")\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [],\n  \"opmProperties\": [\n    {\n      \"index\": 0,\n      \"variable\": \"dDepth\",\n      \"type\": \"PropDouble\",\n      \"displayName\": \""
+      },
+      "tokens_used": 10037,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically generates T-connections (mortise/pockets) between two groups of beams (Male and Female) within a selected structural element by applying the hsbT-Connection TSL.",
+          "category": "Machining/Automation",
+          "typicalUseCase": "Used to quickly apply consistent T-joint milling between joists (Male) and main beams/headers (Female) across a floor or roof assembly where the connection parameters (depth, gap) are uniform."
+        },
+        "parameters": [
+          {
+            "name": "dDepth",
+            "technicalDefault": "U(0)",
+            "businessMeaning": "The depth of the milling or pocket cut into the Female beam to accommodate the Male beam.",
+            "validRange": "10mm to 500mm (typically 1/3 to 1/2 of the female beam width)",
+            "unit": "mm",
+            "affectsOutput": "Determines how deep the tool cuts into the receiving beam. A value of 0 usually results in no machining."
+          },
+          {
+            "name": "dGap",
+            "technicalDefault": "U(0)",
+            "businessMeaning": "The clearance allowance between the Male beam and the Female beam pocket.",
+            "validRange": "0mm to 10mm",
+            "unit": "mm",
+            "affectsOutput": "Creates space for expansion or easier assembly. A positive value makes the slot slightly larger than the incoming beam."
+          },
+          {
+            "name": "sPainterMale",
+            "technicalDefault": "<Disabled>",
+            "businessMeaning": "Selects the definition used to identify the 'Male' beams (the beams entering the joint, e.g., joists).",
+            "validRange": "List of available Painter Definitions or '<Disabled>'",
+            "unit": "Selection",
+            "affectsOutput": "Filters which beams are treated as the entering member. If disabled, no Male beams are selected, and no connections are made."
+          },
+          {
+            "name": "sPainterFemale",
+            "technicalDefault": "<Disabled>",
+            "businessMeaning": "Selects the definition used to identify the 'Female' beams (the beams receiving the joint, e.g., rim beams or headers).",
+            "validRange": "List of available Painter Definitions or '<Disabled>'",
+            "unit": "Selection",
+            "affectsOutput": "Filters which beams are machined to receive the Male beam."
+          },
+          {
+            "name": "sPainterMaleStream",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Internal storage for the Painter definition configuration of the Male beams (used for catalogs and saving states).",
+            "validRange": "N/A (System generated string)",
+            "unit": "String",
+            "affectsOutput": "Indirectly affects output by preserving filter settings; does not directly change geometry."
+          },
+          {
+            "name": "sPainterFemaleStream",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Internal storage for the Painter definition configuration of the Female beams (used for catalogs and saving states).",
+            "validRange": "N/A (System generated string)",
+            "unit": "String",
+            "affectsOutput": "Indirectly affects output by preserving filter settings; does not directly change geometry."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing 'sPainterMale' selection",
+            "effect": "Updates the internal 'sPainterMaleStream' to save the specific painter configuration.",
+            "cascade": [
+              "sPainterMaleStream"
+            ]
+          },
+          {
+            "trigger": "Changing 'sPainterFemale' selection",
+            "effect": "Updates the internal 'sPainterFemaleStream' to save the specific painter configuration.",
+            "cascade": [
+              "sPainterFemaleStream"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "TSL Instance (hsbT-Connection)",
+            "description": "Creates individual instances of the 'hsbT-Connection' script at every intersection where a Male beam meets a Female beam.",
+            "appliedTo": "Intersections of beams within the selected Element that match the Painter definitions."
+          }
+        ]
+      },
+      "tokens_used": 8374,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Initialization: User launches the script via command or catalog insert.",
+          "2. Insertion Cycle Check: If insertCycleCount > 1 (recursive call), the script erases the instance and exits immediately.",
+          "3. Property Loading: If an execution key (_kExecuteKey) is present, properties are loaded from the matching catalog; otherwise, properties are loaded from the '_LastInserted' catalog or the standard dialog is shown.",
+          "4. Element Selection: User is prompted (PrEntity) to select one or more structural Elements.",
+          "5. Instance Generation: A new persistent instance of the script is created for each selected Element in ModelSpace. The insertion instance is then erased.",
+          "6. Execution Phase (_bOnDbCreated): The persistent instance initializes and retrieves all beams from the assigned Element.",
+          "7. Painter Filtering: The script checks the 'Male beams' and 'Female beam' properties. If they are not '<Disabled>', it uses PainterDefinitions to filter the Element's beams into two separate lists.",
+          "8. Stream Serialization: If valid painters are used, their configuration (Name, Type, Filter, Format) is saved into the hidden 'sPainterMaleStream' and 'sPainterFemaleStream' properties.",
+          "9. Intersection Analysis: The script iterates through every 'Male' beam and identifies the four perpendicular 'Female' beams (Up, Down, Left, Right) relative to the Element's coordinate system.",
+          "10. Connection Management: For each valid intersection, the script checks if an 'hsbT-Connection' TSL already exists for that specific beam pair and Element.",
+          "11. TSL Creation/Update: If a connection exists, its Depth and Gap properties are updated. If not, a new 'hsbT-Connection' instance is created, configured with the current Depth/Gap, and anchored to the intersection point.",
+          "12. Visualization: The script draws a text label at the element origin to indicate its presence."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Source",
+            "path1": {
+              "name": "Command/Key Execution",
+              "steps": [
+                "Checks for _kExecuteKey.",
+                "Loads properties from specific catalog or '_LastInserted'.",
+                "Skips interactive showDialog."
+              ]
+            },
+            "path2": {
+              "name": "Manual Insert",
+              "steps": [
+                "No _kExecuteKey detected.",
+                "Executes showDialog() for user input.",
+                "Proceeds to selection."
+              ]
+            }
+          },
+          {
+            "condition": "Element Assignment",
+            "path1": {
+              "name": "Element Linked",
+              "steps": [
+                "Valid Element found at _Element[0].",
+                "Proceeds to beam processing and machining."
+              ]
+            },
+            "path2": {
+              "name": "No Element",
+              "steps": [
+                "_Element array is empty.",
+                "Reports 'no element found'.",
+                "Erases instance and stops."
+              ]
+            }
+          },
+          {
+            "condition": "Painter Configuration",
+            "path1": {
+              "name": "Filter Active",
+              "steps": [
+                "Painter property is not '<Disabled>'.",
+                "Beams are filtered by the PainterDefinition.",
+                "Connections generated only for filtered results."
+              ]
+            },
+            "path2": {
+              "name": "Filter Disabled",
+              "steps": [
+                "Painter property is '<Disabled>'.",
+                "No beams are assigned to that role (Male or Female).",
+                "No connections are processed for that role."
+              ]
+            }
+          },
+          {
+            "condition": "Existing TSL Instance",
+            "path1": {
+              "name": "Update Existing",
+              "steps": [
+                "Finds existing 'hsbT-Connection' for the intersection.",
+                "Updates Depth and Gap properties.",
+                "Does not create a new instance."
+              ]
+            },
+            "path2": {
+              "name": "Create New",
+              "steps": [
+                "No existing connection found.",
+                "Creates new 'hsbT-Connection' TSL.",
+                "Initializes with current parameters."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Duplicate Insert Cycle",
+            "errorMessage": "(Silent)",
+            "recovery": "Script automatically erases the duplicate execution instance."
+          },
+          {
+            "check": "Element Availability",
+            "errorMessage": "\"no element found\"",
+            "recovery": "User must re-run the script and ensure a valid Element is selected."
+          },
+          {
+            "check": "Painter Validity",
+            "errorMessage": "(None explicit, code handles invalid painters gracefully)",
+            "recovery": "If a named painter definition is missing/invalid, the beam list remains empty. User should select a valid painter from the dropdown."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Parameters",
+            "how": "OPM Properties Palette (Depth, Gap)",
+            "effect": "Updates the Depth and Gap on all existing 'hsbT-Connection' instances managed by this script."
+          },
+          {
+            "action": "Change Filters",
+            "how": "OPM Properties Palette (Male beams, Female beam)",
+            "effect": "Changes which beams are considered Male or Female. Triggers a recalculation to create connections for new matches (cleanup of old connections is not explicitly handled in the snippet)."
+          },
+          {
+            "action": "Save Settings",
+            "how": "Catalog Save / Stream Properties",
+            "effect": "Saves the current configuration, including specific Painter Definition settings, to a catalog for future use."
+          }
+        ]
+      },
+      "tokens_used": 9300,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_IntegrateAllBeams2\n\n## Overview\nThis script automatically generates T-connections (mortises and pockets) between two groups of beams (Male and Female) within a selected structural element. It utilizes the `hsbT-Connection` sub-script to machine the intersections, using Painter Definitions to identify which beams act as the entering member (Male) and which act as the receiving member (Female).\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D Elements and GenBeams. |\n| Paper Space | No | Not designed for layout views or shop drawings. |\n| Shop Drawing | No | Not designed for 2D detailing. |\n\n## Prerequisites\n- **Required Entities**: A structural `Element` containing multiple beams (e.g., a floor assembly with joists and rim beams).\n- **Minimum Beams**: At least two beams intersecting perpendicularly (one Male, one Female).\n- **Required Settings**: Pre-configured **Painter Definitions** must exist in your hsbCAD environment to filter the Male and Female beams (e.g., a painter named \"Joists\" for Male beams and \"Rim\" for Female beams).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Browse and select `hsb_IntegrateAllBeams2.mcr`.\n\n### Step 2: Configure Properties (Dialog)\nUpon launching, a dialog appears (unless run via a catalog preset).\n- **Action**: Set the preferred **Depth** and **Gap** for the connections.\n- **Action**: Select the **Painter Definitions** for \"Male beams\" and \"Female beam\".\n- **Action**: Click OK to confirm.\n\n### Step 3: Select Elements\n```\nCommand Line: |Select elements|\nAction: Click on the structural Element(s) in the drawing that contain the beams you wish to connect.\n```\n- The script will process the element, filter the beams based on your Painter settings, and create or update the T-connections at all valid intersections.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Depth | Number | 0 mm | The depth of the milling cut into the Female beam to accommodate the Male beam. |\n| Gap | Number | 0 mm | The clearance allowance between the Male beam and the Female beam pocket. |\n| Male beams | Dropdown | <Disabled> | Selects the Painter Definition used to identify the entering beams (e.g., joists). |\n| Female beam | Dropdown | <Disabled> | Selects the Painter Definition used to identify the receiving beams (e.g., rim beams). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Updates the machining based on changes to beam positions or property settings (Depth, Gap, Painters). |\n| Save to Catalog | Saves the current configuration (Depth, Gap, and Painter selections) to a catalog file for future use. |\n\n## Settings Files\n- **Filename**: User-defined (e.g., `MyTConnectionSettings.cat`)\n- **Location**: hsbCAD Catalog folder (Company or Install path).\n- **Purpose**: Stores specific configurations for Depth, Gap, and Painter Definitions, allowing you to apply consistent settings across different projects using the \"Execute\" function.\n\n## Tips\n- **Painter Naming**: Ensure your beams in the model are assigned to the correct Painter Definitions before running this script. If the dropdown shows `<Disabled>`, the script will not create any connections.\n- **Smart Updates**: If you run the script again on an existing instance, it will update existing connections (changing depth/gap) rather than creating duplicates, provided the beam pairs remain the same.\n- **Perpendicular Logic**: The script specifically looks for perpendicular intersections (Up, Down, Left, Right) relative to the element's coordinate system.\n\n## FAQ\n- **Q: I ran the script, but no machining appeared.**\n- **A: Check the \"Male beams\" and \"Female beam\" properties in the OPM. If they are set to `<Disabled>` or if the selected Painters do not match any beams in your element, no connections will be generated.\n- **Q: Can I adjust the depth after inserting?**\n- **A: Yes. Select the script instance in the model, change the \"Depth\" value in the Properties Palette, and right-click to \"Recalculate\".\n- **Q: Does this work on curved beams?**\n- **A: This script is designed primarily for orthogonal intersections (standard floor/roof joist layouts). Complex curved intersections may not be detected correctly."
+      },
+      "tokens_used": 6391,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,343 @@
+{
+  "filename": "hsbWelding.mcr",
+  "status": "completed",
+  "total_tokens": 52381,
+  "processing_time": 289.83168482780457,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 6,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.6",
+            "date": "09dec13",
+            "author": "th@hsbCAD.de",
+            "changes": "symbol placement auto corrected on creation or on recalc"
+          },
+          {
+            "version": "1.5",
+            "date": "18apr13",
+            "author": "th@hsbCAD.de",
+            "changes": "supports dimrequests for sdEntitySymbolDisplay"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 7927,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script interacts with 3D model geometry using getEntity and getPoint. Uses realBody() and intersectWith() to calculate welding geometry in 3D. Uses mapRequests to pass data to the detailing engine but runs as a standard tool instance in the model. No sd_* prefixes, Viewport usage, or Paper Space specific functions found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Entity",
+            "Beam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7825,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10719,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates 3D solid geometry and standardized 2D drafting symbols for welding seams between two entities (typically steel plates or components) in timber construction models.",
+          "category": "Detailing/Annotation",
+          "typicalUseCase": "Used to visualize and document welded connections on steel plates, braces, or connectors within the 3D model and generate the corresponding symbols for shop drawings."
+        },
+        "parameters": [
+          {
+            "name": "dThickness",
+            "technicalDefault": "5mm",
+            "businessMeaning": "The nominal thickness (throat thickness or leg length) of the weld. This defines the size of the weld triangle in 2D symbols and the volume of the material in 3D.",
+            "validRange": "3mm - 20mm",
+            "unit": "mm",
+            "affectsOutput": "Scales the weld symbol size and the 3D solid volume of the weld bead."
+          },
+          {
+            "name": "sWeldKind",
+            "technicalDefault": "Kehl-Naht (Fillet)",
+            "businessMeaning": "The geometric preparation type of the weld joint (e.g., Fillet, V-groove, Butt joint). Determines the shape of the ISO/ANSI symbol drawn.",
+            "validRange": "List of standard weld types (Fillet, V, HV, Y, HY, I)",
+            "unit": "enum",
+            "affectsOutput": "Changes the shape of the 2D annotation symbol (triangle, chevron, lines) associated with the weld."
+          },
+          {
+            "name": "sWeldingDouble",
+            "technicalDefault": "No",
+            "businessMeaning": "Indicates if the weld is applied on both sides of the joint (double weld) or just one.",
+            "validRange": "Yes/No",
+            "unit": "boolean",
+            "affectsOutput": "Adds a secondary symbol marker on the opposite side of the reference line in the annotation."
+          },
+          {
+            "name": "sWeldShape",
+            "technicalDefault": "flat",
+            "businessMeaning": "The surface finish contour of the weld after completion (flat, concave, or convex).",
+            "validRange": "flat, concave, convex, not set",
+            "unit": "enum",
+            "affectsOutput": "Adds a specific arc or line modifier to the weld symbol to indicate the finished surface profile."
+          },
+          {
+            "name": "sWeldOnsite",
+            "technicalDefault": "No",
+            "businessMeaning": "Flag indicating if the welding operation must be performed on the construction site rather than in the fabrication shop.",
+            "validRange": "Yes/No",
+            "unit": "boolean",
+            "affectsOutput": "Appends a small 'flag' symbol to the weld leader line to signify a field weld."
+          },
+          {
+            "name": "sWeldPath",
+            "technicalDefault": "Segment",
+            "businessMeaning": "Defines the continuity of the weld along the intersection. 'Segment' is a discrete line, 'Ring' is a continuous closed loop, 'Contour' follows complex intersection shapes.",
+            "validRange": "Segment, Ring, Contour",
+            "unit": "enum",
+            "affectsOutput": "Calculates the 3D path and symbol placement based on either a single edge or the entire intersection loop."
+          },
+          {
+            "name": "sDrawOption",
+            "technicalDefault": "Symbol + Path",
+            "businessMeaning": "Controls the visual representation in the CAD model (2D annotation, 3D solid body, or centerline path).",
+            "validRange": "Solid, Symbol, Path, or Combinations",
+            "unit": "enum",
+            "affectsOutput": "Toggles visibility of the generated graphics. 'Solid' creates physical mass for clash detection; 'Symbol' creates shop drawing annotations."
+          },
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "Current Standard",
+            "businessMeaning": "Specifies the text style and arrow standards used for the weld symbol and leader lines.",
+            "validRange": "Any defined DimStyle in the drawing",
+            "unit": "style",
+            "affectsOutput": "Controls the height, font, and arrowheads of the text and lines in the 2D symbol."
+          },
+          {
+            "name": "nColor",
+            "technicalDefault": "254",
+            "businessMeaning": "The display color of the generated weld geometry (solid and/or lines) in the model.",
+            "validRange": "0-255 (AutoCAD Color Index)",
+            "unit": "index",
+            "affectsOutput": "Visual distinction in the 3D workspace."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sWeldPath is set to 'Ring' or 'Contour'",
+            "effect": "Disables double welding option automatically",
+            "cascade": [
+              "sWeldingDouble"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "3D Body (Solid)",
+            "description": "A parametric solid representing the weld metal, calculated by extruding the profile along the intersection curve of the two connected parts.",
+            "appliedTo": "Intersection of selected Entity 1 and Entity 2"
+          },
+          {
+            "type": "Graphic Symbol (PLine/MapRequest)",
+            "description": "Standardized 2D welding symbol (ISO/EN style) including leaders, flags, and contour indicators, passed to the detailing engine for shop drawings.",
+            "appliedTo": "Annotation layer in Model Space and Shop Drawings"
+          }
+        ]
+      },
+      "tokens_used": 9632,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launch",
+          "Check if running in Insert Mode (_bOnInsert)",
+          "Display Dialog for initial settings (showDialog)",
+          "Prompt user to Select Main Part (getEntity)",
+          "Prompt user to Select Secondary Part (getEntity)",
+          "Prompt user to Pick Point on Welding Edge (_Pt0)",
+          "Prompt user to Pick Second Point on Welding Edge (defines X-axis)",
+          "Prompt user to Pick Third Point on Welding Plane (defines Y-axis)",
+          "Calculate Coordinate System (vx, vy, vz) and validate vectors are not parallel",
+          "Store Coordinate System vectors in _Map",
+          "End Insertion (return)",
+          "--- On Recalculation ---",
+          "Validate existence of at least 2 Entities in _Entity array",
+          "Retrieve Entity 0 and Entity 1",
+          "Set Dependencies and Execution Loops",
+          "Retrieve Coordinate System vectors from _Map (or defaults if missing)",
+          "Validate vectors are not parallel (else Error)",
+          "Check for Context Menu Triggers (e.g., Swap Z-Axis)",
+          "Calculate Intersecting Body (Weld bead geometry)",
+          "Validate Reference Plane direction using dot product",
+          "Parse Properties (WeldKind, Double, Path, DrawOption, etc.)",
+          "Force 'Double Welding' to 'No' if 'Weld Path' is 'Ring' or 'Contour'",
+          "Extract Slice and Intersection Profiles (PlaneProfile)",
+          "Determine Weld Path (Segment vs Ring/Contour) based on closest point to _Pt0",
+          "Initialize Display properties (Color, DimStyle)",
+          "Generate 3D Solid Geometry (if DrawOption includes Solid)",
+          "Generate 2D Symbol Geometry (Leader, Symbol Type, Flags) based on Weld Kind",
+          "Generate MapRequests for Shop Drawing detailing",
+          "Assign Entity to Layer/Group"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script execution phase",
+            "path1": {
+              "name": "Insert Phase",
+              "steps": [
+                "Check insertCycleCount (erase if > 1)",
+                "Show Dialog",
+                "Entity Selection (Main & Secondary)",
+                "Point Picking (Origin, Edge X, Plane Y)",
+                "CoordSys construction",
+                "Store in Map",
+                "Exit"
+              ]
+            },
+            "path2": {
+              "name": "Recalc/Update Phase",
+              "steps": [
+                "Entity validation (min 2)",
+                "Dependency setup",
+                "Map retrieval",
+                "Geometry intersection calculation",
+                "Symbol/Solid generation",
+                "MapRequest publishing"
+              ]
+            }
+          },
+          {
+            "condition": "Weld Path Selection (sWeldPath)",
+            "path1": {
+              "name": "Segment (Default)",
+              "steps": [
+                "Iterate through intersection rings",
+                "Analyze individual segments within rings",
+                "Find single segment closest to _Pt0"
+              ]
+            },
+            "path2": {
+              "name": "Ring or Contour",
+              "steps": [
+                "Iterate through intersection rings",
+                "Select entire ring closest to _Pt0 (Ring) OR all rings (Contour)",
+                "Force 'Double Welding' property to 'No'"
+              ]
+            }
+          },
+          {
+            "condition": "Weld Kind (sWeldKind)",
+            "path1": {
+              "name": "Kehl-Naht (Fillet)",
+              "steps": [
+                "Draw triangular symbol",
+                "Add surface contour markers (flat/convex/concave) if specified"
+              ]
+            },
+            "path2": {
+              "name": "V, HV, Y, HY, I (Groove/Butt)",
+              "steps": [
+                "Draw specific geometric symbol (Chevrons, Lines, etc.) corresponding to type",
+                "Add surface contour markers if specified"
+              ]
+            }
+          },
+          {
+            "condition": "Draw Option (sDrawOption)",
+            "path1": {
+              "name": "Solid included",
+              "steps": [
+                "Sweep weld profile along calculated path",
+                "Create 3D Body"
+              ]
+            },
+            "path2": {
+              "name": "Symbol included",
+              "steps": [
+                "Draw PLine geometry in 3D",
+                "Create DimRequests for 2D annotation"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Count",
+            "errorMessage": null,
+            "recovery": "Automatically eraseInstance() and exit if fewer than 2 entities are found."
+          },
+          {
+            "check": "Vector Parallism (Insert & Recalc)",
+            "errorMessage": "\"Invalid points picked, please pick three points on the welding plane\"",
+            "recovery": "Automatically eraseInstance() and exit. User must re-insert script and pick distinct points."
+          },
+          {
+            "check": "Reference Plane Validity",
+            "errorMessage": "\"Invalid Connection\"",
+            "recovery": "Automatically eraseInstance() and exit."
+          },
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": null,
+            "recovery": "Automatically eraseInstance() if count > 1 (Prevents recursive loops)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Parameters",
+            "how": "AutoCAD Properties Palette (OPM)",
+            "effect": "Updates weld dimensions, type (Symbol changes), visibility (Solid/Symbol/Path), and color. Triggers recalculation of geometry."
+          },
+          {
+            "action": "Swap Z-Axis",
+            "how": "Right-click Context Menu -> 'Swap Z-Axis'",
+            "effect": "Inverts the Z-vector (vz) of the coordinate system, effectively flipping the weld normal direction. Updates _Map and redraws."
+          },
+          {
+            "action": "Update Geometry based on Model Changes",
+            "how": "System Automatic (Dependency)",
+            "effect": "Script is set as dependent on the two selected entities. If the beams/plates move or change geometry, the script recalculates and updates the weld position and intersection shape."
+          }
+        ]
+      },
+      "tokens_used": 10075,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbWelding.mcr\n\n## Overview\nThis script generates 3D solid geometry and standardized 2D drafting symbols for welding seams between two entities (typically steel plates or connectors) within the timber construction model. It visualizes the physical weld mass for clash detection and creates detailed ISO/EN symbols for shop drawings.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script must be inserted and run in Model Space. |\n| Paper Space | No | Not supported directly in Layouts. |\n| Shop Drawing | No | While the script runs in Model Space, it generates symbols that appear in generated shop drawings via MapRequests. |\n\n## Prerequisites\n- **Required Entities**: At least 2 Entities (Beams, Plates, or other constructive elements).\n- **Minimum Beam Count**: 2.\n- **Required Settings**: None required by default.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbWelding.mcr` from the list.\n\n### Step 2: Configure Initial Settings (Optional)\nA dialog may appear allowing you to set initial parameters such as weld thickness or type. You can accept the defaults and change them later. Click OK to proceed.\n\n### Step 3: Select Main Part\n```\nCommand Line: Select Entity 1:\nAction: Click on the primary beam, plate, or component to be welded.\n```\n\n### Step 4: Select Secondary Part\n```\nCommand Line: Select Entity 2:\nAction: Click on the secondary beam, plate, or component that joins the first.\n```\n\n### Step 5: Define Weld Origin\n```\nCommand Line: Pick point on welding edge:\nAction: Click a point on the intersection edge where the weld should start.\n```\n\n### Step 6: Define Weld Direction (X-Axis)\n```\nCommand Line: Pick second point on welding edge (defines X-axis):\nAction: Click a second point along the intersection edge to define the length and direction of the weld segment.\n```\n\n### Step 7: Define Weld Plane (Y-Axis)\n```\nCommand Line: Pick third point on welding plane (defines Y-axis):\nAction: Click a point indicating the side of the joint where the weld bead is applied. This defines the \"normal\" direction of the weld.\n```\n\n### Step 8: Finish\nThe script calculates the intersection and generates the 3D solid and/or 2D symbol based on the draw options.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Thickness | Double | 5 mm | The throat thickness or leg length of the weld. Affects both the 3D volume and the size of the symbol. |\n| WeldKind | String | Kehl-Naht (Fillet) | The type of weld joint (e.g., Fillet, V, HV, Y, HY, I). Determines the shape of the 2D symbol. |\n| WeldingDouble | String | No | Specifies if the weld is applied on both sides of the joint. |\n| WeldShape | String | flat | The surface finish contour (flat, concave, convex). Adds modifiers to the symbol. |\n| WeldOnsite | String | No | If set to \"Yes\", adds a \"field weld\" flag to the symbol leader line. |\n| WeldPath | String | Segment | Defines the weld continuity: \"Segment\" (single line), \"Ring\" (closed loop), or \"Contour\" (complex shape). |\n| DrawOption | String | Symbol + Path | Controls visual output: choose to generate \"Solid\" (3D body), \"Symbol\" (2D annotation), \"Path\" (centerline), or combinations. |\n| DimStyle | String | Current Standard | The text style and arrow standard used for the weld symbol. |\n| Color | Integer | 254 | The AutoCAD color index for the generated weld graphics. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Swap Z-Axis | Inverts the normal vector (Z-axis) of the weld, flipping the weld symbol to the opposite side of the joint. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script does not rely on external XML settings files.\n\n## Tips\n- **Automatic Updates**: The script sets dependencies on the selected entities. If you move or modify the connected plates/beams, the weld geometry and symbol will update automatically.\n- **Path Restrictions**: If you set **WeldPath** to \"Ring\" or \"Contour\", the **WeldingDouble** option will automatically be disabled to prevent conflicting geometries.\n- **Visibility**: Use the **DrawOption** property to toggle the 3D solid (useful for collision checking) independently from the 2D symbol (useful for clean drawings).\n- **Correction**: If the weld symbol appears on the wrong side of the connection, use the \"Swap Z-Axis\" context menu option instead of re-inserting the script.\n\n## FAQ\n- **Q: Why did my weld disappear?**\n- **A:** Check if you modified the connected beams such that they no longer intersect or touch. The script requires a valid intersection between the two entities.\n- **Q: Can I show the 3D weld volume in drawings but hide the symbol?**\n- **A:** Yes. Change the **DrawOption** property to \"Solid\" or \"Solid + Path\". You can then use standard AutoCAD layer freezing to hide the solid in specific viewports if needed.\n- **Q: What does \"Kehl-Naht\" mean?**\n- **A:** It is the German term for \"Fillet Weld,\" which is the standard triangular weld shape."
+      },
+      "tokens_used": 6203,
+      "error": null
+    }
+  }
+}

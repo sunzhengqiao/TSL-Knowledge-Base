@@ -1,0 +1,417 @@
+{
+  "filename": "hsb_SetBeamNameFloor.mcr",
+  "status": "completed",
+  "total_tokens": 53879,
+  "processing_time": 255.23257327079773,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "01.07.2010",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "Release Version"
+          },
+          {
+            "version": "1.1",
+            "date": "13.07.2010",
+            "author": "",
+            "changes": "Any beam that doesnt have a code will be set as Joist or with the name of the profile"
+          },
+          {
+            "version": "1.2",
+            "date": "16.07.2010",
+            "author": "",
+            "changes": "Add Properties for all the beam names"
+          },
+          {
+            "version": "1.3",
+            "date": "08.10.2010",
+            "author": "",
+            "changes": "Allow the user to select a material for the joist"
+          },
+          {
+            "version": "1.4",
+            "date": "08.10.2010",
+            "author": "",
+            "changes": "Also include the material to beams with code 'J'"
+          },
+          {
+            "version": "1.5",
+            "date": "19.10.2010",
+            "author": "",
+            "changes": "Set the subLabel of the beams with the group of the element"
+          },
+          {
+            "version": "1.6",
+            "date": "27.10.2010",
+            "author": "",
+            "changes": "Add the options for material, grade and information"
+          },
+          {
+            "version": "1.6",
+            "date": "27.10.2010",
+            "author": "",
+            "changes": "Add the options for other material for Beams with code J"
+          },
+          {
+            "version": "1.8",
+            "date": "15.03.2010",
+            "author": "",
+            "changes": "Add beam types to the Beams"
+          },
+          {
+            "version": "1.9",
+            "date": "03.05.2012",
+            "author": "",
+            "changes": "Change Glulam and add some beam types compatible with iPro"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8978,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script operates directly on ElementRoof and GenBeam objects within the 3D model. It uses `dbCreate` with `_kModel` context, performs property modifications (setName, setMaterial, setColor) on beams, and manipulates sheet definitions. No viewport or shopdrawing generation logic present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementRoof",
+            "GenBeam",
+            "Sheet"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "3D Model Space with a constructed Element",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 8225,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10392,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the naming, coloring, material assignment, and typing of floor/roof beams and sheets based on their specific beam codes (e.g., 'J' for Joist, 'Rimboard'). It standardizes element properties for production and labeling.",
+          "category": "Framing",
+          "typicalUseCase": "Used immediately after constructing a floor or roof element to ensure all structural components (joists, rim boards, trimmers) have the correct naming convention, material properties, and color coding for drawings and manufacturing."
+        },
+        "parameters": [
+          {
+            "name": "sJoistMaterial",
+            "technicalDefault": "\"Other Material\"",
+            "businessMeaning": "Selects the specific material profile to apply to standard Joists and beams marked with code 'J' (e.g., Alpine SpaceJoist or FloorTrus profiles).",
+            "validRange": "List selection (Other Material, Alpine SpaceJoist, Alpine FloorTrus)",
+            "unit": "N/A",
+            "affectsOutput": "Updates the Material property of beams identified as Joists. If 'Other Material' is selected, the value from 'sOtherMaterial' is used."
+          },
+          {
+            "name": "sOtherMaterial",
+            "technicalDefault": "\"**Other Type**\"",
+            "businessMeaning": "Defines a custom material string to apply when 'Other Material' is chosen in the Joist Material dropdown.",
+            "validRange": "Any valid material string from the hsbCAD catalog",
+            "unit": "N/A",
+            "affectsOutput": "Sets the material property for Joists/Code 'J' beams if 'sJoistMaterial' is set to 'Other Material'."
+          },
+          {
+            "name": "sSetLabel",
+            "technicalDefault": "T(\"No\")",
+            "businessMeaning": "Determines whether the SubLabel attribute of beams should be automatically populated with the Element's Group Name.",
+            "validRange": "Yes/No",
+            "unit": "N/A",
+            "affectsOutput": "If Yes, writes the Group Name into the beam's SubLabel field, useful for filtering or scheduling in downstream processes."
+          },
+          {
+            "name": "sbmName04 (Name Joist)",
+            "technicalDefault": "\"Joist\"",
+            "businessMeaning": "The display name assigned to beams identified as standard Joists.",
+            "validRange": "Text string",
+            "unit": "N/A",
+            "affectsOutput": "Sets the Name property of the beam in the model and on drawings."
+          },
+          {
+            "name": "nColorDef04 (Joist Color)",
+            "technicalDefault": "32",
+            "businessMeaning": "The CAD display color index for Joists.",
+            "validRange": "0-255 (AutoCAD Color Index)",
+            "unit": "Color Index",
+            "affectsOutput": "Changes the visual color of the beam in the 3D model and 2D views."
+          },
+          {
+            "name": "sbmMaterial04 (Material Joist)",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The material specification (e.g., C24, Glulam) assigned to Joists.",
+            "validRange": "String from material catalog",
+            "unit": "N/A",
+            "affectsOutput": "Sets the physical material property, affecting weight, strength calculations, and takeoffs."
+          },
+          {
+            "name": "sbmGrade04 (Grade Joist)",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The structural grade of the timber for Joists.",
+            "validRange": "String (e.g., C24, GL24h)",
+            "unit": "N/A",
+            "affectsOutput": "Updates the beam's Grade property for engineering reports."
+          },
+          {
+            "name": "sbmInformation04 (Information Joist)",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Additional user-defined metadata for Joists.",
+            "validRange": "Text",
+            "unit": "N/A",
+            "affectsOutput": "Populates the Information field for scheduling or labeling."
+          },
+          {
+            "name": "sbmName00 (Name Rimboard)",
+            "technicalDefault": "\"Rim Board\"",
+            "businessMeaning": "Display name for the perimeter rim boards.",
+            "validRange": "Text string",
+            "unit": "N/A",
+            "affectsOutput": "Sets the Name property of Rimboard beams."
+          },
+          {
+            "name": "sbmMaterial00 (Material Rimboard)",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Material specification for Rimboards.",
+            "validRange": "String from material catalog",
+            "unit": "N/A",
+            "affectsOutput": "Sets the physical material property for Rimboards."
+          },
+          {
+            "name": "sbmName02 (Name Trimmer)",
+            "technicalDefault": "\"Trimmer\"",
+            "businessMeaning": "Display name for trimmer beams (used around openings).",
+            "validRange": "Text string",
+            "unit": "N/A",
+            "affectsOutput": "Sets the Name property of Trimmer beams."
+          },
+          {
+            "name": "sbmMaterial02 (Material Trimmer)",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Material specification for Trimmers.",
+            "validRange": "String from material catalog",
+            "unit": "N/A",
+            "affectsOutput": "Sets the physical material property for Trimmers."
+          },
+          {
+            "name": "sbmName03 (Name Blocking)",
+            "technicalDefault": "\"Blocking\"",
+            "businessMeaning": "Display name for blocking pieces between joists.",
+            "validRange": "Text string",
+            "unit": "N/A",
+            "affectsOutput": "Sets the Name property of Blocking."
+          },
+          {
+            "name": "sbmMaterial03 (Material Blocking)",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Material specification for Blocking.",
+            "validRange": "String from material catalog",
+            "unit": "N/A",
+            "affectsOutput": "Sets the physical material property for Blocking."
+          },
+          {
+            "name": "sbmName01 (Name Facing Joist)",
+            "technicalDefault": "\"Facing Joist\"",
+            "businessMeaning": "Display name for facing joists (often used for ledger attachment or doubled joists).",
+            "validRange": "Text string",
+            "unit": "N/A",
+            "affectsOutput": "Sets the Name property of Facing Joists."
+          },
+          {
+            "name": "sbmMaterial01 (Material Facing Joist)",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Material specification for Facing Joists.",
+            "validRange": "String from material catalog",
+            "unit": "N/A",
+            "affectsOutput": "Sets the physical material property for Facing Joists."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sJoistMaterial set to 'Other Material'",
+            "effect": "Enables the use of sOtherMaterial string for joist material assignment.",
+            "cascade": [
+              "sOtherMaterial"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "GenBeam",
+            "description": "Modifies existing GenBeam properties (Name, Color, Material, Grade, Information, Type, SubLabel) based on the BeamCode mapping.",
+            "appliedTo": "All beams within the selected ElementRoof that have a matching beam code (J, Rimboard, Blocking, etc.) or no code."
+          },
+          {
+            "type": "Sheet",
+            "description": "Renames the Sheet entity to match its assigned material name.",
+            "appliedTo": "Sheets located at various indices (Top, Bottom, Left, Right) of the ElementRoof."
+          }
+        ]
+      },
+      "tokens_used": 9310,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script starts execution.",
+          "Initializes arrays and properties for beam mapping (Codes, Names, Materials, Colors, etc.).",
+          "Checks insertion state (_bOnInsert) or if triggered from context menu (nExecutionMode).",
+          "If _bOnInsert is true (Run from palette):",
+          "  - Collects all selected Elements.",
+          "  - Clones script instance onto each selected Element with 'nExecutionMode' set to 1.",
+          "  - Erases original instance.",
+          "If _bOnInsert is false and nExecutionMode is 1 (Running inside Element context):",
+          "  - Validates the ElementRoof object.",
+          "  - Erases any duplicate instances of this script attached to the Element.",
+          "  - Retrieves all beams from the Element.",
+          "  - Iterates through each beam:",
+          "    - Skips beams not in zone index 0.",
+          "    - Checks the beam's code.",
+          "    - If Code is Empty:",
+          "      - Checks profile name (Rectangular vs Custom).",
+          "      - Sets Name to Profile Name (if custom) or 'Joist' (if Rectangular).",
+          "      - Sets Material/Grade for Rectangular profiles.",
+          "    - If Code is NOT Empty:",
+          "      - Converts Code to Uppercase.",
+          "      - Searches for matching Code in mapping table.",
+          "      - If match found: Applies Name, Color, Material, Grade, Info, and Type from properties.",
+          "      - Special Case: If Code is 'J', overrides Material with the specific selection (Alpine/Other).",
+          "    - If 'Set Label' property is Yes: Sets beam SubLabel to Element Group Name.",
+          "  - Iterates through Sheet indices (1, -1, 2, -2, 3, -5, 4, -4):",
+          "    - Sets Sheet Name to match its Material property.",
+          "  - Draws display entity.",
+          "  - Assigns script to Element Group.",
+          "  - Resets 'nExecutionMode' to 0."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Check Insertion Mode (_bOnInsert)",
+            "path1": {
+              "name": "Insertion (Palette Run)",
+              "steps": [
+                "Detect selected elements.",
+                "Clone TSL onto each element with execution flag set.",
+                "Erase self."
+              ]
+            },
+            "path2": {
+              "name": "Internal Execution (Element Update)",
+              "steps": [
+                "Process beams within the current element.",
+                "Apply properties and renamings.",
+                "Update sheets."
+              ]
+            }
+          },
+          {
+            "condition": "Beam Code Check (Inside Loop)",
+            "path1": {
+              "name": "Empty Code",
+              "steps": [
+                "Check Profile shape.",
+                "If Profile is Rectangular: Set as 'Joist' (using Joist props).",
+                "If Profile is Custom: Set Name to Profile Name."
+              ]
+            },
+            "path2": {
+              "name": "Specific Code Found",
+              "steps": [
+                "Map code to properties (Rimboard, Trimmer, Blocking, etc.).",
+                "Apply Name, Color, Material, Grade, Info, Type.",
+                "Check if Code == 'J': Override Material with Alpine/Other selection."
+              ]
+            }
+          },
+          {
+            "condition": "sJoistMaterial Selection",
+            "path1": {
+              "name": "Alpine SpaceJoist/FloorTrus",
+              "steps": [
+                "Use specific mapped string (e.g., 'SpaceJoist.47') for material on 'J' beams."
+              ]
+            },
+            "path2": {
+              "name": "Other Material",
+              "steps": [
+                "Use string from 'sOtherMaterial' property for material on 'J' beams."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Validity",
+            "errorMessage": "None (Silent failure/return)",
+            "recovery": "Ensure a valid ElementRoof is selected before running the script."
+          },
+          {
+            "check": "Beam Availability",
+            "errorMessage": "None (Silent return)",
+            "recovery": "Ensure the Element contains beams."
+          },
+          {
+            "check": "Zone Index",
+            "errorMessage": "None",
+            "recovery": "Beams outside Zone 0 are ignored automatically by script logic."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Update Properties",
+            "how": "AutoCAD Properties Palette (OPM)",
+            "effect": "Changing properties like 'sJoistMaterial', beam Names, or Colors and executing 'TSL | Update' will re-process the element with new settings."
+          },
+          {
+            "action": "Element Modification",
+            "how": "hsbCAD Element Edit / Catalog modification",
+            "effect": "If the element is modified (e.g., joists added), the script will process new beams based on the existing property configuration."
+          },
+          {
+            "action": "Delete Script",
+            "how": "Erase TSL instance",
+            "effect": "Stops automatic processing. Beams retain their last set names but will not update automatically on future changes unless script is reapplied."
+          }
+        ]
+      },
+      "tokens_used": 9890,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SetBeamNameFloor.mcr\n\n## Overview\nThis script automates the naming, coloring, and material assignment of floor and roof beams based on their beam codes (e.g., Joist, Rimboard, Trimmer). It ensures that all structural components within an element adhere to standard naming conventions and have the correct production properties applied automatically.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be applied to an ElementRoof or Floor Element in the 3D model. |\n| Paper Space | No | Not applicable for layout views. |\n| Shop Drawing | No | Not applicable for shop drawing generation. |\n\n## Prerequisites\n- **Required Entities**: An existing `ElementRoof` (Floor or Roof) containing `GenBeam` entities.\n- **Minimum Beam Count**: 0 (Script can run on empty elements).\n- **Required Settings**: None. All settings are managed via the Properties Palette.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the AutoCAD command line.\n2.  Browse to the location of `hsb_SetBeamNameFloor.mcr` and select it.\n3.  Click **Open**.\n\n### Step 2: Select Element\n```\nCommand Line: Select element:\nAction: Click on the Floor or Roof element you wish to process.\n```\n*Note: You can select multiple elements if required.*\n\n### Step 3: Configure Properties (Optional)\n1.  Select the element.\n2.  Open the **Properties Palette** (Ctrl+1).\n3.  Scroll down to the section labeled \"TSL: hsb_SetBeamNameFloor...\".\n4.  Adjust names, materials, or colors as needed.\n5.  Right-click the element and select **TSL | Update** to apply changes.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Global Settings** | | | |\n| sJoistMaterial | Dropdown | Other Material | Selects the specific material profile for Joists (Code 'J'). Options: Alpine SpaceJoist, Alpine FloorTrus, or Other Material. |\n| sOtherMaterial | String | **Other Type** | The custom material string to use if \"Other Material\" is selected above. |\n| sSetLabel | Yes/No | No | If Yes, sets the SubLabel of all beams to the Element's Group Name. |\n| **Joist Settings** | | | |\n| sbmName04 | String | Joist | The display name assigned to standard Joists. |\n| nColorDef04 | Integer | 32 | The AutoCAD color index for Joists. |\n| sbmMaterial04 | String | (Empty) | Material specification for Joists (e.g., C24). |\n| sbmGrade04 | String | (Empty) | Structural grade for Joists. |\n| sbmInformation04 | String | (Empty) | Additional metadata for Joists. |\n| **Rimboard Settings** | | | |\n| sbmName00 | String | Rim Board | The display name for perimeter rim boards. |\n| sbmMaterial00 | String | (Empty) | Material specification for Rimboards. |\n| **Trimmer Settings** | | | |\n| sbmName02 | String | Trimmer | The display name for trimmer beams. |\n| sbmMaterial02 | String | (Empty) | Material specification for Trimmers. |\n| **Blocking Settings** | | | |\n| sbmName03 | String | Blocking | The display name for blocking pieces. |\n| sbmMaterial03 | String | (Empty) | Material specification for Blocking. |\n| **Facing Joist Settings** | | | |\n| sbmName01 | String | Facing Joist | The display name for facing joists. |\n| sbmMaterial01 | String | (Empty) | Material specification for Facing Joists. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| TSL | Update | Re-runs the script to apply any changes made in the Properties Palette or to update after geometry changes. |\n| TSL | Erase | Removes the script instance from the element. Beams will keep their last assigned names/values but will not update automatically thereafter. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: This script does not rely on external XML settings files. All configuration is stored within the script properties on the element.\n\n## Tips\n- **Code 'J' Logic**: If a beam has the code 'J', the script will try to apply the specific Alpine material profile if selected in `sJoistMaterial`. Otherwise, it falls back to the material defined in `sbmMaterial04`.\n- **Uncoded Beams**: Beams without a specific code will be named \"Joist\" if they have a rectangular profile, or named after their profile name if they are custom.\n- **Visual Organization**: Use the `nColorDef04` (Joist Color) to visually differentiate standard joists from rim boards or trimmers in the 3D model.\n\n## FAQ\n- **Q: Why didn't my beams rename?**\n  - A: Ensure the script is attached to the element. Select the element, check the Properties Palette for the TSL instance. If present, right-click and choose **TSL | Update**.\n- **Q: Can I use this for walls?**\n  - A: No, this script is designed specifically for floor and roof elements (`ElementRoof`).\n- **Q: How do I apply a specific material like \"C24\" to all Joists?**\n  - A: Set `sJoistMaterial` to \"Other Material\", type \"C24\" into the `sOtherMaterial` field, and run **TSL | Update**.\n- **Q: What happens if I delete the script?**\n  - A: The element and beams remain in the model, but they will no longer automatically update their names or materials if the element geometry changes or if new beams are added."
+      },
+      "tokens_used": 7084,
+      "error": null
+    }
+  }
+}

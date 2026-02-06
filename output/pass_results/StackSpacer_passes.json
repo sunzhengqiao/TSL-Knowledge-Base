@@ -1,0 +1,381 @@
+{
+  "filename": "StackSpacer.mcr",
+  "status": "completed",
+  "total_tokens": 51977,
+  "processing_time": 468.60022139549255,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "2.2",
+            "date": "12.02.2025",
+            "author": "Thorsten Huck",
+            "changes": "HSB-23372 fully supporting new behaviour of controlling properties"
+          },
+          {
+            "version": "2.1",
+            "date": "29.11.2024",
+            "author": "Thorsten Huck",
+            "changes": "HSB-21733 bugfix position vertical spacers when using fixed length"
+          },
+          {
+            "version": "2.0",
+            "date": "22.11.2024",
+            "author": "Thorsten Huck",
+            "changes": "HSB-21733 complete revision, NOT compatible with previous releases, supports horizontal and vertical spacers"
+          },
+          {
+            "version": "1.3",
+            "date": "17.11.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-20449 hardware added"
+          },
+          {
+            "version": "1.2",
+            "date": "24.10.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-19659 reference link renamed"
+          },
+          {
+            "version": "1.1",
+            "date": "19.10.2023",
+            "author": "",
+            "changes": "HSB-19659 additional properties to distinguish between inside/between packs spacers"
+          },
+          {
+            "version": "1.0",
+            "date": "18.10.2023",
+            "author": "Thorsten Huck",
+            "changes": "HSB-19659 first beta release"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 9336,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script creates 3D geometry ('Body bdSpacers[]'), uses World Plane ('Plane pnW(_PtW,_ZW)'), implements interactive Grips for 3D manipulation, and exports Hardware Components ('HardWrComp') representing physical spacers. It references TSL instances ('TslInst stack') as parents, indicating it operates on the 3D construction model rather than generating 2D drawings. No 'sd_' prefixes or Paper Space logic found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "TslInst",
+            "Stack Entities (StackEntity/StackPack)"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing stacked timber elements (Truck/Stack configurations).",
+          "requiredSettings": [
+            "TslUtilities.dll (located in _kPathHsbInstall)",
+            "Entities with subMaps containing 'ptOrg' or 'DataLink'"
+          ]
+        }
+      },
+      "tokens_used": 8171,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": [],
+          "interactivePrompts": [
+            {
+              "trigger": "Recalc on key 'Add Stack and/or Packs'",
+              "function": "PrEntity",
+              "promptOriginal": "|Select stack and/or packs|",
+              "condition": "_bOnRecalc && _kExecuteKey == sTriggerAppend",
+              "filter": "TslInst"
+            },
+            {
+              "trigger": "Recalc on key 'Remove Packs'",
+              "function": "PrEntity",
+              "promptOriginal": "|Select packs|",
+              "condition": "_bOnRecalc && _kExecuteKey == sTriggerRemovePacks",
+              "filter": "TslInst"
+            }
+          ]
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "|Add Stack and/or Packs|",
+            "handler": "sTriggerAppend",
+            "action": "Prompts user to select stack entities and/or packs to add to the spacer calculation.",
+            "visibilityCondition": "sRelation == tRPackItems (Items in Pack)"
+          },
+          {
+            "menuItem": "|Remove Packs|",
+            "handler": "sTriggerRemovePacks",
+            "action": "Prompts user to select packs to remove from the calculation.",
+            "visibilityCondition": "packs.length() > 1"
+          },
+          {
+            "menuItem": "|Remove Stack|",
+            "handler": "sTriggerRemoveStack",
+            "action": "Removes the currently referenced stack from the calculation.",
+            "visibilityCondition": "stack.bIsValid()"
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 10201,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically calculates and generates wooden spacer sticks required to separate timber packs or items within a transport stack configuration.",
+          "category": "Hardware",
+          "typicalUseCase": "Used when preparing timber for transport to ensure proper spacing between packs for ventilation, stability, and strapping access."
+        },
+        "parameters": [
+          {
+            "name": "sRelation",
+            "technicalDefault": "tRPackItems",
+            "businessMeaning": "Defines the structural relationship of the spacers: whether they separate individual items within a single pack, separate whole packs from each other, or span the entire stack.",
+            "validRange": "Items in Pack, Pack to Pack, Entire Stack",
+            "unit": "Selection List",
+            "affectsOutput": "Determines which entities are selected for gap calculation and where the spacers are physically generated (inside a pack vs between packs)."
+          },
+          {
+            "name": "sAlignments",
+            "technicalDefault": "tHorizontal",
+            "businessMeaning": "Specifies the orientation of the spacer sticks relative to the stack geometry.",
+            "validRange": "Horizontal, Vertical",
+            "unit": "Selection List",
+            "affectsOutput": "Rotates the generated spacer geometry 90 degrees around the stack vertical axis."
+          },
+          {
+            "name": "tSpacerHeightName",
+            "technicalDefault": "|Spacer Height|",
+            "businessMeaning": "The identifying name of the property that dictates the thickness (height) of the spacer material.",
+            "validRange": "String matching a valid property name in the database or element map",
+            "unit": "String",
+            "affectsOutput": "Controls the vertical thickness (Y-axis in local coords) of the rectangular spacer body."
+          },
+          {
+            "name": "dWidth",
+            "technicalDefault": "Calculated dynamically (approx 100mm)",
+            "businessMeaning": "The width (cross-grain depth) of the spacer stick sitting under the timber load.",
+            "validRange": "50mm - 200mm (Standard: 80-100mm)",
+            "unit": "mm",
+            "affectsOutput": "Defines the size of the spacer body perpendicular to the timber length."
+          },
+          {
+            "name": "dLength",
+            "technicalDefault": "Calculated dynamically (approx 1200mm)",
+            "businessMeaning": "The length of the spacer stick, typically spanning across multiple timber elements.",
+            "validRange": "600mm - 3000mm",
+            "unit": "mm",
+            "affectsOutput": "Defines the span of the spacer body parallel to the timber width (or length, depending on alignment)."
+          },
+          {
+            "name": "vecX, vecY, vecZ",
+            "technicalDefault": "View/Stack Coordinate System",
+            "businessMeaning": "The local construction axes used to orient the spacers correctly in 3D space.",
+            "validRange": "Any orthogonal 3D vector set",
+            "unit": "Vector3d",
+            "affectsOutput": "Defines the rotation and coordinate system for all generated geometry and grips."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sRelation == tRPackItems",
+            "effect": "Enables the 'Add Stack and/or Packs' context menu item.",
+            "cascade": [
+              "_Entity[]",
+              "Packs",
+              "Stack"
+            ]
+          },
+          {
+            "trigger": "packs.length() > 1",
+            "effect": "Enables the 'Remove Packs' context menu item.",
+            "cascade": [
+              "_Entity[]"
+            ]
+          },
+          {
+            "trigger": "stack.bIsValid()",
+            "effect": "Enables the 'Remove Stack' context menu item.",
+            "cascade": [
+              "_Entity[]",
+              "Stack"
+            ]
+          },
+          {
+            "trigger": "Changing sAlignments (Horizontal/Vertical)",
+            "effect": "Swaps the interpretation of Length and Width vectors, recalculating spacer positions.",
+            "cascade": [
+              "dWidth",
+              "dLength",
+              "Body bdSpacers[]"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Body",
+            "description": "3D rectangular solids representing the wooden spacer sticks.",
+            "appliedTo": "Positioned in the gaps between stacked timber entities."
+          },
+          {
+            "type": "HardWrComp",
+            "description": "Hardware components generated for BOM/export, named by format: 'ScriptName Number WxHxL'.",
+            "appliedTo": "Attached to the script instance, linked to the parent stack entity."
+          },
+          {
+            "type": "Grip",
+            "description": "Interactive graphical handles to adjust the reference point or drag spacers along axes.",
+            "appliedTo": "Visual overlay on the spacers or stack reference point."
+          },
+          {
+            "type": "PLine",
+            "description": "Visual center lines and cross-section markers indicating spacer placement.",
+            "appliedTo": "Drawn at the center of each generated spacer body."
+          }
+        ]
+      },
+      "tokens_used": 8556,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script via command or catalog.",
+          "Script initializes properties (Alignment, Relation, Dimensions).",
+          "User selects initial Stacks or Packs (Entity Selection).",
+          "Script analyzes geometry of selected entities (Union profiles, shadow projections).",
+          "Script calculates optimal spacer positions and gaps based on 'Relation' setting.",
+          "Script generates Body geometry (3D sticks) and Hardware components.",
+          "Script draws visual markers (Center lines, cross-sections).",
+          "Validation check: Are spacer profiles generated?",
+          "If valid: Instance remains active. If invalid: Instance erases (unless debugging)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "sRelation Property is set to 'Items in Pack'",
+            "path1": {
+              "name": "Item-Level Spacing",
+              "steps": [
+                "Context menu item 'Add Stack and/or Packs' becomes available.",
+                "Calculates spacers between items within the selected packs."
+              ]
+            },
+            "path2": {
+              "name": "Global Spacing",
+              "steps": [
+                "Context menu item 'Add Stack and/or Packs' is hidden.",
+                "Calculates spacers based on 'Pack to Pack' or 'Entire Stack' logic."
+              ]
+            }
+          },
+          {
+            "condition": "Validation Check (ppSpacers.length < 1)",
+            "path1": {
+              "name": "Drag Operation",
+              "steps": [
+                "User is currently modifying the instance via Grips.",
+                "Script draws a red 'Invalid' cross at the reference point.",
+                "Instance is NOT deleted to allow continuous adjustment."
+              ]
+            },
+            "path2": {
+              "name": "Static Recalculation",
+              "steps": [
+                "Calculation resulted in zero spacers (e.g., gap too small).",
+                "Script calls eraseInstance().",
+                "Script instance is removed from the model."
+              ]
+            }
+          },
+          {
+            "condition": "sAlignments Property (Horizontal vs Vertical)",
+            "path1": {
+              "name": "Horizontal",
+              "steps": [
+                "Spacers oriented parallel to the stack width.",
+                "Grip logic uses 'nGripModel' index for manipulation."
+              ]
+            },
+            "path2": {
+              "name": "Vertical",
+              "steps": [
+                "Spacers oriented along the stack depth/height.",
+                "Grip logic uses 'nGripSection' index for manipulation."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Spacer Profile Generation",
+            "errorMessage": "(Visual Only - Red Cross drawn)",
+            "recovery": "Move spacers to a valid location using grips, or adjust input dimensions to ensure gaps are large enough."
+          },
+          {
+            "check": "Number of Packs for Removal",
+            "errorMessage": "Context menu item hidden",
+            "recovery": "Must have more than one pack referenced to enable the 'Remove Packs' command."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Dimensions",
+            "how": "OPM (Object Properties Palette)",
+            "effect": "Updates Width, Height, and Length; recalculates Body geometry and Hardware size."
+          },
+          {
+            "action": "Add/Remove Entities",
+            "how": "Right-click Context Menu",
+            "effect": "Adds or removes Stacks/Packs from the calculation list; resets execution loop to update geometry."
+          },
+          {
+            "action": "Reposition Spacers",
+            "how": "Grips (Interactive graphical handles)",
+            "effect": "Drags the spacer reference point; snaps to the closest valid axis defined by the stack geometry."
+          },
+          {
+            "action": "Change Alignment",
+            "how": "OPM Property 'sAlignments'",
+            "effect": "Swaps the orientation of the spacers (Horizontal/Vertical) and updates coordinate systems."
+          }
+        ]
+      },
+      "tokens_used": 9613,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# StackSpacer.mcr\n\n## Overview\nThis script automatically calculates and generates 3D wooden spacer sticks to separate timber packs or items within a transport stack configuration. It ensures proper spacing for ventilation, stability, and strapping access during logistics.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Generates 3D geometry and Hardware components. |\n| Paper Space | No | Not designed for 2D drawings. |\n| Shop Drawing | No | Not designed for manufacturing views. |\n\n## Prerequisites\n- **Required Entities**: Existing Stack entities or Packs (TslInst type) must be present in the model.\n- **Minimum Beams**: 0 (Script operates on TSL instances representing stacks/packs).\n- **Required Settings**: `TslUtilities.dll` must be installed in the hsbCAD path.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `StackSpacer.mcr`\n\n### Step 2: Initial Insertion\n```\nCommand Line: Insertion point:\nAction: Click in the model space to place the script instance. Initially, no geometry may be visible until entities are linked.\n```\n\n### Step 3: Link Stack or Packs\n```\nAction: Right-click the script instance and select \"|Add Stack and/or Packs|\".\nCommand Line: Select stack and/or packs:\nAction: Select the desired TslInst stack entities or packs from the model window and press Enter.\n```\n\n### Step 4: Adjust Configuration\n```\nAction: Select the script instance and open the Properties (OPM) palette.\nAction: Modify the \"Relation\" (e.g., Items in Pack vs Pack to Pack) and \"Alignments\" (Horizontal/Vertical) to match your stacking needs.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sRelation | Selection List | Items in Pack | Defines what the spacers separate: individual items within a pack, separate packs from each other, or span the entire stack. |\n| sAlignments | Selection List | Horizontal | Sets the orientation of the spacer sticks relative to the stack (Horizontal or Vertical). |\n| tSpacerHeightName | String | \\|Spacer Height\\| | The property name used to look up the thickness/height of the spacer material. |\n| dWidth | Number | ~100mm | The width (cross-grain depth) of the spacer stick. |\n| dLength | Number | ~1200mm | The length of the spacer stick. |\n| vecX / vecY / vecZ | Vector | View/Stack Coord. | The local coordinate axes determining the rotation of the spacers. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| \\|Add Stack and/or Packs\\| | Prompts you to select additional stack entities or packs to include in the spacer calculation. |\n| \\|Remove Packs\\| | Prompts you to select specific packs to remove from the calculation (only visible if multiple packs are linked). |\n| \\|Remove Stack\\| | Removes the currently referenced stack entity from the calculation. |\n\n## Settings Files\nNo specific settings files are required for this script.\n\n## Tips\n- **Use Grips**: You can drag the spacers interactively using the graphical grips to fine-tune their position along the stack axes.\n- **Orientation Switching**: Changing the `sAlignments` property between Horizontal and Vertical will recalculate the geometry and swap the length/width logic automatically.\n- **Hardware Generation**: The script automatically creates Hardware components (HardWrComp) based on the spacer dimensions for BOM export.\n- **Visual Feedback**: Center lines and cross-section markers are drawn to help visualize the exact placement of the spacers.\n\n## FAQ\n- **Q: Why did my script instance disappear after I changed a property?**\n  **A:** The script performs a validation check. If the configuration results in zero valid spacers (e.g., gaps are too small or no entities are linked), the instance automatically erases itself. Re-insert the script and check your entity selections.\n- **Q: How do I space items inside a single pack versus spacing whole packs?**\n  **A:** Change the `sRelation` property in the Properties palette. Select \"Items in Pack\" for internal spacing or \"Pack to Pack\" for spacing between different stack units.\n- **Q: Can I adjust the position without typing numbers?**\n  **A:** Yes, select the script instance and use the blue interactive grips to drag the spacer reference point."
+      },
+      "tokens_used": 6100,
+      "error": null
+    }
+  }
+}

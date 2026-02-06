@@ -1,0 +1,222 @@
+{
+  "filename": "mapIO_TslInstAttached.mcr",
+  "status": "completed",
+  "total_tokens": 19833,
+  "processing_time": 316.72529768943787,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3568,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses `collectEntities(true, TslInst(), _kMySpace)` which operates on the active space (typically Model for structural TSLs). There is no usage of `_Viewport`, `sd_` prefixes, or `#Type E` logic. The script explicitly prevents manual insertion (erases instance) and is designed solely as a utility function called via `callMapIO`."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Any Entity (passed via _Map key 'thisEntity')"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Cannot be run manually. Must be instantiated via `callMapIO` from another TSL script. The source entity must belong to at least one Group.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1809,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3419,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A background utility script that scans an entity to find and report any other TSL (script) instances attached to it, acting as a conflict detector or inventory tool.",
+          "category": "Utility/Logic",
+          "typicalUseCase": "Used by other scripts to check if a beam already has a specific connector (like a ledger or hanger) applied before attempting to add a new one, preventing duplicate machining."
+        },
+        "parameters": [
+          {
+            "name": "thisEntity",
+            "technicalDefault": "null (passed via _Map)",
+            "businessMeaning": "The target timber element (beam, wall, panel) being inspected for attached scripts.",
+            "validRange": "Any entity in the drawing that supports grouping (e.g., GenBeam, Element).",
+            "unit": "N/A",
+            "affectsOutput": "Defines the scope of the search. Only scripts attached to this specific entity will be reported."
+          },
+          {
+            "name": "scriptName",
+            "technicalDefault": "Empty String",
+            "businessMeaning": "The specific name of a TSL script to look for (e.g., 'mcs_shearPlate').",
+            "validRange": "Valid hsbCAD script filename (case-insensitive). Empty string returns all attached scripts.",
+            "unit": "String",
+            "affectsOutput": "Filters the result list. If set, only instances matching this name are returned; otherwise, all attached instances are returned."
+          },
+          {
+            "name": "reportDebug",
+            "technicalDefault": "0 (False)",
+            "businessMeaning": "Enables verbose logging of the scan process to the command line for troubleshooting.",
+            "validRange": "0 (Silent) or 1 (Verbose).",
+            "unit": "Boolean",
+            "affectsOutput": "No impact on geometry. Only displays text reports (e.g., entity counts) to the user console."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Data References (TslInst)",
+            "description": "Returns references to the TSL instances found attached to the target entity via the MapIO interface.",
+            "appliedTo": "None (Read-only operation)."
+          }
+        ]
+      },
+      "tokens_used": 2687,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script instantiation (via `callMapIO` from another TSL).",
+          "Retrieve input parameters from Map (`thisEntity`, `scriptName`, `reportDebug`).",
+          "Validate that `thisEntity` belongs to at least one group; issue warning if not.",
+          "Scan the entire model (all sub-groups) to collect all `TslInst` entities.",
+          "Iterate through every found TSL instance.",
+          "Check if the current TSL instance is attached to `thisEntity`.",
+          "Filter results: if `scriptName` is provided, verify it matches the instance name (case-insensitive).",
+          "If both attachment and name criteria are met, append the TSL instance to the Map return list under key 'tslAttached'.",
+          "If `reportDebug` is true, log entity counts to the command line.",
+          "Return control to the calling script with the populated Map.",
+          "If script is run manually (not via `_bOnMapIO`), immediately erase the instance and terminate."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Is the script being executed via `callMapIO`?",
+            "path1": {
+              "name": "MapIO Execution (Normal Flow)",
+              "steps": [
+                "Parse Map inputs.",
+                "Scan groups and entities.",
+                "Filter and compile list of attached TSLs.",
+                "Return results in Map."
+              ]
+            },
+            "path2": {
+              "name": "Manual Insertion",
+              "steps": [
+                "Detect `_bOnMapIO` is false.",
+                "Execute `eraseInstance()`.",
+                "Exit script immediately."
+              ]
+            }
+          },
+          {
+            "condition": "Does the target entity belong to at least one group?",
+            "path1": {
+              "name": "Group Membership Valid",
+              "steps": [
+                "Proceed to scan sub-groups and collect TSL instances."
+              ]
+            },
+            "path2": {
+              "name": "No Group Membership",
+              "steps": [
+                "Display warning: 'Warning for [Type] The entity needs to be assigned to at least one group'.",
+                "Continue execution (scan returns empty as no links exist)."
+              ]
+            }
+          },
+          {
+            "condition": "Was a specific `scriptName` provided in the Map input?",
+            "path1": {
+              "name": "Specific Filter",
+              "steps": [
+                "Compare candidate TSL's name with input string (ignoring case).",
+                "Only add to results if names match."
+              ]
+            },
+            "path2": {
+              "name": "No Filter (Wildcard)",
+              "steps": [
+                "Add any TSL attached to the entity to the results list regardless of its name."
+              ]
+            }
+          },
+          {
+            "condition": "Is `reportDebug` set to true/1?",
+            "path1": {
+              "name": "Debug Mode",
+              "steps": [
+                "Execute `reportNotice` for entity counts during iteration."
+              ]
+            },
+            "path2": {
+              "name": "Silent Mode",
+              "steps": [
+                "Skip reporting notices to the command line."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Group membership of target entity (`entThis.groups().length()`).",
+            "errorMessage": "Warning for [Entity Type] The entity needs to be assigned to at least one group",
+            "recovery": "User must manually assign the target entity to a group in the CAD environment before calling the checking script again."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Manual Modification",
+            "how": "None (Script erases itself if not called via MapIO)",
+            "effect": "N/A - The script is a transient utility function and does not persist in the drawing for manual editing."
+          }
+        ]
+      },
+      "tokens_used": 3793,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# mapIO_TslInstAttached.mcr\n\n## Overview\nThis script is a background utility used by other hsbCAD scripts. It automatically scans a selected timber element to detect and report any other scripts (TSLs) already attached to it, acting as a conflict detector to prevent duplicate machining.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Operates invisibly within the model space when called by other scripts. |\n| Paper Space | No | Not designed for 2D layout or detailing views. |\n| Shop Drawing | No | Not intended for shop drawing generation. |\n\n## Prerequisites\n- **Required Entities:** The script is triggered by another script acting on a specific entity (e.g., a beam or wall).\n- **Minimum Beam Count:** 0 (It processes a single entity passed to it).\n- **Required Settings:** The target entity must belong to at least one construction group.\n\n## Usage Steps\n\n### Step 1: Automatic Execution\n**Command:** None (Manual run is not supported).\nThis script runs automatically when called by another hsbCAD script via the `callMapIO` function. You do not need to launch it manually.\n\n### Step 2: Background Scan\nWhen the parent script executes, this utility performs the following checks automatically:\n1. It verifies that the target entity belongs to a Group.\n2. It scans the model for all TSL instances.\n3. It filters these instances to find those attached to the target element.\n\n### Step 3: Data Return\nThe script passes the list of found attached scripts back to the parent script. The parent script then decides whether to proceed with an action or display a warning (e.g., \"Connector already exists\").\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not persist in the drawing and therefore has no editable properties in the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | No custom context menu options are provided. The script instance is erased immediately after execution. |\n\n## Settings Files\n- **Filename:** None required.\n- **Location:** N/A\n- **Purpose:** This script relies solely on input parameters passed directly from the calling script.\n\n## Tips\n- **Group Membership:** Ensure your beams and panels are assigned to a construction group. If an element is not grouped, this script cannot find attached machining, and the parent script may fail to detect duplicates.\n- **Debugging:** If you are a developer troubleshooting a calling script, you can enable the internal `reportDebug` flag (via code) to see scan details in the command line.\n\n## FAQ\n- **Q: I tried to insert this script, but it disappeared immediately.**\n  - A: This is normal behavior. `mapIO_TslInstAttached.mcr` is a utility function designed only to be called by other scripts. It deletes itself if run manually because it cannot function without input from a parent script.\n- **Q: I received a warning saying \"The entity needs to be assigned to at least one group.\"**\n  - A: The target timber element you are working on is not in a construction group. Use the hsbCAD grouping tools to assign the element to a group, then retry the operation.\n- **Q: Can I use this to find all scripts on a beam?**\n  - A: Not directly. You must run a parent script that utilizes this utility. The parent script can be configured to report what this utility finds."
+      },
+      "tokens_used": 4557,
+      "error": null
+    }
+  }
+}

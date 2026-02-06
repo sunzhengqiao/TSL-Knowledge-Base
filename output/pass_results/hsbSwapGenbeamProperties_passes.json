@@ -1,0 +1,249 @@
+{
+  "filename": "hsbSwapGenbeamProperties.mcr",
+  "status": "completed",
+  "total_tokens": 29783,
+  "processing_time": 317.541047334671,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "This tsl swaps / replaces the selected properties of a set of genbeams",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "21Sep2017",
+            "author": "thorsten.huck@hsbcad.com",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4594,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select GenBeam entities directly and modifies their properties (posnum, name, material). There is no 'sd_' prefix, no '_Viewport' usage, and no '#Type E' entity collections typical of ShopDrawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model space containing GenBeams",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2822,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7220,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A utility tool to swap, copy, or transfer textual property data (like Name, Material, Grade) between different attribute fields of selected GenBeams.",
+          "category": "Utility/Data Management",
+          "typicalUseCase": "Used when reorganizing beam data, such as moving position numbers into the name field, renaming materials with a prefix, or swapping labels between beams."
+        },
+        "parameters": [
+          {
+            "name": "sSource",
+            "technicalDefault": "Posnum (Index 0)",
+            "businessMeaning": "The original property field from which data is read (e.g., Position Number, Material Name).",
+            "validRange": "Posnum, Name, Material, Information, Label, Grade, Sublabel, Sublabel2",
+            "unit": "N/A (Enumeration)",
+            "affectsOutput": "Determines which existing string value is extracted from the GenBeam to be used in the operation."
+          },
+          {
+            "name": "sTarget",
+            "technicalDefault": "Name (Index 0)",
+            "businessMeaning": "The destination property field that will be overwritten or modified (e.g., setting the Beam Name).",
+            "validRange": "Name, Material, Information, Label, Grade, Sublabel, Sublabel2",
+            "unit": "N/A (Enumeration)",
+            "affectsOutput": "Determines which property attribute of the GenBeam receives the new value."
+          },
+          {
+            "name": "sPrefix",
+            "technicalDefault": "Empty string",
+            "businessMeaning": "A specific text string added to the start of the source data before writing it to the target.",
+            "validRange": "Any alphanumeric string (e.g., 'OLD-', 'REV-')",
+            "unit": "String",
+            "affectsOutput": "Modifies the data written to the target field (e.g., appending 'PRE-' to a position number)."
+          },
+          {
+            "name": "sMode",
+            "technicalDefault": "Overwrite",
+            "businessMeaning": "Defines the logic of the transfer: 'Overwrite' copies source to target, 'Overwrite and clear source' also deletes the original data, 'Swap Values' exchanges the data between the two fields.",
+            "validRange": "Overwrite, Overwrite and clear source, Swap Values",
+            "unit": "N/A (Enumeration)",
+            "affectsOutput": "Controls whether the source field remains intact, is cleared, or is overwritten by the old target value."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sSource matches sTarget",
+            "effect": "The script detects an invalid operation and aborts execution, prompting the user to select different properties.",
+            "cascade": []
+          },
+          {
+            "trigger": "sMode == 'Swap Values'",
+            "effect": "The script temporarily reads the current Target value to ensure it is preserved by moving it to the Source field.",
+            "cascade": [
+              "sTarget"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Property Update",
+            "description": "Modifies the metadata (Name, Material, Grade, etc.) of existing GenBeam entities. No physical geometry or machining is altered.",
+            "appliedTo": "GenBeams selected by the user during script execution"
+          }
+        ]
+      },
+      "tokens_used": 4086,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script (hsbSwapGenbeamProperties)",
+          "Script checks for Execution Key (_kExecuteKey)",
+          "[Conditional] Load properties from Catalog OR show interactive Dialog",
+          "Script checks if Source Property equals Target Property",
+          "[Conditional] Auto-correct Target index (if before dialog) OR Abort (if after)",
+          "Script prompts user to 'Select genbeam(s)'",
+          "User selects one or more GenBeams and confirms",
+          "Script iterates through each selected GenBeam",
+          "Script reads the value from the Source Property field",
+          "Script applies defined Prefix (if any) to the Source value",
+          "[Conditional] If Mode is 'Swap Values', read current Target value to variable",
+          "Script writes (Source + Prefix) to the Target Property field",
+          "[Conditional] If Mode is 'Overwrite and clear source' OR 'Swap Values', write value to Source field",
+          "Script erases itself from the drawing",
+          "Process Complete"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Key (_kExecuteKey) is present",
+            "path1": {
+              "name": "Catalog Execution",
+              "steps": [
+                "Search for catalog entry matching _kExecuteKey",
+                "If found, load properties from that entry",
+                "If not found, load properties from '_LastInserted'",
+                "Skip dialog display"
+              ]
+            },
+            "path2": {
+              "name": "Interactive Execution",
+              "steps": [
+                "Check if Source equals Target (Default State)",
+                "If equal, auto-increment Target to next property option",
+                "Display Properties Dialog to user",
+                "User confirms settings"
+              ]
+            }
+          },
+          {
+            "condition": "Mode Selection (sMode)",
+            "path1": {
+              "name": "Overwrite",
+              "steps": [
+                "Read Source value",
+                "Write Source value (+Prefix) to Target",
+                "Source value remains unchanged"
+              ]
+            },
+            "path2": {
+              "name": "Overwrite and Clear Source",
+              "steps": [
+                "Read Source value",
+                "Write Source value (+Prefix) to Target",
+                "Write empty string (or old Target if logic implies) to Source"
+              ]
+            },
+            "path3": {
+              "name": "Swap Values",
+              "steps": [
+                "Read Source value",
+                "Read Target value",
+                "Write Source value (+Prefix) to Target",
+                "Write original Target value to Source"
+              ]
+            }
+          },
+          {
+            "condition": "Validation: Source == Target",
+            "path1": {
+              "name": "Invalid Configuration",
+              "steps": [
+                "Display Error Message: 'Please select different properties...'",
+                "Erase Script Instance",
+                "Exit"
+              ]
+            },
+            "path2": {
+              "name": "Valid Configuration",
+              "steps": [
+                "Continue to Entity Selection"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Source Property vs Target Property Equality",
+            "errorMessage": "Please select different properties of source and target.",
+            "recovery": "User must re-run the script and ensure the Source and Target dropdowns have different values selected."
+          },
+          {
+            "check": "Entity Type Selection",
+            "errorMessage": "Implicit filter via PrEntity",
+            "recovery": "The prompt only accepts GenBeam entities; non-GenBeam selections are ignored by the logic loop."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None (Command Script)",
+            "how": "N/A",
+            "effect": "The script executes once and calls eraseInstance(). It does not remain in the drawing as an editable object. Modified properties on the GenBeams are permanent until manually changed again."
+          }
+        ]
+      },
+      "tokens_used": 6072,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbSwapGenbeamProperties.mcr\n\n## Overview\nA utility tool to copy, move, or swap textual property data (such as Name, Material, or Grade) between different fields of selected GenBeams. It is useful for reorganizing beam data, for example, copying position numbers into the name field or renaming materials with a specific prefix.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates directly on GenBeams in the 3D model. |\n| Paper Space | No | Not designed for layout views or shop drawings. |\n| Shop Drawing | No | Does not process entities on drawing sheets. |\n\n## Prerequisites\n- **Required entities**: GenBeams must exist in the drawing.\n- **Minimum beam count**: 1 or more beams must be selected to execute the operation.\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command**: `TSLINSERT`\n**Action**: Browse and select `hsbSwapGenbeamProperties.mcr`.\n\n### Step 2: Configure Properties\n**Action**: The Properties Palette (or a dialog box) will appear. Adjust the following settings before proceeding:\n\n1.  **Source**: Select the property field you want to read data from (e.g., *Posnum*).\n2.  **Target**: Select the property field you want to write data to (e.g., *Name*).\n    *   *Note*: Ensure the Source and Target are different, or the script will error.\n3.  **Prefix**: Enter any text string you want to add to the beginning of the source data (e.g., \"REV-\"). Leave empty if not needed.\n4.  **Mode**: Select how the data is handled:\n    *   *Overwrite*: Copies Source to Target. Source remains unchanged.\n    *   *Overwrite and clear source*: Copies Source to Target, then deletes the data in the Source field.\n    *   *Swap Values*: Exchanges the data between Source and Target.\n\n### Step 3: Select GenBeams\n**Command Line**: `Select genbeam(s)`\n**Action**: Click on the beams you wish to modify in the model space. Press **Enter** or **Space** to confirm your selection.\n\n### Step 4: Execution\n**Action**: The script processes the selected beams and updates their properties. The script instance will automatically erase itself upon completion.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Source | Dropdown | Posnum | The property field to read data from (e.g., Posnum, Name, Material, Information, Label, Grade, Sublabel, Sublabel2). |\n| Target | Dropdown | Name | The property field to write data to (e.g., Name, Material, Information, Label, Grade, Sublabel, Sublabel2). |\n| Prefix | Text | (Empty) | A text string added to the start of the source data when writing to the target field (e.g., typing \"OLD-\" adds \"OLD-\" to the value). |\n| Mode | Dropdown | Overwrite | Determines how the data transfer is handled. Options: \"Overwrite\", \"Overwrite and clear source\", or \"Swap Values\". |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This is a command script that runs once and erases itself; it does not offer persistent right-click menu options. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Use Prefix for Versioning**: If you need to keep old data but mark it as obsolete, set the Target to the current field (e.g., Name), Source to Name, Prefix to \"OLD-\", and Mode to \"Overwrite\". Wait, this requires Source != Target. *Correction*: Use this logic when copying from one field to another, e.g., copy Name to Material with a prefix to preserve old names in the material slot.\n- **Swapping Data**: The \"Swap Values\" mode is perfect if you accidentally filled the \"Name\" field with data that should be in the \"Material\" field and vice versa.\n- **Avoiding Errors**: Always double-check that **Source** and **Target** are set to different properties. If they match, the script will display an error message and exit.\n\n## FAQ\n- **Q: What happens if I select 0 beams?**\n  A: The script will start the selection prompt. If you confirm the selection without picking anything, the script will simply end without making changes.\n- **Q: Why did the script abort immediately after opening?**\n  A: You likely set the **Source** and **Target** properties to the same value. The script prevents writing a field to itself to avoid logic errors.\n- **Q: Can I use this script on Wall elements or Panels?**\n  A: No, this script is designed specifically for **GenBeams**. It will not recognize or process other entity types."
+      },
+      "tokens_used": 4989,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,253 @@
+{
+  "filename": "hsb_SetHeaderDescriptionOnPropSet.mcr",
+  "status": "completed",
+  "total_tokens": 21675,
+  "processing_time": 233.16313886642456,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5283,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Uses PrEntity for Element() selection, iterates through _Element[] and ElementWall.opening(). Directly manipulates PropertySets attached to model Openings. No usage of sd_ functions, _Viewport, or #Type E."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "ElementWall",
+            "Opening",
+            "ElemText"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing structural walls with openings and generated element text",
+          "requiredSettings": [
+            "PropertySet named 'Door Schedule'",
+            "ElemText entities with textCode='WINDOW' and textSubCode='HEADER'"
+          ]
+        }
+      },
+      "tokens_used": 2841,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "Select an Elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3451,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically extracts header descriptions from specific text labels placed near wall openings and writes them into the opening's PropertySet for scheduling purposes.",
+          "category": "DataManagement",
+          "typicalUseCase": "A user has manually annotated header information (e.g., '2x12 DF') using ElemText entities next to window/door openings and needs to push this text data into the 'Door Schedule' PropertySet for reports or production tags."
+        },
+        "parameters": [],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "PropertySet",
+            "description": "Updates the 'Header_Description' field within the 'Door Schedule' PropertySet attached to specific Opening entities.",
+            "appliedTo": "Openings within selected Wall Elements"
+          },
+          {
+            "type": "ScriptInstance",
+            "description": "A temporary processing instance that erases itself immediately after execution, leaving only the modified property data.",
+            "appliedTo": "N/A"
+          }
+        ]
+      },
+      "tokens_used": 2021,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launched (Insertion)",
+          "Check if this is a recursive insertion cycle (insertCycleCount > 1)",
+          "[Conditional Branch] Is Recursive?",
+          "Path Yes: Erase script instance immediately and exit",
+          "Path No: Prompt user to select Element(s) via PrEntity",
+          "User selects Elements and confirms",
+          "Store selected Elements into internal _Element array",
+          "Script Instance Pauses (Waiting for Database/Event)",
+          "Script Reactivated (Processing)",
+          "Check if any Elements are stored in _Element array",
+          "[Conditional Branch] Elements Available?",
+          "Path No: Erase script instance and exit",
+          "Path Yes: Cast first Element to ElementWall to verify validity",
+          "[Conditional Branch] Valid ElementWall?",
+          "Path No: Erase script instance and exit",
+          "Path Yes: Begin Main Loop iterating through all selected Elements",
+          "Get all Openings within the current Element",
+          "Begin Inner Loop iterating through all Openings in Element",
+          "Get existing PropertySet map named 'Door Schedule' from Opening",
+          "Get all ElemText entities associated with the current Element",
+          "Begin Loop iterating through all ElemText entities",
+          "Filter for text entities with code='WINDOW' and subCode='HEADER'",
+          "If match found: Store text location and text content into arrays",
+          "End ElemText Loop",
+          "Begin Loop to find closest Header Text to the current Opening",
+          "Calculate X-axis distance between Opening Origin and Text Location",
+          "Compare distance to current minimum distance",
+          "If closer: Update Header string to this text's content",
+          "End Closest Text Loop",
+          "[Conditional Branch] Header Text Found?",
+          "Path No: Skip to next Opening",
+          "Path Yes: Create new PropertySet Map containing 'Header_Description'",
+          "Apply updated PropertySet Map to the Opening",
+          "End Opening Loop",
+          "End Element Loop",
+          "Erase script instance and exit"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Check for recursive insertion (insertCycleCount > 1)",
+            "path1": {
+              "name": "Recursive Execution",
+              "steps": [
+                "Call eraseInstance()",
+                "Exit script"
+              ]
+            },
+            "path2": {
+              "name": "First Execution",
+              "steps": [
+                "Execute PrEntity for Element selection",
+                "Populate _Element array"
+              ]
+            }
+          },
+          {
+            "condition": "Check for valid Element array (_Element.length() <= 0)",
+            "path1": {
+              "name": "No Elements",
+              "steps": [
+                "Call eraseInstance()",
+                "Exit script"
+              ]
+            },
+            "path2": {
+              "name": "Elements Exist",
+              "steps": [
+                "Proceed to ElementWall cast check"
+              ]
+            }
+          },
+          {
+            "condition": "Check first Element is a valid ElementWall",
+            "path1": {
+              "name": "Invalid Wall",
+              "steps": [
+                "Call eraseInstance()",
+                "Exit script"
+              ]
+            },
+            "path2": {
+              "name": "Valid Wall",
+              "steps": [
+                "Iterate Openings",
+                "Search for Header Texts"
+              ]
+            }
+          },
+          {
+            "condition": "Check ElemText code and subCode match (WINDOW + HEADER)",
+            "path1": {
+              "name": "Match Found",
+              "steps": [
+                "Add text coordinates to ptLocationText array",
+                "Add text content to sHeaderDescription array"
+              ]
+            },
+            "path2": {
+              "name": "No Match",
+              "steps": [
+                "Ignore ElemText",
+                "Continue to next entity"
+              ]
+            }
+          },
+          {
+            "condition": "Check if closest text was found (sHeader != \"\")",
+            "path1": {
+              "name": "Header Found",
+              "steps": [
+                "Create Map with Header_Description",
+                "Update Opening PropertySet 'Door Schedule'"
+              ]
+            },
+            "path2": {
+              "name": "No Header Found",
+              "steps": [
+                "Skip PropertySet update",
+                "Continue to next Opening"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Recursive insertion protection",
+            "errorMessage": "None (Silent fail)",
+            "recovery": "Script simply terminates if it detects it is being called recursively during insertion."
+          },
+          {
+            "check": "Element Selection Validation",
+            "errorMessage": "None (Silent fail)",
+            "recovery": "If the user cancels the PrEntity selection or selects nothing, the script erases itself."
+          },
+          {
+            "check": "Element Type Validation",
+            "errorMessage": "None (Silent fail)",
+            "recovery": "If the selected element cannot be cast to an ElementWall, the script erases itself."
+          },
+          {
+            "check": "Opening PropertySet Existence",
+            "errorMessage": "None (Silent fail)",
+            "recovery": "The script attempts to retrieve the 'Door Schedule' map. If it doesn't exist, it proceeds to potentially create/overwrite it via setAttachedPropSetFromMap later, provided a header is found."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 4068,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SetHeaderDescriptionOnPropSet\n\n## Overview\nAutomatically extracts header descriptions from specific text labels placed near wall openings and writes them into the 'Door Schedule' PropertySet for scheduling and tagging purposes.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be run in the Model Space where the wall elements and text labels exist. |\n| Paper Space | No | Not supported in layout views. |\n| Shop Drawing | No | This script operates on the 3D model structure, not 2D drawings. |\n\n## Prerequisites\n- **Required Entities**:\n  - Wall Elements containing Openings.\n  - **ElemText** entities must exist near the openings to serve as the source data.\n- **Specific Text Settings**:\n  - The ElemText entities must have `Text Code` set to `WINDOW`.\n  - The ElemText entities must have `Text SubCode` set to `HEADER`.\n- **Property Sets**:\n  - The script targets a PropertySet named `Door Schedule`. It will create or update the field `Header_Description` within this set on the Opening entities.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command**: Type `TSLINSERT` in the command line or run via your custom toolbar icon.\n**Action**: Select `hsb_SetHeaderDescriptionOnPropSet.mcr` from the file dialog.\n\n### Step 2: Select Walls\n```\nCommand Line: Select an Elements\nAction: Click on the Wall Elements that contain the openings you wish to update. You can select multiple walls.\n```\n\n### Step 3: Confirm Selection\n```\nAction: Press Enter or Right-click to confirm the selection.\n```\n*Note: Once confirmed, the script will automatically find the closest 'Header' text to every opening in the selected walls, update the properties, and then erase itself.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| N/A | N/A | N/A | This script does not expose any parameters to the Properties Palette. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| N/A | This script does not add any options to the right-click context menu. |\n\n## Settings Files\n- None. This script relies on the geometry and existing text entities in the drawing rather than external settings files.\n\n## Tips\n- **Placement Matters**: The script calculates the distance between the text and the opening along the X-axis. Ensure your \"Header\" text is physically closer to the intended opening than any other header text to ensure correct association.\n- **Verification**: After running the script, select an opening and check its Properties Palette under the \"Door Schedule\" category to verify the `Header_Description` field has been populated.\n- **Cleanup**: The script instance automatically deletes itself after running, so you do not need to manually remove it from the drawing.\n\n## FAQ\n- **Q: I ran the script, but the properties didn't update. Why?**\n  - **A**: Check that your ElemText entities have the exact codes `WINDOW` (Code) and `HEADER` (SubCode). Also, ensure the text is close enough to the opening.\n- **Q: Does this script work on curved walls?**\n  - **A**: Yes, it works on any ElementWall. It uses the opening's origin point to find the closest text.\n- **Q: Can I use this for Door headers as well?**\n  - **A**: Yes, provided the text label uses the required `WINDOW` and `HEADER` codes and is located near the door opening."
+      },
+      "tokens_used": 4011,
+      "error": null
+    }
+  }
+}

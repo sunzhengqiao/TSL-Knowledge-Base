@@ -1,0 +1,267 @@
+{
+  "filename": "hsbStretchBeam2Entity.mcr",
+  "status": "completed",
+  "total_tokens": 31931,
+  "processing_time": 155.5842161178589,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "E",
+          "numBeamsReq": 1,
+          "keywords": [],
+          "majorVersion": 1,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 1
+        },
+        "description": "This tsl stretches beams to a bounding entity (beam, or TrussEntity)",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "10.05.2022",
+            "author": "Marsel Nakuci",
+            "changes": "Init"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3805,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Explicit use of `_kModelSpace` argument in `dbCreate` method. Logic involves 3D geometric calculations (`Body.rayIntersection`, `Quader`, `Vector3d`) and modifies `GenBeam` geometry using `Cut` and `_kStretchOnInsert`. No shop drawing prefixes (`sd_`) or viewport-specific code found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Entity (Beam or TrussEntity)"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5397,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select beams to stretch|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select bounding entities|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "_bOnInsert (when _kExecuteKey is not set)",
+            "title": "Standard Properties Dialog",
+            "dataSource": "Internal Script Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dGap",
+            "type": "PropDouble",
+            "displayName": "|Gap|",
+            "defaultValue": "0",
+            "inputType": "number",
+            "options": [],
+            "category": "|General|",
+            "description": "|Defines the Gap|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4783,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automatically stretches or trims selected timber beams to precisely meet the face of bounding structural elements (beams or trusses) while maintaining a user-defined clearance gap.",
+          "category": "Framing / Detailing",
+          "typicalUseCase": "Used when connecting floor joists, studs, or rafters to main beams or trusses where the secondary elements need to be cut to length with a specific air gap or distance from the main supporting element."
+        },
+        "parameters": [
+          {
+            "name": "dGap",
+            "technicalDefault": "0",
+            "businessMeaning": "The clearance distance maintained between the end of the beam being stretched and the face of the bounding entity. It creates a physical separation between the two elements.",
+            "validRange": "0mm to 50mm (Typically 0-10mm for tolerances, up to 50mm for insulation gaps)",
+            "unit": "mm",
+            "affectsOutput": "Determines the final length of the beam. A positive value shortens the beam relative to the intersection point; a zero value creates a flush connection."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Geometric Stretch/Cut",
+            "description": "The script modifies the geometry of the target beam by stretching or trimming it to the calculated intersection point with the bounding entity. The modification uses the _kStretchOnInsert flag, meaning the beam's length definition is updated.",
+            "appliedTo": "The beams selected in the first prompt ('Select beams to stretch')."
+          }
+        ]
+      },
+      "tokens_used": 5928,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script launched (hsbStretchBeam2Entity).",
+          "2. Check `insertCycleCount`: if greater than 1, erase instance and exit (prevents re-entrancy).",
+          "3. Determine Property Source: Check if `_kExecuteKey` is set.",
+          "4. [Conditional] Load properties from Catalog (if key found) OR Show standard Properties Dialog (if no key).",
+          "5. User Input: Prompt 'Select beams to stretch' (Beam selection).",
+          "6. User Input: Prompt 'Select bounding entities' (Beam or TrussEntity selection).",
+          "7. Batch Processing: Loop through every beam selected in Step 5.",
+          "8. Instance Generation: For each beam, map the bounding entities and create a new TSL instance attached to that specific beam.",
+          "9. Main Instance: Erase the original temporary instance.",
+          "10. [Sub-Instance Execution] Validate: Ensure exactly one beam is attached.",
+          "11. [Sub-Instance Execution] Validation: Ensure mapped bounding entities are present.",
+          "12. [Sub-Instance Execution] Analysis: Loop through bounding entities to find intersections.",
+          "13. [Sub-Instance Execution] Calculation: Determine closest intersection point in both -X (Left) and +X (Right) directions.",
+          "14. [Sub-Instance Execution] Application: Apply `Cut` tool with `_kStretchOnInsert` flag using calculated point and `dGap` offset.",
+          "15. [Sub-Instance Execution] Cleanup: Erase the TSL instance, leaving only the modified beam."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Key (_kExecuteKey) presence",
+            "path1": {
+              "name": "Catalog Load",
+              "steps": [
+                "Check if key matches a catalog entry",
+                "Load properties from matching catalog",
+                "If no match, load from 'LastInserted' catalog"
+              ]
+            },
+            "path2": {
+              "name": "Dialog Interaction",
+              "steps": [
+                "Execute `showDialog()`",
+                "User manually sets Gap (dGap)",
+                "Script proceeds to selections"
+              ]
+            }
+          },
+          {
+            "condition": "Bounding Entity Type",
+            "path1": {
+              "name": "Beam Entity",
+              "steps": [
+                "Cast to Beam",
+                "Get envelope body",
+                "Calculate intersection with ray"
+              ]
+            },
+            "path2": {
+              "name": "TrussEntity",
+              "steps": [
+                "Cast to TrussEntity",
+                "Generate composite body from TrussDefinition",
+                "Transform body to World Coordinates",
+                "Calculate intersection with ray"
+              ]
+            }
+          },
+          {
+            "condition": "Intersection Found (Left or Right)",
+            "path1": {
+              "name": "Intersection Valid",
+              "steps": [
+                "Identify closest intersection point",
+                "Calculate cut normal vector",
+                "Offset point by `dGap`",
+                "Add Cut tool to beam"
+              ]
+            },
+            "path2": {
+              "name": "No Intersection",
+              "steps": [
+                "Skip cutting for that specific side",
+                "Preserve original beam length on that end"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insert Cycle Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script self-terminates immediately to prevent recursion."
+          },
+          {
+            "check": "Attached Beam Count (_Beam.length)",
+            "errorMessage": "Beam for stretching is needed",
+            "recovery": "Script erases itself. User must run the tool again and ensure beams are selected correctly."
+          },
+          {
+            "check": "Element Assignment (bm.element())",
+            "errorMessage": "No element found",
+            "recovery": "Script erases itself. Ensure the beam to be stretched is part of a valid Element."
+          },
+          {
+            "check": "Bounding Entities Map",
+            "errorMessage": "No bounding entities found",
+            "recovery": "Script erases itself. User must run tool again and ensure valid bounding entities are selected."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Script Self-Termination",
+            "how": "Automatic (eraseInstance)",
+            "effect": "The TSL instance is deleted from the model. No further script-based editing is possible."
+          },
+          {
+            "action": "Geometry Modification",
+            "how": "addToolStatic(Cut, _kStretchOnInsert)",
+            "effect": "The beam's length and end cut geometry are permanently updated in the database to match the calculated intersection points minus the gap."
+          }
+        ]
+      },
+      "tokens_used": 7462,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbStretchBeam2Entity.mcr\n\n## Overview\nThis script automatically stretches or trims selected timber beams to precisely meet the face of bounding structural elements (such as other beams or trusses). It allows for a user-defined clearance gap to be maintained between the elements.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D model entities. |\n| Paper Space | No | Not designed for 2D layout or detailing views. |\n| Shop Drawing | No | Does not generate shop drawings or annotations. |\n\n## Prerequisites\n- **Required entities**: At least one beam to stretch and at least one bounding entity (Beam or TrussEntity).\n- **Minimum beam count**: 1 beam to modify.\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command**: `TSLINSERT` → Select `hsbStretchBeam2Entity.mcr`\n\n### Step 2: Configure Properties\n**Action**: The Properties Dialog appears.\n- **Gap**: Enter the desired distance (in current drawing units) to leave between the beam end and the bounding entity. A value of 0 creates a flush connection.\n- Click **OK** or **Apply** to proceed.\n\n### Step 3: Select Beams to Stretch\n```\nCommand Line: Select beams to stretch\nAction: Click on the beam(s) you want to modify (stretch/trim). Press Enter to confirm selection.\n```\n\n### Step 4: Select Bounding Entities\n```\nCommand Line: Select bounding entities\nAction: Click on the entity(ies) that define the limit for the stretch (e.g., a main supporting beam or truss). Press Enter to confirm.\n```\n\n### Step 5: Processing\n**Action**: The script calculates intersections and applies the modifications.\n- The script will automatically stretch/trim the selected beams to the calculated intersection points.\n- The specified gap is applied.\n- The script instance self-terminates, leaving only the modified geometry.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Gap | Double | 0 | Defines the clearance distance maintained between the end of the beam being stretched and the face of the bounding entity. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script does not add persistent right-click context menu options. It is a \"run-once\" script. |\n\n## Settings Files\n- **Filename**: None\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Direction matters**: The script calculates intersections along the beam's local X-axis (Left and Right directions). Ensure the beam is oriented correctly relative to where you want it to stretch.\n- **Gap Usage**: Use the Gap property for insulation spacing or to account for construction tolerances.\n- **Batch Processing**: You can select multiple beams to stretch in Step 3 and multiple bounding entities in Step 4. The script will process the combination efficiently.\n- **Truss Support**: The script recognizes TrussEntities as valid boundaries, not just standard beams.\n\n## FAQ\n- **Q: Why didn't my beam stretch?**\n  **A**: The script looks for intersections in the longitudinal direction of the beam. If the bounding entity is not directly in the path of the beam's extension, no cut will be made. Also, ensure the bounding entity was selected in the second step.\n- **Q: Can I undo the changes?**\n  **A**: Yes, since the script modifies the geometry directly, you can use the standard AutoCAD `UNDO` command to revert the changes.\n- **Q: What happens if I set a Gap of 0?**\n  **A**: The beam will be stretched or trimmed so that its end face exactly touches the face of the bounding entity (flush connection)."
+      },
+      "tokens_used": 4556,
+      "error": null
+    }
+  }
+}

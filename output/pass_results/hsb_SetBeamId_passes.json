@@ -1,0 +1,208 @@
+{
+  "filename": "hsb_SetBeamId.mcr",
+  "status": "completed",
+  "total_tokens": 19026,
+  "processing_time": 161.10411477088928,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "17.04.2009",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "First version"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3456,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select Beam() entities directly from the model. It does not use 'sd_' prefix, '_Viewport', or '#Type E' patterns associated with ShopDrawing or Paper Space scripts. It uses 'eraseInstance()' after processing, which is typical of utility scripts acting on 3D model data."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "The script requires user interaction to select beams from the Model Space.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1261,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select a set of beams|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "Properties Dialog",
+            "trigger": "_bOnInsert && _kExecuteKey == \"\"",
+            "title": null,
+            "dataSource": "Internal Script Properties",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sId",
+            "type": "PropString",
+            "displayName": "ID to set in the Beam",
+            "defaultValue": "999",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3464,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "A utility script to batch assign a specific internal ID (hsbId) to a selection of beams.",
+          "category": "Utility/DataManagement",
+          "typicalUseCase": "Updating production identifiers, ERP codes, or element grouping numbers for multiple timber elements simultaneously."
+        },
+        "parameters": [
+          {
+            "name": "sId",
+            "technicalDefault": "999",
+            "businessMeaning": "The specific alphanumeric code to be stamped onto the selected beams as their internal hsbId. This usually corresponds to an element number, assembly code, or manufacturing reference used in data export.",
+            "validRange": "Any text string (e.g., numeric codes like '101', composite codes like 'FL-01', or manufacturing flags)",
+            "unit": "Text",
+            "affectsOutput": "Modifies the metadata (hsbId property) of the selected beams. It does not change physical geometry, dimensions, or machining operations."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Metadata",
+            "description": "Updates the hsbId attribute of the selected beams with the specified string value.",
+            "appliedTo": "User-selected beams via PrEntity"
+          }
+        ]
+      },
+      "tokens_used": 3133,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script execution launched via hsbCAD interface.",
+          "2. Properties Dialog (OPM) displays default ID '999' for user editing.",
+          "3. Command line prompts user to select a set of beams.",
+          "4. User confirms selection (or presses Esc to cancel).",
+          "5. Script enters recalculation cycle (Processing Phase).",
+          "6. Input string is trimmed of leading/trailing whitespace.",
+          "7. Script iterates through the selected beam collection.",
+          "8. The hsbId property of each selected beam is updated to the input string.",
+          "9. Script instance erases itself from the drawing."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Check for duplicate execution cycles (insertCycleCount > 1)",
+            "path1": {
+              "name": "Duplicate Detected",
+              "steps": [
+                "Script immediately erases instance and returns",
+                "Prevents logic from running if script is copied/pasted."
+              ]
+            },
+            "path2": {
+              "name": "First Cycle",
+              "steps": [
+                "Proceed to User Input phase"
+              ]
+            }
+          },
+          {
+            "condition": "User Selection via PrEntity",
+            "path1": {
+              "name": "Valid Selection",
+              "steps": [
+                "Selected beams are added to internal _Beam array",
+                "Script proceeds to Recalculation"
+              ]
+            },
+            "path2": {
+              "name": "Empty/Cancelled Selection",
+              "steps": [
+                "_Beam array remains empty",
+                "Recalculation loop runs 0 times",
+                "Script erases instance"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insertion Cycle Count",
+            "errorMessage": "None (Silent exit)",
+            "recovery": "N/A - Script ensures it only runs once immediately after insertion."
+          },
+          {
+            "check": "Input String Whitespace",
+            "errorMessage": "None",
+            "recovery": "Script automatically executes trimLeft() and trimRight() on the input string to remove accidental spaces."
+          }
+        ],
+        "postInsertionActions": []
+      },
+      "tokens_used": 3794,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_SetBeamId.mcr\n\n## Overview\nThis script allows you to quickly assign or update the internal ID (hsbId) for multiple selected beams simultaneously. It is useful for batch updating element numbers, production codes, or ERP references without editing each beam individually.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This is the primary environment for selecting and modifying 3D beams. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required entities**: At least one Beam must exist in the model to modify.\n- **Minimum beam count**: 1 (The script will run without errors if 0 are selected, but no changes will be made).\n- **Required settings files**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_SetBeamId.mcr` from the file dialog.\n\n### Step 2: Configure ID Value\n```\nCommand Line: [Script instance appears in model]\nAction: \n1. Ensure the script instance is selected.\n2. Open the Properties Palette (Ctrl+1).\n3. Locate the parameter \"ID to set in the Beam\".\n4. Change the value from the default \"999\" to your desired identifier (e.g., \"FL-01\", \"A-100\").\n```\n\n### Step 3: Select Beams\n```\nCommand Line: Select a set of beams\nAction: \n1. Click to select individual beams or use a window selection to select multiple beams.\n2. Press Enter or Spacebar to confirm the selection.\n```\n\n*(Note: The script will automatically apply the ID and erase itself after confirmation.)*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| ID to set in the Beam | Text | 999 | The specific alphanumeric code to assign to the selected beams' internal hsbId property. This does not change the physical geometry, only the data identifier. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script runs immediately upon insertion and interaction; it does not retain persistent context menu options. |\n\n## Settings Files\nNone.\n\n## Tips\n- **Set ID First**: Modify the \"ID to set in the Beam\" property in the Properties Palette *before* clicking on the beams in the model. This ensures the correct ID is applied as soon as you make your selection.\n- **Batch Updates**: You can use window selection (dragging from left to right) or crossing selection (dragging right to left) to update dozens of beams in a single operation.\n- **Script Behavior**: The script instance will disappear automatically after processing the beams. This is normal behavior for a utility script.\n\n## FAQ\n- **Q: Can I use letters and numbers in the ID?**\n  A: Yes, the ID parameter accepts any text string (e.g., \"101\", \"Wall-A\", \"Mfg-Code\").\n- **Q: I accidentally included spaces in my ID. Will this cause errors?**\n  A: No, the script automatically removes leading and trailing spaces from your input to ensure clean data.\n- **Q: What happens if I cancel the selection?**\n  A: If you press Esc instead of selecting beams, the script will simply erase itself without making any changes to the model."
+      },
+      "tokens_used": 3918,
+      "error": null
+    }
+  }
+}

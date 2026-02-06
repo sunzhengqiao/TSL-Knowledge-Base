@@ -1,0 +1,291 @@
+{
+  "filename": "hsb_IntegrateToolings.mcr",
+  "status": "completed",
+  "total_tokens": 28941,
+  "processing_time": 372.3819968700409,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5656,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Explicit usage of '_kModelSpace' in the dbCreate function call. The script manipulates 3D Beam geometry using 'BeamCut', 'envelopeBody', and 'addTool' methods, which are specific to 3D model processing. There is no usage of 'sd_' prefixes, '_Viewport', or ShopDrawing entities."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 4202,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "|Select beams|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select tools|",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 3,
+              "function": "PrEntity",
+              "promptOriginal": "|Select beams to| |add|",
+              "condition": "_kExecuteKey == \"|Add beams|\"",
+              "required": true
+            },
+            {
+              "step": 4,
+              "function": "PrEntity",
+              "promptOriginal": "|Select beams to| |remove|",
+              "condition": "_kExecuteKey == \"|Remove beams|\"",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "modifySectionForCnCProp",
+            "type": "PropString",
+            "displayName": "|Modify section for CnC|",
+            "defaultValue": 0,
+            "inputType": "dropdown",
+            "options": [
+              "|No|",
+              "|Yes|"
+            ],
+            "category": null,
+            "description": "|Specifies whether the tool is allowed to grow in its free directions for machine operations.|"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "|Add beams|",
+            "handler": "|Add beams|",
+            "action": "Appends selected beams to the script instance.",
+            "alsoTriggeredBy": null
+          },
+          {
+            "menuItem": "|Remove beams|",
+            "handler": "|Remove beams|",
+            "action": "Removes selected beams from the script instance.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 3147,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Integrates the volume of a specific 'Tool' beam into multiple target beams as a machining operation (volume subtraction) wherever they intersect.",
+          "category": "Machining",
+          "typicalUseCase": "Automatically cutting voids, slots, or complex joinery in structural beams by using a secondary 'tool' beam to define the cut shape and position."
+        },
+        "parameters": [
+          {
+            "name": "modifySectionForCnCProp",
+            "technicalDefault": "0",
+            "businessMeaning": "Determines if the tool operation is allowed to project infinitely in the tool's local free cross-sectional directions (cutting completely through the target beam's profile) rather than being restricted to the exact physical length/width of the tool beam.",
+            "validRange": "No (Strict Volume Cut), Yes (Infinite/Projection Cut)",
+            "unit": "Enum",
+            "affectsOutput": "Machining geometry on target beams (Strict volume subtraction vs. Through-cut) and the visual color of the tool representation in the model."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User changes 'Modify section for CnC' property",
+            "effect": "Updates the internal calculation for the BeamCut and changes the display color of the tool visualization line.",
+            "cascade": [
+              "toolColor",
+              "BeamCut.setModifySectionForCnC"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "BeamCut",
+            "description": "A volumetric cut operation that subtracts the tool geometry from the target beam. It is applied only where the target beam's envelope body intersects with the tool beam's envelope body.",
+            "appliedTo": "Target beams selected during insertion or added via context menu."
+          }
+        ]
+      },
+      "tokens_used": 5146,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User executes script command to insert.",
+          "Script checks if insertion is in the first cycle (prevents recursive loops).",
+          "User is prompted to select target beams (beams to be machined).",
+          "User is prompted to select tool beams (beams defining the cut shape).",
+          "Script iterates through every selected tool beam.",
+          "For each tool beam, a new script instance is created in ModelSpace, mapping that specific tool and the list of target beams to it.",
+          "The original temporary script instance erases itself.",
+          "Each generated instance retrieves its specific tool beam from the map.",
+          "Instance verifies the tool beam is valid and target list is not empty.",
+          "Instance sets up context menu triggers for adding/removing beams.",
+          "Instance reads 'Modify section for CnC' property to determine cut type and visual color.",
+          "Instance creates a 'BeamCut' object based on the tool beam's geometry.",
+          "Instance iterates through all target beams assigned to it.",
+          "Instance checks if the target beam's envelope body intersects the tool body.",
+          "If intersecting, the 'BeamCut' is applied to the target beam.",
+          "Instance draws a reference line to visualize the tool's centerline."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Cycle Check (insertCycleCount)",
+            "path1": {
+              "name": "Master Insertion Mode",
+              "steps": [
+                "Execute selection prompts.",
+                "Create worker instances.",
+                "Erase master instance."
+              ]
+            },
+            "path2": {
+              "name": "Recursion Detected",
+              "steps": [
+                "Erase instance immediately.",
+                "Stop execution."
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Execution (_kExecuteKey)",
+            "path1": {
+              "name": "Add beams",
+              "steps": [
+                "Prompt user to select beams.",
+                "Check if selected beams are already in the list.",
+                "Append new beams to the internal list (_Beam)."
+              ]
+            },
+            "path2": {
+              "name": "Remove beams",
+              "steps": [
+                "Prompt user to select beams.",
+                "Find index of selected beams in the internal list.",
+                "Remove beams from the internal list."
+              ]
+            }
+          },
+          {
+            "condition": "Geometric Intersection (hasIntersection)",
+            "path1": {
+              "name": "Intersection Found",
+              "steps": [
+                "Apply tool (BeamCut) to the target beam.",
+                "Update target beam geometry."
+              ]
+            },
+            "path2": {
+              "name": "No Intersection",
+              "steps": [
+                "Skip current target beam.",
+                "Continue to next target beam."
+              ]
+            }
+          },
+          {
+            "condition": "Entity Dependency Validation",
+            "path1": {
+              "name": "Tool Beam Valid",
+              "steps": [
+                "Proceed with calculation."
+              ]
+            },
+            "path2": {
+              "name": "Tool Beam Invalid/Empty",
+              "steps": [
+                "Erase script instance.",
+                "Stop execution."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insertion Cycle Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script erases itself automatically if it detects it is running in a cycle greater than 1 to prevent infinite loops during instance generation."
+          },
+          {
+            "check": "Assigned Tool Beam Validity",
+            "errorMessage": "None (Silent)",
+            "recovery": "If the mapped tool beam is deleted or invalid (bIsValid() returns false), the script instance erases itself."
+          },
+          {
+            "check": "Target Beam List Length",
+            "errorMessage": "None (Silent)",
+            "recovery": "If all beams are removed via 'Remove beams' or the list is empty on generation, the script instance erases itself."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Target Beam List",
+            "how": "Right-click Context Menu > 'Add beams' or 'Remove beams'",
+            "effect": "Opens a selection prompt to dynamically add new beams to the machining group or remove existing ones without deleting the script."
+          },
+          {
+            "action": "Toggle Cut Projection Mode",
+            "how": "Properties Palette (OPM) > 'Modify section for CnC'",
+            "effect": "Switches the 'BeamCut' behavior between a strict volumetric cut (No) and an infinite projection cut (Yes). Also changes the color of the tool visualization line (Red=1 for No, White=7 for Yes)."
+          },
+          {
+            "action": "Move/Rotate Tool",
+            "how": "CAD Grips or Move/Rotate commands on the Tool Beam entity",
+            "effect": "Script detects geometry change (via setDependencyOnEntity) and recalculates the cut position and intersection on all linked target beams."
+          },
+          {
+            "action": "Update Target Geometry",
+            "how": "Modify Target Beam dimensions/position",
+            "effect": "Script recalculates intersections; if the target moves away from the tool, the cut is removed; if it moves into the tool, the cut is applied."
+          }
+        ]
+      },
+      "tokens_used": 5989,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_IntegrateToolings\n\n## Overview\nThis script integrates the volume of specific \"tool\" beams into multiple target beams, creating machining cuts (voids or slots) wherever they intersect. It allows you to use standard beam geometry to define complex cut shapes and apply them to structural members automatically.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script is designed for 3D model processing only. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | This operates on the 3D model, not drawing views. |\n\n## Prerequisites\n- **Required Entities**: At least one \"Tool\" beam (to define the cut) and at least one target beam (to receive the cut).\n- **Minimum Beam Count**: 2 (1 target, 1 tool).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command:** `TSLINSERT` → Select `hsb_IntegrateToolings.mcr`\n\n### Step 2: Select Target Beams\n```\nCommand Line: Select beams\nAction: Click on the beams you want to machine (cut). Press Enter to confirm selection.\n```\n*These are the structural beams that will have material removed.*\n\n### Step 3: Select Tool Beams\n```\nCommand Line: Select tools\nAction: Click on the beams that will act as the cutting tools. Press Enter to confirm selection.\n```\n*The script will create a separate instance for each tool selected, applying its shape to all target beams selected in Step 2.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Modify section for CnC | Dropdown | No | Determines if the tool projects infinitely through the target beam (Yes) or cuts strictly the volume of the tool beam (No). Also changes the visualization color of the tool (Red for No, White for Yes). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Add beams | Allows you to select additional target beams to apply the current tool cut to. |\n| Remove beams | Allows you to select target beams to remove the tool cut from. |\n\n## Settings Files\nNone. This script does not rely on external XML settings files.\n\n## Tips\n- **Visualization:** The tool beam is visualized with a centerline. If the line is **Red**, the \"Modify section for CnC\" is set to \"No\" (strict volume cut). If it is **White**, it is set to \"Yes\" (projection cut).\n- **Dynamic Updates:** If you move or rotate the tool beam using standard AutoCAD grips or commands, the cut on the target beams will update automatically.\n- **Through-Cuts:** Use the \"Modify section for CnC\" = \"Yes\" option if you want a tool to cut completely through a beam profile, regardless of the tool's actual length in that direction.\n\n## FAQ\n- **Q: What happens if I delete the tool beam?**\n  - A: The script instance detects that the tool beam is no longer valid and erases itself automatically, removing the cuts.\n- **Q: Can I use one tool to cut multiple different beams?**\n  - A: Yes. During insertion, select all the beams you want to cut as \"Target Beams,\" then select your \"Tool.\" The script will apply that tool to all selected targets.\n- **Q: What is the difference between \"No\" and \"Yes\" for Modify section for CnC?**\n  - A: **No** acts like a physical cookie cutter—only the volume where the tool physically exists is removed. **Yes** acts like an infinite laser—the tool projects through the target beam in its free local directions, useful for drilling through-holes or slots that go past the tool's length."
+      },
+      "tokens_used": 4801,
+      "error": null
+    }
+  }
+}

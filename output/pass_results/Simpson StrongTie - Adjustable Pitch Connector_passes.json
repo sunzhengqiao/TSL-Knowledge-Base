@@ -1,0 +1,271 @@
+{
+  "filename": "Simpson StrongTie - Adjustable Pitch Connector.mcr",
+  "status": "completed",
+  "total_tokens": 41164,
+  "processing_time": 439.66630578041077,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 6493,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script constructs 3D Body objects and draws them using Display(9). It interacts with GenBeam entities via _Beam0 and _Beam1 using getBeam(). No 'sd_' API calls, _Viewport references, or #Type E definitions found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6437,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getBeam",
+              "promptOriginal": "Select male beam",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getBeam",
+              "promptOriginal": "Select female beam",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "prdMaleWidthTlorenace",
+            "type": "PropDouble",
+            "displayName": "Male Tolerance",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": "If beam is smallest that expected by manufacturer, a measure of tolerance can be added"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 7226,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates a 3D model of a Simpson Strong-Tie VPA (Variable Pitch Anchor) adjustable joist hanger connecting a male joist to a female beam at a specific pitch.",
+          "category": "Hardware",
+          "typicalUseCase": "Connecting a sloped rafter or joist to a supporting beam or ledger plate where the angle varies between 15 and 45 degrees."
+        },
+        "parameters": [
+          {
+            "name": "prdMaleWidthTlorenace",
+            "technicalDefault": 0,
+            "businessMeaning": "A tolerance allowance applied to the width of the male (joist) beam during hanger selection. It accounts for timber being slightly undersized than the nominal width required by the connector.",
+            "validRange": "0 mm to 5 mm",
+            "unit": "mm",
+            "affectsOutput": "Determines if the script considers the beam width compatible with the available hanger sizes. Increasing it allows slightly narrower beams to pass validation, preventing the script from deleting the connector instance with an error."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "prdMaleWidthTlorenace is increased",
+            "effect": "Expands the lower bound acceptance criteria for the male beam width (dMw) in the lookup table logic.",
+            "cascade": [
+              "iIndex",
+              "dHw",
+              "strModel"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "3D Body (Visual Representation)",
+            "description": "A geometric assembly of steel plates representing the Simpson Strong-Tie VPA hanger, including the face plate, seat support, and lateral flanges, adjusted to the calculated pitch angle.",
+            "appliedTo": "Inserted at the intersection of the selected Male and Female GenBeams."
+          }
+        ]
+      },
+      "tokens_used": 7440,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Start Script Execution",
+          "2. [Conditional] Check if inserting instance (_bOnInsert)",
+          "3. If Yes: Prompt user to select Male Beam (Joist)",
+          "4. If Yes: Prompt user to select Female Beam (Support)",
+          "5. If Yes: Show Properties Dialog and Return (Wait for Recalculate)",
+          "6. If No (Recalculating): Calculate Reference Vectors and Orientation",
+          "7. Validate Perpendicularity of Male and Female beams",
+          "8. Retrieve Beam Dimensions (Width/Height) and apply Tolerance",
+          "9. Determine Hanger Model Index based on Male Beam Width",
+          "10. Calculate geometric intersection of beams (Contact Points)",
+          "11. Validate Hanger Position relative to Female Beam length",
+          "12. Validate Physical Contact between beams",
+          "13. Calculate Pitch Angle between beams",
+          "14. Validate Angle is within Manufacturer limits (15-45 deg)",
+          "15. Generate 3D Geometry (Front plate, Bottom plate, Lateral plates)",
+          "16. Perform Final Clearance Checks (Male height, Female width, Female height)",
+          "17. Draw all Hanger Bodies to Model Space"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "_bOnInsert flag status",
+            "path1": {
+              "name": "Initial Insertion",
+              "steps": [
+                "Prompt 'Select male beam'",
+                "Prompt 'Select female beam'",
+                "Execute showDialogOnce()",
+                "Halt execution"
+              ]
+            },
+            "path2": {
+              "name": "Recalculation / Update",
+              "steps": [
+                "Run geometric validation checks",
+                "Regenerate 3D Bodies",
+                "Update Display"
+              ]
+            }
+          },
+          {
+            "condition": "Male Beam Width vs. Array Sizes",
+            "path1": {
+              "name": "Valid Size Found",
+              "steps": [
+                "Set iIndex to matching array index",
+                "Retrieve Model String and Widths from arrays",
+                "Continue to geometry generation"
+              ]
+            },
+            "path2": {
+              "name": "No Size Match",
+              "steps": [
+                "Report 'Male beam doesnt fit in hanger'",
+                "Erase Instance",
+                "Stop script"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Perpendicularity (dot product of axes)",
+            "errorMessage": "Beams must be perpendicular",
+            "recovery": "Rotate beams to 90 degrees relative to each other"
+          },
+          {
+            "check": "Male beam width (dMw) matches available hanger sizes within tolerance",
+            "errorMessage": "Male beam doesnt fit in hanger",
+            "recovery": "Increase 'Male Tolerance' property or change male beam width"
+          },
+          {
+            "check": "Geometric intersection exists between beam faces",
+            "errorMessage": "Hanger cannot be used here",
+            "recovery": "Move beams closer or align their top faces in Z-world or local Up"
+          },
+          {
+            "check": "Male beam alignment over female beam (Total Hanger Width)",
+            "errorMessage": "Male beam is not in right position over female beam",
+            "recovery": "Move male beam along the female beam axis so it sits centrally or fully supported"
+          },
+          {
+            "check": "Physical contact gap (distance between contact points)",
+            "errorMessage": "Beams are not in contact or are intersecting each other",
+            "recovery": "Adjust beam positions so they touch without overlapping"
+          },
+          {
+            "check": "Pitch Angle (15-45 degrees)",
+            "errorMessage": "Angle not recommended by manufacturer",
+            "recovery": "Adjust pitch of male beam to be between 15 and 45 degrees"
+          },
+          {
+            "check": "Male beam height vs. calculated minimum",
+            "errorMessage": "Male height not enough for hanger",
+            "recovery": "Select a deeper male beam or reduce pitch"
+          },
+          {
+            "check": "Female beam width vs. required anchor depth",
+            "errorMessage": "Female width not enough for hanger",
+            "recovery": "Select a wider female beam"
+          },
+          {
+            "check": "Female beam height vs. vertical hanger requirement",
+            "errorMessage": "Female height not enough for hanger",
+            "recovery": "Select a taller female beam"
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Beam Dimensions",
+            "how": "Stretch/Modify GenBeam properties in AutoCAD",
+            "effect": "Script recalculates and re-assigns hanger model size or deletes if out of bounds"
+          },
+          {
+            "action": "Adjust Tolerance",
+            "how": "Edit 'Male Tolerance' in OPM (Properties Palette)",
+            "effect": "Widens the acceptance range for the male beam width lookup"
+          },
+          {
+            "action": "Move/Rotate Beams",
+            "how": "Grip edit or Move/Rotate commands in AutoCAD",
+            "effect": "Recalculates geometric position, pitch, and validity of the connector"
+          }
+        ]
+      },
+      "tokens_used": 8863,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Simpson StrongTie - Adjustable Pitch Connector\n\n## Overview\nThis script generates a 3D model of a Simpson Strong-Tie VPA (Variable Pitch Anchor) adjustable joist hanger. It connects a male joist (e.g., rafter) to a female supporting beam (e.g., ledger) and automatically adjusts to accommodate pitches between 15 and 45 degrees.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for 3D Body generation |\n| Paper Space | No | Not applicable |\n| Shop Drawing | No | This is a model generation script |\n\n## Prerequisites\n- **Required Entities**: Two GenBeams (one \"Male\" joist and one \"Female\" support beam).\n- **Minimum Beam Count**: 2\n- **Required Settings**: None\n- **Geometry Requirements**: The Male and Female beams must be perpendicular and in physical contact.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1. Type `TSLINSERT` in the AutoCAD command line.\n2. Select the file `Simpson StrongTie - Adjustable Pitch Connector.mcr`.\n\n### Step 2: Select Male Beam\n```\nCommand Line: Select male beam\nAction: Click on the joist or rafter that sits on top of the support beam.\n```\n\n### Step 3: Select Female Beam\n```\nCommand Line: Select female beam\nAction: Click on the supporting beam or ledger plate that the joist connects to.\n```\n\n### Step 4: Configure Properties\n1. Once selected, the script will generate the initial connector.\n2. Select the connector to view its properties in the AutoCAD Properties Palette (OPM).\n3. Adjust parameters if necessary (e.g., if the beam width is slightly undersized).\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Male Tolerance | Number | 0 | Adds a tolerance allowance to the male beam width. Use this if the timber is slightly undersized compared to the nominal hanger size. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None Defined | No custom context menu items are added by this script. |\n\n## Settings Files\n- **None**: This script does not rely on external settings files.\n\n## Tips\n- **Pitch Limits**: Ensure the angle (pitch) between the joist and the support beam is between **15° and 45°**. Outside this range, the manufacturer recommends against using this connector, and the script may display a validation error.\n- **Beam Contact**: The top of the female beam must physically touch the bottom of the male beam. Ensure they are not intersecting or floating apart.\n- **Perpendicularity**: The beams must be perpendicular (90°) to each other in plan view.\n- **Troubleshooting Fit**: If you see an error \"Male beam doesn't fit in hanger,\" check your actual beam width. If it is just slightly smaller than the standard size (e.g., due to timber planning), increase the **Male Tolerance** property in the Properties Palette.\n\n## FAQ\n- **Q: The connector disappeared after I moved the beams. Why?**\n  - A: The script performs real-time validation. If the beams are no longer touching, are no longer perpendicular, or the pitch has exceeded 45°, the connector will delete itself to prevent incorrect modeling.\n- **Q: How do I fix the error \"Male beam doesnt fit in hanger\"?**\n  - A: This usually happens if your beam width is not an exact match for the standard Simpson Strong-Tie sizes. Increase the **Male Tolerance** value in the Properties Palette to allow a small margin of error.\n- **Q: Can I use this for flat roofs (0° pitch)?**\n  - A: No, this specific connector (VPA) is designed for adjustable pitches between 15° and 45°. Use a standard face-mount hanger for flat connections."
+      },
+      "tokens_used": 4705,
+      "error": null
+    }
+  }
+}

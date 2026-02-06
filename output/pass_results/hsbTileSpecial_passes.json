@@ -1,0 +1,295 @@
+{
+  "filename": "hsbTileSpecial.mcr",
+  "status": "completed",
+  "total_tokens": 46804,
+  "processing_time": 239.64367389678955,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9064,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly uses '_kModelSpace' in the 'tslNew.dbCreate()' method. It interacts with 'ERoofPlane' entities and generates 3D geometry. There are no 'sd_' prefixes, '_Viewport' references, or #Type E declarations typically found in Shop Drawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ERoofPlane"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space containing a valid Roof Plane with Roof Tile definitions",
+          "requiredSettings": [
+            "Roof Tile Style assigned to the selected Roof Plane (specifically Hsb_RoofTile map data)",
+            "RoofTilingManager.dll (_kPathHsbInstall\\Utilities\\RoofTiles\\RoofTilingManager.dll)",
+            "Valid Tile Data accessible via the RoofTilingManager database connection"
+          ]
+        }
+      },
+      "tokens_used": 6657,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getERoofPlane",
+              "promptOriginal": "Implicit selection of ERoofPlane",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getPoint",
+              "promptOriginal": "Select point",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "Standard Dialog (showDialog)",
+            "trigger": "On Insert if '_kExecuteKey' is empty",
+            "title": null,
+            "dataSource": "Internal properties (specifically 'sSpecialTile')",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sSpecialTile",
+            "type": "PropString",
+            "displayName": "Special Tile",
+            "defaultValue": "First available special tile name from database",
+            "inputType": "dropdown",
+            "options": [
+              "Dynamic list of special tiles derived from 'RoofTilingManager.dll'"
+            ],
+            "category": "RoofTileFamilyName (e.g., FamilyName)",
+            "description": "The model of the selected special tile"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": [
+          {
+            "filename": "RoofTilingManager.dll",
+            "searchPaths": [
+              "_kPathHsbInstall\\Utilities\\RoofTiles\\RoofTilingManager.dll"
+            ],
+            "purpose": "Provides special tile definitions (Name, ArticleNumber, Dimensions) via database connection",
+            "required": true
+          }
+        ]
+      },
+      "tokens_used": 6553,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Places special roof tiles (e.g., snow guards, ridge tiles, vents) onto a roof plane, automatically handling adjacent half-tiles and subtracting the tile count from the standard roof covering.",
+          "category": "Hardware/Roofing",
+          "typicalUseCase": "Adding specific tile accessories to a 3D model where a roof style has already been applied, ensuring accurate BOM calculations and 2D plan representation."
+        },
+        "parameters": [
+          {
+            "name": "sSpecialTile",
+            "technicalDefault": "First available special tile name from database (sorted alphabetically)",
+            "businessMeaning": "Selects the specific accessory tile model to be placed. This determines the physical dimensions, Article Number for ordering, and the specific 'Tile Type' (e.g., standard, half, snow guard) used for positioning logic.",
+            "validRange": "Dynamic list of special tile names defined in the RoofTilingManager database that match the Manufacturer and Family of the selected Roof Plane.",
+            "unit": "Text List (Selection)",
+            "affectsOutput": "Determines the geometry drawn (size of the rectangle), the Hardware Component data (Material, Article Number, Manufacturer) written to the BOM, and the logic for whether half-tiles are required alongside the special tile."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Selection of ERoofPlane",
+            "effect": "Filters the available options in the 'sSpecialTile' dropdown to only show tiles compatible with the roof plane's assigned Manufacturer and Tile Family.",
+            "cascade": [
+              "sSpecialTile"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Graphical Representation (PLine/PlaneProfile)",
+            "description": "Draws the special tile as a filled rectangle in 2D/3D views based on its width and length from the database. If the tile placement overlaps a half-tile column or boundary, it automatically generates the required half-tile geometry.",
+            "appliedTo": "Model Space (Coordinate system of the selected Roof Plane)"
+          },
+          {
+            "type": "Hardware Component (HardWrComp)",
+            "description": "Generates Bill of Material entries for the special tile and any associated half-tiles. Includes Article Number, Manufacturer, Dimensions (Length/Width), and Material/Surface finish.",
+            "appliedTo": "The TSL Instance / linked to the Element Group of the Roof Plane"
+          },
+          {
+            "type": "Logical Data (Map)",
+            "description": "Publishes a 'TilesToSubtract' map to inform the main roof tiling calculation (hsbTileGrid) that standard tiles should be removed at this location to prevent double counting.",
+            "appliedTo": "Internal TSL Logic / Roof Plane Context"
+          }
+        ]
+      },
+      "tokens_used": 8060,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launch detected (_bOnInsert)",
+          "Check for Catalog execution key (_kExecuteKey)",
+          "Prompt user to select an ERoofPlane",
+          "Validate Roof Plane has valid 'Hsb_RoofTile' map and Family Definition",
+          "Query RoofTilingManager.dll for special tiles matching the plane's Manufacturer and Family IDs",
+          "Sort retrieved tile names alphabetically",
+          "Verify that at least one special tile was found",
+          "If not using Catalog: Show standard Dialog to select 'sSpecialTile'",
+          "Enter Placement Loop: Prompt user for insertion point",
+          "Create new TSL instance at selected point with current properties",
+          "Update any previously created instances in the session (transformBy)",
+          "Repeat placement loop until user cancels (Escape/Right-click)",
+          "Erase the temporary 'template' instance",
+          "Finalize created instances: Calculate grid alignment, generate geometry, create Hardware components, and publish 'TilesToSubtract' map"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Is script executed via a Catalog Entry?",
+            "path1": {
+              "name": "Catalog Execution",
+              "steps": [
+                "Load properties directly from catalog key (_kExecuteKey)",
+                "Skip the standard dialog",
+                "Proceed to placement loop"
+              ]
+            },
+            "path2": {
+              "name": "Manual Execution",
+              "steps": [
+                "Execute standard showDialog()",
+                "User selects special tile from filtered list",
+                "Proceed to placement loop"
+              ]
+            }
+          },
+          {
+            "condition": "Roof Plane Data Validity",
+            "path1": {
+              "name": "Valid Data",
+              "steps": [
+                "Extract Manufacturer ID and Family ID",
+                "Connect to RoofTilingManager.dll",
+                "Proceed to tile collection"
+              ]
+            },
+            "path2": {
+              "name": "Invalid/Missing Data",
+              "steps": [
+                "Report error: 'could not find valid roof tile data'",
+                "Erase script instance",
+                "Exit workflow"
+              ]
+            }
+          },
+          {
+            "condition": "Special Tile Availability",
+            "path1": {
+              "name": "Tiles Found",
+              "steps": [
+                "Populate property array sSpecialTiles",
+                "Set default selection to first item",
+                "Continue to placement"
+              ]
+            },
+            "path2": {
+              "name": "No Tiles Found",
+              "steps": [
+                "Report error: 'Could not find any special tiles'",
+                "Erase script instance",
+                "Exit workflow"
+              ]
+            }
+          },
+          {
+            "condition": "User Input in Placement Loop",
+            "path1": {
+              "name": "Point Selected",
+              "steps": [
+                "Store insertion point (_Pt0)",
+                "Generate new instance geometry",
+                "Loop back to prompt for next point"
+              ]
+            },
+            "path2": {
+              "name": "Selection Cancelled (Esc/Right-click)",
+              "steps": [
+                "Break out of loop",
+                "Erase template instance",
+                "Finalize script"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Presence of 'Hsb_RoofTile' map with 'RoofFamilyDefinition' on the selected ERoofPlane",
+            "errorMessage": "Script could not find valid roof tile data. Please make sure the roofplane has a roof tile style assigned. The tool will be deleted.",
+            "recovery": "Assign a valid Roof Tile Style to the Roof Plane before running the script."
+          },
+          {
+            "check": "Availability of special tiles in RoofTilingManager.dll for the specific Manufacturer and Family",
+            "errorMessage": "Script Could not find any special tiles. Tool will be deleted.",
+            "recovery": "Ensure the Tile Catalog contains definitions for special tiles (Types 0, 7, 15-22, 90) matching the roof plane's configuration."
+          },
+          {
+            "check": "Entity type on recalculation",
+            "errorMessage": "None (Silent failure/erase)",
+            "recovery": "Ensure the linked Entity[0] remains a valid ERoofPlane."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Change Special Tile Model",
+            "how": "OPM (Properties Palette) dropdown 'Special Tile'",
+            "effect": "Updates the tile geometry, dimensions, Article Number, and recalculates the requirement for half-tiles based on the new width."
+          },
+          {
+            "action": "Relocate Tile",
+            "how": "Drag the insertion point grip",
+            "effect": "Moves the tile on the roof plane. Script recalculates grid position; if moved into or out of a half-column zone, it automatically adds or removes half-tile geometry."
+          },
+          {
+            "action": "Roof Plane Modification",
+            "how": "Modify the underlying ERoofPlane geometry or style",
+            "effect": "Triggers a recalculation. The special tile adjusts to the new plane coordinate system and checks for tile data validity against the new style."
+          }
+        ]
+      },
+      "tokens_used": 10277,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbTileSpecial.mcr\n\n## Overview\nThis script allows you to place special roof tiles, such as snow guards, vents, or ridge tiles, onto a selected roof plane. It automatically handles adjacent half-tile geometry and updates the Bill of Materials (BOM) to ensure accurate material counts.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates within the 3D model environment. |\n| Paper Space | No | Not supported in 2D layout views. |\n| Shop Drawing | No | Not intended for generating shop drawings. |\n\n## Prerequisites\n- **Required Entities**: An existing Roof Plane (`ERoofPlane`) in the model.\n- **Minimum Beam Count**: 0 (This script works on Roof Planes, not beams).\n- **Required Settings**:\n  - A valid Roof Tile Style must be assigned to the selected Roof Plane.\n  - `RoofTilingManager.dll` must be accessible (located in `_kPathHsbInstall\\Utilities\\RoofTiles\\`).\n  - The tile database must contain definitions for special tiles matching the roof plane's Manufacturer and Family.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbTileSpecial.mcr` from the file list.\n\n### Step 2: Select Roof Plane\n```\nCommand Line: Select Roof Plane\nAction: Click on the desired Roof Plane in the model.\n```\n*Note: The script will verify if the plane has a valid Roof Tile Style assigned. If the style is missing, the script will report an error and exit.*\n\n### Step 3: Select Special Tile Type\n```\nDialog: Standard Dialog\nAction: Choose the specific tile model (e.g., \"Snow Guard\", \"Vent\") from the dropdown list.\n```\n*Note: The list is automatically filtered to show only tiles compatible with the Manufacturer and Tile Family of the selected roof plane.*\n\n### Step 4: Specify Insertion Point\n```\nCommand Line: Select point\nAction: Click on the roof surface to place the selected special tile.\n```\n*Note: The tile will align to the roof plane's coordinate system and tile grid.*\n\n### Step 5: Continue or Finish\n```\nCommand Line: Select point\nAction: \n- To place another tile of the same type: Click a new location.\n- To finish: Press **Esc** or **Right-click** to cancel the command.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Special Tile | Dropdown | First available tile | Selects the model of the special tile to place. Changing this selection updates the geometry, dimensions, and Article Number in the BOM. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| (None) | This script does not add specific custom items to the right-click context menu. Use the Properties Palette to modify settings. |\n\n## Settings Files\n- **Filename**: `RoofTilingManager.dll`\n- **Location**: `_kPathHsbInstall\\Utilities\\RoofTiles\\`\n- **Purpose**: Provides the database connection and definitions for special tiles, including Name, Article Number, Dimensions, and Tile Type.\n\n## Tips\n- **Automatic Half-Tiles**: The script automatically detects if a special tile overlaps a boundary that requires a half-tile. It generates the necessary half-tile geometry automatically.\n- **Adjusting Position**: You can drag the special tile using its insertion point grip after placement. If you drag it into a zone that requires a half-tile, the geometry will update automatically.\n- **Catalog Integration**: If you execute this script from a Catalog Entry, it skips the dialog step and uses the properties saved in the catalog, allowing for faster placement.\n\n## FAQ\n- **Q: The script deleted itself immediately after I selected the roof plane. Why?**\n  **A:** This typically means the script could not find valid \"Special Tile\" definitions in the database for the specific Manufacturer and Family assigned to your roof plane. Check your Roof Tile Style settings and ensure special tiles are defined in the catalog.\n- **Q: Does this script remove the standard roof tiles underneath?**\n  **A:** Yes, logically. It publishes a \"TilesToSubtract\" map which informs the main roof tiling calculation (e.g., `hsbTileGrid`) to exclude standard tiles at this location, preventing double-counting in the BOM."
+      },
+      "tokens_used": 6193,
+      "error": null
+    }
+  }
+}

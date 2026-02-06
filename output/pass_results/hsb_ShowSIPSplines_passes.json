@@ -1,0 +1,271 @@
+{
+  "filename": "hsb_ShowSIPSplines.mcr",
+  "status": "completed",
+  "total_tokens": 25326,
+  "processing_time": 203.06040000915527,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": null,
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "31.08.2008",
+            "author": "Alberto Jena (aj@hsb-cad.com)",
+            "changes": "First Release."
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3396,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "PaperSpace",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script prompts for a Viewport on insertion using getViewport() and stores it in the _Viewport intrinsic array. It retrieves the Element from the Viewport (vp.element()). It explicitly transforms coordinates from Model Space to Paper Space using the transformation matrix ms2ps (ptToDisplay.transformBy(ms2ps)). It draws text relative to the Paper Space axes (_YW, -_XW)."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Viewport",
+            "Element",
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Paper Space (Layout) containing a Viewport linked to a valid Element.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 3108,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getViewport",
+              "promptOriginal": "Select a viewport",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sDimStyle",
+            "type": "PropString",
+            "displayName": "Dim Style",
+            "defaultValue": "_DimStyles",
+            "inputType": "dropdown",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 0,
+            "variable": "dOffsetFromEl",
+            "type": "PropDouble",
+            "displayName": "Offset From Element",
+            "defaultValue": "50",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4116,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Annotates 2D layout views (Paper Space) to automatically distinguish between 'Spline' insulation members and standard 'Timber' members within a SIP wall or floor element.",
+          "category": "Annotation/ShopDrawing",
+          "typicalUseCase": "Creating floor plan or foundation drawings for SIP buildings where specific splines (typically connecting panels) need to be identified and labeled differently from standard timber joists or studs."
+        },
+        "parameters": [
+          {
+            "name": "sDimStyle",
+            "technicalDefault": "_DimStyles",
+            "businessMeaning": "Defines the visual appearance (font, text height, color) of the annotation text labels according to the drafting standards set up in the project.",
+            "validRange": "Any existing Dimension Style name defined in the current hsbCAD/AutoCAD drawing.",
+            "unit": "String (List Selection)",
+            "affectsOutput": "Updates the graphical style of the 'Spline' and 'Timber' text labels in the drawing viewport."
+          },
+          {
+            "name": "dOffsetFromEl",
+            "technicalDefault": "50",
+            "businessMeaning": "Sets the distance the text label is offset from the centerline of the wall/element perpendicular to its length.",
+            "validRange": "0mm to 500mm (depending on drawing scale and wall thickness to avoid overlapping with other geometry)",
+            "unit": "mm",
+            "affectsOutput": "Relocates the text label closer to or further away from the wall's center axis in the layout view."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Text Annotation",
+            "description": "Strings of text ('Spline' or 'Timber') placed in Paper Space, corresponding to the location of beams perpendicular to the element's X-axis.",
+            "appliedTo": "Paper Space (Layout), linked to the geometry of Beams within the selected Viewport's Element."
+          }
+        ]
+      },
+      "tokens_used": 3950,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script (Insertion)",
+          "System prompts: 'Select a viewport'",
+          "User selects a viewport in the layout",
+          "System displays Property Dialog (showDialog)",
+          "User confirms properties (or cancels)",
+          "Script executes Recalculation phase",
+          "System validates stored Viewport (Erases instance if missing)",
+          "System retrieves Element from Viewport (Exits if invalid)",
+          "System retrieves all Beams from Element",
+          "System filters Beams perpendicular to Element X-axis (vx)",
+          "System creates a base profile along Element X-axis for intersection testing",
+          "System loops through filtered Beams",
+          "System calculates Shadow Profile of Beam on Element plane",
+          "Condition: Intersection Area > 4mm²?",
+          "If Yes: Check Beam Name ('SPLINE' vs others)",
+          "Determine Label: 'Spline' or 'Timber'",
+          "System applies Offset (dOffsetFromEl) perpendicular to Element length",
+          "System transforms coordinate from Model Space to Paper Space (ms2ps)",
+          "System draws text label in Paper Space"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script State (_bOnInsert)",
+            "path1": {
+              "name": "First Run (Insertion)",
+              "steps": [
+                "Prompt user for Viewport selection",
+                "Show Property Dialog",
+                "Return immediately"
+              ]
+            },
+            "path2": {
+              "name": "Subsequent Runs (Recalculation)",
+              "steps": [
+                "Validate existing data",
+                "Perform geometric analysis",
+                "Draw/Update entities"
+              ]
+            }
+          },
+          {
+            "condition": "Viewport Availability",
+            "path1": {
+              "name": "No Viewport",
+              "steps": [
+                "Execute eraseInstance()",
+                "Remove script from drawing"
+              ]
+            },
+            "path2": {
+              "name": "Viewport Found",
+              "steps": [
+                "Retrieve associated Element",
+                "Continue processing"
+              ]
+            }
+          },
+          {
+            "condition": "Beam Identification",
+            "path1": {
+              "name": "Name is SPLINE",
+              "steps": [
+                "Set label text to 'Spline'"
+              ]
+            },
+            "path2": {
+              "name": "Name is not SPLINE",
+              "steps": [
+                "Set label text to 'Timber'"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "_Viewport array population",
+            "errorMessage": "None",
+            "recovery": "If array is empty, the script automatically deletes itself (eraseInstance). User must re-insert to select a viewport."
+          },
+          {
+            "check": "Element validity (el.bIsValid())",
+            "errorMessage": "None",
+            "recovery": "Script stops calculation silently. User must ensure the selected viewport is linked to a valid hsbCAD Element."
+          },
+          {
+            "check": "Beam population (bmAll.length())",
+            "errorMessage": "None",
+            "recovery": "Script stops if Element has no beams. User must add beams to the Element."
+          },
+          {
+            "check": "Beam Shadow Intersection Area (ppShadow.area())",
+            "errorMessage": "None",
+            "recovery": "Beams not intersecting the central strip profile (width 100mm) are ignored. Ensure beams are within the search zone."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Update Text Offset",
+            "how": "Select instance -> OPM -> Change 'Offset From Element'",
+            "effect": "Repositions text labels closer to or further from the wall centerline in Paper Space."
+          },
+          {
+            "action": "Change Text Style",
+            "how": "Select instance -> OPM -> Change 'Dim Style'",
+            "effect": "Updates the font, size, and color of the annotations to the selected dimension style."
+          },
+          {
+            "action": "Modify Element Content",
+            "how": "Rename beams in Model Space (e.g., rename stud to 'SPLINE')",
+            "effect": "Script detects name change and updates the label from 'Timber' to 'Spline' automatically."
+          }
+        ]
+      },
+      "tokens_used": 6047,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_ShowSIPSplines.mcr\n\n## Overview\nThis script automatically annotates 2D layout views (Paper Space) to distinguish between 'Spline' insulation members and standard 'Timber' members within a SIP (Structural Insulated Panel) wall or floor element. It places text labels in the drawing layout corresponding to the location of specific structural members.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | No | The script does not function in Model Space. |\n| Paper Space | Yes | This is the primary space; script must be inserted on a Layout tab. |\n| Shop Drawing | No | This is for general layout annotation. |\n\n## Prerequisites\n- **Required Entities:** A Viewport in Paper Space that is linked to a valid hsbCAD Element (Wall or Floor).\n- **Minimum Beams:** 1 (The Element must contain beams/members to annotate).\n- **Required Settings:** None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_ShowSIPSplines.mcr`\n\n### Step 2: Select Viewport\n```\nCommand Line: Select a viewport\nAction: Click on the viewport border in the Paper Space layout that displays the Element you wish to annotate.\n```\n\n### Step 3: Configure Properties\n```\nAction: A property dialog will appear automatically.\nAction: Adjust the Dim Style or Offset as needed and click OK.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Dim Style | dropdown | _DimStyles | Determines the visual style (font, text height, color) of the annotation labels. |\n| Offset From Element | number | 50 | Sets the distance (in mm) from the centerline of the element to the center of the text label. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| *None* | This script does not add specific custom items to the right-click context menu. |\n\n## Settings Files\n- **Filename**: *None*\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Naming Convention:** The script identifies members by name. If a beam is named exactly \"SPLINE\", it will be labeled as \"Spline\". All other beams will be labeled \"Timber\".\n- **Updating Labels:** If you rename a beam in the model (e.g., change a stud to \"SPLINE\"), the script will automatically update the label in the layout upon recalculation.\n- **Self-Cleaning:** If you delete the Viewport associated with this script, the script instance will automatically remove itself from the drawing.\n\n## FAQ\n- **Q: Why is the text not appearing for some of my beams?**\n  A: The script filters beams based on their orientation relative to the element's X-axis. Ensure the beams are roughly perpendicular to the element's length, and that they intersect the central analysis profile of the wall.\n- **Q: How do I change the text size?**\n  A: You cannot change the size directly with a number property. Instead, change the **Dim Style** property to a Dimension Style that uses your desired text height.\n- **Q: Can I use this on normal timber walls?**\n  A: Yes, but unless beams are named \"SPLINE\", they will all be labeled \"Timber\". This is primarily designed for SIP constructions where splines are distinct."
+      },
+      "tokens_used": 4709,
+      "error": null
+    }
+  }
+}

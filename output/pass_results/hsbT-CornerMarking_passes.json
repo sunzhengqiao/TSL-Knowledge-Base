@@ -1,0 +1,193 @@
+{
+  "filename": "hsbT-CornerMarking.mcr",
+  "status": "completed",
+  "total_tokens": 23461,
+  "processing_time": 190.3000750541687,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "13dec13",
+            "author": "th@hsbCAD.de",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 3788,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script manipulates Beam objects directly using `bm1.addTool()`. It references `_Beam[0]` and `_Beam[1]` which are arrays of beam elements associated with the TSL instance in the 3D model. There are no calls to `_Viewport`, `sd_*` functions, or `_Entity[]`, and no logic checking for `_kPaperSpace`."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space (3D model context). The script references two specific beams: the marking beam and the beam to be marked.",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1735,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "dMarkerLength",
+            "type": "PropDouble",
+            "displayName": "|Marker Length|",
+            "defaultValue": "U(30)",
+            "inputType": "number",
+            "options": null,
+            "category": null,
+            "description": "|Defines length of the marker line, overlapping segments will be combined.|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 4616,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates production marker lines on a beam to visually indicate the intersection area where a connecting beam meets it (T-connection).",
+          "category": "Manufacturing/Machining",
+          "typicalUseCase": "Marking the exact contact surface on a main beam (wall or post) to guide assembly or verify fit for a cross-beam or joist."
+        },
+        "parameters": [
+          {
+            "name": "dMarkerLength",
+            "technicalDefault": "U(30)",
+            "businessMeaning": "Defines the visual length of the corner marks. For short intersections, the line spans the full edge. For long intersections, it creates 'ticks' starting from the corners extending inward by this amount.",
+            "validRange": "5mm - 100mm",
+            "unit": "mm",
+            "affectsOutput": "Determines the geometry of the MarkerLine entities added to the beam. Changing this value extends or shortens the lines drawn along the perimeter of the intersection plane."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Changing the intersection geometry (beam sizes/angles)",
+            "effect": "Determines if the marker is a full line or corner ticks based on edge length relative to Marker Length.",
+            "cascade": []
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "MarkerLine",
+            "description": "Visual or CNC marker lines drawn on the surface of the beam representing the boundary of the intersecting beam.",
+            "appliedTo": "_Beam[1] (The beam selected as 'beams to be marked')"
+          }
+        ]
+      },
+      "tokens_used": 3385,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User launches script (via command line, menu, or tool button with optional catalog key).",
+          "If a catalog key is provided (e.g., from a tool button), properties are loaded from that specific catalog entry.",
+          "Command line prompts user to 'Select marking beams' (the intersecting beam).",
+          "Command line prompts user to 'Select beams to be marked' (the target beam).",
+          "System calculates the intersection geometry between the two beams and generates the corner points (_Pt1 to _Pt4) and normal vector (_Z1).",
+          "Script iterates through the 4 sides of the intersection quadrilateral.",
+          "For each side, the distance between corner points is calculated and compared against 2 * Marker Length.",
+          "Appropriate MarkerLine entities (either full lines or corner ticks) are generated and added to the target beam.",
+          "Script completes and displays preview graphics."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Comparison of intersection edge length (d) against 2 * Marker Length",
+            "path1": {
+              "name": "Short Edge (Continuous Line)",
+              "steps": [
+                "System determines edge length is short enough for a single mark (2 * dMarkerLength >= d).",
+                "Script creates a single MarkerLine spanning the entire edge from point A to point B.",
+                "Visual preview draws a continuous polyline between the points."
+              ]
+            },
+            "path2": {
+              "name": "Long Edge (Corner Ticks)",
+              "steps": [
+                "System determines edge is too long for a single mark (2 * dMarkerLength < d).",
+                "Script calculates a vector along the edge.",
+                "Script creates a MarkerLine 'tick' starting at the first corner (A), extending inward by dMarkerLength.",
+                "Script creates a MarkerLine 'tick' starting at the second corner (B), extending inward by dMarkerLength.",
+                "Visual preview draws the two separate tick lines."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Intersection Validity",
+            "errorMessage": "Implicit failure (No explicit error message in code).",
+            "recovery": "Ensure the two selected beams actually intersect physically in the model so that points _Pt1 through _Pt4 can be calculated."
+          },
+          {
+            "check": "Beam Assignment",
+            "errorMessage": "Implicit failure.",
+            "recovery": "Ensure exactly two beams are selected during the prompts: one marking beam and one beam to be marked."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Marker Length",
+            "how": "Select the TSL instance and edit the 'Marker Length' property in the AutoCAD Properties Palette (OPM).",
+            "effect": "The script recalculates immediately. Increasing the length may merge separate ticks into a continuous line; decreasing it may split a continuous line into ticks."
+          },
+          {
+            "action": "Update Catalog Defaults",
+            "how": "Change properties in OPM, then save the instance as the catalog entry '_LastInserted' or a custom name.",
+            "effect": "Subsequent script insertions or insertions via a specific tool button will use these new values by default."
+          }
+        ]
+      },
+      "tokens_used": 5708,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbT-CornerMarking.mcr\n\n## Overview\nThis script creates production marker lines on a beam to visually indicate the exact intersection area where a connecting beam meets it (T-connection). It is useful for guiding assembly or verifying fit for cross-beams or joists.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates directly on 3D beam objects. |\n| Paper Space | No | Not applicable for 2D layouts or drawings. |\n| Shop Drawing | No | Not designed for shop drawing contexts. |\n\n## Prerequisites\n- **Required Entities**: Two `GenBeam` elements.\n- **Minimum Beam Count**: 2\n- **Required Settings**: None.\n- **Geometry Requirement**: The two selected beams must physically intersect in the 3D model.\n\n## Usage Steps\n\n### Step 1: Launch Script\n1.  Type `TSLINSERT` in the command line.\n2.  Navigate to the script location and select `hsbT-CornerMarking.mcr`.\n\n### Step 2: Select Marking Beam\n```\nCommand Line: Select marking beams\nAction: Click on the intersecting beam (e.g., the cross-beam or joist) that defines the connection area.\n```\n\n### Step 3: Select Target Beam\n```\nCommand Line: Select beams to be marked\nAction: Click on the main beam (e.g., the wall or post) where you want the corner marks to appear.\n```\n\n### Step 4: Adjust Properties (Optional)\n1.  Select the newly created script instance in the model.\n2.  Open the **Properties Palette** (Ctrl+1).\n3.  Modify the **Marker Length** if the default lines are too long or too short.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| |Marker Length| | Number | 30 | Defines the length of the marker line segments. If the intersection edge is long, this creates 'ticks' starting from the corners. If the intersection is short, it may create a continuous line. |\n\n## Right-Click Menu Options\nThis script does not add custom items to the right-click context menu. Standard hsbCAD options (e.g., Catalog, Save) apply.\n\n## Settings Files\nNo external settings files or XML dependencies are required for this script.\n\n## Tips\n- **Continuous Lines vs. Ticks**: The script automatically determines the drawing style. If the length of the intersection edge is shorter than twice the Marker Length, it draws a continuous line. If it is longer, it draws two \"ticks\" starting from the corners inward.\n- **Visualizing Assembly**: Use these marks on the shop floor to quickly identify where intersecting timbers should be placed without needing to measure.\n- **Dynamic Updates**: If you move the beams after inserting the script, the marker lines will update automatically to match the new intersection geometry.\n\n## FAQ\n- **Q: I selected the beams, but no lines appeared.**\n  A: Ensure the two beams actually touch or overlap in the 3D model. The script calculates geometry based on physical intersections. Check that you selected the correct \"Marking Beam\" (the cross piece) and \"Beam to be marked\" (the main piece).\n- **Q: How do I make the corner marks longer?**\n  A: Select the script instance and increase the **Marker Length** value in the Properties Palette. If you increase it enough, the two separate ticks will merge into a single continuous line.\n- **Q: Can I use this to mark multiple beams at once?**\n  A: The current workflow prompts for a single target beam. To mark multiple beams, you must run the script again for each pair or use the copy/paste functionality if the geometry is identical."
+      },
+      "tokens_used": 4229,
+      "error": null
+    }
+  }
+}

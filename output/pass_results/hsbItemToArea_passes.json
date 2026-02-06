@@ -1,0 +1,236 @@
+{
+  "filename": "hsbItemToArea.mcr",
+  "status": "completed",
+  "total_tokens": 48275,
+  "processing_time": 359.0529282093048,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8988,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Filename 'hsbItemToArea.mcr' lacks 'sd_' or 'Multipage' prefix. Script uses PrEntity for interactive selection and operates on 3D entity types (ERoofPlane, Element, Sheet). It calculates geometric properties (Area, Perimeter) and generates visual guides (vis, Point3d) typical of Model Space detailing tools, with no viewport or layout logic found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "EntPLine",
+            "Circle",
+            "ERoofPlane",
+            "Sip",
+            "Element",
+            "Sheet",
+            "Opening"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Script must be inserted onto valid geometric entities in the model.",
+          "requiredSettings": [
+            "hsbItemToArea.xml",
+            "hsbLooseMaterialsUI.dll"
+          ]
+        }
+      },
+      "tokens_used": 6840,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"ShowDynamicDialog\",\n        \"promptOriginal\": null,\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      },\n      {\n        \"step\": 2,\n        \"function\": \"PrEntity\",\n        \"promptOriginal\": \"Select a set of [Allowed Classes] or [Allowed Classes]...\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [\n    {\n      \"type\": \"ShowDynamicDialog\",\n      \"trigger\": \"_bOnInsert\",\n      \"title\": null,\n      \"dataSource\": \"OPM Properties (sMajor, sArticle) and hsbLooseMaterialsUI.dll\",\n      \"features\": {\n        \"searchable\": false,\n        \"multiSelect\": false\n      }\n    }\n  ],\n  \"opmProperties\": [\n    {\n      \"index\": 0,\n      \"variable\": \"sMajor\",\n      \"type\": \"PropString\",\n      \"displayName\": \"|Major - Minor group|\",\n      \"defaultValue\": null,\n      \"inputType\": \"dropdown\",\n      \"options\": [\n        \"(Dynamic List from XML)\"\n      ],\n      \"category\": \"|Groups|\",\n      \"description\": \"|Defines a Major - Minor group|\"\n    },\n    {\n      \"index\": 1,\n      \"variable\": \"sArticle\",\n      \"type\": \"PropString\",\n      \"displayName\": \"|Article|\",\n      \"defaultValue\": null,\n      \"inputType\": \"dropdown\",\n      \"options\": [\n        \"(Dynamic List from Inventory)\"\n      ],\n      \"category\": \"|Groups|"
+      },
+      "tokens_used": 9751,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Assigns a specific inventory article to selected model entities (walls, roofs, panels) and calculates their geometric properties (Area, NetArea, Perimeter) for material quantification.",
+          "category": "Material Management / Estimation",
+          "typicalUseCase": "Used during the detailing or estimation phase to tag wall faces, roof planes, or structural panels with specific materials (like sheathing or insulation) for BOM generation."
+        },
+        "parameters": [
+          {
+            "name": "sMajor",
+            "technicalDefault": "Null (from XML Settings)",
+            "businessMeaning": "The material category or group (e.g., 'Sheathing', 'Insulation', 'Flooring'). This selection determines which specific articles are available and restricts the types of entities that can be selected.",
+            "validRange": "Predefined list in 'hsbItemToArea.xml' (e.g., 'OSB-Board', 'Plasterboard')",
+            "unit": "String",
+            "affectsOutput": "Filters the available 'sArticle' list and restricts the 'PrEntity' selection to specific classes defined in the XML settings (e.g., allowing only Elements for Structural groups)."
+          },
+          {
+            "name": "sArticle",
+            "technicalDefault": "Null (from Inventory/DLL)",
+            "businessMeaning": "The specific material item or product code to be associated with the geometry (e.g., 'OSB 18mm T&G'). This links the physical area calculated by the script to an inventory item.",
+            "validRange": "Dynamic list populated from the hsbLooseMaterials database via DLL, filtered by 'sMajor'.",
+            "unit": "String",
+            "affectsOutput": "Updates the internal data map with the specific article details and displays the calculated area/perimeter in the properties palette."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects 'sMajor'",
+            "effect": "Invokes a .NET function to retrieve valid sub-items and updates the 'sArticle' dropdown. It also configures the entity selection filter to only allow classes defined for that group.",
+            "cascade": [
+              "sArticle",
+              "PrEntity Allowed Classes"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Calculated Data / Map",
+            "description": "Non-geometric output. The script calculates and stores Area, NetArea, and Perimeter of the selected entities into the script instance Map, linked to the selected Article ID.",
+            "appliedTo": "The script instance (associated with the selected element location)."
+          },
+          {
+            "type": "Visual Annotation",
+            "description": "A visual leader line and text label displaying the selected Article name, created in Model Space to indicate the assignment.",
+            "appliedTo": "Model Space (at the insertion point)."
+          }
+        ]
+      },
+      "tokens_used": 7009,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User executes script command.",
+          "Script loads XML settings ('hsbItemToArea.xml').",
+          "[Validation] Check if XML is valid. If not, report error and exit.",
+          "[Conditional] Check for Execution Catalog Key. If found, load properties; else open empty dialog.",
+          "Script locates and validates 'hsbLooseMaterialsUI.dll'.",
+          "User selects 'Major' group (Material Category) via Dialog/OPM.",
+          "Script queries DLL for Articles based on Major group.",
+          "User selects specific 'Article' from the populated list.",
+          "Script determines 'Allowed Classes' for selection from XML based on Major group.",
+          "Command prompt: User selects one or more geometric entities (Walls, Roofs, etc.) matching Allowed Classes.",
+          "Script processes geometry: Extracts PLine from the primary selected entity.",
+          "[Conditional] If multiple entities selected, Joins geometry of subsequent entities into a unified PlaneProfile.",
+          "Script generates visual annotation (Guide line, Leader, Mark, Text).",
+          "Script calculates Area (Primary), NetArea (Union of all), and Perimeter.",
+          "Script writes calculated data and Article details to the instance Map.",
+          "Script instance finishes insertion."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution via Catalog Key vs Manual Insert",
+            "path1": {
+              "name": "Catalog Execution",
+              "steps": [
+                "Read '_kExecuteKey'",
+                "Check if key exists in script catalogs",
+                "Load properties from catalog definition",
+                "Skip initial Major selection if valid"
+              ]
+            },
+            "path2": {
+              "name": "Manual Insert",
+              "steps": [
+                "Initialize with default settings",
+                "Invoke ShowDynamicDialog",
+                "User selects Major and Article manually"
+              ]
+            }
+          },
+          {
+            "condition": "Geometry Source Type (Entity[0])",
+            "path1": {
+              "name": "PLine/Circle",
+              "steps": [
+                "Cast to EntPLine or Circle",
+                "Get PLine directly",
+                "Convert Circle to LineApprox if necessary"
+              ]
+            },
+            "path2": {
+              "name": "BIM Object (Roof, Wall, Sheet, etc.)",
+              "steps": [
+                "Cast to ERoofPlane, Element, Sip, Sheet, or Opening",
+                "Calculate Envelope or Shape (plEnvelope/plShape)",
+                "Use Object's Coordinate System"
+              ]
+            }
+          },
+          {
+            "condition": "Multiple Entities Selected",
+            "path1": {
+              "name": "Single Entity",
+              "steps": [
+                "Calculate Area from the single primary PLine",
+                "NetArea equals Area"
+              ]
+            },
+            "path2": {
+              "name": "Multiple Entities",
+              "steps": [
+                "Iterate through entities starting at index 1",
+                "Join rings into a PlaneProfile (ppFullArea)",
+                "Calculate NetArea from the union of all entities"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "XML Settings Integrity",
+            "errorMessage": "Wrong definition of the xml file 1001",
+            "recovery": "Ensure 'hsbItemToArea.xml' exists in the correct path and contains valid 'Majors' structure."
+          },
+          {
+            "check": "DLL Availability",
+            "errorMessage": "The 'hsbLooseMaterialsUI.dll' was not found, please contact your local support team",
+            "recovery": "Install or restore the missing hsbLooseMaterials add-on."
+          },
+          {
+            "check": "Inventory Data",
+            "errorMessage": "No articles defined in the inventory",
+            "recovery": "Ensure the Inventory database contains items for the selected Major-Minor group."
+          },
+          {
+            "check": "Entity Selection",
+            "errorMessage": "(Standard CAD 'Invalid selection' if wrong class picked)",
+            "recovery": "User must select an entity class allowed by the configuration (e.g., Element, ERoofPlane)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Move Annotation",
+            "how": "Grip Edit (Select Script Instance)",
+            "effect": "Moves the text label and leader line. Recalculates the guide vector relative to the entity."
+          },
+          {
+            "action": "Update Geometry",
+            "how": "Modify underlying entity (e.g., resize wall)",
+            "effect": "Script detects dependency change, recalculates Area, NetArea, and Perimeter automatically. Updates the 'Description' field in properties."
+          },
+          {
+            "action": "View Properties",
+            "how": "Select Script Instance -> Properties Palette",
+            "effect": "View selected Article and calculated geometric properties (Area/NetArea/Perimeter). Note: Article selection is Read-Only after insertion."
+          }
+        ]
+      },
+      "tokens_used": 9656,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbItemToArea.mcr\n\n## Overview\nAssigns a specific inventory article (material) to selected model entities (such as walls, roofs, or sheets) and calculates their geometric properties (Area, Net Area, Perimeter) for material estimation and quantification.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script is designed for 3D model detailing. |\n| Paper Space | No | Not supported in layout views. |\n| Shop Drawing | No | Not a shop drawing generation script. |\n\n## Prerequisites\n- **Required Entities**: Element (Wall), ERoofPlane, Sip, Sheet, Opening, EntPLine, or Circle.\n- **Minimum Beam Count**: 0.\n- **Required Settings Files**:\n  - `hsbItemToArea.xml` (Configuration file for groups and classes).\n  - `hsbLooseMaterialsUI.dll` (Interface for inventory/material data).\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command:** `TSLINSERT` (or run via Catalog Key)\n**Action:** Browse and select `hsbItemToArea.mcr`.\n\n### Step 2: Select Material Group\n**Dialog:** Dynamic Dialog appears on insertion.\n**Action:** Select the **Major** group (Category) from the dropdown list (e.g., \"Sheathing\", \"Insulation\"). This selection filters the available articles and determines which types of entities you can select next.\n\n### Step 3: Select Specific Article\n**Dialog:** Dynamic Dialog (Continues from Step 2).\n**Action:** Select the specific **Article** (Product code) from the list (e.g., \"OSB 18mm T&G\").\n\n### Step 4: Select Geometric Entities\n**Command Line:** `Select a set of [Allowed Classes] or [Allowed Classes]...`\n**Action:** Click on the desired entities in the model (e.g., a roof plane or wall face).\n*Note: You can select multiple entities to calculate a combined Net Area.*\n\n### Step 5: Place Annotation\n**Command Line:** `Insertion point:`\n**Action:** Click in the model space to place the text label and leader line indicating the assigned material.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| |Major - Minor group| | dropdown | - | Defines the material category (e.g., Sheathing). Filters the available Articles and valid entity classes. |\n| |Article| | dropdown | - | The specific inventory item to assign to the geometry. |\n| Area | Double | Calculated | The surface area of the selected entity/entities. |\n| NetArea | Double | Calculated | The union of areas if multiple entities are selected (removes overlaps). |\n| Perimeter | Double | Calculated | The total perimeter length of the selected geometry. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Move Annotation | Select the script instance and drag the grip to move the text label and leader line. The vector updates automatically. |\n| Update Geometry | If the underlying wall or roof is modified, the script recalculates Area and Perimeter automatically. |\n\n## Settings Files\n- **Filename**: `hsbItemToArea.xml`\n- **Location**: Company or Install path (standard TSL search path).\n- **Purpose**: Defines the \"Major\" groups available for selection and specifies which entity classes (e.g., Element, Sheet) are allowed for each group.\n\n- **Filename**: `hsbLooseMaterialsUI.dll`\n- **Location**: hsbCAD application directory.\n- **Purpose**: Connects the script to the hsbCAD Inventory database to retrieve available Articles.\n\n## Tips\n- **Calculating Totals**: If you select multiple disjointed planes (e.g., several roof sections), the script calculates the **Net Area** (the union of all shapes), which is useful for ordering total material.\n- **Filtering**: Pay attention to the **Major** group selection. If you cannot click a certain entity type (e.g., a Wall), check if the selected Major Group allows \"Element\" class in the XML settings.\n- **Visual Feedback**: The leader line created by the script helps identify exactly which surface the material calculation applies to on complex models.\n\n## FAQ\n- **Q: I get an error \"Wrong definition of the xml file 1001\".**\n  **A:** The file `hsbItemToArea.xml` is missing, corrupt, or formatted incorrectly. Contact your CAD Manager to restore the file from the company standard.\n- **Q: The \"Article\" dropdown is empty.**\n  **A:** There are no items defined in the hsbCAD Inventory for the selected Major-Minor group, or the `hsbLooseMaterialsUI.dll` is missing.\n- **Q: Can I change the Article after insertion?**\n  **A:** No, the Article selection is read-only after insertion to maintain data integrity. Delete the script instance and re-insert to assign a different material."
+      },
+      "tokens_used": 6031,
+      "error": null
+    }
+  }
+}

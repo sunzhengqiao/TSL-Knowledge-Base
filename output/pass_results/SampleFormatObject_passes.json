@@ -1,0 +1,253 @@
+{
+  "filename": "SampleFormatObject.mcr",
+  "status": "completed",
+  "total_tokens": 42461,
+  "processing_time": 836.7027177810669,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8924,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script uses `PrEntity` to select entities and `getPoint()` to define an insertion point, which are standard Model Space behaviors. It uses a `Display` object to draw text labels based on world coordinates (`_PtW`). It iterates through selected entities to access properties like `.realBody()` and `.formatObject()`, which are characteristic of 3D model entities. There is no usage of `_Viewport`, `_kPaperSpace`, `sd_` prefixes, or `#Type E` constructs typical of Paper Space or Shop Drawing scripts."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Entity",
+            "GenBeam",
+            "Sip",
+            "ChildPanel",
+            "Opening",
+            "OpeningSF",
+            "MetalPartCollectionEnt"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model space containing valid construction entities.",
+          "requiredSettings": [
+            "hsbCenterOfGravity TSL (referenced via MapIO for 'Calculate Weight' variable)"
+          ]
+        }
+      },
+      "tokens_used": 7095,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getPoint",
+              "promptOriginal": null,
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getInt",
+              "promptOriginal": "Select a property by index to add(+) or to remove(-) ,|-1 = Exit|",
+              "condition": "_bOnRecalc && (trigger == Add/Remove Format)",
+              "required": false
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "_bOnInsert",
+            "title": null,
+            "dataSource": "Catalog Entries",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sFormat",
+            "type": "PropString",
+            "displayName": "|Format|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": "|General|",
+            "description": "|Defines the Format|"
+          }
+        ],
+        "contextMenu": [
+          {
+            "menuItem": "|Add/Remove Format|",
+            "handler": "../|Add/Remove Format|",
+            "action": "Prompt user to select properties to add or remove from the format string by index.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": []
+      },
+      "tokens_used": 6327,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "This script creates a visual label displaying custom properties and calculated data (like weight or grain direction) for selected timber elements based on a definable format string.",
+          "category": "Annotation",
+          "typicalUseCase": "Used to tag beams or panels in the 3D model with specific information (e.g., surface quality, weight, dimensions) for verification or listing purposes."
+        },
+        "parameters": [
+          {
+            "name": "sFormat",
+            "technicalDefault": "",
+            "businessMeaning": "The template string that defines what information is displayed in the label. It uses placeholders (e.g., '@(Weight)', '@(Surface Quality)') to extract data from the selected entity.",
+            "validRange": "Text string containing supported property keys (e.g., '@(Width)', '@(GrainDirectionText)') and static text.",
+            "unit": "String",
+            "affectsOutput": "Determines the content and layout of the text label generated in the model. Changing this adds or removes specific data points from the display."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selection of entity type (e.g., Beam vs. Sip)",
+            "effect": "The available properties for the format string change. For example, 'GrainDirection' is only available for Sips/ChildPanels, while 'Width' is relevant for Openings.",
+            "cascade": [
+              "sFormat"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Text/Graphic Label",
+            "description": "A visual text label drawn at the insertion point, containing resolved property values and potentially graphic symbols like grain direction arrows.",
+            "appliedTo": "Model Space (referencing selected entities like GenBeams, Sips, Openings)"
+          }
+        ]
+      },
+      "tokens_used": 6347,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Inserted/Started",
+          "Check execution key (Silent catalog run vs. Dialog)",
+          "[Conditional] Show properties dialog to define 'Format' string if not running silently",
+          "Prompt user to select Entity(ies) (PrEntity)",
+          "Prompt user for Insertion Point (getPoint)",
+          "Validate entity selection (Erase instance if count < 1)",
+          "Iterate selected entities to collect available properties and custom variables (Weight, Grain, etc.)",
+          "Resolve 'Format' string by replacing '@(Variable)' placeholders with actual entity data",
+          "Draw resolved text label at insertion point",
+          "[Conditional] Draw graphic symbols (e.g., grain arrow) if requested in format"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Execution Key presence during Insert (_kExecuteKey)",
+            "path1": {
+              "name": "Silent/Catalog Mode",
+              "steps": [
+                "Check if key matches an existing catalog entry",
+                "Apply properties from catalog entry",
+                "Skip the interactive dialog"
+              ]
+            },
+            "path2": {
+              "name": "Interactive Dialog Mode",
+              "steps": [
+                "Launch standard properties dialog (showDialog)",
+                "User manually enters or selects 'Format' string"
+              ]
+            }
+          },
+          {
+            "condition": "Context Menu Trigger: 'Add/Remove Format'",
+            "path1": {
+              "name": "Interactive Modification Loop",
+              "steps": [
+                "List all available properties alphabetically with current values in command line",
+                "Prompt user for index to add (+) or remove (-)",
+                "Update the 'sFormat' property string",
+                "Loop until user enters -1 to exit",
+                "Redraw label with new format"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Type Detected",
+            "path1": {
+              "name": "Sip / ChildPanel",
+              "steps": [
+                "Add variables: Calculate Weight, GrainDirection, SurfaceQuality, SipComponent.Name"
+              ]
+            },
+            "path2": {
+              "name": "Beam",
+              "steps": [
+                "Add variables: Calculate Weight, Surface Quality"
+              ]
+            },
+            "path3": {
+              "name": "Opening",
+              "steps": [
+                "Add variables: Width, Height, Rise, SillHeight, Description, Type"
+              ]
+            },
+            "path4": {
+              "name": "MetalPartCollectionEnt",
+              "steps": [
+                "Add variables: Definition"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Selection Array Length",
+            "errorMessage": "Invalid selection set Tool will be deleted.",
+            "recovery": "User must re-insert the script and ensure at least one valid entity (Beam, Sip, Opening, etc.) is selected."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Add/Remove Format Items",
+            "how": "Right-click Context Menu -> 'Add/Remove Format'",
+            "effect": "Initiates a command-line interface to list available properties and modify the format string by adding or removing specific data points."
+          },
+          {
+            "action": "Edit Format String",
+            "how": "AutoCAD Properties Palette (OPM) -> Format property",
+            "effect": "Updates the template used to generate the label text."
+          },
+          {
+            "action": "Relocate Label",
+            "how": "Grip Edit (Move)",
+            "effect": "Moves the text label insertion point; the connecting line to the entity updates automatically."
+          }
+        ]
+      },
+      "tokens_used": 8994,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# SampleFormatObject.mcr\n\n## Overview\nThis script generates a visual label displaying custom properties and calculated data (such as weight, dimensions, or surface quality) for selected timber construction elements in the model.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Used for tagging 3D elements like beams, panels, and openings. |\n| Paper Space | No | Not designed for layout views. |\n| Shop Drawing | No | Not designed for manufacturing details. |\n\n## Prerequisites\n- **Required Entities**: At least one valid entity (GenBeam, Sip, ChildPanel, Opening, OpeningSF, or MetalPartCollectionEnt).\n- **Minimum Count**: 1 entity. If no entity is selected, the script instance will be deleted.\n- **Required Settings**: The `hsbCenterOfGravity` TSL must be available to calculate and display the \"Weight\" property.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `SampleFormatObject.mcr`\n\n### Step 2: Select Entities\n```\nCommand Line: Select entities:\nAction: Select one or more construction entities (beams, panels, openings, etc.) from the model that you wish to label.\n```\n\n### Step 3: Define Insertion Point\n```\nCommand Line: Specify insertion point:\nAction: Click in the model space where you want the label to appear.\n```\n\n### Step 4: Configure Format\n```\nDialog: Properties\nAction: Enter the Format string (e.g., @(Weight), @(Surface Quality)) or use the default. Click OK to generate the label.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Format | text | | Defines the layout and content of the label using placeholders (e.g., `@(Width)`, `@(GrainDirectionText)`). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Add/Remove Format | Opens a command-line list of available properties. Type the index number to add a property to the format or type `-index` to remove it. Type `-1` to finish. |\n\n## Settings Files\n- **Script Dependency**: `hsbCenterOfGravity.tsl`\n- **Location**: TSL Search Path\n- **Purpose**: Calculates the weight used in the `@(Weight)` variable.\n\n## Tips\n- Use the **Add/Remove Format** right-click option to build your label string easily instead of typing it manually.\n- The available properties change depending on the entity type selected (e.g., Sips show Grain Direction, Openings show Dimensions).\n- You can move the label later using **Grip Edit** (click the label and drag the grip) to reposition it in the drawing.\n\n## FAQ\n- **Q: Why did the script disappear immediately after I placed it?**\n  - A: The script automatically deletes itself if no valid entities were selected during the selection step. Ensure you select a beam, panel, or opening before placing the label.\n\n- **Q: The \"Weight\" shows as 0 or is missing.**\n  - A: Ensure the `hsbCenterOfGravity` TSL is installed and accessible in your hsbCAD environment, as the script relies on it to calculate weight.\n\n- **Q: Can I label multiple different types of entities at once?**\n  - A: Yes, you can select mixed entities (e.g., a Beam and a Panel). The script will attempt to resolve properties relevant to each specific entity type."
+      },
+      "tokens_used": 4774,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,192 @@
+{
+  "filename": "hsbCLT-LapJoint.mcr",
+  "status": "completed",
+  "total_tokens": 38226,
+  "processing_time": 631.1642870903015,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 8983,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script explicitly uses '_kModelSpace' when calling 'dbCreate'. It manipulates 3D geometry using 'Element' and 'Sip' classes, performs 'dbSplit' operations, and generates 'Display' objects for the model. No ShopDrawing prefixes ('sd_'), '#Type E' definitions, or Viewport handling found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "Sip"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing at least one panel (Element).",
+          "requiredSettings": [
+            "hsbCLT-LapJoint (XML settings file optional but referenced for configuration)"
+          ]
+        }
+      },
+      "tokens_used": 6685,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9707,
+      "error": null
+    },
+    "4": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "Request timeout after retries"
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. User launches script (via Insert or Command line).",
+          "2. User selects Panel(s) and defines reference points (Split points or Edge points).",
+          "3. Script initializes instance properties and checks for valid Element/Entity reference.",
+          "4. Script checks for valid Construction (SIPs/GenBeams) within the panel.",
+          "5. [Conditional Branch] Construction Status:",
+          "   - Path A (SIPs Exist): Script calculates split plane, splits the panel using dbSplit, and clones the TSL onto the resulting sub-elements.",
+          "   - Path B (No SIPs): Script draws a plan-view symbol representation and waits for construction to be generated.",
+          "6. Script calculates joint parameters (Depth, Side, Direction).",
+          "7. Script processes context triggers (Flip, Swap Depth, Add/Remove Panels) if invoked.",
+          "8. Script generates geometry, cuts, and display objects.",
+          "9. Instance updates in Model Space."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Check for existing Construction (SIPs/GenBeams) in the selected Element.",
+            "path1": {
+              "name": "Construction Exists (Split Mode)",
+              "steps": [
+                "Identify SIP entities within the Element.",
+                "Calculate split plane based on user input points.",
+                "Intersect split plane with SIP envelope.",
+                "Execute dbSplit on the SIP.",
+                "Create new TSL instances on the split parts via dbCreate.",
+                "Set execution loops to 2."
+              ]
+            },
+            "path2": {
+              "name": "No Construction (Preview Mode)",
+              "steps": [
+                "Retrieve Element outline (plOutlineWall).",
+                "Calculate plan symbol geometry based on Width/Depth/Gap.",
+                "Draw preview PLine in Display object.",
+                "Wait for Element construction event to trigger split."
+              ]
+            }
+          },
+          {
+            "condition": "Depth Property Value (dDepth).",
+            "path1": {
+              "name": "Auto Depth",
+              "steps": [
+                "Check if dDepth <= 0 or > Panel Thickness.",
+                "Set dThisDepth to 0.5 * Panel Thickness (dZ)."
+              ]
+            },
+            "path2": {
+              "name": "Manual Depth",
+              "steps": [
+                "Use user-defined dDepth value directly."
+              ]
+            }
+          },
+          {
+            "condition": "Context Command / Recalc Trigger",
+            "path1": {
+              "name": "Flip Side / Double Click",
+              "steps": [
+                "Invert nSide multiplier.",
+                "Transform _Pt0 by vecZ.",
+                "Return early."
+              ]
+            },
+            "path2": {
+              "name": "Flip Direction",
+              "steps": [
+                "Toggle bFlipDir boolean.",
+                "Invert vecZFace vector."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Reference Validity",
+            "errorMessage": "could not find reference to element.",
+            "recovery": "Script erases instance if element cannot be found."
+          },
+          {
+            "check": "Catalog Entry",
+            "errorMessage": "Could not find [Key] in the list of catalog entries.",
+            "recovery": "Script reports available entries and creates instance with default values."
+          },
+          {
+            "check": "Element Type",
+            "errorMessage": "Element is not a valid Wall/Panel.",
+            "recovery": "Script checks element assignment logic; fails if not applicable (implied by 'assignToElementGroup' usage)."
+          },
+          {
+            "check": "Split Intersection",
+            "errorMessage": "(Implicit) Split plane does not intersect panel.",
+            "recovery": "Script checks 'ptsInt.length() > 0' before splitting. If 0, no split occurs."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Flip Side",
+            "how": "Double Click or Context Menu 'Flip Side'",
+            "effect": "Reverses the side of the joint (nSide) and moves the insertion point."
+          },
+          {
+            "action": "Flip Direction",
+            "how": "Context Menu 'Flip Direction'",
+            "effect": "Toggles the tool orientation relative to the panel normal (bFlipDir)."
+          },
+          {
+            "action": "Swap Depth",
+            "how": "Context Menu 'Swap Depth'",
+            "effect": "Swaps depth parameters between reference and opposite sides."
+          },
+          {
+            "action": "Add/Remove Panels",
+            "how": "Context Menu 'Add Panel(s)' / 'Remove Panel(s)'",
+            "effect": "Links or unlinks additional panels to the lap joint tool instance."
+          },
+          {
+            "action": "Edit Properties",
+            "how": "Properties Palette (OPM)",
+            "effect": "Modify dimensions (Width, Depth, Gaps, Chamfers, Radius) and settings."
+          },
+          {
+            "action": "Grip Edit",
+            "how": "Drag graphical grips in model",
+            "effect": "Relocates the joint reference point (_Pt0) and recalculates geometry."
+          }
+        ]
+      },
+      "tokens_used": 8519,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-LapJoint\n\n## Overview\nThis script automates the creation of lap joints on CLT (Cross Laminated Timber) panels. It allows users to split panels based on defined reference points, supports previewing joints before construction is generated, and provides tools to modify joint orientation and depth.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates in the 3D model to split and manipulate panel geometry. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Entities**: At least one CLT Panel (Element) in the Model Space.\n- **Minimum Beam Count**: 1 Panel.\n- **Required Settings**: `hsbCLT-LapJoint.xml` (Optional configuration file for default values).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbCLT-LapJoint.mcr` from the list.\n\n### Step 2: Select Panel\n```\nCommand Line: Select Element/Panel\nAction: Click on the CLT panel in the model where you want to apply the lap joint.\n```\n\n### Step 3: Define Reference Point\n```\nCommand Line: Specify Split point/Edge point\nAction: Click a point on the panel to define where the lap joint should occur.\n```\n\n### Step 4: Configuration\nThe script will initialize and check for existing construction (SIPs/GenBeams).\n- **If construction exists**: The panel will split immediately, and the joint geometry will be generated.\n- **If no construction**: A plan-view symbol will be drawn. The split will occur automatically once construction is generated on the panel.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Joint Width | Number | Var. | Determines the width of the lap joint cut. |\n| Joint Depth | Number | Auto | Sets the depth of the cut. Use 'Auto' (<=0) for half the panel thickness, or enter a manual value. |\n| Gap | Number | 0 | Defines the gap size between joined parts. |\n| Chamfer | Number | 0 | Sets the chamfer size on the joint edges. |\n| Radius | Number | 0 | Applies a fillet radius to internal corners. |\n| Side | Integer | 1 | Determines which side of the reference point the joint is applied to. |\n| Flip Direction | Boolean | False | Toggles the orientation of the tool relative to the panel normal. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Flip Side | Reverses the side of the joint (swaps internal/external). This can also be triggered by double-clicking the instance. |\n| Flip Direction | Toggles the joint direction 180 degrees relative to the panel surface. |\n| Swap Depth | Swaps depth parameters between the reference side and the opposite side. |\n| Add Panel(s) | Links additional existing panels to the current lap joint instance. |\n| Remove Panel(s) | Unlinks panels from the lap joint instance. |\n\n## Settings Files\n- **Filename**: `hsbCLT-LapJoint.xml`\n- **Location**: Company or Install path (standard hsbCAD search paths).\n- **Purpose**: Stores catalog entries and default configuration parameters for dimensions and material assignments.\n\n## Tips\n- **Preview Mode**: You can insert this script on a panel before the construction (SIPs) is generated. The script will draw a preview symbol and automatically execute the split once the construction is calculated.\n- **Auto Depth**: Leave the 'Joint Depth' set to 0 or negative to automatically default the depth to 50% of the panel thickness.\n- **Quick Edit**: Double-click the graphical symbol in the model to quickly Flip the Side of the joint without using the context menu.\n\n## FAQ\n- **Q: Why didn't the panel split when I inserted the script?**\n- **A:** The script is likely in \"Preview Mode\" because no construction (SIPs/GenBeams) exists inside the panel yet. Generate the construction for the panel, and the split will occur automatically.\n- **Q: How do I move the joint to a different location?**\n- **A:** Use the Grip Edit function. Click and drag the graphical grip in the model to relocate the joint reference point.\n- **Q: What happens if I change the panel thickness?**\n- **A:** If the Joint Depth is set to 'Auto', the cut depth will update automatically to match the new thickness (50%)."
+      },
+      "tokens_used": 4332,
+      "error": null
+    }
+  }
+}

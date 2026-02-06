@@ -1,0 +1,210 @@
+{
+  "filename": "hsbPanelOpeningFillet.mcr",
+  "status": "completed",
+  "total_tokens": 43988,
+  "processing_time": 211.01914978027344,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.1",
+            "date": "21mar13",
+            "author": "th@hsbCAD.de",
+            "changes": "initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8258,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses '_kModelSpace' in tslNew.dbCreate. It targets 'Sip' (Panel) entities using _Sip[0] and getSip(). The logic modifies 3D geometry (stretchEdgeTo, addOpening) rather than creating 2D annotations or views."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "3D Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6076,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [\n      {\n        \"step\": 1,\n        \"function\": \"getSip\",\n        \"promptOriginal\": \"Select panel and a point inside the window or door\",\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      },\n      {\n        \"step\": 2,\n        \"function\": \"getPoint\",\n        \"promptOriginal\": \"\\n\" + T(\"|Pick point inside opening|\"),\n        \"condition\": \"_bOnInsert\",\n        \"required\": true\n      }\n    ],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [\n    {\n      \"type\": \"showDialog\",\n      \"trigger\": \"_bOnInsert (when _kExecuteKey is empty)\",\n      \"title\": null,\n      \"dataSource\": \"Script Properties (dRadius)\",\n      \"features\": {\n        \"searchable\": false,\n        \"multiSelect\": false\n      }\n    }\n  ],\n  \"opmProperties\": [\n    {\n      \"index\": 0,\n      \"variable\": \"dRadius\",\n      \"type\": \"PropDouble\",\n      \"displayName\": \"|Radius|\",\n      \"defaultValue\": 20,\n      \"inputType\": \"number\",\n      \"options\": [],\n      \"category\": null,\n      \"description\": \"|Defines the radius of the fillet|\"\n    }\n  ],\n  \"contextMenu\": [],\n  \"settingsFiles\": []\n}\n```"
+      },
+      "tokens_used": 6004,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Adds fillets (rounded corners) to existing window or door openings in a structural panel (SIP).",
+          "category": "Geometry Modification",
+          "typicalUseCase": "Applying rounded corners to rectangular or polygonal cutouts in panels to improve aesthetics, facilitate CNC routing, or prevent sealant cracking."
+        },
+        "parameters": [
+          {
+            "name": "dRadius",
+            "technicalDefault": "20",
+            "businessMeaning": "The size of the radius for the rounded corners to be applied to the opening.",
+            "validRange": "0 to (Minimum Opening Width / 2). Typically 0mm to 100mm.",
+            "unit": "mm",
+            "affectsOutput": "Determines the curvature of the corners. A larger radius removes more material from the corner, resulting in a smoother, rounder transition between edges. If set to 0, the opening remains sharp-cornered (though the script effectively replaces the opening)."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Opening",
+            "description": "A new opening geometry added to the panel, replacing the original opening with one that has rounded corners.",
+            "appliedTo": "The selected Structural Insulated Panel (Sip)"
+          }
+        ]
+      },
+      "tokens_used": 7153,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script initializes properties (Radius) and unit conversion.",
+          "If script is being inserted (_bOnInsert): Check insert cycle to prevent multiple instances.",
+          "Determine property source: Show Dialog if no catalog key is provided; otherwise load from catalog.",
+          "Prompt user to select a Structural Panel (Sip) entity.",
+          "Enter interactive loop: Prompt user to pick a point inside the target window or door opening.",
+          "Create a new non-interactive instance of the script (cloning) passing the Sip, Point, and Radius.",
+          "Terminate the interactive 'master' instance.",
+          "[New Instance] Validate if the linked Panel entity is valid; erase if not.",
+          "Identify the opening geometry at the selected point by checking standard opening polylines.",
+          "[Conditional] If no standard opening is found, calculate a 'Door' opening by subtracting the panel envelope from its convex hull.",
+          "[Conditional - Window] Loop through detected edges, calculate stretch planes based on normals, and call MapIO to stretch edges inward.",
+          "[Conditional - Door] Calculate outward stretch vectors for edges, stretch geometry, and generate a new profile using Convex Hull logic.",
+          "Generate the fillet geometry: Offset the identified profile inwards by the Radius.",
+          "Reconstruct the outline: Add line segments at the offset distance and insert Arcs (Radius) at the corners.",
+          "Apply the new rounded geometry to the Panel using sip.addOpening (replacing the original).",
+          "Erase the script instance (Script is not resident)."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Opening Type Detection (Point in Profile check)",
+            "path1": {
+              "name": "Standard Window",
+              "steps": [
+                "Point matches an existing opening ring in plOpenings array.",
+                "Collect edges associated with that polyline.",
+                "Calculate inward stretch distance based on Radius.",
+                "Use MapIO to stretch specific edges to defined planes."
+              ]
+            },
+            "path2": {
+              "name": "Door / Edge Opening",
+              "steps": [
+                "Point does not match standard openings (implies opening touches panel edge).",
+                "Generate Convex Hull of panel and subtract Envelope to find 'door' rings.",
+                "Identify edges pointing 'outwards' (free direction).",
+                "Stretch edges outward significantly.",
+                "Construct new opening shape by merging original and stretched outlines, then applying Convex Hull."
+              ]
+            }
+          },
+          {
+            "condition": "Execution Context",
+            "path1": {
+              "name": "Interactive Insert (_bOnInsert)",
+              "steps": [
+                "Show Dialog / Load Catalog.",
+                "Get Panel selection.",
+                "Get Point selection.",
+                "Spawn Cloned Instance."
+              ]
+            },
+            "path2": {
+              "name": "MapIO Helper (_bOnMapIO)",
+              "steps": [
+                "Receive Sip, Edge Point, Plane Normal from Map.",
+                "Execute sip.stretchEdgeTo() operation.",
+                "Return result."
+              ]
+            },
+            "path3": {
+              "name": "Calculation Instance",
+              "steps": [
+                "Read inputs from _Sip, _Pt0, Properties.",
+                "Perform Fillet Calculation.",
+                "Modify Panel.",
+                "Erase Instance."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Panel Entity Validity",
+            "errorMessage": "\\n invalid sip",
+            "recovery": "User must ensure a valid Sip (Structural Panel) is selected and the script is re-run."
+          },
+          {
+            "check": "Opening Detection",
+            "errorMessage": "(Implicit - No error message shown)",
+            "recovery": "If the point selected is not inside a window or door opening, the script erases itself without making changes. User must pick a point inside a valid cutout."
+          },
+          {
+            "check": "Minimum Geometry Size",
+            "errorMessage": "(Implicit - No error message shown)",
+            "recovery": "If the calculated fillet area is too small (near zero), the modification is skipped. This usually happens if the Radius is larger than the opening dimensions."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Script Self-Destructs",
+            "how": "Internal logic (eraseInstance)",
+            "effect": "The TSL instance is removed from the drawing immediately after modifying the panel geometry. There are no grips or OPM properties to edit afterwards."
+          },
+          {
+            "action": "Panel Geometry Update",
+            "how": "sip.addOpening()",
+            "effect": "The selected opening in the Panel is permanently replaced with a new geometry featuring rounded corners of the specified radius."
+          }
+        ]
+      },
+      "tokens_used": 9473,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "```json\n{\n  \"documentation\": \"# hsbPanelOpeningFillet.mcr\\n\\n## Overview\\nThis script adds rounded corners (fillets) to window or door openings within structural panels (SIPs). It replaces the sharp corners of an existing cutout with smooth arcs of a specified radius.\\n\\n## Usage Environment\\n| Space | Supported | Notes |\\n|-------|-----------|-------|\\n| Model Space | Yes | Script operates on 3D panel geometry. |\\n| Paper Space | No | Not applicable. |\\n| Shop Drawing | No | Not applicable. |\\n\\n## Prerequisites\\n- **Required Entities**: A Structural Panel (Sip/Element) must exist in the model.\\n- **Existing Opening**: The selected panel must have at least one window or door opening.\\n\\n## Usage Steps\\n\\n### Step 1: Launch Script\\nCommand: `TSLINSERT` \\nAction: Browse to the script location and select `hsbPanelOpeningFillet.mcr`.\\n\\n### Step 2: Set Radius\\nIf no catalog key is provided, a dialog or property input will appear.\\n**Action**: Enter the desired radius for the fillet (default is 20mm).\\n\\n### Step 3: Select Panel\\n**Command Line**: `Select panel and a point inside the window or door`\\n**Action**: Click on the Structural Panel that contains the opening you want to modify.\\n\\n### Step 4: Select Opening Point\\n**Command Line**: `Pick point inside opening`\\n**Action**: Click a point inside the specific window or door opening where you want the fillets applied.\\n\\n**Result**: The script calculates the new geometry, applies the rounded corners to the panel, and then automatically removes itself from the drawing.\\n\\n## Properties Panel Parameters\\n\\n| Parameter | Type | Default | Description |\\n|-----------|------|---------|-------------|\\n| Radius | Number | 20 mm | Defines the radius of the rounded corners to be applied to the opening. |\\n\\n## Right-Click Menu Options\\nNone. The script does not remain in the drawing after execution.\\n\\n## Settings Files\\nNone.\\n\\n## Tips\\n- **Geometry Validation**: Ensure the `Radius` value is not larger than half of the opening's width or height. If the radius is too large, the fillet operation may fail or produce unexpected results.\\n- **Permanent Modification**: This script permanently alters the panel geometry. Since the script instance deletes itself after running, you cannot simply click and edit the properties later. Use the `Undo` command to revert changes if needed.\\n- **Door Openings**: The script intelligently detects if the opening is a standard window (internal) or a door (touching the panel edge) and adjusts the geometry calculation accordingly.\\n\\n## FAQ\\n- **Q: Can I edit the fillet radius after inserting?**\\n  **A**: No. The script runs once, modifies the panel, and then erases itself. To change the radius, you must Undo the command and run it again with the new value.\\n\\n- **Q: What happens if I select a point that is not inside an opening?**\\n  **A**: The script will detect that no valid opening exists at that location, erase itself, and leave the panel unchanged.\"\n}\n```"
+      },
+      "tokens_used": 7024,
+      "error": null
+    }
+  }
+}

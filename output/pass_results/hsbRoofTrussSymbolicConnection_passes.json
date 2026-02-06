@@ -1,0 +1,222 @@
+{
+  "filename": "hsbRoofTrussSymbolicConnection.mcr",
+  "status": "completed",
+  "total_tokens": 21008,
+  "processing_time": 376.4039192199707,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": 0,
+          "keywords": [],
+          "majorVersion": 0,
+          "minorVersion": 0,
+          "dxaOut": 0,
+          "implInsert": 0
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2640,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses TrussEntity objects and draws geometry using Display dp(-1). It connects trusses in the 3D model using TrussConnection. No references to _Viewport, sd_ prefix, or shop drawing entities."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "TrussEntity"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 2823,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "getTrussEntity",
+              "promptOriginal": "Select carried truss",
+              "condition": "_bOnInsert",
+              "required": true
+            },
+            {
+              "step": 2,
+              "function": "getTrussEntity",
+              "promptOriginal": "Select carrier truss",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "pSymbolSize",
+            "type": "PropDouble",
+            "displayName": "|Symbol size|",
+            "defaultValue": "U(120)",
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 3549,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Creates a visual symbolic representation and establishes a logical link between two roof trusses to indicate a connection or carrying relationship.",
+          "category": "Framing/Visualization",
+          "typicalUseCase": "Used to indicate where a truss sits on or connects to another truss (e.g., truss girder system) in the 3D model without generating physical machining or hardware."
+        },
+        "parameters": [
+          {
+            "name": "pSymbolSize",
+            "technicalDefault": "U(120)",
+            "businessMeaning": "Defines the diameter of the circular symbol used to visually mark the connection point in the model.",
+            "validRange": "50 - 500",
+            "unit": "mm",
+            "affectsOutput": "Adjusts the radius of the concentric circles drawn on both the host (carried) and carrier trusses."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "Symbolic Geometry (PLine)",
+            "description": "Draws two concentric rings on the Host truss (Blue), two concentric rings on the Carrier truss (Green), and a connecting line (Red) between the two reference points.",
+            "appliedTo": "Host Truss and Carrier Truss entities"
+          },
+          {
+            "type": "Logical Link",
+            "description": "Creates a logical 'SymbolicConnection' link between the two trusses using the TrussConnection API.",
+            "appliedTo": "Both Truss Entities"
+          }
+        ]
+      },
+      "tokens_used": 3746,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Launch",
+          "2. [Branch] Check insertion context (_bOnInsert)",
+          "3. [If UI Insertion] Prompt user to select 'carried truss' (Host)",
+          "4. [If UI Insertion] Prompt user to select 'carrier truss' (Carrier)",
+          "5. [If Code Insertion] Retrieve entities from internal _Entity list",
+          "6. Validate entity selection (Count must be 2, type must be TrussEntity)",
+          "7. [If Invalid] Erase script instance and terminate",
+          "8. [If Valid] Register dependencies on both trusses",
+          "9. Calculate connection points using TrussConnection API",
+          "10. Draw symbolic geometry (Blue rings on Host, Green rings on Carrier, Red connecting line)",
+          "11. Complete / Wait for update trigger"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script insertion method (_bOnInsert flag)",
+            "path1": {
+              "name": "UI Insertion",
+              "steps": [
+                "Execute getTrussEntity prompts for Host and Carrier",
+                "Append selections to _Entity list"
+              ]
+            },
+            "path2": {
+              "name": "Programmatic Insertion (API)",
+              "steps": [
+                "Skip prompts",
+                "Use entities passed directly in the _Entity list"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Validity and Count",
+            "path1": {
+              "name": "Valid Input",
+              "steps": [
+                "Assign TrussEntity variables",
+                "Set dependencies",
+                "Execute Geometry creation"
+              ]
+            },
+            "path2": {
+              "name": "Invalid Input",
+              "steps": [
+                "Detect count != 2 or invalid entities",
+                "Execute eraseInstance()",
+                "Return (Script removes itself)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Count Check",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Script deletes itself. User must re-insert and ensure exactly 2 trusses are selected."
+          },
+          {
+            "check": "TrussEntity Validity",
+            "errorMessage": "None (Silent failure)",
+            "recovery": "Script deletes itself if selected objects are not valid TrussEntities or are deleted."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Symbol Size",
+            "how": "OPM (Object Properties Manager) -> pSymbolSize",
+            "effect": "Updates the diameter of the concentric rings drawn on both trusses."
+          },
+          {
+            "action": "Update Truss Geometry",
+            "how": "Modify geometry of Host or Carrier truss",
+            "effect": "Script recalculates reference points and redraws symbols/lines to match new truss positions automatically."
+          },
+          {
+            "action": "Delete Trusses",
+            "how": "Erase Host or Carrier entity",
+            "effect": "Script detects invalid entities and executes eraseInstance(), removing the connection symbol."
+          }
+        ]
+      },
+      "tokens_used": 4025,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbRoofTrussSymbolicConnection.mcr\n\n## Overview\nThis script creates a visual symbol and establishes a logical link between two roof trusses. It is typically used to indicate where a truss sits on or is supported by another truss (e.g., in truss girder systems) without generating physical machining or hardware.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script must be used in the 3D model. |\n| Paper Space | No | Not applicable for layouts. |\n| Shop Drawing | No | Does not generate 2D drawing details. |\n\n## Prerequisites\n- **Required Entities**: Two existing roof trusses (`TrussEntity`).\n- **Minimum Beam Count**: 0 (It operates on Truss Entities, not standard beams).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbRoofTrussSymbolicConnection.mcr`\n\n### Step 2: Select the Carried Truss\n```\nCommand Line: Select carried truss\nAction: Click on the truss that is being supported (the top truss).\n```\n\n### Step 3: Select the Carrier Truss\n```\nCommand Line: Select carrier truss\nAction: Click on the truss providing the support (the bottom or girder truss).\n```\n\n### Step 4: Verify Creation\nThe script will automatically draw the symbolic connection:\n- **Blue Rings**: Placed on the carried truss.\n- **Green Rings**: Placed on the carrier truss.\n- **Red Line**: Connects the two trusses.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Symbol size (`pSymbolSize`) | Number | 120 mm | Defines the diameter of the circular symbols used to mark the connection point. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| None | No custom context menu options are provided. |\n\n## Settings Files\n- No external settings files are required for this script.\n\n## Tips\n- **Automatic Updates**: If you move or modify the geometry of either truss, the connection symbol and line will update automatically to maintain the link.\n- **Visual Clarity**: You can adjust the `Symbol size` in the properties palette if the default rings are too small or too large for your model scale.\n- **Deletion**: If you delete one of the connected trusses, the script will detect the missing entity and delete itself automatically.\n- **Color Coding**: Remember the color codes for troubleshooting: Blue = Host (Carried), Green = Carrier (Support), Red = Connection Path.\n\n## FAQ\n- **Q: The script vanished immediately after I selected the trusses. Why?**\n  **A:** This usually happens if the selected objects were not valid TrussEntities or if the selection was interrupted. The script requires exactly two valid roof trusses to function. Simply re-run the command and ensure you click on valid truss objects.\n\n- **Q: Does this script cut holes or add bolts to the trusses?**\n  **A:** No. This script is purely symbolic. It creates a visual representation and a logical data link for the model, but it does not generate any physical machining or CNC data.\n\n- **Q: Can I change the colors of the symbols?**\n  **A:** No, the colors are hardcoded into the script (Blue/Green/Red) to maintain consistency in the model display."
+      },
+      "tokens_used": 4225,
+      "error": null
+    }
+  }
+}

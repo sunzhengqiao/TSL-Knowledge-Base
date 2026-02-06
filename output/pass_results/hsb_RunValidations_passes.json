@@ -1,0 +1,258 @@
+{
+  "filename": "hsb_RunValidations.mcr",
+  "status": "completed",
+  "total_tokens": 24690,
+  "processing_time": 180.3581736087799,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": 2,
+          "minorVersion": 2,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "2.2",
+            "date": "29/08/2022",
+            "author": "Robert Pol",
+            "changes": "Always take all groups"
+          },
+          {
+            "version": "2.1",
+            "date": "21/09/2021",
+            "author": "Robert Pol",
+            "changes": "Take all entities from the element"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 4440,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity with Element() type to select 3D construction elements. It calls elementGroup().collectEntities(..., _kModelSpace, ...) and constructs a ModelMap object to analyze the 3D model. There are no references to _kPaperSpace, _Viewport, or sd_ drawing functions."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element"
+          ],
+          "minimumBeams": null,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "_kPathHsbInstall\\Utilities\\hsbValidation\\hsbValidationTSL.dll",
+            "_kPathHsbInstall\\Utilities.Acad\\hsbValidation\\hsbValidationInspectorAcad.dll"
+          ]
+        }
+      },
+      "tokens_used": 3466,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialogOnce",
+            "trigger": "if (_kExecuteKey==\"\")",
+            "title": "Properties",
+            "dataSource": "Standard TSL Properties Dialog",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sGroupName",
+            "type": "PropString",
+            "displayName": "Test Group",
+            "defaultValue": "First item from sAllGroups",
+            "inputType": "dropdown",
+            "options": [
+              "sAllGroups (via DotNet)"
+            ],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 5258,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Launches the hsbCAD Validation Inspector tool to check the 3D model for design errors and clashes based on predefined company validation rules.",
+          "category": "Quality Assurance / Analysis",
+          "typicalUseCase": "Used by a CAD Manager or Designer to verify a set of construction elements (walls, floors, roofs) against company standards or specific logical validation rules (e.g., material usage, machining constraints, geometric integrity) before manufacturing or export."
+        },
+        "parameters": [
+          {
+            "name": "sGroupName",
+            "technicalDefault": "First item from sAllGroups",
+            "businessMeaning": "The specific validation rule set or configuration group to run against the selected elements. These groups are defined in the external hsbValidation configuration managed by the company.",
+            "validRange": "Must match one of the available validation groups retrieved from the hsbValidation DLLs (typically defined in company configuration files).",
+            "unit": "String (List)",
+            "affectsOutput": "Determines which specific checks are performed during the validation inspection, influencing the content of the resulting report or error list."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "External hsbValidation Configuration",
+            "effect": "Determines the list of available options for sGroupName.",
+            "cascade": [
+              "sGroupName"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Validation Report / Inspector Window",
+            "description": "A standalone interface or report displaying validation errors, warnings, and informational messages based on the 'Test Group' selected.",
+            "appliedTo": "Selected hsbCAD Elements (Walls, Floors, Roofs) and all contained entities (beams, plates, etc.)."
+          }
+        ]
+      },
+      "tokens_used": 2587,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script initializes variables and calls .NET assembly to retrieve list of available Test Groups",
+          "[Insertion Phase] Script checks insertCycleCount to prevent duplicate execution",
+          "If invoked without an execute key, the standard Properties Dialog is displayed to select the 'Test Group'",
+          "User is prompted via command line to select a set of Elements (Walls/Floors)",
+          "If selection is confirmed, the selected Elements are stored in the _Element array",
+          "[Execution Phase] Script configures ModelMap flags to include solids, tools, hardware, and construction info",
+          "Script iterates through selected Elements and collects all sub-entities (beams, plates, etc.) from the Element Group",
+          "A ModelMap is constructed containing all geometric and attribute data",
+          "Input parameters (ModelMap, Test Group, Company Path) are packaged into a Map",
+          "Script calls the external .NET function 'LaunchValidationInspector' in hsbValidationInspectorAcad.dll",
+          "The Validation Inspector window is launched externally",
+          "Script executes eraseInstance() to remove itself from the drawing"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insert Cycle Count check",
+            "path1": {
+              "name": "Duplicate Insertion",
+              "steps": [
+                "If insertCycleCount > 1",
+                "Execute eraseInstance()",
+                "Return immediately"
+              ]
+            },
+            "path2": {
+              "name": "First Insertion",
+              "steps": [
+                "If insertCycleCount <= 1",
+                "Continue to Execute Key check"
+              ]
+            }
+          },
+          {
+            "condition": "Execute Key check (_kExecuteKey)",
+            "path1": {
+              "name": "Manual Run",
+              "steps": [
+                "If _kExecuteKey is empty",
+                "Execute showDialogOnce()",
+                "Open Properties Dialog for Test Group selection"
+              ]
+            },
+            "path2": {
+              "name": "Scripted/Batch Run",
+              "steps": [
+                "If _kExecuteKey is set",
+                "Skip Properties Dialog",
+                "Use default/pre-set properties"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Selection (PrEntity)",
+            "path1": {
+              "name": "Selection Successful",
+              "steps": [
+                "User selects Elements",
+                "Append to _Element array",
+                "Return to trigger next cycle (Execution)"
+              ]
+            },
+            "path2": {
+              "name": "Selection Cancelled",
+              "steps": [
+                "User cancels or selects nothing",
+                "Function returns false",
+                "Script ends without running validation"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Selection",
+            "errorMessage": "None (Internal TSL Logic)",
+            "recovery": "User must select at least one Element when prompted at the command line to proceed."
+          },
+          {
+            "check": "Test Group Availability",
+            "errorMessage": "None (Internal TSL Logic)",
+            "recovery": "The 'Test Group' property is dynamically populated from the external DLL. If the list is empty, the user cannot select a valid group and the external validation may not run correctly. Check hsbValidation configuration."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "None",
+            "how": "N/A",
+            "effect": "The script executes its logic immediately after insertion/selection and calls eraseInstance(), removing itself from the drawing. It cannot be modified via OPM or context menu after the initial run."
+          }
+        ]
+      },
+      "tokens_used": 4541,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_RunValidations.mcr\n\n## Overview\nThis script launches the hsbCAD Validation Inspector tool to check selected construction elements (walls, floors, roofs) against company-specific design rules and standards. It generates a detailed report of errors and clashes to help ensure model integrity before manufacturing.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script is designed for 3D model verification. |\n| Paper Space | No | Not applicable for 2D layouts. |\n| Shop Drawing | No | Not used within single-element shop drawings. |\n\n## Prerequisites\n- **Required Entities**: Elements (Walls, Floors, or Roofs).\n- **Minimum Beam Count**: None (entire Elements are selected).\n- **Required Settings**: The external hsbValidation DLLs must be installed in the hsbCAD Utilities folder:\n  - `...Utilities\\hsbValidation\\hsbValidationTSL.dll`\n  - `...Utilities.Acad\\hsbValidation\\hsbValidationInspectorAcad.dll`\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_RunValidations.mcr`\n\n### Step 2: Select Test Group\n```\nDialog: Properties\nAction: Use the \"Test Group\" dropdown to select the set of validation rules (e.g., General, Material, Machining) you wish to run. Click OK.\n```\n\n### Step 3: Select Elements\n```\nCommand Line: Select a set of elements\nAction: Click on the Elements (Walls, Floors, Roofs) in your 3D model that you want to check. Press Enter to confirm selection.\n```\n*(The script will then launch the Validation Inspector window and automatically remove itself from the drawing.)*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Test Group | Dropdown | First item available | Selects the specific validation rule set or configuration group to run against the selected elements. Options are retrieved from your company's hsbValidation configuration. |\n\n## Right-Click Menu Options\n| Menu Item | Description |\n|-----------|-------------|\n| None | This script executes immediately upon insertion and erases itself from the drawing. There are no context menu options available after execution. |\n\n## Settings Files\n- **DLL Dependencies**: `hsbValidationTSL.dll`, `hsbValidationInspectorAcad.dll`\n- **Location**: `_kPathHsbInstall\\Utilities\\hsbValidation\\` and `_kPathHsbInstall\\Utilities.Acad\\hsbValidation\\`\n- **Purpose**: These external files contain the logic for the validation rules and the interface for the Inspector window. The specific rule sets are usually managed by your CAD Manager via external configuration files referenced by these DLLs.\n\n## Tips\n- The script is a \"one-time command\" tool; it will disappear from your drawing immediately after launching the inspector.\n- You can select multiple Elements at once using a window selection during the command line prompt.\n- If the \"Test Group\" dropdown is empty, contact your CAD Manager, as the validation configuration files may be missing or misconfigured.\n\n## FAQ\n- **Q: Where do I see the validation results?**\n  A: A standalone \"Validation Inspector\" window will open displaying a list of errors, warnings, and info messages based on the checks performed.\n- **Q: Can I re-run the script on the same elements?**\n  A: Yes, simply insert the script again (`TSLINSERT`), select your desired Test Group, and pick the elements again.\n- **Q: Why did the script block vanish from the model?**\n  A: The script is designed to run once and then delete itself (`eraseInstance`) to avoid cluttering the drawing. It does not affect your geometry."
+      },
+      "tokens_used": 4398,
+      "error": null
+    }
+  }
+}

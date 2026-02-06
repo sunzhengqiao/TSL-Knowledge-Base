@@ -1,0 +1,172 @@
+{
+  "filename": "hsbCLT-Rabbet.mcr",
+  "status": "completed",
+  "total_tokens": 49020,
+  "processing_time": 322.6557183265686,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9588,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Uses getSip for input, interacts with Sip entities (envelopeBody, vecZ), performs 3D boolean operations via Body/BeamCut/Mortise, and uses dpModel.draw for visualization. No sd_ prefixes, Viewport interactions, or #Type definitions found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Sip"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "3D Model Space containing at least two non-parallel Sip panels",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 6836,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7228,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Automates the creation of rabbet and tenon joints for connecting CLT panels (T-connections) by generating the necessary machining cuts and 3D geometry.\",\n    \"category\": \"Machining/Jointing\",\n    \"typicalUseCase\": \"Used when connecting a wall or floor panel into another panel (T-junction) where a structural interlock (rabbet/tenon) is required instead of a simple butt joint.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"dWidth\",\n      \"technicalDefault\": \"50\",\n      \"businessMeaning\": \"Defines the width of the tenon (the protruding part on the male panel) and the corresponding groove on the female panel. A value of 0 automatically sets the width to 50% of the panel thickness.\",\n      \"validRange\": \"0 (50% Thickness) to Panel Thickness\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Adjusts the horizontal size of the interlocking joint geometry.\"\n    },\n    {\n      \"name\": \"dDepth\",\n      \"technicalDefault\": \"20\",\n      \"businessMeaning\": \"Defines the depth of the cut into the female panel, determining how far the male panel inserts into the female panel.\",\n      \"validRange\": \"10 to 100 (Dependent on female panel width)\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Controls the penetration depth of the male tenon into the female groove.\"\n    },\n    {\n      \"name\": \"dGapSide\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"Specifies the clearance gap on the reference side of the tenon within the groove, allowing for dimensional tolerances or adhesive thickness.\",\n      \"validRange\": \"0 to 10\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Increases the width of the groove on the reference side relative to the tenon.\"\n    },\n    {\n      \"name\": \"dGapSide2\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"Specifies the clearance gap on the opposite side of the tenon, allowing for asymmetric tolerances.\",\n      \"validRange\": \"0 to 10\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Increases the width of the groove on the opposite side relative to the tenon.\"\n    },\n    {\n      \"name\": \"dGapDepth\",\n      \"technicalDefault\": \"0\",\n      \"businessMeaning\": \"Defines a gap at the bottom of the groove (front of the joint), ensuring the male panel does not bottom out hard against the female panel face.\",\n      \"validRange\": \"0 to 10\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Shortens the effective depth of the tenon or deepens the groove to create an air gap at the intersection face.\"\n    },\n    {\n      \"name\": \"sAlignment\",\n      \"technicalDefault\": \"Reference Side\",\n      \"businessMeaning\": \"Controls the positioning of the joint along the thickness of the panel. Options are Reference Side, Center, or Opposite Side.\",\n      \"validRange\": \"Reference Side / Center / opposite side\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Shifts the entire cut geometry to align with the inner face, center, or outer face of the panel.\"\n    },\n    {\n      \"name\": \"dOffset\",\n      \"technicalDefault\": \"50\",\n      \"businessMeaning\": \"Defines a manual offset distance from the reference side to fine-tune the joint position if standard alignment options are insufficient.\",\n      \"validRange\": \"0 to Panel Thickness\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Shifts the starting point of the joint calculation along the panel's X-axis.\"\n    },\n    {\n      \"name\": \"sTool\",\n      \"technicalDefault\": \"Contact\",\n      \"businessMeaning\": \"Determines how the tool extends vertically if the panels have different heights. Options are Contact (match intersection only), towards bottom (extend to floor), towards top (extend to ceiling), or both sides.\",\n      \"validRange\": \"Contact / towards bottom / towards top / both Sides\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Extends the length of the groove/cut in the Z-direction to ensure full contact or specific routing.\"\n    },\n    {\n      \"name\": \"sToolShape\",\n      \"technicalDefault\": \"not rounded\",\n      \"businessMeaning\": \"Defines the corner geometry of the tool for CNC machining (sharp corners, full round, or rounded corners) to relieve stress or suit tooling capabilities.\",\n      \"validRange\": \"not rounded / round / rounded\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Changes the contour of the cut ends from sharp to radius-based fillets.\"\n    }\n  ],\n  \"parameterDependencies\": [\n    {\n      \"trigger\": \"dWidth = 0\",\n      \"effect\": \"Script calculates width as 50% of the panel thickness automatically.\",\n      \"cascade\": [\n        \"dWidth\"\n      ]\n    },\n    {\n      \"trigger\": \"Joint Length (calculated) >= 1500mm\",\n      \"effect\": \"Forces Tool Shape to 'not rounded' and locks the parameter to prevent excessive machining time or tool errors.\",\n      \"cascade\": [\n        \"sToolShape\"\n      ]\n    },\n    {\n      \"trigger\": \"Specific geometric conditions (Mortise logic)\",\n      \"effect\": \"Forces dGapSide2 to equal dGapSide to maintain symmetry for the machining operation.\",\n      \"cascade\": [\n        \"dGapSide2\",\n        \"dGapSide\"\n      ]\n    }\n  ],\n  \"outputEntities"
+      },
+      "tokens_used": 9859,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Launch: User executes the script.",
+          "2. Catalog Check: System checks if a catalog entry was used to launch.",
+          "3. [Branch] Configuration: Load properties from catalog (Silent) OR Show Properties Dialog.",
+          "4. Male Selection: Prompt user 'Select male panel'.",
+          "5. Female Selection: Prompt user 'Select female panel(s)'.",
+          "6. Validation: Check for valid selection set (count > 1) and non-parallel orientation.",
+          "7. Storage: Store references to Male and Female panels.",
+          "8. Calculation: Calculate intersection geometry and vectors.",
+          "9. [Branch] Joint Type: Determine if connection is 'Gable' or 'Standard'.",
+          "10. Tooling Generation: Apply BeamCut (Gable) or Mortise (Standard) operations.",
+          "11. Visualization: Draw 2D symbols and gap indications in the model."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Catalog Entry Usage",
+            "path1": {
+              "name": "Catalog Mode",
+              "steps": [
+                "Detect execution key in catalog list",
+                "Load preset property values automatically",
+                "Skip dialog display"
+              ]
+            },
+            "path2": {
+              "name": "Manual Mode",
+              "steps": [
+                "No catalog key found",
+                "Display Properties Dialog to user",
+                "Wait for user confirmation"
+              ]
+            }
+          },
+          {
+            "condition": "Split Male Panel Detection (Holzius)",
+            "path1": {
+              "name": "Standard Reference",
+              "steps": [
+                "Map 'checkMalesForHolzius' not present or false",
+                "Use the initially selected Male Sip"
+              ]
+            },
+            "path2": {
+              "name": "Closest Sip Reference",
+              "steps": [
+                "Map 'checkMalesForHolzius' active",
+                "Search Male Element for Sips",
+                "Calculate distance to Female shadow",
+                "Switch reference to closest Sip if different",
+                "Trigger script recalculation"
+              ]
+            }
+          },
+          {
+            "condition": "Joint Geometry (Gable vs Standard)",
+            "path1": {
+              "name": "Gable Connection",
+              "steps": [
+                "Angle between panel Y-axes > 60 degrees",
+                "Use BeamCut operations",
+                "Force ToolShape to 'not rounded' if length > 1500mm"
+              ]
+            },
+            "path2": {
+              "name": "Standard Connection",
+              "steps": [
+                "Angle between panel Y-axes <= 60 degrees",
+                "Force symmetry: Set dGapSide2 = dGapSide",
+                "Use Mortise operations for Male and Female sides"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Selection Count",
+            "errorMessage": "This tool requires at least two panels.",
+            "recovery": "Select a male panel and at least one female panel."
+          },
+          {
+            "check": "Panel Parallelism",
+            "errorMessage": "Panels may not be parallel.",
+            "recovery": "Select panels that intersect or form a T-junction (non-parallel Z-vectors)."
+          },
+          {
+            "check": "Reference Integrity",
+            "errorMessage": "This tool requires at least two panels.",
+            "recovery": "Ensure referenced panels have not been deleted from the model."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Toggle Alignment",
+            "how": "Double-click the script instance",
+            "effect": "Cycles the 'Alignment' property: Reference Side -> Center -> Opposite Side -> Reference Side."
+          },
+          {
+            "action": "Parameter Adjustment",
+            "how": "Edit properties in AutoCAD Properties Palette (OPM)",
+            "effect": "Updates dimensions (Width, Depth, Gaps), offsets, and tooling shapes immediately."
+          },
+          {
+            "action": "Panel Modification",
+            "how": "Move or Rotate the connected panels using AutoCAD commands",
+            "effect": "Script recalculates the joint geometry to match the new panel positions."
+          }
+        ]
+      },
+      "tokens_used": 9890,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbCLT-Rabbet.mcr\n\n## Overview\nAutomates the creation of rabbet and tenon joints for connecting CLT panels (T-connections). It generates the necessary machining cuts and 3D geometry to create a structural interlock between a male and female panel.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for selecting Sip/CLT entities and performing 3D boolean operations. |\n| Paper Space | No | Not applicable. |\n| Shop Drawing | No | This script operates on the 3D model geometry, not 2D drawings. |\n\n## Prerequisites\n- **Required Entities**: At least two CLT/Sip panels in the model.\n- **Minimum Count**: 2 Panels (1 Male, 1 or more Female).\n- **Geometry**: Panels must be non-parallel (forming a T-junction).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbCLT-Rabbet.mcr` from the list.\n\n### Step 2: Configuration\n- **Catalog Mode**: If a catalog entry was selected, properties load automatically.\n- **Manual Mode**: If no catalog is used, a Properties Dialog will appear. Adjust settings (Width, Depth, Gaps) and click OK.\n\n### Step 3: Select Male Panel\n```\nCommand Line: Select male panel\nAction: Click on the panel that will insert into the other (the Tenon).\n```\n\n### Step 4: Select Female Panels\n```\nCommand Line: Select female panel(s)\nAction: Click on the receiving panel(s) (the Groove). Press Enter to finish selection.\n```\n\n### Step 5: Validation and Generation\nThe script checks for valid intersections. If successful, it calculates the toolpath and generates the rabbet geometry.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| dWidth | Number | 50 | Width of the tenon. Set to `0` to automatically use 50% of panel thickness. |\n| dDepth | Number | 20 | Depth of the cut into the female panel (penetration depth). |\n| dGapSide | Number | 0 | Clearance gap on the reference side of the tenon (allows for tolerances). |\n| dGapSide2 | Number | 0 | Clearance gap on the opposite side of the tenon. |\n| dGapDepth | Number | 0 | Gap at the bottom of the groove to prevent the panels from bottoming out. |\n| sAlignment | Dropdown | Reference Side | Positions the joint: **Reference Side**, **Center**, or **Opposite Side**. |\n| dOffset | Number | 50 | Manual offset distance from the reference side to fine-tune position. |\n| sTool | Dropdown | Contact | Vertical tool extension: **Contact**, **towards bottom**, **towards top**, or **both sides**. |\n| sToolShape | Dropdown | not rounded | Corner geometry: **not rounded**, **round**, or **rounded**. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Toggle Alignment | Double-click the script instance in the model to cycle alignment (Reference -> Center -> Opposite). |\n| Update / Recalculate | Recalculates the joint if panels have been moved or parameters changed. |\n\n## Settings Files\n- **Catalog**: Standard hsbCAD Catalogs.\n- **Purpose**: Allows saving predefined parameter sets (Width, Depth, Gaps) for quick insertion without opening the dialog.\n\n## Tips\n- **Automatic Width**: Setting `dWidth` to `0` is a quick way to center the tenon within the panel thickness.\n- **Long Joints**: If the joint length exceeds 1500mm, the script automatically forces the Tool Shape to `not rounded` to prevent machining errors.\n- **Editing**: You can move or rotate the connected panels using standard AutoCAD commands; the script will update the joint geometry automatically upon recalculation.\n- **Asymmetry**: In \"Standard\" connections (low angle), the script forces `dGapSide2` to equal `dGapSide` to maintain machining symmetry.\n\n## FAQ\n- **Q: Why does the script fail with \"Panels may not be parallel\"?**\n  - **A**: This tool is designed for T-connections (intersecting planes). It cannot create a joint between two panels that run exactly parallel to each other.\n- **Q: How do I quickly switch the joint to the center of the panel?**\n  - **A**: Double-click the script instance in the model to cycle the `sAlignment` property until it reaches \"Center\".\n- **Q: Can I use this on floor panels?**\n  - **A**: Yes, provided the geometry represents a valid T-connection between Sip/CLT entities, regardless of orientation (wall or floor)."
+      },
+      "tokens_used": 5619,
+      "error": null
+    }
+  }
+}

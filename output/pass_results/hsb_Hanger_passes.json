@@ -1,0 +1,190 @@
+{
+  "filename": "hsb_Hanger.mcr",
+  "status": "completed",
+  "total_tokens": 32579,
+  "processing_time": 405.59353470802307,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 5931,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script retrieves 'MALEBEAMS' and 'FEMALEBEAMS' (GenBeam entities) and calculates 3D coordinates (Point3d ptOrigin). It attaches TSL instances (hsb_HangerDisplay) to structural beams using dbCreate. No PaperSpace/Viewport API calls (_Viewport, _kPaperSpace) or sd_ prefixes are present."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space",
+          "requiredSettings": [
+            "Microsoft SQL Server Compact 4.0",
+            "hsbAcadHangerIntegration.dll located in hsbCAD Install Utilities.Acad folder",
+            "CONNECTION[] Map structure containing MALEBEAMS, FEMALEBEAMS, and Origin"
+          ]
+        }
+      },
+      "tokens_used": 3701,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [
+          {
+            "menuItem": "changeHanger",
+            "handler": "_kExecuteKey == \"changeHanger\"",
+            "action": "Processes the CONNECTION[] map to regenerate or update the hanger display instances (hsb_HangerDisplay) attached to the structural beams. It erases existing instances within a tolerance and creates new ones.",
+            "alsoTriggeredBy": null
+          }
+        ],
+        "settingsFiles": [
+          {
+            "filename": "hsbAcadHangerIntegration.dll",
+            "searchPaths": [
+              "%hsbCAD Install%\\Utilities.Acad\\Hanger\\"
+            ],
+            "purpose": "External .NET assembly containing the HangerDialogDotNetInsertion function which handles the user interface and database logic during script insertion.",
+            "required": true
+          },
+          {
+            "filename": "insertHangerMap.dxx",
+            "searchPaths": [
+              "%Current Drawing Folder%"
+            ],
+            "purpose": "Path defined for debugging purposes to write connection map data (usage is commented out in the script).",
+            "required": false
+          }
+        ]
+      },
+      "tokens_used": 5723,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Inserts structural hanger hardware (joist hangers, etc.) based on a database configuration, connecting male and female timber beams.",
+          "category": "Hardware",
+          "typicalUseCase": "A user inserts this script to place specific hangers (e.g., face-mount or top-mount) where a joist meets a supporting beam or ledger, ensuring correct geometry and placement based on engineering specifications."
+        },
+        "parameters": [
+          {
+            "name": "sModel",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The specific catalog model or part number of the hanger selected from the database.",
+            "validRange": "Valid part numbers existing in the connected SQL database.",
+            "unit": "String (Catalog Code)",
+            "affectsOutput": "Determines the geometric shape, size, and load-bearing capabilities of the hanger instance generated."
+          },
+          {
+            "name": "sType",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The generic family or installation style of the hanger (e.g., 'Face Mount', 'Top Flange').",
+            "validRange": "Defined by database schema (e.g., 'I-Joist', 'Solid Timber', 'LVL').",
+            "unit": "String (Category)",
+            "affectsOutput": "Filters the available models and determines how the hanger orients itself relative to the supporting beam."
+          },
+          {
+            "name": "sDimstyle",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "The drafting style or dimension configuration to be used when labeling the hanger in shop drawings.",
+            "validRange": "Available dimension styles in the current hsbCAD environment (e.g., 'Standard', 'Metric').",
+            "unit": "String (Style Name)",
+            "affectsOutput": "Controls the appearance and format of annotations and dimensions associated with the hanger in 2D outputs."
+          },
+          {
+            "name": "nDisplayModel",
+            "technicalDefault": "0",
+            "businessMeaning": "The level of detail for the 3D representation and sub-elements (e.g., wireframe vs. solid, show/hide nails/screws).",
+            "validRange": "0 (No/Full Model), 1 (Yes/Detailed), 2 (Short Model/Minimal)",
+            "unit": "Integer (Enum)",
+            "affectsOutput": "Changes the visual complexity of the generated `hsb_HangerDisplay` instance, potentially affecting rendering performance and drawing clarity."
+          },
+          {
+            "name": "dTolerance",
+            "technicalDefault": "0.0",
+            "businessMeaning": "The maximum distance along the supporting beam within which existing hangers will be considered duplicates and replaced.",
+            "validRange": "1.0 mm to 50.0 mm (typically small multiples of standard timber spacing).",
+            "unit": "mm",
+            "affectsOutput": "If the new insertion point is within this distance of an existing hanger on the same side of the beam, the old one is deleted and replaced by the new one."
+          },
+          {
+            "name": "sScriptName",
+            "technicalDefault": "\"hsb_HangerDisplay\"",
+            "businessMeaning": "The specific TSL script responsible for drawing the actual geometry of the hanger.",
+            "validRange": "Valid TSL filenames available in the search paths.",
+            "unit": "String (Filename)",
+            "affectsOutput": "Determines which geometric engine renders the hardware. Custom scripts allow for proprietary or specialized hanger visualizations."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "User selects Hanger Model/Type (via DotNet Dialog)",
+            "effect": "Retrieves Model, Type, Dimstyle, Tolerance, and ScriptName from the database.",
+            "cascade": [
+              "sModel",
+              "sType",
+              "sDimstyle",
+              "dTolerance",
+              "sScriptName"
+            ]
+          },
+          {
+            "trigger": "sScriptName is empty in database",
+            "effect": "Script defaults to standard display script.",
+            "cascade": [
+              "sScriptName"
+            ]
+          },
+          {
+            "trigger": "Existing hanger found within dTolerance",
+            "effect": "PreviousOrigin is set, old hanger erased, new one created.",
+            "cascade": [
+              "mpToClone.setPoint3d('PreviousOrigin')",
+              "tslCurr.dbErase()"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "TslInst (TSL Instance)",
+            "description": "An instance of a display script (typically `hsb_HangerDisplay`) representing the physical hanger hardware.",
+            "appliedTo": "Attached to the Male (supported) beam as a tool, positioned at the connection origin defined by the female (supporting) beam."
+          }
+        ]
+      },
+      "tokens_used": 4561,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7562,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_Hanger.mcr\n\n## Overview\nThis script inserts structural hanger hardware (such as joist hangers or straps) based on a database configuration. It calculates the correct placement and geometry to connect a supporting beam (female) and a supported beam (male) using a specific hardware model.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | This script operates on 3D structural beams. |\n| Paper Space | No | Not intended for 2D drawing views. |\n| Shop Drawing | No | Generates 3D model data only. |\n\n## Prerequisites\n- **Required Entities**: Structural Beams (GenBeam).\n- **Minimum Beam Count**: 2 (One supporting/beam, one supported/joist).\n- **Required Settings**:\n  - Microsoft SQL Server Compact 4.0 (must be installed).\n  - `hsbAcadHangerIntegration.dll` located in the `hsbCAD Install\\Utilities.Acad\\Hanger\\` folder.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsb_Hanger.mcr`\n\n### Step 2: Configure Hanger (Dialog)\n```\nDialog: Hanger Integration\nAction: The external .NET dialog opens. Select the Manufacturer, Hanger Type, and specific Model (e.g., \"Face Mount\", \"I-Joist\") from the database.\n```\n\n### Step 3: Select Beams\n```\nCommand Line: Select Female/Supporting Beam\nAction: Click on the main beam (or ledger) that carries the load.\n\nCommand Line: Select Male/Supported Beam\nAction: Click on the joist or beam being supported.\n```\n\n### Step 4: Placement\n```\nAction: The script automatically calculates the intersection point and inserts the hanger geometry.\n```\n\n## Properties Panel Parameters\n*Note: This script does not expose parameters directly to the AutoCAD Properties Palette (OPM). Configuration is handled via the insertion dialog described above.*\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **sModel** | String | (From DB) | The specific catalog part number of the hanger selected during insertion. |\n| **sType** | String | (From DB) | The generic family of the hanger (e.g., \"Face Mount\", \"Top Flange\"). |\n| **sDimstyle** | String | (From DB) | The dimension style used for labeling the hanger in drawings. |\n| **nDisplayModel** | Integer | 0 | Controls the detail level of the 3D representation (0=Full Model, 1=Detailed, 2=Minimal). |\n| **dTolerance** | Double | 0.0 | The search distance (in mm) used to identify duplicate hangers for replacement. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **changeHanger** | Regenerates or updates the hanger instance. It searches for existing hangers within the defined tolerance along the beam, erases the old one, and replaces it with the current configuration. |\n\n## Settings Files\n- **Filename**: `hsbAcadHangerIntegration.dll`\n- **Location**: `%hsbCAD Install%\\Utilities.Acad\\Hanger\\`\n- **Purpose**: Provides the user interface for selecting hangers and communicates with the SQL database to retrieve hardware dimensions and properties.\n\n## Tips\n- **Placement Accuracy**: Ensure your structural beams intersect or touch correctly in the model. The script calculates the hanger position based on the beam geometry.\n- **Replacing Hangers**: Use the `changeHanger` context menu option to swap an existing hanger for a different size or model without manually deleting the old one.\n- **Display Performance**: If your model is heavy, check the `nDisplayModel` setting. Setting it to a simpler representation (like wireframe) can improve regeneration times.\n\n## FAQ\n- **Q: Why doesn't the dialog open when I run the script?**\n  - A: Check that `hsbAcadHangerIntegration.dll` is present in your `Utilities.Acad\\Hanger` folder and that Microsoft SQL Server Compact 4.0 is installed on your machine.\n- **Q: Can I edit the hanger size after insertion?**\n  - A: You cannot manually edit the dimensions in the Properties palette. Use the `changeHanger` right-click option to select a different model from the database.\n- **Q: How do I prevent duplicate hangers?**\n  - A: The script uses the `dTolerance` parameter. If a new hanger is inserted very close to an existing one on the same beam, the script will automatically replace the old one."
+      },
+      "tokens_used": 5101,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,177 @@
+{
+  "filename": "Rothoblaas ALU.mcr",
+  "status": "completed",
+  "total_tokens": 50501,
+  "processing_time": 654.3782634735107,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9339,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "The script interacts with GenBeam entities and creates 3D geometry (Body objects) using primitives like addPoly, addCylinder, and addSphere. There are no references to Paper Space elements (e.g., _Viewport), ShopDrawing functions (sd_*), or drawing annotations (#Type E + _Entity[]). It focuses on generating the physical connector geometry in the 3D model."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 2,
+          "requiredSpace": "Model Space",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 5669,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 10040,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates 3D geometry, machining, and BOM data for Rothoblaas ALU connectors (AluMini, AluMidi, AluMaxi) used for timber-to-timber or timber-to-concrete connections.",
+          "category": "Hardware",
+          "typicalUseCase": "Connecting beams at 90-degree or inclined joints using aluminum alloy brackets, requiring specific drill patterns and fastener lists (nails, screws, chemical dowels)."
+        },
+        "parameters": [
+          {
+            "name": "Family (sFamily)",
+            "technicalDefault": "MIDI",
+            "businessMeaning": "Selects the physical size series of the bracket, determining material thickness, height, and capacity.",
+            "validRange": "MINI (Smallest), MIDI (Medium), MAXI (Largest)",
+            "unit": "Enum",
+            "affectsOutput": "Changes the dimensions of the aluminum body (thickness s1/s2, height H, width La/Lb), hole diameters, and the range of available lengths."
+          },
+          {
+            "name": "Type (nType)",
+            "technicalDefault": "1",
+            "businessMeaning": "The specific configuration or length index of the connector within the chosen family.",
+            "validRange": "Integer (e.g., 1, 2, 3...) corresponding to catalog lengths. 'Auto detect' finds the largest fitting type.",
+            "unit": "Index",
+            "affectsOutput": "Determines the overall length of the connector and calculates the quantity of fasteners (nails/screws) required based on the size."
+          },
+          {
+            "name": "Connector Mode (nMode)",
+            "technicalDefault": "0 (Wood/Wood)",
+            "businessMeaning": "Defines the assembly context, specifically what material the 'wings' of the connector are fastening into.",
+            "validRange": "0 (Wood-to-Wood), 1 (Wood-to-Concrete/Steel)",
+            "unit": "Enum",
+            "affectsOutput": "Swings the fastener assignment between nails/screws (for wood) and chemical dowels/screw-in anchors (for concrete). Adjusts fastener quantities for pillar connections."
+          },
+          {
+            "name": "Shank Drills (bShankDrills)",
+            "technicalDefault": "Yes",
+            "businessMeaning": "Determines if the main beam is fully drilled through to accept the primary connection pins (shank).",
+            "validRange": "Yes, No",
+            "unit": "Boolean",
+            "affectsOutput": "Toggles the creation of through-cylinders (drills) in the main beam. If disabled, the connector geometry remains but the beam hole is omitted."
+          },
+          {
+            "name": "Slot Alignment",
+            "technicalDefault": "Auto/Default",
+            "businessMeaning": "Controls the rotational orientation of the slot/housing cut into the secondary beam.",
+            "validRange": "Alignment options (e.g., Top, Bottom, Auto)",
+            "unit": "Enum",
+            "affectsOutput": "Rotates the rectangular cutout geometry in the secondary beam to ensure proper assembly clearance."
+          },
+          {
+            "name": "Depth (Drill Depth)",
+            "technicalDefault": "Auto (Full)",
+            "businessMeaning": "Specifies the depth of drill holes if they are not through-holes.",
+            "validRange": "> 0 mm",
+            "unit": "mm",
+            "affectsOutput": "Limits the length of the cylindrical drill bodies generated in the beams."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Family is changed",
+            "effect": "Updates the allowed range for Type and resets hole diameters/thicknesses to match the specific bracket series (Mini/Midi/Maxi).",
+            "cascade": [
+              "Type",
+              "Fastener Diameters",
+              "Connector Dimensions"
+            ]
+          },
+          {
+            "trigger": "Type is increased",
+            "effect": "Increases the length of the connector and increments the quantity of wing fasteners (nails/anchors) based on the series' increment rule.",
+            "cascade": [
+              "Connector Length",
+              "Fastener Quantity"
+            ]
+          },
+          {
+            "trigger": "Connector Mode is set to Wood/Concrete",
+            "effect": "Replaces small fasteners (Anker nails) with heavy-duty fasteners (Chemical dowels/Screw-in anchors).",
+            "cascade": [
+              "Fastener Type",
+              "Fastener Model",
+              "Fastener Length"
+            ]
+          },
+          {
+            "trigger": "Command 'Extend length to be cut from rod' is used",
+            "effect": "Extends the list of available 'Types' to cover the maximum rod length available from the manufacturer.",
+            "cascade": [
+              "Type (Maximum Value)"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Body (MetalPart)",
+            "description": "The 3D solid representation of the Rothoblaas Aluminum connector (L-shaped or T-shaped profile depending on view).",
+            "appliedTo": "Model Space (generated at the intersection of beams)"
+          },
+          {
+            "type": "Drill (Cylinder)",
+            "description": "Through-holes or blind holes in the beams for the connector shank and wing fasteners.",
+            "appliedTo": "Selected GenBeams (Main beam and secondary beams)"
+          },
+          {
+            "type": "Slot/Rectangular Cut",
+            "description": "Machining to remove material in the secondary beam to allow the connector wings to sit flush.",
+            "appliedTo": "Secondary GenBeams"
+          },
+          {
+            "type": "HardWrComp (Hardware Component)",
+            "description": "BOM entries for fasteners such as 'HBS+ Screw', 'Anker nail', 'Pin', or 'Chemical dowel'. Quantities are calculated based on connector Type.",
+            "appliedTo": "Script Instance (linked to the main beam)"
+          }
+        ]
+      },
+      "tokens_used": 9061,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"workflowDiagram\": [\n    \"Script Launch (via Catalog, Toolbar, or Command Line)\",\n    \"Family Pre-selection (Checks Execute Key or Map for 'MINI', 'MIDI', 'MAXI'; defaults to MIDI)\",\n    \"User Input: Select Main Beam (Male)\",\n    \"User Input: Select Secondary Beam(s) (Female)\",\n    \"Property Initialization (Sets default Type, Mode, Shank Drills, etc.)\",\n    \"Geometric Calculation (Determines intersection vectors, coordinate system, and beam orientation)\",\n    \"Conditional Branch: Type Selection (Auto-detects largest fitting Type or applies manual selection)\",\n    \"Conditional Branch: Connector Mode Check (Determines fastener type based on Wood/Wood or Wood/Concrete)\",\n    \"Geometry Generation: Creates 3D Body (Aluminum profile)\",\n    \"Geometry Generation: Creates Machining (Shank drills in main beam, Slots in secondary beams)\",\n    \"BOM Generation: Calculates and assigns Hardware Components (Pins, Nails, Dowels) based on quantities\",\n    \"Visualization: Updates 3D model and OPM properties\"\n  ],\n  \"conditionalBranches\": [\n    {\n      \"condition\": \"Family Selection (Determines dimension arrays)\",\n      \"path1\": {\n        \"name\": \"MINI\",\n        \"steps\": [\n          \"Loads small dimension arrays (Thickness 6mm, Height 30mm)\",\n          \"Sets small hole diameters (7mm)\",\n          \"Defaults to 'HBS+ Screw' or 'Anker nail' for wood connections\"\n        ]\n      },\n      \"path2\": {\n        \"name\": \"MIDI\",\n        \"steps\": [\n          \"Loads medium dimension arrays (Thickness 6mm, Height 40mm)\",\n          \"Sets medium hole diameters (5mm small, 9mm large)\",\n          \"Defaults to 'Anker nail' (wood) or 'Chemical dowel' (concrete)\"\n        ]\n      },\n      \"path3\": {\n        \"name\": \"MAXI\",\n        \"steps\": [\n          \"Loads large dimension arrays (Thickness 10/12mm, Height 64mm)\",\n          \"Sets large hole diameters (7.5mm small, 17mm large)\",\n          \"Defaults to 'Anker nail' (wood) or 'Chemical dowel' (concrete)\"\n        ]\n      }\n    },\n    {\n      \"condition\": \"Connector Mode (nMode)\",\n      \"path1\": {\n        \"name\": \"Wood-to-Wood (Mode 0)\",\n        \"steps\": [\n          \"Calculates wing fastener quantity\",\n          \"Checks if secondary beam is a pillar (vertical)\",\n          \"If Pillar: Applies partial nailing (reduced quantity)\",\n          \"If Standard Beam: Applies total nailing (full quantity)\",\n          \"Assigns small fasteners (e.g., Anker nails)\"\n        ]\n      },\n      \"path2\": {\n       "
+      },
+      "tokens_used": 10896,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# Rothoblaas ALU\n\n## Overview\nGenerates 3D geometry, machining (drills and slots), and BOM data for Rothoblaas ALU connectors (AluMini, AluMidi, AluMaxi) used for timber-to-timber or timber-to-concrete connections.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Generates 3D solid bodies and applies machining to beams. |\n| Paper Space | No | Does not create 2D annotations or drawings directly. |\n| Shop Drawing | No | Does not generate shop drawing views. |\n\n## Prerequisites\n- **Required Entities**: At least 2 GenBeams.\n- **Minimum Beam Count**: 2 (One Main Beam, one or more Secondary Beams).\n- **Required Settings**: None (uses internal dimension catalogs).\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `Rothoblaas ALU.mcr`\n*(Alternatively, launch via your custom Catalog or Toolbar if mapped).*\n\n### Step 2: Select Main Beam\n```\nCommand Line: Select Main Beam (Male):\nAction: Click on the beam that will host the main shank of the connector.\n```\n\n### Step 3: Select Secondary Beams\n```\nCommand Line: Select Secondary Beam(s) [Female]:\nAction: Click on the intersecting beam(s) that will connect to the main beam.\n        Press Enter to finish selection.\n```\n\n### Step 4: Configure Parameters\n```\nAction: Select the script instance in the model.\n        Open the Properties Palette (Ctrl+1).\n        Adjust the 'Family' and 'Type' to fit your structural requirements.\n```\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Family | Dropdown | MIDI | Selects the size series: **MINI** (Small), **MIDI** (Medium), or **MAXI** (Large). Determines thickness and height. |\n| Type | Integer | 1 | The specific length configuration of the connector. Higher numbers indicate longer connectors with more fasteners. |\n| Connector Mode | Dropdown | Wood/Wood (0) | **0**: Wood-to-Wood (uses nails/screws). **1**: Wood-to-Concrete/Steel (uses chemical dowels/anchors). |\n| Shank Drills | Boolean | Yes | If **Yes**, drills the main beam completely through for the connector shank. |\n| Slot Alignment | Dropdown | Auto | Controls the rotation of the slot/housing cut into the secondary beam (e.g., Top, Bottom, Auto). |\n| Depth | Double | Auto | Sets the depth of drill holes if they are not through-holes (0 or negative often implies full depth). |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Extend length to be cut from rod | Expands the available 'Type' list to include custom lengths up to the maximum available rod length from the manufacturer. |\n\n## Settings Files\n- **Internal Data**: Uses hardcoded dimension arrays for Mini, Midi, and Maxi series.\n- **Mappings**: Can be configured via Execute Keys or Map files for pre-selecting families (optional).\n\n## Tips\n- **Auto-Detection**: The script attempts to auto-detect the largest fitting 'Type' based on the beam geometry. If the connector looks too small or large, manually adjust the 'Type' parameter.\n- **Pillar Beams**: When using Wood-to-Wood mode on a vertical pillar, the script automatically reduces the quantity of nails on the wing to prevent splitting.\n- **Visual Check**: Ensure the \"Slot\" in the secondary beam aligns correctly with the connector wings. Use the \"Slot Alignment\" property if the rotation is incorrect.\n\n## FAQ\n- **Q: Why are there no drills appearing in my main beam?**\n  A: Check the **Shank Drills** property in the palette. If it is set to \"No\", the holes will not be generated.\n- **Q: What happens if I switch Mode from Wood/Wood to Wood/Concrete?**\n  A: The script replaces standard wood fasteners (like Anker nails) with heavy-duty fasteners (like Chemical dowels) and adjusts the hole sizes accordingly.\n- **Q: How do I get a longer connector than the standard list allows?**\n  A: Right-click the script instance and select **Extend length to be cut from rod**. This updates the catalog list to include extended lengths."
+      },
+      "tokens_used": 5496,
+      "error": null
+    }
+  }
+}

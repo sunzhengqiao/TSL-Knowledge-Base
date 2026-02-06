@@ -1,0 +1,336 @@
+{
+  "filename": "hsbFloorToWallMarking.mcr",
+  "status": "completed",
+  "total_tokens": 35669,
+  "processing_time": 670.8071105480194,
+  "passes": {
+    "1": {
+      "success": false,
+      "data": {},
+      "tokens_used": 0,
+      "error": "Request timeout after retries"
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Explicit use of `_kModelSpace` in `dbCreate` function. Script adds physical `Mark` tools to beams (`plate.addTool(mrk)`). Prompts for `ElementRoof` which is a 3D entity. No `_Viewport` or Paper Space APIs detected."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "ElementRoof",
+            "ElementWall",
+            "Beam"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Model Space (3D)",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7062,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "showDialog",
+              "promptOriginal": "Properties Dialog",
+              "condition": "_bOnInsert",
+              "required": false
+            },
+            {
+              "step": 2,
+              "function": "PrEntity",
+              "promptOriginal": "|Select element(s)|",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "ShowDynamicDialog",
+            "trigger": "Insertion (unless _kExecuteKey is set)",
+            "title": "hsbFloorToWallMarking",
+            "dataSource": "Script Properties (sWallFilter, sJoistFilter)",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "sWallFilter",
+            "type": "PropString",
+            "displayName": "|Wall Filter|",
+            "defaultValue": "|Any|",
+            "inputType": "dropdown",
+            "options": [
+              "|Any|",
+              "|Exterior Walls|",
+              "|Interior Walls|"
+            ],
+            "category": "|General|",
+            "description": "|Defines a filter of the walls based on their exposed state.|"
+          },
+          {
+            "index": 1,
+            "variable": "sJoistFilter",
+            "type": "PropString",
+            "displayName": "|Joist Filter|",
+            "defaultValue": "",
+            "inputType": "text",
+            "options": [],
+            "category": "|General|",
+            "description": "|Defines the Joist Filter.| |Specify a text value which should be found in the information field of a potential joist.|"
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 6570,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Automates the creation of layout markings on wall top plates to indicate where floor elements (joists or floor planes) intersect or bear on the wall.",
+          "category": "ShopDrawing/Marking",
+          "typicalUseCase": "Used during the detailing phase to mark floor-to-wall connections on wall panels for installation guidance or fabrication checks."
+        },
+        "parameters": [
+          {
+            "name": "sWallFilter",
+            "technicalDefault": "|Any|",
+            "businessMeaning": "Determines which walls are marked based on their exposure type. Allows filtering for only exterior (insulated/sheathed) or interior walls.",
+            "validRange": "List selection (Any, Exterior Walls, Interior Walls)",
+            "unit": "text",
+            "affectsOutput": "Restricts the generation of marks to only walls matching the selected exposure state (e.g., only mark exterior walls)."
+          },
+          {
+            "name": "sJoistFilter",
+            "technicalDefault": "",
+            "businessMeaning": "Filters specific floor joists based on text found in their 'Information' property. Used to only mark joists that match a specific criteria (e.g., 'CANTILEVER').",
+            "validRange": "Any text string (case-insensitive)",
+            "unit": "text",
+            "affectsOutput": "If set, only joists containing this text string will generate marks. If empty, all joists intersecting the wall are marked."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "sJoistFilter is set to a value",
+            "effect": "Reduces the number of joists considered for marking in Mode 2 (Joist to Plate).",
+            "cascade": [
+              "ptMarks",
+              "mapRequests"
+            ]
+          },
+          {
+            "trigger": "sWallFilter is set to '|Exterior Walls|' or '|Interior Walls|'",
+            "effect": "Limits the set of walls processed in Mode 0 (Distribution) based on the wall's exposed state.",
+            "cascade": [
+              "wall",
+              "ptMarks",
+              "mapRequests"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Mark",
+            "description": "A point marker placed on the top plate surface at the intersection point of the floor element.",
+            "appliedTo": "Wall Top Plates (Beams)"
+          },
+          {
+            "type": "DimensionInfo (Hsb_DimensionInfo)",
+            "description": "Metadata requests for shop drawings to generate labels/text associated with the marks (e.g., floor number or joist name).",
+            "appliedTo": "Wall Element"
+          },
+          {
+            "type": "ElemItem",
+            "description": "Export item for 'Deckenmarkierung' (Ceiling marking) specific to projects with 'Lux' in their special settings.",
+            "appliedTo": "Wall Element"
+          }
+        ]
+      },
+      "tokens_used": 7064,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script starts: Initialize constants and read properties (Wall Filter, Joist Filter).",
+          "Check execution context: Is this an Insertion (_bOnInsert) or an existing instance?",
+          "[Insertion Branch] Check insertCycleCount; if > 1, erase instance and exit (prevent duplicates).",
+          "[Insertion Branch] Check _kExecuteKey: If provided, load properties from catalog; else, Show Dynamic Dialog.",
+          "[Insertion Branch] Prompt user to select Element(s) (ElementRoof).",
+          "[Insertion Branch] Iterate selected elements: For each, create a new script instance (Mode 0) attached to the element.",
+          "[Insertion Branch] Erase the original insertion instance.",
+          "[Instance Execution Branch] Read 'mode' from Map object (0=Distribution, 1=Floor->Plate, 2=Joist->Plate).",
+          "[Instance Execution Branch] Identify attached entities: ElementRoof and ElementWall.",
+          "[Instance Execution Branch] [Duplicate Check] Scan existing TSL instances on the wall. If an instance with the same mode and entities exists, erase self and exit.",
+          "[Mode 0: Distribution] Collect all joists belonging to the floor (direct beams + loose beams from element group).",
+          "[Mode 0: Distribution] Filter joists based on perpendicularity, profile type, and Joist Filter text.",
+          "[Mode 0: Distribution] Find all walls in the model intersecting the floor envelope.",
+          "[Mode 0: Distribution] Iterate intersecting walls: Check Wall Filter (Any/Exterior/Interior).",
+          "[Mode 0: Distribution] If wall passes filter, find top plates intersecting the floor envelope.",
+          "[Mode 0: Distribution] For each valid plate, create new script instance in Mode 1 (Floor to Plate).",
+          "[Mode 0: Distribution] Filter joists specifically intersecting the wall.",
+          "[Mode 0: Distribution] For each joist/plate intersection, create new script instance in Mode 2 (Joist to Plate).",
+          "[Mode 1: Floor to Plate] Calculate intersection of floor envelope and wall plate profile.",
+          "[Mode 1: Floor to Plate] Project valid intersection points onto the plate surface.",
+          "[Mode 1: Floor to Plate] Generate 'Mark' tools and Dimension Requests for the shop drawing.",
+          "[Mode 2: Joist to Plate] Validate beam inputs (must be Joist + Plate).",
+          "[Mode 2: Joist to Plate] Calculate projection of joist center onto plate surface.",
+          "[Mode 2: Joist to Plate] Generate 'Mark' tools and Dimension Requests.",
+          "[Finalization] Compile all marks into a 'Hsb_DimensionInfo' map.",
+          "[Finalization] Check for 'Lux' project special: If true, create 'ElemItem' export entry."
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Trigger (_bOnInsert)",
+            "path1": {
+              "name": "New Insertion",
+              "steps": [
+                "Show Dialog or Load Catalog",
+                "Select Floor Elements",
+                "Create Distribution Mode (Mode 0) instances",
+                "Erase Self"
+              ]
+            },
+            "path2": {
+              "name": "Instance Update/Recalc",
+              "steps": [
+                "Read Mode (0, 1, or 2)",
+                "Perform logic based on mode",
+                "Generate/Update marks",
+                "Update Dimension Info"
+              ]
+            }
+          },
+          {
+            "condition": "Mode 0: Wall Filter Selection",
+            "path1": {
+              "name": "Any",
+              "steps": [
+                "Process all intersecting walls regardless of exposed state."
+              ]
+            },
+            "path2": {
+              "name": "Exterior/Interior",
+              "steps": [
+                "Check wall exposed state.",
+                "Process only walls matching the selected state."
+              ]
+            }
+          },
+          {
+            "condition": "Mode 0: Joist Filter Defined",
+            "path1": {
+              "name": "Filter is Empty",
+              "steps": [
+                "Include all profiled joists intersecting the wall."
+              ]
+            },
+            "path2": {
+              "name": "Filter Contains Text",
+              "steps": [
+                "Check joist 'Information' field for the text.",
+                "Include only joists containing the text."
+              ]
+            }
+          },
+          {
+            "condition": "Mode 2: Beam References",
+            "path1": {
+              "name": "Valid (Joist + Plate)",
+              "steps": [
+                "Calculate intersection points.",
+                "Create marks."
+              ]
+            },
+            "path2": {
+              "name": "Invalid (< 2 beams)",
+              "steps": [
+                "Report Error: Invalid beam reference.",
+                "Erase Instance."
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Insertion Cycle Count",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script auto-erases duplicate insertions."
+          },
+          {
+            "check": "Duplicate Instance Check (Non-Mode 0)",
+            "errorMessage": "None (Silent)",
+            "recovery": "Script detects existing identical TSL on wall and erases self to prevent overlapping work."
+          },
+          {
+            "check": "Element Reference (Non-Mode 0)",
+            "errorMessage": "Element reference not found.",
+            "recovery": "Script erases self."
+          },
+          {
+            "check": "Joist Projection (Mode 2)",
+            "errorMessage": "No intersection found between [FloorElement] & [JoistName]. Tool will be deleted.",
+            "recovery": "Script erases self if calculated intersection area is negligible."
+          },
+          {
+            "check": "Beam Reference Count (Mode 2)",
+            "errorMessage": "Invalid beam reference. Tool will be deleted.",
+            "recovery": "Script erases self if less than 2 beams are referenced."
+          },
+          {
+            "check": "Marks Found",
+            "errorMessage": "no marks could be found [ElementNumber]",
+            "recovery": "Script erases self if geometry processing yields zero mark points (unless Debug mode is on)."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Adjust Wall Filter",
+            "how": "OPM Properties Palette (General Category)",
+            "effect": "Modifying the filter and recalculating updates which walls are marked in subsequent updates."
+          },
+          {
+            "action": "Adjust Joist Filter",
+            "how": "OPM Properties Palette (General Category)",
+            "effect": "Changes the text criteria for selecting specific joists. Recalculating filters marks based on new string."
+          },
+          {
+            "action": "Modify Floor/Wall Geometry",
+            "how": "Standard CAD Grips/Properties",
+            "effect": "Because the script uses `addRecalcTrigger` implicitly via entity attachment, changes to the wall or floor geometry (or their beams) trigger an automatic recalculation of the mark positions."
+          }
+        ]
+      },
+      "tokens_used": 9444,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbFloorToWallMarking.mcr\n\n## Overview\nThis script automates the creation of layout markings on wall top plates to indicate where floor elements (joists or floor planes) intersect. It generates physical markers and dimension information on walls based on their relationship with selected floor elements.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Script must be run in the 3D model. |\n| Paper Space | No | Not applicable. |\n| Shop Drawing | No | The script runs in Model Space to generate data used in shop drawings. |\n\n## Prerequisites\n- **Required Entities**:\n  - `ElementRoof`: The floor element to be used as a reference.\n  - `ElementWall`: Walls intersecting the floor.\n  - `Beam`: Top plates on walls and joists on the floor.\n- **Minimum Beams**: None (Script detects geometry from existing elements).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbFloorToWallMarking.mcr`\n\n### Step 2: Configure Properties (Dialog)\n```\nDialog: hsbFloorToWallMarking\nAction: Set filters for the type of walls and joists to be marked.\n- Wall Filter: Select \"Any\", \"Exterior Walls\", or \"Interior Walls\".\n- Joist Filter: (Optional) Enter a text string to filter joists by their \"Information\" field.\n```\n\n### Step 3: Select Floor Elements\n```\nCommand Line: |Select element(s)|\nAction: Click on the floor element(s) (ElementRoof) that intersect the walls you want to mark. Press Enter to confirm.\n```\n*Note: After selection, the script automatically calculates intersections and creates the necessary markers on the relevant wall top plates. The original script instance is removed after processing.*\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Wall Filter | dropdown | Any | Defines which walls are marked based on their exposed state. Options: \"Any\", \"Exterior Walls\", \"Interior Walls\". |\n| Joist Filter | text | (Empty) | Defines a filter for floor joists. If specified, only joists containing this text in their \"Information\" property will be marked. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| (Standard Options) | No custom context menu items are added. Use standard TSL recalculate options to update marks after geometry changes. |\n\n## Settings Files\n- **Filename**: None required.\n- **Location**: N/A\n- **Purpose**: N/A\n\n## Tips\n- **Automatic Updates**: If you modify the geometry of the wall or floor (e.g., move a wall, change a joist angle), the marks will automatically update during the next recalculation.\n- **Targeting Specific Joists**: Use the \"Joist Filter\" property to mark only specific types of joists. For example, enter \"Cantilever\" to only mark joists that have that word in their information field.\n- **Filtering Walls**: Use the \"Wall Filter\" to quickly ignore interior partitions if you only need markings for exterior connections.\n\n## FAQ\n- **Q: I ran the script, but no marks appeared.**\n  **A**: Ensure the selected floor element actually intersects with wall top plates. Also, check the \"Wall Filter\" property to ensure it isn't excluding the walls you are looking at (e.g., set to \"Exterior\" but trying to mark an interior wall).\n  \n- **Q: What happens if I delete a floor element that was used to create marks?**\n  **A**: The script instances attached to the walls will detect the missing reference and automatically delete themselves to prevent errors.\n\n- **Q: Can I use this for ceiling markings?**\n  **A**: Yes, the script logic treats `ElementRoof` entities as horizontal planes. It can be used for floors or ceilings depending on how your elements are modeled."
+      },
+      "tokens_used": 5529,
+      "error": null
+    }
+  }
+}

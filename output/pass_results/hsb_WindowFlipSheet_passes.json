@@ -1,0 +1,386 @@
+{
+  "filename": "hsb_WindowFlipSheet.mcr",
+  "status": "completed",
+  "total_tokens": 47409,
+  "processing_time": 190.89367485046387,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.21",
+            "date": "27.02.2023",
+            "author": "Marsel Nakuci",
+            "changes": "HSB-18011: get sheet properties from sheets that are deleted"
+          },
+          {
+            "version": "1.20",
+            "date": "28.06.2022",
+            "author": "Marsel Nakuci",
+            "changes": "HSB-15869: set name, material and beamcode of the newly created sheet"
+          },
+          {
+            "version": "1.19",
+            "date": "10/01/2022",
+            "author": "Robert Pol",
+            "changes": "Add option to combine openings"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8378,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Script uses PrEntity to select Element objects. Modifies the 3D model by creating new Sheet objects using dbCreate() and deleting existing ones. Accesses Element sub-entities like el.beam(), el.opening(), and el.sheet(). No shop drawing functions (sd_*) or viewport handling found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "Element",
+            "OpeningSF",
+            "Sheet",
+            "Beam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing Elements with configured zones",
+          "requiredSettings": [
+            "Element Zone settings configured for 'Vertical Sheets' distribution",
+            "Valid catalog entries for _kExecuteKey"
+          ]
+        }
+      },
+      "tokens_used": 7103,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\\nSelect a set of elements",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [
+          {
+            "type": "showDialog",
+            "trigger": "_bOnInsert && _kExecuteKey == \"\"",
+            "title": null,
+            "dataSource": "Internal Prop Declarations",
+            "features": {
+              "searchable": false,
+              "multiSelect": false
+            }
+          }
+        ],
+        "opmProperties": [
+          {
+            "index": 0,
+            "variable": "psZones",
+            "type": "PropString",
+            "displayName": "Zones to Redistribute the Sheets",
+            "defaultValue": "1;2",
+            "inputType": "text",
+            "options": [],
+            "category": null,
+            "description": "Please type the number of the zones separate by ; (1-10)"
+          },
+          {
+            "index": 0,
+            "variable": "pdMinimumWidthHorizontal",
+            "type": "PropDouble",
+            "displayName": "Enter a minimum width of sheeting for horizontal distribution",
+            "defaultValue": 100,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          },
+          {
+            "index": 1,
+            "variable": "pdMinimumWidthVertical",
+            "type": "PropDouble",
+            "displayName": "Enter a minimum width of sheeting for vertical distribution",
+            "defaultValue": 0,
+            "inputType": "number",
+            "options": [],
+            "category": null,
+            "description": null
+          }
+        ],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 8680,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Redistributes and resizes structural sheathing (OSB/Plywood) around window openings within Element Zones, ensuring sheets respect minimum width constraints and correct vertical distribution.",
+          "category": "Framing",
+          "typicalUseCase": "Used when a user adjusts window sizes or adds new openings to a wall element, requiring the sheathing sheets to be cut or re-sized to fit around the new opening geometry while avoiding narrow strips."
+        },
+        "parameters": [
+          {
+            "name": "psZones",
+            "technicalDefault": "1;2",
+            "businessMeaning": "Specifies the specific construction layers (zones) of the wall element that contain the structural sheathing to be redistributed. These layers are typically where OSB or plywood sheets are applied.",
+            "validRange": "1 to 10",
+            "unit": "count",
+            "affectsOutput": "Determines which specific layer(s) of the wall construction the script processes. Sheets in unlisted zones remain untouched."
+          },
+          {
+            "name": "pdMinimumWidthHorizontal",
+            "technicalDefault": "100",
+            "businessMeaning": "Defines the smallest allowable width for a sheathing sheet segment in the horizontal direction. Prevents the generation of narrow, unusable strips of sheathing beside windows or corners.",
+            "validRange": "50 to 600",
+            "unit": "mm",
+            "affectsOutput": "If a sheet would be cut narrower than this value near a window or edge, the script shifts the cut line to the next stud or removes the narrow section entirely to maintain structural integrity and usability."
+          },
+          {
+            "name": "pdMinimumWidthVertical",
+            "technicalDefault": "0",
+            "businessMeaning": "Defines the smallest allowable height for a sheathing sheet segment in the vertical direction. This controls how sheets are stacked above or below windows.",
+            "validRange": "0 to 1200",
+            "unit": "mm",
+            "affectsOutput": "Enforces a minimum height for sheets created above or below openings. If set to 0, the script follows the standard zone height settings exactly."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "Element Zone 'Vertical Sheets' Distribution setting",
+            "effect": "Script execution validity",
+            "cascade": [
+              "psZones",
+              "pdMinimumWidthHorizontal",
+              "pdMinimumWidthVertical"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Sheet",
+            "description": "New structural sheathing panels (OSB/Plywood) fitted around openings.",
+            "appliedTo": "Selected Element objects in the specified Zones."
+          },
+          {
+            "type": "Erase",
+            "description": "Removal of existing conflicting or obsolete sheathing sheets in the processed area.",
+            "appliedTo": "Existing Sheet entities within the target Element Zones."
+          }
+        ]
+      },
+      "tokens_used": 7438,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script Launch / Trigger",
+          "Set Sequence Number to -80",
+          "Initialize Properties (psZones, pdMinimumWidthHorizontal, pdMinimumWidthVertical) and Constants",
+          "[Check: Is this a Database Creation Event?]",
+          "[Yes] Set Property Values from Catalog (_kExecuteKey)",
+          "[Check: Is this an Insertion Event (_bOnInsert)?]",
+          "[Yes] [Check: Is Execute Key empty (_kExecuteKey == \"\")?]",
+          "[Yes] Show Dialog for user input",
+          "[Check: Is insertCycleCount > 1?]",
+          "[Yes] Erase Instance and Exit (Prevent duplicate runs)",
+          "[No] Prompt User to Select a Set of Elements (PrEntity)",
+          "[No Selection Made] Erase Instance and Exit",
+          "[Selection Made] Append Elements to internal list, Save Instance, Exit Script",
+          "[Check: Does Element List contain elements?]",
+          "[No] Erase Instance and Exit",
+          "[Yes] Parse psZones string to determine target Zones",
+          "Loop through each Selected Element",
+          "Extract Element Coordinate System and Vectors",
+          "Collect all Beams within the Element",
+          "Identify Jack Studs (Bottom and Top) based on Beam Type",
+          "Loop through all Openings in the Element",
+          "Filter Valid Openings (bIsValid check)",
+          "[Check: Is 'Combine Openings' logic active?]",
+          "[Yes] Calculate Union of overlapping/nearby openings",
+          "Calculate Opening Geometry (Extent, Left/Right points with Gap)",
+          "Extend Opening Profile vertically to find intersecting Jacks",
+          "Identify Jacks Below Opening (Intersection Logic with 10% area threshold)",
+          "Identify Jacks Above Opening (Intersection Logic with 10% area threshold)",
+          "Loop through each Target Zone",
+          "Retrieve existing Sheets for the current Zone",
+          "Get Material, Name, and BeamCode from first existing sheet (Template)",
+          "[Check: Does Zone have 'Vertical Sheets' distribution?]",
+          "[No] Skip Zone",
+          "[Yes] Retrieve Zone Settings (Width, Height, Gap, Vertical Gap)",
+          "Calculate Plane Profile for new Sheeting (Extended around Opening)",
+          "Determine Horizontal Split Points (Beam Centers or Calculated Minimum Width points)",
+          "Determine Vertical Split Points (Standard sheet height or Minimum Vertical Height)",
+          "Transform Plane Profile to Zone location",
+          "Create Master Sheet using dbCreate()",
+          "Apply Template Properties (Material, Name, Code, Color)",
+          "Assign Sheet to Element Zone",
+          "Perform Vertical Splits using Split Planes derived from Points",
+          "Perform Horizontal Splits using Split Planes derived from Points",
+          "Next Opening/Zone/Element",
+          "Erase Script Instance (nErase flag set true)"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script Entry Point",
+            "path1": {
+              "name": "Database Creation",
+              "steps": [
+                "Load Catalog Defaults",
+                "Skip Insertion Logic"
+              ]
+            },
+            "path2": {
+              "name": "User Insertion",
+              "steps": [
+                "Show Dialog if Key empty",
+                "Prevent Duplicate Insertions",
+                "Select Elements",
+                "Save and Exit"
+              ]
+            }
+          },
+          {
+            "condition": "Sheet Split Logic (Horizontal)",
+            "path1": {
+              "name": "Split at Beams",
+              "steps": [
+                "Iterate through auxiliary beams (perpendicular)",
+                "Check minimum width constraint",
+                "Adjust split point if width < pdMinimumWidthHorizontal",
+                "Append Beam Center to Split Points array"
+              ]
+            },
+            "path2": {
+              "name": "Split at Distance (No Beams)",
+              "steps": [
+                "Project current point to center line",
+                "Check minimum width constraint",
+                "Adjust split point geometrically if needed",
+                "Append point to Split Points array"
+              ]
+            }
+          },
+          {
+            "condition": "Zone Distribution Type",
+            "path1": {
+              "name": "Vertical Sheets",
+              "steps": [
+                "Proceed with logic",
+                "Calculate Horizontal and Vertical Splits"
+              ]
+            },
+            "path2": {
+              "name": "Other Distribution",
+              "steps": [
+                "Skip processing for this Zone",
+                "Continue to next Zone"
+              ]
+            }
+          },
+          {
+            "condition": "Minimum Width Validation (Horizontal)",
+            "path1": {
+              "name": "Width Satisfied",
+              "steps": [
+                "Accept current split point location"
+              ]
+            },
+            "path2": {
+              "name": "Width Too Narrow",
+              "steps": [
+                "Move split point to next beam position",
+                "Or shift geometric point backward",
+                "Loop check (max 100 iterations)"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Element Selection Count",
+            "errorMessage": "(Implicit) Script erases itself if no elements found.",
+            "recovery": "User must re-run script and select valid elements."
+          },
+          {
+            "check": "Zone Distribution Setting",
+            "errorMessage": "(Implicit) Zone is skipped if distribution != 'Vertical Sheets'.",
+            "recovery": "Change Element Zone settings to 'Vertical Sheets'."
+          },
+          {
+            "check": "Valid Opening Data",
+            "errorMessage": "(Implicit) Invalid openings skipped (bIsValid check).",
+            "recovery": "Ensure wall elements have valid window/door opening definitions."
+          },
+          {
+            "check": "Sheet Dimensions",
+            "errorMessage": "Defaults to 12000 if width/height < 0.01 in Zone settings.",
+            "recovery": "Set positive width/height in Zone catalog."
+          },
+          {
+            "check": "Minimum Width/Height Properties",
+            "errorMessage": "Split points adjusted potentially resulting in larger overhangs to avoid narrow strips.",
+            "recovery": "Adjust pdMinimumWidthHorizontal/Vertical properties in OPM."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Sheet Parameters",
+            "how": "OPM (Object Properties Palette)",
+            "effect": "Updates the script properties (psZones, pdMinimumWidthHorizontal, pdMinimumWidthVertical). Note: Changes do not auto-update existing geometry; script must be re-run (deleted and re-inserted or re-executed) to apply changes to geometry."
+          },
+          {
+            "action": "Delete Script Instance",
+            "how": "Standard Erase command or Script auto-erases after execution",
+            "effect": "Removes the script logic instance from the drawing, leaving the generated Sheets as native CAD entities."
+          },
+          {
+            "action": "Modify Sheet Geometry",
+            "how": "Grip Edit / Manual Sheet Editing",
+            "effect": "Sheets are native entities after creation; they can be manually modified, though re-running the TSL will overwrite manual changes based on the opening geometry."
+          }
+        ]
+      },
+      "tokens_used": 9774,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_WindowFlipSheet.mcr\n\n## Overview\nThis script automatically regenerates structural sheathing (OSB or Plywood) around window and door openings within selected wall elements. It ensures that sheet layouts respect specified minimum width and height constraints to avoid narrow, unusable material strips.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script modifies 3D Element entities and creates new Sheet objects. |\n| Paper Space | No | Not designed for layout views or shop drawings. |\n| Shop Drawing | No | Does not generate 2D detailing. |\n\n## Prerequisites\n- **Required Entities:** Element objects containing Openings (Windows/Doors) and Beams (Studs/Jacks).\n- **Minimum Beam Count:** 1 (Practically requires wall elements with framing).\n- **Required Settings:** Element Zones must be configured with the **Distribution Type** set to **\"Vertical Sheets\"**.\n\n## Usage Steps\n\n### Step 1: Launch Script\nExecute the command `TSLINSERT` in the command line.\nBrowse to and select `hsb_WindowFlipSheet.mcr`.\n\n### Step 2: Configure Properties\nUpon insertion, a properties dialog (or the AutoCAD Properties Palette) will appear. Set the following parameters:\n- **Zones to Redistribute:** Enter the zone numbers (e.g., `1;2`) where the sheathing is located.\n- **Minimum Widths:** Set the horizontal and vertical constraints.\n\n### Step 3: Select Elements\nThe command line will prompt:\n```\nCommand Line: Select a set of elements\nAction: Click on the wall elements you wish to update and press Enter.\n```\n\n### Step 4: Execution\nThe script will process the selected elements:\n1. It identifies existing sheets in the specified zones.\n2. It calculates new sheet geometries around the openings, respecting jack stud locations and minimum widths.\n3. It deletes the old sheets and replaces them with the newly generated ones.\n4. The script instance automatically erases itself upon completion.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| Zones to Redistribute the Sheets | String | 1;2 | Specifies which construction layers (zones) to process. Separate multiple zone numbers with a semicolon (;). Range is 1-10. |\n| Enter a minimum width of sheeting for horizontal distribution | Number | 100 | The smallest allowable width (in mm) for a sheathing segment. Prevents creating narrow strips beside windows or corners. |\n| Enter a minimum width of sheeting for vertical distribution | Number | 0 | The smallest allowable height (in mm) for a sheathing segment above or below windows. If 0, standard zone heights are used. |\n\n## Right-Click Menu Options\nThis script does not add specific options to the right-click context menu.\n\n## Settings Files\n- **Filename:** Element Zone Configuration (Catalog).\n- **Location:** Defined in your hsbCAD Company or Installation path.\n- **Purpose:** The script relies on the \"Vertical Sheets\" distribution setting within the Element's Zone configuration. If the zone is set to \"Continuous\" or another type, the script will skip that zone.\n\n## Tips\n- **Zone Configuration:** Ensure the specific layer (Zone) you want to modify is set to **\"Vertical Sheets\"** distribution in the Element properties *before* running the script. Zones with other distribution types will be ignored.\n- **Combine Openings:** The script includes logic to combine overlapping or nearby openings, ensuring sheathing runs continuously across complex window groups.\n- **Preserving Properties:** The script attempts to copy the Material, Name, and BeamCode from existing sheets before deleting them. Ensure your catalog has default values set if you are running this on a new element with no sheets.\n- **Re-running:** To update the sheets later (e.g., after moving a window), simply re-insert the script. It will overwrite the previous sheet layout.\n\n## FAQ\n- **Q: I ran the script, but nothing happened in my wall.**\n  A: Check your Element Zone settings. The script only processes zones where the Distribution Type is explicitly set to **\"Vertical Sheets\"**.\n- **Q: Why are there still narrow strips of sheathing beside my window?**\n  A: Increase the value of **Enter a minimum width of sheeting for horizontal distribution** in the properties palette and re-run the script.\n- **Q: Does this work on gable walls or roofs?**\n  A: This script is designed for standard wall elements with vertical sheeting distribution. Results on complex geometries may vary."
+      },
+      "tokens_used": 6036,
+      "error": null
+    }
+  }
+}

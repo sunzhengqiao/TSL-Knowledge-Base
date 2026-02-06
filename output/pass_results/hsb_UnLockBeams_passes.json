@@ -1,0 +1,215 @@
+{
+  "filename": "hsb_UnLockBeams.mcr",
+  "status": "completed",
+  "total_tokens": 15490,
+  "processing_time": 125.70739889144897,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": "",
+          "numBeamsReq": null,
+          "keywords": [],
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 2305,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "Uses PrEntity to select Beam() entities and calls setPanhand(), which are operations on 3D model entities. No sd_ prefixes, Viewport logic, or #Type E structures found."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing Beams to modify",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 1851,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "commandLine": {
+          "insertionFlow": [
+            {
+              "step": 1,
+              "function": "PrEntity",
+              "promptOriginal": "\nSelect Beams",
+              "condition": "_bOnInsert",
+              "required": true
+            }
+          ],
+          "keywordOptions": []
+        },
+        "dialogs": [],
+        "opmProperties": [],
+        "contextMenu": [],
+        "settingsFiles": []
+      },
+      "tokens_used": 1562,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Unlocks selected timber beams by breaking their link to their parent layout or floor, allowing them to be moved or edited independently.",
+          "category": "DataManagement",
+          "typicalUseCase": "Used when a user needs to free specific beams from a floor layout to modify their position or properties without the constraints of the original grouping."
+        },
+        "parameters": [
+          {
+            "name": "ssE (Selected Beams)",
+            "technicalDefault": "Empty Selection",
+            "businessMeaning": "The specific timber beams in the model that the user wants to detach from their current structural parent.",
+            "validRange": "1 to Unlimited Beams",
+            "unit": "Entities",
+            "affectsOutput": "Determines which beams will have their parent handle (panhand) cleared and visual color changed to indicate they are free-standing."
+          }
+        ],
+        "parameterDependencies": [],
+        "outputEntities": [
+          {
+            "type": "GenBeam",
+            "description": "Updates the internal properties of the beam to remove the parent link (sets panhandle to empty) and changes the display color (usually to orange/red) to visually signal the unlocked status.",
+            "appliedTo": "User Selected Beams"
+          }
+        ]
+      },
+      "tokens_used": 3156,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "Script launched via command or palette",
+          "Check if _bOnInsert is true (Script insertion phase)",
+          "Check insertCycleCount() to prevent multiple execution",
+          "Prompt user 'Select Beams' via PrEntity",
+          "User selects GenBeam entities from Model Space",
+          "Store selected beams in internal _Beam array",
+          "End insertion phase and return (Pause)",
+          "Resume execution (Calculation/Update phase)",
+          "Iterate through all beams in _Beam array",
+          "Create empty Entity object to serve as null parent",
+          "Call setPanhand(emptyEntity) to detach beam from floor/layout",
+          "Call setColor(32) to visually indicate unlocked status (usually orange)",
+          "Erase the script instance from the model",
+          "Process complete"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Script insertion phase (_bOnInsert is true)",
+            "path1": {
+              "name": "Insertion Phase",
+              "steps": [
+                "Check insertCycleCount",
+                "Execute PrEntity selection",
+                "Store selection in _Beam",
+                "Return (Wait for recalc/update)"
+              ]
+            },
+            "path2": {
+              "name": "Execution Phase",
+              "steps": [
+                "Iterate through _Beam array",
+                "Modify beam properties (Panhand, Color)",
+                "Erase instance"
+              ]
+            }
+          },
+          {
+            "condition": "Insert cycle count check (insertCycleCount() > 1)",
+            "path1": {
+              "name": "Valid First Run",
+              "steps": [
+                "Proceed to selection prompt"
+              ]
+            },
+            "path2": {
+              "name": "Subsequent Cycle",
+              "steps": [
+                "Erase instance immediately",
+                "Return to prevent recursion"
+              ]
+            }
+          },
+          {
+            "condition": "User Selection Input (ssE.go() result)",
+            "path1": {
+              "name": "Selection Made",
+              "steps": [
+                "Append selected beams to _Beam array",
+                "Return to update phase"
+              ]
+            },
+            "path2": {
+              "name": "Selection Cancelled/Empty",
+              "steps": [
+                "Skip appending",
+                "Return to update phase",
+                "Loop through empty array (No action taken)",
+                "Erase instance"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Type during selection",
+            "errorMessage": "None (Filter applied via PrEntity Beam())",
+            "recovery": "PrEntity restricts selection to Beam() entities automatically; user cannot select non-beams."
+          },
+          {
+            "check": "Recursion prevention via insertCycleCount()",
+            "errorMessage": "None (Silent exit)",
+            "recovery": "Script automatically erases itself if triggered more than once in a single insertion event to prevent infinite loops."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Beam Modification",
+            "how": "Direct entity manipulation via script execution",
+            "effect": "Selected beams lose their parent hierarchy link (Unlocked) and change color to index 32."
+          },
+          {
+            "action": "Script Removal",
+            "how": "eraseInstance() command",
+            "effect": "The TSL instance is removed from the drawing immediately after processing, leaving only the modified beams."
+          }
+        ]
+      },
+      "tokens_used": 2756,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsb_UnLockBeams.mcr\n\n## Overview\nThis script detaches selected timber beams from their parent floor or layout, effectively \"unlocking\" them for independent modification. It removes the hierarchical link and changes the beam color to indicate they are no longer grouped with the original structure.\n\n## Usage Environment\n\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | The script operates on 3D beam entities within the model. |\n| Paper Space | No | This script is not designed for use in layout views or shop drawings. |\n| Shop Drawing | No | This script does not generate detailing views. |\n\n## Prerequisites\n- **Required Entities**: GenBeam (Timber Beams) must exist in the drawing.\n- **Minimum Beam Count**: 1 (You must select at least one beam for the script to take effect).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: Type `TSLINSERT` in the command line and select `hsb_UnLockBeams.mcr` from the file dialog.\n\n### Step 2: Select Beams\n```\nCommand Line: Select Beams\nAction: Click on individual beams or use a window selection to choose the beams you wish to unlock. Press Enter to confirm selection.\n```\n\n### Step 3: Completion\nThe script will automatically process the selected beams, remove their parent link, change their color to orange (Color Index 32), and then erase its own instance from the drawing.\n\n## Properties Panel Parameters\n\nThis script does not expose any editable parameters in the AutoCAD Properties Palette.\n\n## Right-Click Menu Options\n\nThis script does not add specific options to the entity right-click menu.\n\n## Settings Files\nNo external settings files (XML or otherwise) are required or used by this script.\n\n## Tips\n- **Visual Indicator**: The unlocked beams will change to Color Index 32 (usually Orange) to provide immediate visual feedback that they have been detached from the parent floor.\n- **Clean Up**: The script instance automatically erases itself after running. You do not need to delete the script icon manually.\n- **Independence**: Once unlocked, these beams will not move automatically if the original floor or layout is modified.\n\n## FAQ\n- **Q: Why did the script icon disappear immediately after I selected the beams?**\n  - A: This is normal behavior. The script is designed to perform its function (unlocking the beams) and then remove its own instance from the drawing to keep your model clean.\n\n- **Q: Can I re-lock the beams to the floor later?**\n  - A: This script does not have a \"re-lock\" function. You would typically need to recreate the beams within the floor layout or use other specific hsbCAD tools to re-establish the link.\n\n- **Q: What does the color change mean?**\n  - A: The color change to orange indicates that the beam's \"Panhand\" (parent handle) has been cleared, meaning it is now a free-standing element no longer controlled by the parent layout."
+      },
+      "tokens_used": 3860,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,224 @@
+{
+  "filename": "hsbMark_LineOrGrid.mcr",
+  "status": "completed",
+  "total_tokens": 48961,
+  "processing_time": 363.6019835472107,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {
+        "header": {
+          "type": null,
+          "numBeamsReq": null,
+          "keywords": null,
+          "majorVersion": null,
+          "minorVersion": null,
+          "dxaOut": null,
+          "implInsert": null
+        },
+        "description": "",
+        "versionHistory": [
+          {
+            "version": "1.3",
+            "date": "28.09.2021",
+            "author": "Marsel Nakuci",
+            "changes": "fix grid points when 2  or more grid points are at same location"
+          },
+          {
+            "version": "1.1",
+            "date": "09sep2021",
+            "author": "nilsgregor@hsbcad.com",
+            "changes": "HSB-12477 add multiselection of marking objects"
+          },
+          {
+            "version": "1.0",
+            "date": "02sep2021",
+            "author": "nilsgregor@hsbcad.com",
+            "changes": "HSB-12477 initial"
+          }
+        ],
+        "settingsFiles": [],
+        "dependencies": []
+      },
+      "tokens_used": 8293,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "ModelSpace",
+          "supportsPaperSpace": false,
+          "isShopDrawingScript": false,
+          "isMultipageScript": false,
+          "detectionEvidence": "No 'sd_' prefixes, no '#Type E' macros, and no '_Viewport' usage. The script enters via _bOnInsert, uses getGenBeam() to select 3D entities, projects geometry onto Body objects, and attaches MarkerLine/FreeText tools to the GenBeams using gb.addTool(). These are standard Model Space operations for defining manufacturing data."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Sheet",
+            "Panel",
+            "Line",
+            "Polyline",
+            "Grid",
+            "Grip"
+          ],
+          "minimumBeams": 1,
+          "requiredSpace": "Model Space containing hsbCAD structural elements",
+          "requiredSettings": []
+        }
+      },
+      "tokens_used": 7013,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {},
+      "tokens_used": 7394,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"scriptPurpose\": {\n    \"summary\": \"Projects reference lines, polylines, or grids onto structural timber elements (beams, sheets, panels) to create manufacturing marks or layout lines.\",\n    \"category\": \"Manufacturing / Marking\",\n    \"typicalUseCase\": \"Transferring architectural grid lines or layout dimensions from the CAD model onto the physical timber pieces for assembly or machining reference.\"\n  },\n  \"parameters\": [\n    {\n      \"name\": \"sFilterGbs\",\n      \"technicalDefault\": \"\\\"<No definition>\\\"\",\n      \"businessMeaning\": \"Filters the structural elements (beams/sheets) to be marked based on predefined painter definitions (e.g., only mark walls, not floors).\",\n      \"validRange\": \"List of available Painter Definitions in the project.\",\n      \"unit\": \"List\",\n      \"affectsOutput\": \"Restricts which elements receive the marking tool.\"\n    },\n    {\n      \"name\": \"sMarkType\",\n      \"technicalDefault\": \"\\\"Mark\\\"\",\n      \"businessMeaning\": \"Determines the type of manufacturing output. 'Mark' typically generates a label/number for lists, while 'Markerline' creates a physical scribe or ink line on the timber.\",\n      \"validRange\": \"Mark, Markerline\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Switches between adding a `Mark` tool (text/number) or a `MarkerLine` tool (geometry) to the CNC/export data.\"\n    },\n    {\n      \"name\": \"sFullLength\",\n      \"technicalDefault\": \"\\\"No\\\"\",\n      \"businessMeaning\": \"Controls the extent of the marking. 'No' projects the line across the entire face of the element. 'Yes' projects only the length of the selected source object.\",\n      \"validRange\": \"Yes, No\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Geometry length of the mark on the element.\"\n    },\n    {\n      \"name\": \"sMarkSide\",\n      \"technicalDefault\": \"\\\"Closest side\\\"\",\n      \"businessMeaning\": \"Determines which face of the element receives the mark relative to the source object or the element's local axis.\",\n      \"validRange\": \"Closest side, Opposite side, Left side, Right side\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"The 3D location and face orientation of the applied mark.\"\n    },\n    {\n      \"name\": \"sRemoveMarkingObject\",\n      \"technicalDefault\": \"\\\"No\\\"\",\n      \"businessMeaning\": \"Automatically deletes the drafting entity (line/poly) used as the reference after creating the mark.\",\n      \"validRange\": \"Yes, No\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Cleanliness of the CAD drawing (removes temporary construction lines).\"\n    },\n    {\n      \"name\": \"sRemoveInstance\",\n      \"technicalDefault\": \"\\\"No\\\"\",\n      \"businessMeaning\": \"Deletes the script instance from the model tree after execution, leaving only the generated manufacturing data (Static Tool) attached to the elements.\",\n      \"validRange\": \"Yes, No\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Model tree size and dynamic update capability (Static tools do not update if the script changes).\"\n    },\n    {\n      \"name\": \"nColor\",\n      \"technicalDefault\": \"2\",\n      \"businessMeaning\": \"Sets the display color of the mark in the CAD model for visual identification.\",\n      \"validRange\": \"AutoCAD Color Index (1-255)\",\n      \"unit\": \"Index\",\n      \"affectsOutput\": \"Visual representation only; does not affect CNC data.\"\n    },\n    {\n      \"name\": \"sTxt\",\n      \"technicalDefault\": \"\\\"\\\"\",\n      \"businessMeaning\": \"Defines the text content associated with the mark, supporting static text or format variables (e.g., element length, area).\",\n      \"validRange\": \"Alphanumeric string + hsbCAD format variables\",\n      \"unit\": \"String\",\n      \"affectsOutput\": \"Creates a `FreeText` tool on the element if not empty.\"\n    },\n    {\n      \"name\": \"dTxtHeight\",\n      \"technicalDefault\": \"30\",\n      \"businessMeaning\": \"The physical height of the text on the timber surface.\",\n      \"validRange\": \"> 0 mm (Typically 10-100 mm)\",\n      \"unit\": \"mm\",\n      \"affectsOutput\": \"Size of the text engraving/printing.\"\n    },\n    {\n      \"name\": \"sTxtPosition\",\n      \"technicalDefault\": \"\\\"Middle\\\"\",\n      \"businessMeaning\": \"Aligns the text relative to the mark line (perpendicular to the mark direction).\",\n      \"validRange\": \"Right, Middle, Left\",\n      \"unit\": \"Enum\",\n      \"affectsOutput\": \"Position of the text label relative to the mark line.\"\n    },\n    {\n      \"name\": \"sTxt"
+      },
+      "tokens_used": 9800,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "1. Script Start",
+          "2. Properties Configuration (Dialog or Catalog Preset)",
+          "3. User Selection: Select Marking Objects (Line, Polyline, or Grid)",
+          "4. [Conditional] Grid Selection Jig: User picks specific lines within the Grid",
+          "5. User Selection: Select Target Objects (GenBeam, Sheet, or Panel)",
+          "6. Filter Targets: Apply Painter Definition (if specified)",
+          "7. Loop through each Target Object",
+          "8. Extract Marking Geometry",
+          "9. Project Marking Geometry onto Target Body Surface",
+          "10. Determine Mark Side (Closest/Opposite/Left/Right)",
+          "11. Validate Projection (Check for valid face, exclude edges, handle curved timber)",
+          "12. Generate Manufacturing Tools (MarkerLine and/or FreeText)",
+          "13. Attach Tools to Target Object (Static or Dynamic)",
+          "14. [Conditional] Remove Source Marking Object",
+          "15. [Conditional] Erase Script Instance",
+          "16. End"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Selection of Marking Object Type",
+            "path1": {
+              "name": "Grid Selected",
+              "steps": [
+                "Script enters Jig Mode (_bOnJig)",
+                "Highlight closest grid line to cursor",
+                "Visual toggle: Green (Add) / Red (Remove) specific grid lines",
+                "Confirm selection",
+                "Process only selected grid sub-lines"
+              ]
+            },
+            "path2": {
+              "name": "Line/Polyline Selected",
+              "steps": [
+                "Skip Jig Mode",
+                "Process entire geometry of selected Line/Polyline"
+              ]
+            }
+          },
+          {
+            "condition": "Instance Removal Property (sRemoveInstance)",
+            "path1": {
+              "name": "Yes (Static Tool)",
+              "steps": [
+                "Create tools using gb.addToolStatic()",
+                "Delete script instance from model tree",
+                "Marks become permanent part of element geometry until manually deleted"
+              ]
+            },
+            "path2": {
+              "name": "No (Dynamic Tool)",
+              "steps": [
+                "Create tools using gb.addTool()",
+                "Keep script instance in model tree",
+                "Allow potential future updates via properties (if supported by implementation)"
+              ]
+            }
+          },
+          {
+            "condition": "Mark Side Property (sMarkSide) & Geometry",
+            "path1": {
+              "name": "Closest/Opposite",
+              "steps": [
+                "Calculate distance from marking object to target faces",
+                "Select face with shortest (or longest) perpendicular distance"
+              ]
+            },
+            "path2": {
+              "name": "Left/Right",
+              "steps": [
+                "Determine vector perpendicular to mark direction",
+                "Offset mark to specific side relative to element center or local axis"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Marking Objects Selected",
+            "errorMessage": "None",
+            "recovery": "Script immediately erases itself (eraseInstance) if no entity is selected in the first prompt loop."
+          },
+          {
+            "check": "Target Objects Selected",
+            "errorMessage": "None",
+            "recovery": "Script erases itself if getGenBeam() returns no entities after filtering."
+          },
+          {
+            "check": "Valid Projection on Body",
+            "errorMessage": "Script skips current beam",
+            "recovery": "If the marking line does not physically intersect the beam body (plsPt.length < 1), the loop continues to the next beam without generating an error message."
+          },
+          {
+            "check": "Mark on Edge",
+            "errorMessage": "None",
+            "recovery": "If the projected mark lies exactly on the edge of the body (_kPointOnRing), it is skipped to avoid invalid geometry."
+          },
+          {
+            "check": "Curved Timber Compatibility",
+            "errorMessage": "Warning: 'The marking can not be created at that side of curved timber. The marking is set to a valid side'",
+            "recovery": "Script automatically overrides the 'Mark Side' setting to a valid side (Left/Right instead of Closest/Opposite) and proceeds."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Modify Properties (If Instance Kept)",
+            "how": "Select script instance in model tree -> Properties Palette (OPM)",
+            "effect": "Parameters like Color, Text, or Mark Type can be adjusted. Note: Logic in _bOnInsert suggests updates might require re-insertion unless a calculation trigger handles property changes."
+          },
+          {
+            "action": "Edit Geometry (If Instance Kept)",
+            "how": "Grip Edit or Move",
+            "effect": "Moving the script instance or the source geometry (Line/Grid) typically triggers a recalculation, updating the marks."
+          },
+          {
+            "action": "Delete Marks",
+            "how": "Select the GenBeam -> Element Data / Tools tab",
+            "effect": "Manually delete the 'MarkerLine' or 'FreeText' entries generated by the script."
+          }
+        ]
+      },
+      "tokens_used": 10414,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbMark_LineOrGrid.mcr\n\n## Overview\nProjects reference lines, polylines, or grid lines onto structural timber elements (beams, sheets, panels) to create manufacturing marks or layout text.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Required for selecting 3D structural elements and reference geometry. |\n| Paper Space | No | |\n| Shop Drawing | No | |\n\n## Prerequisites\n- **Required Entities**:\n  - Source Geometry: Lines, Polylines, or Grids.\n  - Target Elements: GenBeams, Sheets, or Panels.\n- **Minimum Beam Count**: 1 (Must select at least one valid structural element).\n- **Required Settings**: None.\n\n## Usage Steps\n\n### Step 1: Launch Script\nCommand: `TSLINSERT` → Select `hsbMark_LineOrGrid.mcr`\n\n### Step 2: Configure Parameters (Optional)\nBefore selecting geometry, you can adjust settings in the Properties Palette (e.g., define text, select mark type, or set filters).\n\n### Step 3: Select Marking Objects\n```\nCommand Line: Select marking objects (Line, Polyline, Grid):\nAction: Click on the reference lines, polylines, or grid objects you wish to project.\n```\n- **Note for Grids**: If a Grid is selected, a \"Jig\" mode activates. Hover over grid lines to toggle them Green (Selected) or Red (Not Selected). Press Enter or click to confirm the selection.\n\n### Step 4: Select Target Elements\n```\nCommand Line: Select target elements:\nAction: Click on the beams, sheets, or panels that need to receive the marks.\n```\n- If a \"Filter\" is defined in properties, only matching elements will be processed.\n\n### Step 5: Completion\nThe script automatically processes the geometry, calculates intersections, and attaches the marks to the elements. If `sRemoveInstance` is set to \"Yes\", the script instance will delete itself, leaving only the marks on the beams.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| sFilterGbs | String | <No definition> | Filters target elements based on a specific Painter Definition (e.g., only walls). |\n| sMarkType | Enum | Mark | Determines the output type: \"Mark\" (Text/Number) or \"Markerline\" (Physical line). |\n| sFullLength | Enum | No | **No**: Projects the line across the entire face of the element. **Yes**: Projects only the length of the selected source object. |\n| sMarkSide | Enum | Closest side | Determines which face receives the mark: \"Closest side\", \"Opposite side\", \"Left side\", or \"Right side\". |\n| sRemoveMarkingObject | Enum | No | **Yes**: Deletes the source Line/Polyline/Grid after processing. **No**: Keeps the source geometry. |\n| sRemoveInstance | Enum | No | **Yes**: Deletes script instance (Static Tool). **No**: Keeps instance for dynamic updates. |\n| nColor | Number | 2 | Sets the AutoCAD color index for visual display of the mark. |\n| sTxt | String | \"\" | Defines the text content for the mark (supports format variables). |\n| dTxtHeight | Number | 30 | Sets the physical height of the text on the timber (in mm). |\n| sTxtPosition | Enum | Middle | Aligns text relative to the mark line: Right, Middle, or Left. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| Recalculate | Updates the marks if the script instance is still present and geometry has moved. |\n| Properties | Opens the Properties Palette to adjust parameters. |\n\n## Settings Files\n- None required.\n\n## Tips\n- **Clean Up**: Use `sRemoveMarkingObject` set to \"Yes\" to automatically delete the temporary construction lines used as references.\n- **Performance**: For large models, use `sFilterGbs` to prevent the script from attempting to mark irrelevant elements (like floor joists when marking wall grids).\n- **Static vs. Dynamic**: If you do not plan to move the grid lines or beams later, set `sRemoveInstance` to \"Yes\" to reduce the size of your model tree.\n- **Grid Selection**: When using Grids, pay attention to the color highlights (Green/Red) during the jig phase to ensure you are marking exactly the lines you intend.\n\n## FAQ\n- **Q: Why did some beams not receive a mark?**\n  **A:** The script will skip a beam if the projection line misses the body completely or if the mark lands exactly on an edge/corner where it cannot be applied.\n- **Q: Can I use this on curved timber?**\n  **A:** Yes. However, if the mark side is set to \"Closest\" or \"Opposite\", the script will automatically override this and use \"Left\" or \"Right\" side logic, as curved geometry cannot calculate a standard \"closest\" face projection.\n- **Q: What is the difference between \"Mark\" and \"Markerline\"?**\n  **A:** \"Mark\" typically adds information to production lists or labels. \"Markerline\" creates actual geometric data used for CNC machining or scribing on the timber surface."
+      },
+      "tokens_used": 6047,
+      "error": null
+    }
+  }
+}

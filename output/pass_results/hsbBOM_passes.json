@@ -1,0 +1,354 @@
+{
+  "filename": "hsbBOM.mcr",
+  "status": "completed",
+  "total_tokens": 53001,
+  "processing_time": 260.05659890174866,
+  "passes": {
+    "1": {
+      "success": true,
+      "data": {},
+      "tokens_used": 9360,
+      "error": null
+    },
+    "2": {
+      "success": true,
+      "data": {
+        "usageEnvironment": {
+          "primarySpace": "Both",
+          "supportsPaperSpace": true,
+          "isShopDrawingScript": true,
+          "isMultipageScript": true,
+          "detectionEvidence": "XML comments explicitly state the script operates in 'modelspace, paperspace and shopdraw space'. The <insert> tags provide instructions for all three spaces. Version history notes 'added shopdraw multipage support' in v3.0. Code includes logic for Beam(), Sheet(), and TslInst() entities."
+        },
+        "prerequisites": {
+          "requiredEntities": [
+            "GenBeam",
+            "Sheet",
+            "TslInst",
+            "hsbViewport"
+          ],
+          "minimumBeams": 0,
+          "requiredSpace": "Modelsapce (requires selected entities), Paperspace (requires hsbViewport), or Shopdraw Space (requires hsbViewport in multipage block)",
+          "requiredSettings": [
+            "TSLBOM map data from referenced TSLs (optional)"
+          ]
+        }
+      },
+      "tokens_used": 7386,
+      "error": null
+    },
+    "3": {
+      "success": true,
+      "data": {
+        "raw_content": "```json\n{\n  \"commandLine\": {\n    \"insertionFlow\": [],\n    \"keywordOptions\": []\n  },\n  \"dialogs\": [],\n  \"opmProperties\": [\n    {\n      \"index\": null,\n      \"variable\": null,\n      \"type\": null,\n      \"displayName\": \"Drawing space\",\n      \"defaultValue\": null,\n      \"inputType\": null,\n      \"options\": [],\n      \"category\": null,\n      \"description\": \"Determines the space and the general behaviour of this tsl. Read only after"
+      },
+      "tokens_used": 10105,
+      "error": null
+    },
+    "4": {
+      "success": true,
+      "data": {
+        "scriptPurpose": {
+          "summary": "Generates Bills of Materials (BOM) and places Position Number (PosNum) labels on structural elements (Beams, Sheets) and Connectors (TSLs) within CAD drawings.",
+          "category": "Documentation / Listing",
+          "typicalUseCase": "Creating production lists, material take-offs, and shop drawing labels for timber framing projects, ensuring every component is identified and quantified."
+        },
+        "parameters": [
+          {
+            "name": "Drawing space",
+            "technicalDefault": "0",
+            "businessMeaning": "Defines the context in which the BOM operates: Modelspace (entire project), Paperspace (specific drawing view), or Shopdraw (single manufacturing detail).",
+            "validRange": "0 (Model), 1 (Paper), 2 (Shopdraw)",
+            "unit": "Integer",
+            "affectsOutput": "Determines which entities are processed (e.g., all beams vs. beams in a viewport) and where the table/labels are drawn."
+          },
+          {
+            "name": "nShowPosNumBm (Show PosNum Beams)",
+            "technicalDefault": "1",
+            "businessMeaning": "Controls the display content of labels attached to beams/timbers.",
+            "validRange": "0=None, 1=PosNum, 2=Name, 3=PosNum+Name, 4=Only in BOM, 5=PosNum+Size",
+            "unit": "Integer",
+            "affectsOutput": "Changes text annotation on beams and their inclusion in the graphical list."
+          },
+          {
+            "name": "nShowPosNumSh (Show PosNum Sheets)",
+            "technicalDefault": "1",
+            "businessMeaning": "Controls the display content of labels attached to panels/sheets (e.g., CLT, Plywood).",
+            "validRange": "0=None, 1=PosNum, 2=Name, 3=PosNum+Name, 4=Only in BOM",
+            "unit": "Integer",
+            "affectsOutput": "Changes text annotation on sheets and their inclusion in the graphical list."
+          },
+          {
+            "name": "nShowPosNumTSL (Show PosNum TSL)",
+            "technicalDefault": "1",
+            "businessMeaning": "Controls how hardware or sub-assembly scripts (TSLs) are labeled.",
+            "validRange": "0=None, 1=PosNum, 2=Name, 3=PosNum+Name, 4=Only in BOM, 5=PosNum+Size",
+            "unit": "Integer",
+            "affectsOutput": "Displays connector IDs or dimensions on the drawing."
+          },
+          {
+            "name": "nPosNumAlignment",
+            "technicalDefault": "1",
+            "businessMeaning": "Sets the orientation of the Position Number labels relative to the drawing or the element.",
+            "validRange": "0=World X (Horizontal), 1=Entity Aligned, 2=Outside Entity",
+            "unit": "Integer",
+            "affectsOutput": "Rotates text labels; 'Outside' ensures labels don't overlap the physical timber representation."
+          },
+          {
+            "name": "bShowCompAngles (Complementary Angles)",
+            "technicalDefault": "0",
+            "businessMeaning": "Calculates the saw angle as (90 - Cut Angle), which is often the setting required on machinery.",
+            "validRange": "Boolean (0/1)",
+            "unit": "Boolean",
+            "affectsOutput": "Modifies the value displayed in the angle columns of the BOM."
+          },
+          {
+            "name": "sFilterMaterial (Material Filter)",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Restricts the BOM list to only specific material grades or types (e.g., 'C24', 'GL24h').",
+            "validRange": "String (semicolon-separated list)",
+            "unit": "String",
+            "affectsOutput": "Filters out rows in the BOM table that do not match the specified materials."
+          },
+          {
+            "name": "sFilterTsl (TSL Filter)",
+            "technicalDefault": "\"\"",
+            "businessMeaning": "Selects specific connector or script types to include in the list (e.g., 'Screw;Plate').",
+            "validRange": "String (semicolon-separated list)",
+            "unit": "String",
+            "affectsOutput": "Excludes non-listed TSL entities from the BOM."
+          },
+          {
+            "name": "nSortCol (Sort Column)",
+            "technicalDefault": "0",
+            "businessMeaning": "Specifies which data column is used to order the rows in the BOM list.",
+            "validRange": "Integer (Column Index)",
+            "unit": "Integer",
+            "affectsOutput": "Reorders the BOM table (e.g., by Length, by Mark Number, by Material)."
+          },
+          {
+            "name": "bShowLogPosNum (Blockbau Log PosNum)",
+            "technicalDefault": "0",
+            "businessMeaning": "Activates a specific numbering format for log house construction, often combining Label, Sublabel, and Layer info.",
+            "validRange": "Boolean (0/1)",
+            "unit": "Boolean",
+            "affectsOutput": "Changes the text string format for position numbers."
+          },
+          {
+            "name": "nColor (PosNum Color)",
+            "technicalDefault": "38",
+            "businessMeaning": "Defines the display color (CAD Index) for the labels to distinguish them from other geometry.",
+            "validRange": "0-255 (CAD Color Index)",
+            "unit": "Integer",
+            "affectsOutput": "Visual color of text and label backgrounds."
+          },
+          {
+            "name": "nHideDisplay (Zone Filter)",
+            "technicalDefault": "0",
+            "businessMeaning": "Allows showing/hiding BOM data based on construction zones or phases.",
+            "validRange": "Integer (Zone Index)",
+            "unit": "Integer",
+            "affectsOutput": "Toggles visibility of labels and list entries for specific zones."
+          }
+        ],
+        "parameterDependencies": [
+          {
+            "trigger": "nShowPosNumBm/Sh/TSL is set to '4' (Only in BOM)",
+            "effect": "The graphical label on the entity is suppressed, but the entity remains in the text table.",
+            "cascade": [
+              "nPosNumAlignment",
+              "nColor"
+            ]
+          },
+          {
+            "trigger": "Drawing space is set to 'Shopdraw'",
+            "effect": "Script filters entities based on the active viewport or single element context, rather than the whole model.",
+            "cascade": [
+              "nSortCol",
+              "bShowCompAngles"
+            ]
+          },
+          {
+            "trigger": "nPosNumAlignment is set to '2' (Outside)",
+            "effect": "The script performs collision detection to move the label away from the beam centerline.",
+            "cascade": [
+              "dTxtHeightStyle",
+              "nColor"
+            ]
+          }
+        ],
+        "outputEntities": [
+          {
+            "type": "Text/String",
+            "description": "Position Numbers and Dimension labels attached to Beams, Sheets, and TSLs.",
+            "appliedTo": "GenBeam, Sheet, TslInst"
+          },
+          {
+            "type": "Table/List",
+            "description": "A formatted Bill of Materials listing quantities, dimensions, materials, and optionally angles for the selected scope.",
+            "appliedTo": "Modelspace, Paperspace, or Shopdraw Layouts"
+          },
+          {
+            "type": "Hatching/Graphic Box",
+            "description": "Background box behind text to ensure readability over geometry (controlled by fill styles).",
+            "appliedTo": "Position Number Labels"
+          }
+        ]
+      },
+      "tokens_used": 9577,
+      "error": null
+    },
+    "5": {
+      "success": true,
+      "data": {
+        "workflowDiagram": [
+          "User runs script hsbBOM.mcr",
+          "Script detects current working space (Model, Paper, or Shopdraw)",
+          "Branch based on Working Space:",
+          "  [Modelspace]: Prompt user to select entities (Beams, Sheets, TSLs). Prompt user to pick an insertion point for the BOM list.",
+          "  [Paperspace]: Prompt user to select an hsbViewport. Prompt user to pick an insertion point for the BOM list.",
+          "  [Shopdraw]: If inside a block, prompt user to select an hsbViewport. Prompt user to pick an insertion point.",
+          "Script reads property set (either catalog defaults or existing instance properties)",
+          "Script filters entities based on property settings (Material, TSL Name, Zone, Display options)",
+          "Script collects BOM data from filtered entities (Position numbers, sizes, angles, material)",
+          "Script calculates text size and alignment for Position Numbers (PosNums)",
+          "Script detects collisions between PosNums and moves them iteratively to avoid overlap",
+          "Script draws the PosNums on entities (if not set to 'Only in BOM')",
+          "Script draws the BOM Table/List at the insertion point"
+        ],
+        "conditionalBranches": [
+          {
+            "condition": "Insertion Context / Working Space",
+            "path1": {
+              "name": "Modelspace",
+              "steps": [
+                "Prompt for Entity Selection (Select Entities)",
+                "Prompt for Insertion Point (Pick Point)",
+                "Process selected entities and all sub-components"
+              ]
+            },
+            "path2": {
+              "name": "Paperspace",
+              "steps": [
+                "Prompt for Viewport Selection (Select hsbViewport)",
+                "Prompt for Insertion Point (Pick Point)",
+                "Filter entities based on their projection within the selected viewport"
+              ]
+            },
+            "path3": {
+              "name": "Shopdraw Space",
+              "steps": [
+                "Detect if inside a multipage block",
+                "Prompt for Viewport Selection (Select hsbViewport)",
+                "Prompt for Insertion Point (Pick Point)",
+                "Filter entities specific to the shopdrawing view"
+              ]
+            }
+          },
+          {
+            "condition": "Position Number Alignment (Property: nPosNumAlignment)",
+            "path1": {
+              "name": "World X (0)",
+              "steps": [
+                "Calculate text rotation to align with World X axis"
+              ]
+            },
+            "path2": {
+              "name": "Entity Aligned (1)",
+              "steps": [
+                "Calculate text rotation to align with the entity's direction"
+              ]
+            },
+            "path3": {
+              "name": "Outside Entity (2)",
+              "steps": [
+                "Detect entity height and direction",
+                "Calculate offset vector perpendicular to entity",
+                "Move text position outside the physical geometry of the entity"
+              ]
+            }
+          },
+          {
+            "condition": "Entity Display Mode (Properties: nShowPosNumBm/Sh/TSL)",
+            "path1": {
+              "name": "Visible on Entity (0-3, 5)",
+              "steps": [
+                "Generate text string for PosNum",
+                "Create collision profile for text box",
+                "Draw text and background box at calculated position"
+              ]
+            },
+            "path2": {
+              "name": "Only in BOM (4)",
+              "steps": [
+                "Include entity data in the BOM table/list",
+                "Skip drawing of text and background box on the entity geometry"
+              ]
+            }
+          },
+          {
+            "condition": "PosNum Collision Detection",
+            "path1": {
+              "name": "Collision Detected",
+              "steps": [
+                "Check intersection between new PosNum profile and existing PosNum profiles",
+                "If intersecting, move PosNum along vector vMove",
+                "Iterate up to 20 times until clear space is found or limit reached"
+              ]
+            },
+            "path2": {
+              "name": "No Collision",
+              "steps": [
+                "Draw PosNum at initially calculated position"
+              ]
+            }
+          }
+        ],
+        "validationRules": [
+          {
+            "check": "Entity Selection (Modelspace)",
+            "errorMessage": "None explicitly shown in code snippet, but standard CAD prompt behavior applies.",
+            "recovery": "User must select valid GenBeam, Sheet, or TslInst entities."
+          },
+          {
+            "check": "Viewport Selection (Paper/Shopdraw)",
+            "errorMessage": "Script requires an hsbViewport to determine the visible area for the BOM.",
+            "recovery": "User must select an existing hsbViewport entity in the layout."
+          },
+          {
+            "check": "Project Special Flag (Rubner)",
+            "errorMessage": "N/A (Internal Logic)",
+            "recovery": "Script automatically checks `projectSpecial() == \"RUB\"` to force specific color settings for that client."
+          }
+        ],
+        "postInsertionActions": [
+          {
+            "action": "Add Entity to BOM",
+            "how": "Right-click Context Menu (addRecalcTrigger)",
+            "effect": "Allows adding new entities to an existing BOM list in modelspace without deleting and re-inserting the script."
+          },
+          {
+            "action": "Property Modification",
+            "how": "AutoCAD Properties Palette (OPM)",
+            "effect": "Changing 'Drawing space' is read-only after insert. Changing 'Show PosNum' options toggles label visibility instantly. Changing 'Material Filter' updates the BOM content."
+          },
+          {
+            "action": "Grip Edit / Move",
+            "how": "CAD Grips",
+            "effect": "Moving the script insertion point moves the BOM table/list."
+          }
+        ]
+      },
+      "tokens_used": 9862,
+      "error": null
+    },
+    "6": {
+      "success": true,
+      "data": {
+        "markdown": "# hsbBOM.mcr\n\n## Overview\nThis script generates Bills of Materials (BOM) tables and places Position Number (PosNum) labels on structural elements. It automates the creation of production lists and material take-offs for timber framing projects in Modelspace, Paperspace, or Shopdrawings.\n\n## Usage Environment\n| Space | Supported | Notes |\n|-------|-----------|-------|\n| Model Space | Yes | Processes selected entities or the entire project depending on interaction. |\n| Paper Space | Yes | Requires selection of an `hsbViewport` to filter visible elements. |\n| Shop Drawing | Yes | Supports multipage blocks; requires viewport selection within the detail. |\n\n## Prerequisites\n- **Required Entities**: GenBeams, Sheets, or TSL instances (connectors/scripts) must exist in the drawing.\n- **Viewport**: An `hsbViewport` is required when running the script in Paperspace or Shopdraw space.\n- **Selection**: In Modelspace, you must have entities to select.\n\n## Usage Steps\n\n### Step 1: Launch Script\n**Command**: `TSLINSERT` (or via the hsbCAD Toolbar/Catalog).\n**Action**: Browse and select `hsbBOM.mcr` from the list and confirm insertion.\n\n### Step 2: Select Entities or Viewport\nThe script prompts differ based on your current CAD space:\n\n*   **In Modelspace:**\n    ```\n    Command Line: Select entities:\n    Action: Click on the Beams, Sheets, or TSLs you want to include. Press Enter to finish selection.\n    ```\n\n*   **In Paperspace or Shopdraw:**\n    ```\n    Command Line: Select hsbViewport:\n    Action: Click on the viewport frame that defines the view you want to create a BOM for.\n    ```\n\n### Step 3: Place BOM Table\n```\nCommand Line: Insertion point:\nAction: Click in the drawing to position the top-left corner of the BOM table/list.\n```\n\n### Step 4: Adjust Properties (Optional)\n**Action**: Select the inserted BOM object (usually represented by an insertion point grip). Open the **Properties Palette** (Ctrl+1) to toggle labels, change filters, or modify sorting.\n\n## Properties Panel Parameters\n\n| Parameter | Type | Default | Description |\n|-----------|------|---------|-------------|\n| **Drawing space** | Integer | 0 | Sets the working context: 0=Model, 1=Paper, 2=Shopdraw. Read-only after insert. |\n| **nShowPosNumBm** | Integer | 1 | Controls labels on Beams. 0=None, 1=PosNum, 2=Name, 3=PosNum+Name, 4=Only in BOM, 5=PosNum+Size. |\n| **nShowPosNumSh** | Integer | 1 | Controls labels on Sheets/Panels. 0=None, 1=PosNum, 2=Name, 3=PosNum+Name, 4=Only in BOM. |\n| **nShowPosNumTSL** | Integer | 1 | Controls labels on Connectors/TSLs. 0=None, 1=PosNum, 2=Name, 3=PosNum+Name, 4=Only in BOM, 5=PosNum+Size. |\n| **nPosNumAlignment** | Integer | 1 | Label orientation. 0=Horizontal (World X), 1=Aligned to Entity, 2=Outside Entity (prevents overlap). |\n| **bShowCompAngles** | Boolean | 0 | If 1, shows complementary saw angles (90 - cut angle) in the BOM. |\n| **sFilterMaterial** | String | \"\" | Filters BOM by material type (e.g., \"C24;GL24h\"). Leave empty to include all. |\n| **sFilterTsl** | String | \"\" | Filters BOM by TSL/Connector names (e.g., \"Screw;Plate\"). Leave empty for all. |\n| **nSortCol** | Integer | 0 | Determines which column the BOM table is sorted by (index number). |\n| **bShowLogPosNum** | Boolean | 0 | If 1, uses Blockbau/Log house specific numbering format (Label + Sublabel + Layer). |\n| **nColor** | Integer | 38 | Sets the CAD color index for the text labels. |\n| **nHideDisplay** | Integer | 0 | Filters visibility based on Zone Index. Used to show/hide elements from specific construction phases. |\n\n## Right-Click Menu Options\n\n| Menu Item | Description |\n|-----------|-------------|\n| **Add Entity to BOM** | Allows you to select new entities and append them to the existing BOM table without deleting and re-running the script. |\n\n## Settings Files\n- **Data Source**: TSLBOM map data (internal/exported data).\n- **Purpose**: Provides the logic for naming and dimensioning TSL components if they are not explicitly defined in the script.\n\n## Tips\n- **Use \"Outside Entity\" Alignment**: If your drawing is dense, set `nPosNumAlignment` to **2**. This pushes the labels outside the timber width so they don't cover your geometry.\n- **Table Only Mode**: If you only need a list and don't want text cluttering the drawing views, set the `nShowPosNum` options to **4** (Only in BOM).\n- **Material Filtering**: You can type multiple materials in `sFilterMaterial` separated by semicolons (e.g., `C24;Kerto-S`) to generate a list for just specific grades.\n- **Moving the Table**: Click the BOM insertion point to activate the grip and drag the table to a new location.\n\n## FAQ\n- **Q: Why are some of my beams missing from the list?**\n  **A**: Check the `sFilterMaterial` or `sFilterTsl` properties. You may have a filter active that excludes certain materials or connector types. Also check `nHideDisplay` (Zone Filter).\n- **Q: Can I update the list if I change beam sizes?**\n  **A**: Yes. Select the BOM insertion point and right-click. If the list doesn't update automatically, use the `hsbRefresh` command or delete and re-insert the script.\n- **Q: What is the difference between \"PosNum\" and \"Name\"?**\n  **A**: \"PosNum\" is the unique assembly mark assigned by hsbCAD numbering rules. \"Name\" is the generic name of the element (e.g., \"Rafter\" or \"Stud\").\n- **Q: How do I list hardware separately?**\n  **A**: Use the `sFilterTsl` property to type the name of your hardware script (e.g., \"Screw\"), or create separate BOM scripts for structure and hardware."
+      },
+      "tokens_used": 6711,
+      "error": null
+    }
+  }
+}
