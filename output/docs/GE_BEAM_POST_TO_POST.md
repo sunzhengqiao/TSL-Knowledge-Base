@@ -1,72 +1,174 @@
-# GE_BEAM_POST_TO_POST.mcr
+# GE_BEAM_POST_TO_POST
 
 ## Overview
-This script automatically generates filler beams (studs or blocking) between two selected vertical posts. It allows for manual or inventory-based sizing and offers options for beam distribution across the post width.
+
+**GE_BEAM_POST_TO_POST** is a one-time generator script that places one or more horizontal framing members (blocking, headers, or bridging) between two selected vertical posts. Once it runs, it creates the beams in the drawing and then removes itself -- the result is a set of standard `GenBeam` entities, not a persistent script object.
+
+The script automatically reads from the project's lumber inventory to suggest correct beam dimensions, material, and grade. You can also override any of these values manually if your project requires a custom specification.
+
+**Key capabilities:**
+- Places one or more horizontal members between exactly two vertical posts in a single operation.
+- Automatically trims the new beams flush to the face of the second post using a static cut.
+- Distributes multiple beams Left to Right, Centered, or Right to Left across the post width.
+- Pulls beam sizes, material, and grade from the hsbFramingDefaults inventory, with manual override fields for every value.
+- Validates post orientation (must be vertical) and top-height alignment before creating anything.
+
+**Version:** 1.3 (03 November 2013, David Rueda, hsbSOFT)
+
+---
 
 ## Usage Environment
-| Space | Supported | Notes |
-|-------|-----------|-------|
-| Model Space | Yes | This is the primary environment for generating beams. |
-| Paper Space | No | Not supported. |
-| Shop Drawing | No | This is a modeling script, not a detailing tool. |
+
+| Environment | Supported | Notes |
+|-------------|-----------|-------|
+| Model Space | Yes | Primary and only environment for this script. |
+| Paper Space | No | Not applicable. |
+| Shop Drawing | No | This script creates model geometry, not drawing details. |
+
+**Script Type:** `O` (Object / Generator)
+**Beams Required at Start:** None pre-selected. The script prompts you to select the two posts interactively during insertion.
+
+---
 
 ## Prerequisites
-- **Required Entities**: Two existing `GenBeam` entities representing vertical posts.
-- **Minimum Beam Count**: 2 existing beams must be selected during insertion.
-- **Required Settings**:
-    - `hsbFramingDefaults.Inventory.dll`: Used to retrieve material grades and standard lumber sizes.
 
-## Usage Steps
+Before running this script, ensure the following are in place:
 
-### Step 1: Launch Script
-Command: `TSLINSERT` → Select `GE_BEAM_POST_TO_POST.mcr` from the list.
+- **Two vertical GenBeam posts** must already exist in the drawing. The posts must be:
+  - Oriented vertically (parallel to the World Z axis).
+  - Have their top ends at the same elevation (same Z height). If they differ, the script will abort.
+- **hsbFramingDefaults Inventory** (`hsbFramingDefaults.Inventory.dll`) must be accessible via the hsbCAD installation path. This provides the list of available lumber items and their dimensions.
+- The drawing must use a consistent unit system (millimeters or inches). The script uses `U()` conversion throughout, so it works in both.
 
-### Step 2: Select First Post
-```
-Command Line: Select first post
-Action: Click on the first vertical GenBeam (post) you wish to span between.
-```
+---
 
-### Step 3: Select Second Post
-```
-Command Line: Select another post
-Action: Click on the second vertical GenBeam.
-```
+## How to Use
 
-### Step 4: Configure Properties
+### Step 1: Run the Script
+
+Launch the script from the hsbCAD tool panel or by typing `TSLINSERT` at the AutoCAD command line and selecting `GE_BEAM_POST_TO_POST` from the list.
+
+### Step 2: Select the First Post
+
+The command line will prompt:
+
 ```
-Action: The Dynamic Dialog appears automatically. Adjust the number of beams, size source, and distribution pattern as needed. Click OK to generate.
+Select first post
 ```
 
-## Properties Panel Parameters
+Click on the first vertical post (GenBeam). The script checks that it is truly vertical. If it is not, an error message appears and the script cancels automatically.
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| Distribution | Integer | 0 | Determines how beams are arranged: 0=Left to Right, 1=Centered, 2=Right to Left. |
-| Beam Count | Integer | 1 | The number of filler beams to generate between the posts. |
-| Size Source | String | Inventory | Choose between "Inventory" (uses dll defaults) or "Manual" (uses custom properties). |
-| Manual Size | String | 2x4 | Nominal size (e.g., 2x6, 2x8) used only if Size Source is set to Manual. |
-| Material | String | - | The material name. Can be pulled from Inventory or entered manually. |
-| Grade | String | - | The structural grade of the lumber. Can be pulled from Inventory or entered manually. |
+### Step 3: Select the Second Post
+
+The command line will prompt:
+
+```
+Select another post
+```
+
+Click on the second vertical post. The script then checks:
+- That the second post is also vertical.
+- That both posts have their tops at the same height.
+
+If either check fails, a message is displayed and the script cancels without creating any beams.
+
+### Step 4: Configure in the Dialog
+
+After both posts are validated, a configuration dialog appears automatically. Set your desired options (see the Properties Panel section below for details). Click **OK** to proceed.
+
+### Step 5: Beams Are Created
+
+The script calculates positions and creates the horizontal beam(s) spanning from the first post to the second post. The beams are automatically cut flush to the face of the second post. Once the beams are placed, the script instance removes itself from the drawing.
+
+> **Note:** It is normal for the script object to disappear after running. The horizontal beams it created remain in the drawing as regular GenBeam entities.
+
+---
+
+## Properties Panel (OPM Parameters)
+
+These properties appear in the AutoCAD Properties Palette (OPM) when the dialog is shown after post selection. They can also be adjusted if you re-run the script.
+
+### General Section
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| Number of beams to place | Integer | 1 | How many horizontal beams to create between the two posts. All beams use the same size and are stacked side by side across the post width. |
+| Distribution | Dropdown | Centered | Controls how the beams are positioned across the post width when placing multiple beams. Options: **Left to right** (starts from the left/front face of the post), **Centered** (distributes beams symmetrically about the post center), **Right to left** (starts from the right/back face of the post). |
+
+### Beam Info -- Auto (from Inventory)
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| Lumber item | Dropdown | First item in list | Selects a lumber product from the project's framing inventory. This sets the beam dimensions (width and height), material, and grade automatically. Change this to match the lumber you intend to use on-site. |
+
+### Beam Info -- Manual (Override Values)
+
+These fields override the values loaded from the inventory. Leave a field empty to use the inventory value. If **Beam size** is set to anything other than "From inventory", the manual values take priority for dimensions.
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| Beam size | Dropdown | From inventory | Selects the nominal lumber size. Options run from 2x1 through 2x16 (standard North American nominal sizes) plus **From inventory** which uses the dimensions from the selected Lumber item above. Width is always 38.1 mm (1.5 in) actual; only the height dimension changes with the nominal size selected. |
+| Beam color | Integer | 32 | AutoCAD color index (ACI) for the new beams. Valid range is -1 to 255. If an out-of-range value is entered, it resets to 32 automatically. |
+| Beam type | Dropdown | (index 12) | Sets the hsbCAD beam type category for classification purposes (for example: stud, plate, header, blocking). This affects BOM grouping and element type assignment. |
+| Name | Text | (empty) | A custom name assigned to the beam entity. Leave blank to keep the default. |
+| Material | Text | (from inventory) | The lumber material (for example: Douglas Fir-Larch, SPF). Overrides the inventory value when filled in. |
+| Grade | Text | (from inventory) | The structural grade (for example: No.2, Select Structural). Overrides the inventory value when filled in. |
+| Information | Text | (empty) | Additional free-text information field stored on the beam. |
+| Label | Text | (empty) | The primary label printed on the beam in shop drawings and element views. |
+| Sublabel | Text | (empty) | A secondary label for the beam. |
+| Sublabel2 | Text | (empty) | A tertiary label for the beam. |
+| Beam code | Text | (empty) | A custom code used for identification or scheduling purposes. |
+
+### Nominal Size Reference
+
+When **Beam size** is set to a manual nominal size, the actual dimensions used are:
+
+| Nominal | Actual Width | Actual Height |
+|---------|-------------|---------------|
+| 2x1 | 38.1 mm / 1.50 in | 19.05 mm / 0.75 in |
+| 2x2 | 38.1 mm / 1.50 in | 38.10 mm / 1.50 in |
+| 2x3 | 38.1 mm / 1.50 in | 63.50 mm / 2.50 in |
+| 2x4 | 38.1 mm / 1.50 in | 88.90 mm / 3.50 in |
+| 2x6 | 38.1 mm / 1.50 in | 139.70 mm / 5.50 in |
+| 2x8 | 38.1 mm / 1.50 in | 184.15 mm / 7.25 in |
+| 2x10 | 38.1 mm / 1.50 in | 234.95 mm / 9.25 in |
+| 2x12 | 38.1 mm / 1.50 in | 285.75 mm / 11.25 in |
+| 2x14 | 38.1 mm / 1.50 in | 336.55 mm / 13.25 in |
+| 2x16 | 38.1 mm / 1.50 in | 387.35 mm / 15.25 in |
+
+---
 
 ## Right-Click Menu Options
 
-| Menu Item | Description |
-|-----------|-------------|
-| *None* | This is a "Generator" script. It runs once, creates the beams, and then erases itself from the drawing. It does not remain for context menu editing. |
+This script has no right-click context menu options. It is a **generator** script: it runs once, creates the beam geometry, then erases itself. The resulting beams are plain GenBeam entities and can be edited with standard hsbCAD beam editing tools.
 
-## Settings Files
-- **DLL**: `hsbFramingDefaults.Inventory.dll`
-- **Location**: hsbCAD installation directory (typically mapped in `TSL.INI`).
-- **Purpose**: Provides default dimensions, material names, and grade information based on the selected lumber item key.
+---
 
-## Tips
-- **Post Alignment**: Ensure the two selected posts are vertical and have their top surfaces at the same Z-height. The script validates this and may fail if they are misaligned.
-- **Fit Check**: The script calculates if the selected number of beams will physically fit on the width of the post. If the total width of the new beams exceeds the post width (plus a small tolerance), generation may fail.
-- **Centered Distribution**: Use the "Centered" (1) distribution option for symmetrical layouts like window sills or headers between posts.
+## Tips and Notes
 
-## FAQ
-- Q: Why did the script disappear immediately after I ran it?
-- A: This is normal behavior for generator scripts. Once the beams are created and added to the model, the script instance removes itself to prevent duplicate data.
-- Q: Can I edit the beams after creation?
-- A: Yes. You can select the newly generated GenBeams and modify their properties using the standard AutoCAD Properties Palette (OPM) or other hsbCAD editing tools.
+**Fit check before creation**
+The script checks whether the total width of the requested beams fits within the available face width of the post. The tolerance depends on the distribution mode: Centered mode allows up to two beam widths of overhang, while Left to Right and Right to Left allow one beam width. If the beams do not fit, the script displays a warning and cancels. Reduce the "Number of beams to place" or switch to a narrower beam size if this occurs.
+
+**Both posts must be at the same top elevation**
+The script checks that the tops of both posts are at the same Z height (within a tolerance of 0.001 mm / 0.0001 in). If you are working with posts of different heights -- for example, a raked roof condition -- this script is not suitable. Adjust post heights before running, or use a different approach.
+
+**Only vertical posts are accepted**
+The script checks that both selected GenBeams are parallel to the World Z axis. Diagonal or angled members will cause the script to abort immediately.
+
+**Beam cut is applied to the second post face**
+The horizontal beams are initially created with a nominal short length (50 mm / 2 in) centered at the first post. The script then applies a static cut tool at the near face of the second post, trimming each beam to the correct span automatically. You do not need to adjust the length manually.
+
+**Inventory vs. manual sizing**
+When "Beam size" is set to **From inventory**, the dimensions (width and height) come from the selected Lumber item. Material and Grade also come from the inventory, but can still be overridden by filling in the manual Material and Grade fields. When you choose a specific nominal size (for example, 2x6), both width and height switch to the fixed nominal-to-actual values shown in the reference table above, and Material and Grade are taken entirely from the manual fields.
+
+**The script erases itself -- this is normal**
+After the beams are created, the script removes its own instance from the drawing. This is by design. The beams it produced are independent GenBeam entities that remain in the drawing and can be freely selected, moved, modified, or deleted.
+
+**Catalog-based defaults on first insert**
+When first placed, the script applies project-level default property values from the catalog system (`setPropValuesFromCatalog`). This means your site-specific framing defaults (if configured in hsbFramingDefaults) will be pre-selected automatically.
+
+**If the inventory DLL is missing**
+If `hsbFramingDefaults.Inventory.dll` cannot be found at the expected installation path, the Lumber item dropdown will be empty. In this case, use the Manual section to specify beam size, material, and grade directly.
+
+**Incomplete inventory data**
+If the selected lumber item in the inventory has a width or height of zero, the script will display an error listing the missing values and cancel. Verify that the lumber item definition is complete in the hsbFramingDefaults editor.

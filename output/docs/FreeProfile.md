@@ -1,101 +1,272 @@
 # FreeProfile.mcr
 
 ## Overview
+
 Creates custom free-form milling or cutting operations (grooves, slots, contours) on timber beams based on a user-defined path. This tool is ideal for complex geometries where standard rectangular or circular cuts are insufficient, allowing for tool path definition via points, circles, or existing openings.
 
+| Property | Value |
+|----------|-------|
+| **Script Type** | O (Object) |
+| **Version** | 1.8 |
+| **Last Updated** | 21.11.2025 |
+| **Minimum Beams Required** | 0 (Selected during insertion) |
+| **Category** | Manufacturing / CNC Milling |
+
+### Version History
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.8 | 21.11.2025 | Error capture for missing cutting body and PLine definition |
+| 1.7 | 21.10.2025 | Common range considers slice in depth or opposite face |
+| 1.6 | 06.10.2025 | Fixed radius cleanup for counter-clockwise polylines |
+| 1.5 | 10.05.2024 | Fixed side change by trigger |
+| 1.4 | 10.05.2024 | Polyline path with width > tool diameter exports as extrusion body |
+| 1.3 | 01.06.2023 | Corrected overshoot on polyline path |
+| 1.0 | 05.10.2022 | Initial release |
+
 ## Usage Environment
+
 | Space | Supported | Notes |
 |-------|-----------|-------|
-| Model Space | Yes | Operates on 3D GenBeam entities. |
-| Paper Space | No | Not applicable for 3D machining operations. |
-| Shop Drawing | No | This is a 3D model generation script. |
+| Model Space | Yes | Primary workspace - operates on 3D GenBeam entities |
+| Paper Space | No | Not applicable for 3D machining operations |
+| Shop Drawing | No | This is a 3D model generation script |
 
 ## Prerequisites
-- **Required Entities:** At least one `GenBeam` (Timber Beam).
-- **Optional Entities:** `PLine`, `Circle`, or `Element` (for defining path geometry).
-- **Minimum Beam Count:** 1 (Second beam is optional).
-- **Required Settings:** `FreeProfile.xml` (Required only for using presets or saving configurations).
 
-## Usage Steps
+- **Required Entities:** At least one `GenBeam` (Timber Beam) - selected during insertion
+- **Optional Entities:** `PLine` (Polyline), `Circle`, or `EcsMarker` for defining path geometry
+- **Settings File:** `FreeProfile.xml` (optional - for tool presets and configurations)
+
+## Insertion Workflow
 
 ### Step 1: Launch Script
-1.  Type `TSLINSERT` in the command line.
-2.  Select `FreeProfile.mcr` from the list.
+1. Type `TSLINSERT` in the command line
+2. Select `FreeProfile.mcr` from the script list
+3. A dialog appears to configure initial settings
 
-### Step 2: Select Primary Beam
+### Step 2: Select Geometry
 ```
-Command Line: Select beam:
-Action: Click on the timber beam you wish to machine.
-```
-
-### Step 3: Select Secondary Beam (Optional)
-```
-Command Line: Select second beam (or press Enter to skip):
-Action: 
-- If the cut involves an intersection with another beam, select the second beam.
-- Otherwise, press Enter to proceed with the single beam.
+Command Prompt: Select genbeams and polylines
+Action: Select one or more timber beams. Optionally, also select existing polylines or circles to define the cutting path.
 ```
 
-### Step 4: Select Reference Face
+### Step 3: Select Reference Face
 ```
-Command Line: Select face:
-Action: Move your cursor over the beam. A dynamic preview of the profile will appear on different faces.
-Click to select the desired face (e.g., Top, Bottom, Left, Right) where the machining should start.
+Command Prompt: Select face [Flip side]
+Action:
+- Move cursor over the beam to highlight available faces
+- Click to select the face where machining should start
+- Press [Flip side] keyword to toggle between front/back faces
 ```
 
-### Step 5: Define Profile Path
-The script offers multiple ways to define the shape of the cut.
-```
-Command Line: [Pick Point / Select Circle / Select Opening]:
-Action: Choose one of the following methods:
-```
-- **Option A (Pick Point):** Click points on the face to draw a custom polyline. Press Enter to finish the shape.
-- **Option B (Select Circle):** Type `S` (if mapped) or select the circle option, then click an existing Circle entity in the drawing to use its shape.
-- **Option C (Select Opening):** Type `O` (if mapped) or select the opening option, then click an existing Opening or Element to trace its contour.
+The script highlights faces in different colors:
+- **Light Blue**: Available faces
+- **Dark Yellow**: Currently selected/highlighted face
 
-### Step 6: Finalize
-The script generates the 3D representation of the tool path and applies the machining operation to the beam.
+### Step 4: Define Profile Path
+
+The method depends on the selected **Mode**:
+
+#### Mode: Polyline Path
+```
+Command Prompt: Pick point [Left/Center/Right/FlipSide]
+Action: Click points on the face to draw the cutting path. Press Enter to finish.
+Options:
+- [Left]: Align tool path to left side of drawn path
+- [Center]: Center tool on drawn path
+- [Right]: Align tool path to right side of drawn path
+- [FlipSide]: Switch to opposite face
+```
+
+#### Mode: Extrusion Body
+Same as Polyline Path, but the area enclosed by the path is milled completely.
+
+#### Mode: Contour
+Automatically extracts the common contour of all referenced beams.
+
+#### Mode: Opening
+```
+Command Prompt: Pick point in opening [All/FlipSide]
+Action: Click inside an existing opening (window/door cut) to trace its contour.
+```
 
 ## Properties Panel Parameters
 
+### General Settings
+
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| **Diameter** | Number | 20 mm | The diameter of the milling cutter or saw blade. Defines the width of the cut. |
-| **Length** | Number | 0 mm | The working length/reach of the tool. A value of 0 typically implies infinite or maximum depth. |
-| **ToolIndex** | Integer | 4 | The CNC machine tool number (e.g., T4) assigned to this operation for manufacturing data. |
-| **Name** | Text | Millhead | The descriptive name of the tool configuration. Changing this can trigger preset loading if it matches an XML entry. |
-| **Vertical Milling Head** | Dropdown | No | Determines tool orientation. "Yes" = perpendicular to surface; "No" = parallel to beam axis. |
-| **Accuracy** | Number | dEps | Tolerance for converting curves to straight lines (0 = true curves, higher value = faceted). |
-| **Color Reference Side** | Integer | 40 | AutoCAD color index for the tool path on the selected face. |
-| **Color Top Side** | Integer | 40 | AutoCAD color index for the tool path on the opposite face. |
-| **Transparency** | Integer | 90 | Transparency level of the tool body visualization (0 = Opaque, 100 = Invisible). |
+| **Mode** | Dropdown | Polyline Path | Defines how the tool processes the path. Options: Contour, Extrusion Body, Opening, Polyline Path |
+| **Corner Cleanup** | Dropdown | None | Corner processing method. Options: None, Overshoot, Rounded |
+| **Face** | Dropdown | Bottom Face | Reference face for machining. Options: Bottom Face, Top Face |
+| **Alignment** | Dropdown | Center | Path alignment relative to drawn polyline. Options: Left, Center, Right |
 
-## Right-Click Menu Options
+### Tool Settings
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| **Tool** | Dropdown | (from settings) | CNC tool selection from configured presets |
+| **Depth** | Number | 20 mm | Depth of cut. Set to 0 for complete through-cut |
+| **Width** | Number | 30 mm | Width of the tool path. Set to 0 to use tool diameter |
+
+### Display Settings
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| **Format** | String | R@(Radius) | Format string for description labels. Supports variables: Radius, Diameter, Freeprofile Width/Depth/Length/Area |
+| **DimStyle** | Dropdown | (current) | Dimension style for text display |
+| **Text Height** | Number | 0 | Text height for descriptions. 0 = use DimStyle default |
+
+### Mode Descriptions
+
+| Mode | Behavior |
+|------|----------|
+| **Polyline Path** | Mills along the specified path only - creates a groove following the drawn line |
+| **Extrusion Body** | Mills the entire area inside the closed path - creates a pocket or slot |
+| **Contour** | Automatically uses the beam's outer contour as the cutting path |
+| **Opening** | Traces an existing opening (from SIP panels or sheets) as the cutting path |
+
+### Corner Cleanup Options
+
+| Option | Behavior |
+|--------|----------|
+| **None** | No special corner treatment - path ends at defined points |
+| **Rounded** | Corners are rounded to tool radius - smooth transitions |
+| **Overshoot** | Tool extends past corners to ensure complete material removal |
+
+**Note:** Rounded and Overshoot options only work with **Vertical Milling Head** tools.
+
+## Right-Click Context Menu
 
 | Menu Item | Description |
 |-----------|-------------|
-| **Configure Tool** | Opens a dialog box to edit Tool Name, Diameter, Length, Index, and other parameters in a centralized form. |
-| **Flip Side** | Moves the profile path from the current reference face to the opposite face of the beam. |
-| **Create defining polyline** | Locks the profile by converting the dynamic grip path into a static polyline entity. Removes editing grips. |
-| **Create defining grips** | Unlocks the profile by converting a static polyline back into dynamic grips, allowing geometric edits. |
-| **Import Settings** | Loads tool parameters (Diameter, Index, etc.) from an external `FreeProfile.xml` file. |
-| **Export Settings** | Saves the current tool parameters to `FreeProfile.xml` for future reuse. |
+| **Flip Side** | Moves the profile from current face to the opposite face of the beam |
+| **Add GenBeams** | Add additional beams to be machined by this profile |
+| **Remove Genbeams** | Remove beams from the machining list (minimum 1 required) |
+| **Select defining polyline** | Choose a new polyline or circle to define the cutting path |
+| **Create defining polyline** | Convert dynamic grip-based path into a static polyline entity |
+| **Create defining grips** | Convert static polyline back to editable grip points |
+| **Configure Tool** | Open dialog to define/edit tool properties (Diameter, Length, Index, Colors) |
+| **Reset Configuration** | Reset to default tool configuration |
+| **Import Settings** | Load tool parameters from `FreeProfile.xml` |
+| **Export Settings** | Save current tool configuration to `FreeProfile.xml` |
+
+## Tool Configuration
+
+### Configure Tool Dialog
+
+Accessed via right-click menu, allows defining custom milling tools:
+
+| Setting | Description |
+|---------|-------------|
+| **Diameter** | Tool diameter in mm |
+| **Length** | Working length/reach of the tool (0 = unlimited) |
+| **ToolIndex** | CNC machine tool number (e.g., T4) |
+| **Name** | Descriptive name for the tool preset |
+| **Vertical Milling Head** | Yes/No - determines if tool is perpendicular or parallel to surface |
+| **Accuracy** | Tolerance for arc-to-line conversion (0 = true curves) |
+| **Color Reference Side** | Display color for reference face tool path |
+| **Color Top Side** | Display color for opposite face tool path |
+| **Transparency** | Tool body visualization transparency (0-100) |
+
+### Default Tool Presets
+
+When no custom settings exist, these defaults are available:
+
+| Tool Name | Diameter | Type |
+|-----------|----------|------|
+| Finger Mill | varies | Vertical |
+| Universal Mill | varies | Horizontal |
+| Vertical Finger Mill | varies | Vertical |
 
 ## Settings Files
-- **Filename**: `FreeProfile.xml`
-- **Location**: Company or Install path (configured in hsbCAD settings).
-- **Purpose**: Stores predefined tool configurations (presets). This allows you to save specific tool diameters and CNC indices and load them later via the "Name" property or Import function.
 
-## Tips
-- **Previewing Faces:** Use the "Select Face" step carefully; the visual preview shows exactly where the material will be removed.
-- **Complex Shapes:** Use the "Pick Point" option to draw custom slots or tenons that aren't simple rectangles.
-- **CNC Export:** Always check the **ToolIndex** property. If this number does not match a tool in your CNC machine's database, the manufacturing output may fail or default to a generic tool.
-- **Locking Geometry:** Once a profile is exactly where you want it, use the **Create defining polyline** context menu option. This prevents accidental shifts if the beam geometry changes slightly.
+- **Filename:** `FreeProfile.xml`
+- **Location:**
+  - Company: `%HSB_COMPANY_PATH%\TSL\Settings\FreeProfile.xml`
+  - Install: `%HSB_INSTALL_PATH%\Content\General\TSL\Settings\FreeProfile.xml`
+- **Purpose:** Stores predefined tool configurations, CNC indices, colors, and accuracy settings
 
-## FAQ
-- **Q: Can I use this to cut a hole all the way through the beam?**
-  A: Yes. Define the path and ensure the **Length** parameter is sufficient to penetrate through the beam, or ensure the depth/height of the path geometry exceeds the beam's dimensions relative to the start face.
-- **Q: What does "Accuracy = 0" do?**
-  A: It tells the CAM system to export the path as true mathematical curves (Arcs). If you set a value > 0, curves are broken into small straight line segments.
-- **Q: Why can't I edit the shape anymore?**
-  A: The profile might be locked as a static polyline. Right-click the script instance and select **Create defining grips** to restore the edit handles.
+### XML Structure Example
+```xml
+<Hsb_Map>
+  <lst nm="Tool[]">
+    <lst nm="CustomMill">
+      <dbl nm="Diameter" ut="L" vl="22"/>
+      <dbl nm="Length" ut="L" vl="100"/>
+      <int nm="CncIndex" vl="5"/>
+      <int nm="isVertical" vl="1"/>
+      <dbl nm="Accuracy" ut="L" vl="0.1"/>
+    </lst>
+  </lst>
+</Hsb_Map>
+```
+
+## Tips and Best Practices
+
+### Workflow Tips
+1. **Preview Faces:** The face selection step shows a dynamic preview - use it to verify the correct machining surface
+2. **Complex Shapes:** Use "Pick Point" mode to draw custom slots or tenons that aren't simple rectangles
+3. **Existing Geometry:** Select a pre-drawn polyline or circle during insertion for precise control
+
+### CNC Export Tips
+1. **ToolIndex Verification:** Always verify the ToolIndex matches your CNC machine's tool database
+2. **Accuracy Settings:** Set Accuracy = 0 for true curves (arcs); use higher values for faceted approximations
+3. **Width vs Diameter:** When Width > Diameter, the tool automatically switches to extrusion mode
+
+### Geometry Management
+1. **Locking Profiles:** Use "Create defining polyline" to prevent accidental shifts when beam geometry changes
+2. **Unlocking Profiles:** Use "Create defining grips" to restore edit handles on locked profiles
+3. **Multiple Beams:** Add multiple beams to apply the same profile to all selected members
+
+## Troubleshooting
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| "Tool definition not found" | Tool name doesn't match XML settings | Select a valid tool from dropdown or import settings |
+| "Could not find any opening" | Opening mode selected but no openings exist | Switch to a different mode or create openings first |
+| "Non-vertical tool does not support rounding/overshooting" | Corner cleanup incompatible with tool type | Set Corner Cleanup to "None" or use vertical tool |
+| "Defining PLine not accurately described" | Path has fewer than 3 points | Draw a valid path with at least 3 points |
+| "Tooling not possible" | Internal profile area too small | Increase path size or check tool diameter |
+| "Insertion in YZ-Plane not supported" | Attempting to insert on beam end face | Select top, bottom, or side face instead |
+| "Width of contour milling cannot be smaller than tool diameter" | Invalid width setting | Set Width >= Tool Diameter or Width = 0 |
+
+## Technical Notes
+
+### SubMapX Data
+The script stores additional data in `subMapX` for external access:
+
+| Key | Data Type | Description |
+|-----|-----------|-------------|
+| `Freeprofile` | Map | Contains Width, Depth, Length, Area, Radius |
+| `myConfig` | Map | Current tool configuration for persistence |
+| `Grip[]` | Map | Grip point positions relative to world origin |
+| `plDefine` | PLine | Backup of defining polyline |
+| `LastToolMode` | String | Previous mode selection |
+| `vecFace` | Vector3d | Face direction vector |
+
+### Format Variables
+Available for use in the **Format** property:
+- `@(Radius)` - Tool radius
+- `@(Diameter)` - Tool diameter
+- `@(Freeprofile Width)` - Profile width
+- `@(Freeprofile Depth)` - Profile depth
+- `@(Freeprofile Length)` - Profile length
+- `@(Freeprofile Area)` - Profile area
+
+## Related Scripts
+
+| Script | Relationship |
+|--------|--------------|
+| `Drill.mcr` | For simple circular holes |
+| `Slot.mcr` | For standard rectangular slots |
+| `Mortise.mcr` | For traditional mortise joints |
+| `Cut.mcr` | For straight cutting operations |
+
+## Commands
+
+```
+TSLINSERT          - Insert FreeProfile script
+TSLCONTENT         - Direct insert command
+TSLCONTENTDRAG     - Insert with drag recalc (Flip Side / Select Tool)
+```

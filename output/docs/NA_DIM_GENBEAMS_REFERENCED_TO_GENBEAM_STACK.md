@@ -1,74 +1,179 @@
-# NA_DIM_GENBEAMS_REFERENCED_TO_GENBEAM_STACK.mcr
+# NA_DIM_GENBEAMS_REFERENCED_TO_GENBEAM_STACK
 
 ## Overview
-Automates the creation of layout dimensions in Paper Space, specifically designed to measure the length or position of GenBeams relative to a "stack" or reference group of beams.
+
+This script generates automatic dimensioning on shop drawings that measures beam and sheet positions relative to a reference beam stack. It detects groups of beams that form stacks (parallel beams connected end-to-end or side-by-side), then creates dimension lines showing how other framing members relate spatially to those stacks.
+
+Typical use cases include dimensioning stud positions relative to top/bottom plates, measuring blocking locations relative to a header assembly, or showing joist spacing from a rim board stack.
 
 ## Usage Environment
-| Space | Supported | Notes |
-|-------|-----------|-------|
-| Model Space | No | This script runs in the layout environment. |
-| Paper Space | Yes | Requires a Viewport to be selected. |
-| Shop Drawing | Yes | Used for annotating production drawings. |
+
+| Property | Value |
+|----------|-------|
+| Script Type | O-Type (Object) |
+| Environment | Paper Space (Shop Drawings) |
+| Requires Beams | No (uses viewport association) |
+| Version | 0.19 |
+| Language Support | English (en-US), French Canadian (fr-CA) |
+| Unit System | Metric and Imperial (auto-detected) |
 
 ## Prerequisites
-- **Required Entities**: A Paper Space Layout containing a Viewport linked to an Element with GenBeams.
-- **Minimum Beam Count**: 1 GenBeam within the referenced Element.
-- **Required Settings**: None (Settings are managed via the Properties Panel).
 
-## Usage Steps
+1. A Paper Space layout with a viewport displaying an hsbCAD Element (wall, floor, or roof)
+2. The element must contain beams or sheets to dimension
+3. Painter Definitions of type "GenBeam" (optional, for filtering specific beam types)
+4. An appropriate AutoCAD dimension style loaded in the drawing (default: "NA Shopdrawing")
 
-### Step 1: Launch Script
-Command: `TSLINSERT` → Select `NA_DIM_GENBEAMS_REFERENCED_TO_GENBEAM_STACK.mcr`
+## Step-by-Step Usage
 
-### Step 2: Select Viewport
-```
-Command Line: Select element viewport
-Action: Click inside the viewport on the layout that contains the element/assembly you wish to dimension.
-```
+### Inserting the Script
 
-### Step 3: Configuration (Optional)
-- Select the script instance in Paper Space.
-- Adjust settings in the Properties Palette (Ctrl+1) if the default appearance does not meet your standards.
+1. Switch to a Paper Space layout tab
+2. Run the script from the hsbCAD TSL menu or command line
+3. When prompted, click on the viewport containing the element you want to dimension
+4. A properties dialog opens with all dimension settings organized into four categories
+5. Configure the settings and click OK to place the dimension
+6. The script only allows one insertion cycle; repeated insertion attempts are blocked
 
-### Step 4: Adjust Dimensions
-- **Move Dimension Lines**: Click and drag the blue grips associated with the dimension lines to reposition them manually.
-- **Modify Settings**: Right-click the script instance to access context menu options for overrides or resets.
+### Editing After Placement
 
-## Properties Panel Parameters
+**Via Properties Dialog:**
+Right-click the TSL instance and select "Edit dimension properties" to reopen the full settings dialog.
+
+**Via Grip Points:**
+Select the TSL instance and drag the grip point to reposition the dimension line. Each detected beam stack gets its own grip point. The dimension recalculates automatically when the grip is released.
+
+## Properties Reference
+
+### Dimension Options
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Dimensioned entities | dropdown | All dimensioned genbeams | Defines the scope: dimensions all beams, only those in the stack, or those touching the stack. |
-| Stack selection | dropdown | All stacked genbeams | Determines the logic used to group beams to act as the reference baseline. |
-| Tolerance | Number | 1.0 mm | Maximum distance for beams to be considered "touching" or "stacked." |
-| Text offset | Number | 2.0 mm | Visual distance between the dimension text and the dimension line. |
-| Arrow size | Number | 2.5 mm | Size of the arrowheads or tick marks at the ends of dimension lines. |
-| Extension line offset | Number | 1.5 mm | Gap between the beam geometry and the start of the dimension extension line. |
-| CurrentLanguage | String | en-US | Sets the language for script messages (e.g., en-US, fr-CA). |
+| Dimensioned entities | Dropdown | Dimensioned beams/sheets in stack | Controls which entities appear in the dimension (see modes below) |
+| Hatch pattern | Dropdown | None | Optional hatch applied to dimensioned and reference beams for visual clarity |
+| Hatch scale | Number | 1.0 | Scale factor for the hatch pattern (automatically adjusted by viewport scale) |
+| Hatch angle | Angle | 0 | Rotation angle for the hatch pattern |
+| Hatch colour | Integer | -1 | AutoCAD color index; -1 uses the TSL instance color |
+| Hatch transparency | Integer | 60 | Transparency percentage when hatch is set to SOLID |
 
-## Right-Click Menu Options
+**Dimensioned Entities Modes:**
+
+| Mode | Behavior |
+|------|----------|
+| Dimensioned beams/sheets and stack | Dimensions filtered beams referenced to stack, plus stack overall dimensions |
+| Stack only | Only the overall stack reference dimensions, no individual beam dimensions |
+| Dimensioned beams/sheets in stack | Dimensions beams that belong to the stack, plus stack overall dimensions |
+| Dimensioned beams/sheets in stack only | Dimensions beams that belong to the stack, without overall stack dimensions |
+| Dimensioned beams/sheets touching stack | Dimensions beams that physically touch the stack |
+
+### Beams/Sheets to Dimension
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Element zone | Dropdown | Zone 0 | Zone filter: 0 = inside element container; 1-5 = front/top zones; -1 to -5 = back/bottom zones |
+| Include filter | Dropdown | None | Painter Definition (GenBeam type) to include only matching beams |
+| Exclude filter | Dropdown | None | Painter Definition (GenBeam type) to remove matching beams from the result |
+| Points to dimension | Dropdown | Start point | Which points on each beam to measure: Start, Middle, End, Start and End, or All points |
+| Beam/Sheet side | Dropdown | Closest edge | Which face of the beam to measure: Entire beam/sheet, Closest edge, or Furthest edge relative to the dimension line |
+
+When both Include and Exclude filters are active, the script first collects beams matching the Include filter, then removes any that also match the Exclude filter.
+
+### Stacked Beams/Sheets (Reference Stack)
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Element zone | Dropdown | Zone 0 | Zone filter for reference stack beams |
+| Include filter | Dropdown | None | Painter Definition to include specific stack members |
+| Exclude filter | Dropdown | None | Painter Definition to exclude specific stack members |
+| Points to reference | Dropdown | Start and end points | Reference points on the stack: Start, End, Start and End, or All |
+| Beam/Sheet side | Dropdown | Closest edge | Which face of the stack to use as reference |
+
+### Dimension Style and Positioning
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Dimension orientation | Dropdown | Top of stack | Place dimension at top/left or bottom/right of the stack |
+| Dimension direction | Dropdown | Normal | Normal (left-to-right, bottom-to-top) or Reverse |
+| Dimension type | Dropdown | Cumulative | Delta (incremental between adjacent points) or Cumulative (running from a baseline) |
+| Dimension line offset | Length | 5/32" / 4mm | Distance from the offset reference to the dimension line, in paper space units |
+| Offset type | Dropdown | Beam Stack | Offset reference: Beam Stack, Viewport edge, or Element framing edge |
+| Project points | Dropdown | No | Whether to project dimensioned points perpendicular onto the dimension line |
+| Dimension style | Dropdown | NA Shopdrawing | AutoCAD dimension style to use |
+| Text height | Length | 0 | Override text height in paper space units; 0 uses the style default |
+| Text side | Dropdown | Away from dimensioned points | Text position relative to the dimension line |
+| Text orientation | Dropdown | Perpendicular | Text rotation: Parallel or Perpendicular to the dimension line |
+
+## Right-Click Menu
 
 | Menu Item | Description |
 |-----------|-------------|
-| Edit dimension properties | Opens the configuration (Properties Panel) to modify visual parameters like offsets, text size, and tolerance. |
-| Add properties override for current element | Saves the current settings specifically for this Element. Future changes to global defaults will not affect this element. |
-| Remove properties override for current element | Deletes element-specific settings and reverts the script to the global default settings. |
-| Reset grip points for current element | Clears manual adjustments to dimension line positions and recalculates them based on the default geometry. |
+| Edit dimension properties | Opens the full properties dialog |
+| Add properties override for current element | Creates element-specific settings that override the defaults for the current viewport element |
+| Remove properties override for current element | Deletes the element-specific override, reverting to default settings |
+| Reset grip points for current element | Resets dimension line positions to their automatic placement |
 
-## Settings Files
-- **Storage**: Internal Drawing Map
-- **Location**: Stored within the current AutoCAD drawing (.dwg).
-- **Purpose**: Retains user preferences for global use and element-specific overrides without requiring external XML files.
+## How Stack Detection Works
 
-## Tips
-- **Use Overrides for Unique Elements**: If one wall panel requires different dimensioning offsets than the rest of the project, use "Add properties override" to handle that specific panel without affecting others.
-- **Fix Grouping Issues**: If beams that should be grouped together are not being dimensioned as a single stack, try increasing the **Tolerance** parameter slightly.
-- **Reset After Updates**: If the model changes significantly and dimensions look disjointed, use "Reset grip points" to snap them back to the calculated optimal positions.
+The script automatically identifies beam stacks through a multi-step process:
+
+1. **Parallel filtering** -- Only beams with parallel length axes are candidates for the same stack
+2. **Row detection** -- Beams connected end-to-end (cut faces that overlap within 1mm tolerance and share cross-section area) form a row
+3. **Stack assembly** -- Rows that are side-by-side (faces within 1mm tolerance with overlapping real bodies) are grouped into a single stack
+4. **Overlap filtering** -- If two detected stacks overlap in the viewport projection, the overlapping one is removed
+
+Each detected stack receives its own grip point and generates its own dimension.
+
+## Settings Storage
+
+All settings are stored within the TSL instance Map data under the key "Genbeams referenced to genbeam stack". There are no external XML files.
+
+- **Global settings**: Stored as "UserSelectedValues" within the dimension properties map
+- **Element overrides**: Stored with the element handle as suffix (e.g., "UserSelectedValues~[handle]")
+- **Grip positions**: Stored per element under "VisualControls~[handle]"
+- **Version tracking**: The settings map records the TSL version to trigger automatic updates when the script version changes
+
+## Tips and Best Practices
+
+1. **Zone selection**: Use Zone 0 for framing members inside the element container. Zones 1-5 target front/top sheeting layers; zones -1 to -5 target back/bottom layers.
+
+2. **Painter Definitions**: Create GenBeam-type Painter Definitions to filter specific member types (e.g., "Studs", "Plates", "Blocking"). This is essential for targeting the correct beams when an element contains many different member types.
+
+3. **Multiple instances**: For complex shop drawings, use separate script instances with different filter settings -- one for stud spacing, one for opening dimensions, one for plate-to-plate measurements.
+
+4. **Delta vs Cumulative**: Use Cumulative dimensions when measuring from a baseline reference (e.g., plate end to each stud). Use Delta dimensions when showing spacing between adjacent members.
+
+5. **Offset type**: Set to "Beam Stack" to position the dimension line relative to the stack itself. Use "Viewport" to align with the viewport edge, or "Element" to align with the overall framing boundary.
+
+6. **Element overrides**: When the same TSL instance spans multiple viewports, use element-specific overrides (right-click menu) to customize settings per element without affecting other viewports.
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| No dimensions appear | Verify the viewport contains a valid hsbCAD Element. Check that zone filters match your target beams. Ensure include/exclude filters are not excluding everything. |
+| Wrong beams dimensioned | Review the zone setting (front vs back). Check the "Dimensioned entities" mode. Verify Painter Definition filters. |
+| Dimension line misplaced | Drag the grip point to reposition. Check "Dimension orientation" (Top vs Bottom). Adjust "Offset type" if needed. |
+| Dimension text overlaps | Increase "Dimension line offset". Change "Text side" setting. Switch from Cumulative to Delta. |
+| Stack not detected correctly | Beams must be parallel and physically connected (end-to-end or side-by-side within 1mm). Isolated beams or beams with gaps form separate stacks. |
+| Override not taking effect | Confirm you used "Add properties override for current element" from the right-click menu. The override message appears in the command line when active. |
 
 ## FAQ
-- **Q: The script disappeared immediately after I selected a viewport.**
-  **A**: This usually happens if the selected viewport is not linked to a valid Element or contains no GenBeams. Ensure you select a viewport showing a valid 3D model.
-- **Q: Can I dimension beams that are not touching each other?**
-  **A**: Yes. Set the **Dimensioned entities** property to "All dimensioned genbeams" to ignore the stacking logic and dimension everything in the view.
-- **Q: How do I change the arrow style?**
-  **A**: Currently, this script controls arrow size via the properties panel. The arrow style itself is typically determined by your current CAD dimension style standard, but this script generates specific entities that may use the style active at insertion.
+
+**Q: Can I dimension beams across multiple zones in one instance?**
+A: No. Each instance uses a single zone for dimensioned beams and a single zone for the reference stack. Use multiple instances for different zones.
+
+**Q: How do I dimension to beam centers instead of edges?**
+A: Set "Points to dimension" to "Middle point" and "Beam/Sheet side" to "Entire beam/sheet".
+
+**Q: Does the dimension update when the element changes?**
+A: Yes. The TSL recalculates automatically when the associated element is modified.
+
+**Q: Can I use this for roof trusses or floor joists?**
+A: Yes, as long as the members are GenBeam entities within an hsbCAD Element visible in a viewport.
+
+**Q: What happens when I change the script version?**
+A: The script detects version mismatches and forces a settings update, preserving your existing selections while adding any new parameters from the updated version.
+
+---
+
+*Script Version: 0.19 | Last Updated: June 24, 2024*

@@ -1,87 +1,136 @@
-# hsbTileEdge.mcr
+# hsbTileEdge
+
+Roof tile edge distribution tool for ridge, hip, and valley intersections between two roof planes.
 
 ## Overview
-This script calculates and visualizes the layout of roof tiles along a roof intersection (valley, hip, or ridge) defined by two roof planes. It performs quantity takeoff and generates 3D bodies representing the tile coverage.
 
-## Usage Environment
+The **hsbTileEdge** script calculates and visualizes the distribution of roof tiles along the intersection line (edge) between two roof planes. It automatically detects the type of intersection (ridge, hip, or valley) and distributes tiles accordingly. The tool supports multiple tile types, allows manual modification of individual tiles, and provides quantity takeoffs for material ordering.
+
+## Environment
+
 | Space | Supported | Notes |
 |-------|-----------|-------|
-| Model Space | Yes | Script requires 3D ERoofPlane entities to define the geometry. |
-| Paper Space | No | Does not support direct creation in Paper Space. |
-| Shop Drawing | No | This is a detailing/modeling script, not a drawing generator. |
+| Model Space | Yes | Primary workspace. Requires 3D ERoofPlane entities. |
+| Paper Space | No | Not designed for Paper Space operations. |
+| Shop Drawing | No | This is a modeling/detailing script. |
+
+**Version**: 1.4
+**Unit System**: Millimeters (mm)
 
 ## Prerequisites
-- **Required Entities**: At least two adjacent `ERoofPlane` entities in the model.
-- **Structural Elements** (Optional but recommended): `GenBeam` (Laths) or `ElementRoof` entities to define the exact nailing height.
-- **Required Settings**: A valid `TileMap` (catalog containing tile dimensions like width, length, and thickness) must be available in the project.
 
-## Usage Steps
+Before using this tool, ensure the following conditions are met:
 
-### Step 1: Launch Script
-Command: `TSLINSERT` → Select `hsbTileEdge.mcr` from the list.
+1. **Two Roof Planes Required**: You must have at least two `ERoofPlane` elements that share a common edge (ridge, hip, or valley line).
+2. **Roof Laths or Elements** (Optional but Recommended): For accurate tile plane positioning, append roof laths or roof elements to the script after insertion.
+3. **Tile Configuration**: The script uses an internal `Tile` map with dimensional parameters (LMin, LMax, WMin, WMax, H) for each tile type.
 
-### Step 2: Configure Initial Properties
-Before or immediately after insertion, use the Properties Palette (Ctrl+1) to set:
-- **Part Start/End**: Define specific tiles for the beginning and end of the run (e.g., half-tiles).
-- **Allow Edit**: Set to "Yes" if you plan to manually modify individual tiles later.
-- **Group**: Assign a group name for organization.
+## Usage
 
-### Step 3: Select Roof Planes
-```
-Command Line: Select ERoofPlane 1/2 <Exit>:
-Action: Click on the first roof plane defining the intersection.
-```
-```
-Command Line: Select ERoofPlane 2/2 <Exit>:
-Action: Click on the second adjacent roof plane.
-```
-*Note: If you do not select two valid planes, the script instance will be automatically erased.*
+### Step-by-Step Workflow
 
-### Step 4: Define Structural Height (Optional)
-Once the script is inserted, you can refine the tile elevation to match the battens.
-1. Select the `hsbTileEdge` instance in the model.
-2. Right-click and choose the option to select structural elements (e.g., "Select Laths" or similar context menu item).
-3. Select the `GenBeam` or `ElementRoof` laths in the model.
-4. The tile geometry will update to sit on top of these elements.
+1. **Insert the Script**
+   - Run the `hsbTileEdge` command or insert the script from your TSL library.
+   - A properties dialog will appear for initial configuration.
 
-### Step 5: Interactive Editing (If Enabled)
-If **sAllowEdit** was set to "Yes":
-1. Select the script instance.
-2. Use the specific Right-Click menu option to start the edit Jig (e.g., "Modify Tiles").
-3. Click on individual tiles or regions to delete them or swap their type based on your catalog options.
+2. **Select Two Roof Planes**
+   - When prompted with "Select 2 roofplanes", click on two adjacent roof planes that form a ridge, hip, or valley intersection.
+   - The script automatically identifies the common edge between the planes.
 
-## Properties Panel Parameters
+3. **Append Reference Geometry** (Recommended)
+   - Right-click the script instance and select **"append roof laths"** or **"append roof elements"** to provide accurate tile plane positioning.
+   - Without this step, a warning message "append laths or roof elements" will be displayed.
+
+4. **Review the Result**
+   - The script displays:
+     - A preview line along the tile edge with directional indicators
+     - Individual tile outlines in plan view
+     - A 3D tile body representation
+     - Color-coded tiles by type (standard vs. special)
+
+5. **Modify Tiles as Needed**
+   - Use the context menu options to delete, add, or modify individual tiles.
+
+## Parameters
+
+### Properties Panel (OPM)
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| sPartStart | Text | "" | The catalog name of the special tile used at the start of the edge (e.g., Starter Tile). |
-| sPartEnd | Text | "" | The catalog name of the special tile used at the end of the edge. |
-| sGroup | Text | "" | Organizational path for the instance in the model browser (e.g., "Roof\Tiles"). |
-| sAllowEdit | Enum | No | Controls if the user can interactively add/remove tiles after insertion. (Options: Yes, No). |
-| sDimStyle | Text | _DimStyles | The dimension style used for any annotations or measurements drawn by the script. |
+| **Dimstyle** | String | (Current) | Dimension style used for text display and measurements. |
+| **Grip edit** | Selection | No | Enable or disable grip editing. Options: "No", "Yes". |
+| **Auto group tsl** | String | "" | Automatically assigns the script instance to a group hierarchy. Separate levels with backslash (e.g., "Roof\Tiles\Ridge"). |
+| **Additional part Start** | String | "" | Tile type code for special start piece at the beginning of the edge. |
+| **Additional part End** | String | "" | Tile type code for special end piece at the end of the edge. |
 
-## Right-Click Menu Options
+### Tile Configuration
+
+The script reads tile specifications from an internal Map structure with the following properties per tile type:
+
+| Property | Description |
+|----------|-------------|
+| **LMin** | Minimum tile length |
+| **LMax** | Maximum tile length |
+| **WMin** | Minimum tile width |
+| **WMax** | Maximum tile width |
+| **H** | Tile height/thickness |
+
+Standard tiles (type "0") define the base distribution parameters. Special tile types can be assigned to individual positions.
+
+## Menu
+
+Right-click the script instance to access the context menu:
 
 | Menu Item | Description |
 |-----------|-------------|
-| Select Structural Elements | Allows you to pick GenBeam laths or roof elements to set the correct Z-height for the tiles. |
-| Modify / Edit Tiles | (Only available if sAllowEdit is Yes) Enters an interactive mode to select and remove specific tiles or change their properties. |
-| Recalculate | Refreshes the tile layout based on current geometry or property changes. |
+| **Update** | Recalculates the tile distribution based on current geometry. |
+| **append roof laths** | Prompts you to select roof lath beams to define the tile plane accurately. |
+| **append roof elements** | Prompts you to select roof elements (with zone data) for tile plane positioning. |
+| **delete tiles** | Allows you to click on tiles to mark them as deleted. Supports single-click or multi-point selection. |
+| **add tiles** | Restores previously deleted tiles at selected positions. |
+| **modify tile** | Changes the tile type at selected positions. Enter the new type index when prompted (0 = default). |
 
-## Settings Files
-- **Filename**: `TileMap` (varies by project configuration)
-- **Location**: Defined in your hsbCAD configuration or project folder.
-- **Purpose**: Contains the geometric definitions (width, height, length) for the available tile types. The script reads this to generate accurate 3D bodies and quantities.
+### Tile Selection Methods
+
+When using delete/add/modify functions:
+- **Single Click**: Affects one tile at the clicked location.
+- **Multiple Points**: Click multiple points to create a selection polygon; all tiles intersecting the polygon are affected.
+- **Two Points**: Creates a line selection; all tiles crossed by the line are affected.
 
 ## Tips
-- **Plane Intersection**: Ensure the two roof planes you select physically intersect in 3D space. If they are parallel or do not meet, the calculation will fail.
-- **Accuracy**: Always select the structural laths (GenBeams) in the Right-Click menu if available. This ensures the tiles visualize exactly where they will be nailed, rather than just floating on the theoretical roof plane.
-- **Quantities**: The script generates quantity data (how many standard, start, and end tiles) which can be exported for BOM/estimating.
+
+1. **Edge Type Detection**: The script automatically identifies the intersection type:
+   - **Valley** (color 151): Sloped intersection going downward
+   - **Ridge** (color 152): Horizontal intersection at roof peak
+   - **Hip** (color 153): Sloped intersection going upward
+
+2. **Accurate Positioning**: Always append roof laths or roof elements after insertion for precise tile plane alignment. The script uses the top surface of laths or elements zone 5 as the tile reference plane.
+
+3. **Grouping**: Use the "Auto group tsl" property to organize multiple tile edge instances. Example: "Roof\Ridge Tiles\North Wing" creates a three-level group hierarchy.
+
+4. **Material Takeoff**: The script automatically counts tiles by type and stores the data in the `TileData` map, accessible for reporting or scheduling.
+
+5. **Special Pieces**: Use "Additional part Start/End" properties to add special starter or termination tiles (e.g., end caps) that differ from the standard distribution.
+
+6. **Visual Feedback**:
+   - Standard tiles display in color 151
+   - Special tiles (type > 0) are marked with an additional line below the tile plane
+   - Start/End pieces display in their respective type colors
+
+7. **Grip Points**: The script creates two grip points at the start and end of the tile edge line. When "Grip edit" is set to "Yes", you can drag these points to adjust the edge extent.
+
+8. **Invalid Selection**: If you select fewer than two valid roof planes or planes that do not form a valid intersection, the script instance will be automatically erased.
 
 ## FAQ
-- **Q: Why did the script disappear immediately after I selected the planes?**
-  **A**: You likely selected fewer than two valid ERoofPlane entities, or the planes selected do not form a valid intersection. The script is designed to erase itself if the geometry is invalid.
-- **Q: How do I remove a tile to make room for a chimney?**
-  **A**: Set the **sAllowEdit** property to "Yes" in the Properties Palette. Then, right-click the script instance, select the edit/modify option, and click the specific tile(s) you wish to remove.
-- **Q: The tiles are floating above the battens. How do I fix this?**
-  **A**: Use the Right-Click menu option to select the Structural Elements (Laths) and pick the beams underneath. The script will adjust the tile elevation to match the top of the beams.
+
+**Q: Why did the script disappear immediately after I selected the planes?**
+A: You likely selected fewer than two valid ERoofPlane entities, or the planes selected do not form a valid intersection. The script erases itself if the geometry is invalid.
+
+**Q: How do I remove a tile to make room for a chimney or vent?**
+A: Right-click the script instance, select "delete tiles", then click on the specific tile(s) you wish to remove.
+
+**Q: The tiles are floating above the battens. How do I fix this?**
+A: Use the "append roof laths" or "append roof elements" context menu option and select the structural elements. The script will adjust the tile elevation to match the top of those elements.
+
+**Q: How do I change a single tile to a different type?**
+A: Right-click and select "modify tile", then click on the tile position. Enter the new type index (0 = default standard tile).

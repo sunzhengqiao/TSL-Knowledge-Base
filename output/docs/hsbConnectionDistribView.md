@@ -1,90 +1,164 @@
 # hsbConnectionDistribView
 
 ## Overview
-This script allows users to define, visualize, and calculate the distribution of mechanical connectors (such as screws, nails, or plates) along a connection between two timber panels or beams. It supports normal, parallel, and arbitrary joint angles and generates the corresponding hardware components for production lists.
+
+`hsbConnectionDistribView` is a Model Space Object-type TSL script that generates a visual distribution layout of connectors (nails, screws, dowels, or other fasteners) along the contact zone between two SIP panels, or along a user-defined line segment. The script reads connector catalog data from an XML configuration file (`hsbExcel2Xml.xml`) and places evenly spaced connector markers at the panel interface. It handles three panel relationship types: normal (90-degree), parallel, and arbitrary (angled) connections.
+
+The entity automatically populates hsbCAD hardware component lists (`HardWrComp`) so that the distributed connectors appear in the project Bill of Materials (BOM) and export workflows.
+
+Typical users are CLT/SIP designers and structural detailers who need to document the fastener layout at panel-to-panel connections and ensure correct quantities in material take-offs.
+
+---
 
 ## Usage Environment
-| Space | Supported | Notes |
-|-------|-----------|-------|
-| Model Space | Yes | Script operates in the 3D model to create hardware components. |
-| Paper Space | No | Not designed for 2D drawing views. |
-| Shop Drawing | No | Does not process Shop Drawing layouts. |
+
+| Property | Value |
+|----------|-------|
+| Space | Model Space only |
+| Script Type | Object (`#Type O`) |
+| Beams Required | 0 |
+| Version | 1.10 (24 May 2020) |
+| Keywords | klh, connection, wall, floor, distribution |
+
+The script creates a persistent, parametric Object entity that recalculates whenever its linked panels move or when the user modifies a property.
+
+---
 
 ## Prerequisites
-- **Required Entities**: Two structural elements (GenBeam or Element) to form the connection.
-- **Minimum Beam Count**: 2 (or two Elements).
-- **Required Settings Files**: `hsbExcel2Xml.xml` located in the `hsbCompany\TSL\Settings` folder.
 
-## Usage Steps
+1. **XML catalog file** -- The file `hsbExcel2Xml.xml` must exist at `<HsbCompanyPath>\TSL\Settings\hsbExcel2Xml.xml`. If missing, the script reports an error and cancels insertion.
 
-### Step 1: Launch Script
-**Command**: `TSLINSERT`
-**Action**: Select `hsbConnectionDistribView.mcr` from the list and click OK.
+2. **At least one Manufacturer entry in the XML** -- The catalog must contain at least one `<Manufacturer>` block with nested `<Model>` and `<Article>` entries.
 
-### Step 2: Select First Element
+3. **Two touching or overlapping SIP panels** (recommended) -- Full intelligence (automatic contact face detection, correct distribution direction, BOM export) requires two actual SIP panel entities. The script can also operate in free-point mode with reduced automation.
+
+---
+
+## How to Use
+
+### Step 1 -- Launch
+
+Run the TSL insert command:
+
 ```
-Command Line: Select Element/Beam 1:
-Action: Click on the first timber beam or wall element.
-```
-
-### Step 3: Select Second Element
-```
-Command Line: Select Element/Beam 2:
-Action: Click on the second timber beam or wall element that connects to the first.
+TSLINSERT -> hsbConnectionDistribView.mcr
 ```
 
-### Step 4: Define Start Point
+Or use a ribbon/toolbox button configured with the `TSLCONTENT` command alias.
+
+### Step 2 -- Select Manufacturer and Article
+
+A property dialog appears with cascading selections:
+
+1. Choose a **Manufacturer** from the XML catalog list.
+2. Choose a **Model** for that manufacturer (list refreshes automatically).
+3. Choose an **Article** (specific part number) for the selected model.
+4. Choose a **CD-Ref** connection code for classification and display color.
+5. Set the distribution spacing parameters.
+
+Click OK to confirm.
+
+The script also supports silent insertion via an OPM key in the format `Manufacturer?Model?Article` passed through `_kExecuteKey`, bypassing the dialog. This is useful for pre-configured toolbar buttons.
+
+### Step 3 -- Define the Distribution Range
+
+The command line prompts:
+
 ```
-Command Line: Specify start point of distribution:
-Action: Click on the intersection or surface where the connector distribution should begin.
+Select panel(s) or Enter to define a distribution
 ```
 
-### Step 5: Define End Point
-```
-Command Line: Specify end point of distribution:
-Action: Click on the intersection or surface where the connector distribution should end.
-```
+**Option A -- Select panels (recommended):** Click one or more SIP panels. The script detects touching pairs and automatically determines the contact face. One distribution entity is created per touching panel pair.
 
-### Step 6: Configure Properties
-After insertion, select the script instance and open the **Properties Palette** (Ctrl+1) to define the hardware manufacturer, model, and spacing logic.
+**Option B -- Manual points:** Press Enter without selecting panels. The command line then prompts for a start point and an end point. Fasteners are placed along this line without being linked to panel geometry.
 
-## Properties Panel Parameters
+### Step 4 -- Review the Result
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| **Loaded Project** | String | Value from XML | The project name associated with the connection (read-only from settings). |
-| **Manufacturer** | Dropdown | --- | Select the hardware vendor (e.g., Simpson, Mitek). This filters the Model list. |
-| **Model** | Dropdown | *Empty* | Select the product series (e.g., specific hanger type). This filters the Article list. |
-| **Article** | Dropdown | *Empty* | Select the exact product SKU or part number. |
-| **CD-Ref** | Dropdown | *From XML* | Connection Design Reference code identifying the joint type. |
-| **CD-Ref Number** | Integer | 0 | An index or variant number for the specific CD-Ref. |
-| **Distance Bottom** | Double (mm) | 0 | Margin distance from the start (bottom/left) of the connection to the first connector. |
-| **Distance Top** | Double (mm) | 0 | Margin distance from the end (top/right) of the connection to the last connector. |
-| **Distance between / Nr.** | Double | 5 (mm) | **Spacing Logic**: <br>• **Positive Value**: Fixed spacing between connectors (mm). <br>• **Negative Value**: Fixed quantity of connectors (e.g., enter -5 to place 5 items). |
-| **Distance between Result** | Double (mm) | 0 | Read-only. Shows the calculated center-to-center spacing. |
-| **NrResult** | Integer | 0 | Read-only. Shows the total calculated number of connectors. |
+Circular markers (5 mm radius) appear at each calculated fastener position, drawn in the color defined by the selected CD-Ref code. The overlap region is highlighted as a filled profile on normal and parallel connections. The Properties Palette shows the calculated quantity and actual spacing as read-only result fields.
 
-## Right-Click Menu Options
+### Step 5 -- Adjust Parameters
 
-| Menu Item | Description |
-|-----------|-------------|
-| *Recalculate* | Updates the connector distribution based on current property values or geometry changes. |
+Open the Properties Palette (OPM) and adjust spacing parameters. The entity recalculates immediately when any value changes. Manufacturer, model, and article selections can also be changed at any time.
 
-## Settings Files
-- **Filename**: `hsbExcel2Xml.xml`
-- **Location**: `hsbCompany\TSL\Settings`
-- **Purpose**: This file contains the catalog of Manufacturers, Models, Articles, and CD-Ref codes. Without this file, the dropdowns will be empty, and the script cannot function.
+---
 
-## Tips
-- **Quick Spacing Adjustment**: To get an evenly distributed number of screws, simply enter a negative number in the **Distance between / Nr.** property (e.g., type `-10` to get 10 screws evenly spaced).
-- **Margin Control**: Increase **Distance Bottom** or **Distance Top** if you need to keep screws away from the edges of the timber.
-- **Visual Updates**: The script provides grip points at the start and end of the connection. Drag these grips in the model to adjust the length of the distribution area visually.
-- **Selection Logic**: You can mix Element types (e.g., select a Wall Element and a Beam Element); the script will calculate the intersection.
+## Properties Panel (OPM Parameters)
 
-## FAQ
-- **Q: Why are the Manufacturer, Model, and Article dropdowns empty?**
-  **A**: The script cannot find the `hsbExcel2Xml.xml` file, or the file is empty/corrupt. Ensure the file exists in your company settings folder.
-- **Q: I changed the spacing, but the connectors didn't move.**
-  **A**: Select the script instance and right-click -> **Recalculate**, or simply click in the **Distance between / Nr.** field and press Enter to force a refresh.
-- **Q: Can I use this for non-rectangular connections?**
-  **A**: Yes, the script supports normal, parallel, and arbitrary connection angles defined by the two selected elements and the points you pick.
+### General
+
+| Parameter | Type | Default | Read-Only | Description |
+|-----------|------|---------|-----------|-------------|
+| Loaded Project | String | (from XML) | Yes | Project name read from the XML catalog. Informational only. |
+
+### Component
+
+| Parameter | Type | Default | Read-Only | Description |
+|-----------|------|---------|-----------|-------------|
+| Manufacturer | String (list) | (first in XML) | No | Connector manufacturer. Changing this refreshes the Model list. |
+| Model | String (list) | (first for manufacturer) | No | Product model. Changing this refreshes the Article list. |
+| Article | String (list) | (first for model) | No | Specific article (part number) used for BOM export. |
+
+### Code
+
+| Parameter | Type | Default | Read-Only | Description |
+|-----------|------|---------|-----------|-------------|
+| CD-Ref | String (list) | (first in XML) | No | Connection code reference. Determines the display color of distribution markers. |
+| CD-Ref Number | Integer | 0 | No | Optional integer qualifier combined with CD-Ref for hardware notes (format: `CD-Ref-Number`). Useful for distinguishing multiple connector rows at the same interface. |
+
+### Distribution
+
+| Parameter | Type | Default | Read-Only | Description |
+|-----------|------|---------|-----------|-------------|
+| Distance Bottom/Start | Double (length) | 0 | No | Edge distance from the start of the distribution range to the first fastener. |
+| Distance Top/End | Double (length) | 0 | No | Edge distance from the end of the distribution range to the last fastener. |
+| Distance between / Nr. | Double | 5 mm | No | Positive value: nominal center-to-center spacing (the script fits as many fasteners as possible and adjusts the actual spacing). Negative integer: the absolute value is interpreted as the exact number of fasteners to place at equal intervals (e.g., `-6` places exactly 6). |
+| Distance between (result) | Double | 0 | Yes | Calculated actual center-to-center distance after fitting. Updated on every recalculation. |
+| Nr. (result) | Integer | 0 | Yes | Total number of fastener positions placed. Used as quantity in BOM export. |
+
+---
+
+## Connection Type Detection
+
+The script automatically classifies the geometric relationship of two linked SIP panels:
+
+**Normal connection (90 degrees):** Panel thickness vectors are perpendicular. The script extracts the contact face profiles of both panels at the interface plane, intersects them, and distributes fasteners along the long edge of the contact area.
+
+**Parallel connection:** Both panels have parallel face normals and overlap in projection. The script finds the overlapping region and distributes fasteners along its longest dimension.
+
+**Arbitrary (angled) connection:** Panels meet at any other angle. The script constructs intersection geometry from the bounding bodies and derives the distribution line from the intersection plane. This covers skewed or inclined connections such as roof ridges or raking walls.
+
+When more than two panels are selected, the script analyses all pairs, identifies which ones actually touch, and creates a separate distribution entity for each touching pair.
+
+---
+
+## Hardware BOM Export
+
+Every recalculation updates the `HardWrComp` list on the entity. Exported data includes:
+
+- **Article number** from the selected Article field
+- **Quantity** equal to the Nr. result value
+- **Manufacturer** and **Model** fields
+- **Description** and **Material** from the XML article definition
+- **Notes** written as `CD-Ref-CDRefNumber` (e.g., `W1-2`)
+- **Physical dimensions** (length, width/diameter, thickness) from XML keys `ScaleX/Length`, `ScaleY/Width/Diameter`, `ScaleZ/Height/Thickness`
+- **Sub-components** -- up to four sub-articles (SubA through SubD) per article in the XML; each generates its own hardware entry with quantity = Nr. result x SubQty
+
+The hardware group name is taken from the hsbCAD group the entity belongs to, allowing BOM output organized by wall, floor, or roof element.
+
+---
+
+## Tips and Notes
+
+- **Grip points.** The entity provides grip points at the start and end of the distribution line. Dragging these grips adjusts the range interactively.
+
+- **Multi-region contact areas.** If the contact face consists of disconnected regions (e.g., a panel with an opening), the script creates one child distribution entity per region, each with its own BOM entry.
+
+- **Free-point mode limitations.** When inserted by two manually clicked points, the entity cannot determine the contact face geometry but still exports correct BOM quantities.
+
+- **Negative value clamping.** When a negative integer is entered and the required number would cause overlapping, the script clamps spacing to zero and recalculates the maximum count.
+
+- **Display color.** Marker color is controlled by the `Colour` field in the CD-Ref code block within the XML catalog. Different colors per CD-Ref code help visually distinguish connection types.
+
+- **XML catalog caching.** Catalog data is cached as a `MapObject` under `hsbTSL/hsbExcel2Xml`. If the XML is updated externally, reopen the drawing to force a re-read.
+
+- **Empty dropdowns.** If Manufacturer, Model, or Article lists are empty after insertion, verify that `hsbExcel2Xml.xml` exists at the correct path and contains valid entries.

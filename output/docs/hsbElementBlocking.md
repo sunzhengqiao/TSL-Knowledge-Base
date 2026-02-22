@@ -1,102 +1,143 @@
-# hsbElementBlocking.mcr
+# hsbElementBlocking
 
 ## Overview
-Automatically generates horizontal blocking beams (noggins or firestops) within timber wall elements. It intelligently adjusts surrounding vertical studs and diagonal bracing to fit the new blocking layout.
+
+Distributes horizontal blocking beams (noggins/dwangs/firestops) within timber wall elements. The script automatically detects vertical studs, calculates available bays, and places blocking at user-defined elevations. It also handles splitting or stretching of intersecting vertical and diagonal members, and detects studs from adjacent connected walls.
+
+**Script Type**: O-Type (Object)
+**Category**: Base/Core -- Stick Frame wall framing
+**Keywords**: Element, Blocking, Filler
+**Version**: 2.4
 
 ## Usage Environment
+
 | Space | Supported | Notes |
 |-------|-----------|-------|
-| Model Space | Yes | Script operates on 3D construction entities. |
-| Paper Space | No | Not designed for 2D drawing generation. |
-| Shop Drawing | No | This is a model generation script. |
+| Model Space | Yes | Primary operating environment. |
+| Paper Space | No | -- |
+| Shop Drawing | No | -- |
 
 ## Prerequisites
-- **Required Entities**: At least one Timber Element or a group of coplanar GenBeams (studs/plates).
-- **Minimum Beam Count**: 0 if an Element is selected; multiple beams if selecting a set manually.
-- **Required Settings**: None. Uses internal defaults or Element structural zone data.
+
+- At least one timber wall Element must exist in the model, or a set of coplanar beams forming a wall frame.
+- The element should contain vertical studs (posts) and horizontal plates defining the frame bays.
+
+## Insertion Methods
+
+The script supports three insertion modes:
+
+1. **Element-based**: Select one or more Elements directly. Blocking is distributed across the full element width.
+2. **Element with boundary studs**: Select a single Element, then pick two studs to define a partial distribution range.
+3. **Beam-based**: Press Enter at the element prompt, then select a group of coplanar beams. The script identifies the parent element from the selected beams.
 
 ## Usage Steps
 
-### Step 1: Launch Script
-1.  Type `TSLINSERT` in the command line or browse the TSL Catalog.
-2.  Select `hsbElementBlocking.mcr` and click OK.
+### Step 1 -- Launch the Script
 
-### Step 2: Select Elements or Beams
+Type `TSLINSERT` in the command line or use the TSL Catalog browser. Select **hsbElementBlocking** and confirm.
+
+### Step 2 -- Configure Properties
+
+The properties dialog appears automatically. Set the desired blocking parameters (height, width, clearance spacing, material, etc.) and click OK.
+
+### Step 3 -- Select Target Geometry
+
 ```
-Command Line: Select elements, <Enter> to select a set of beams of one element
-Action: 
-- Click on a Timber Element to generate blocking inside it.
-OR
-- Press <Enter> and then window-select a group of beams (studs/plates) that form a wall.
+Prompt: "Select elements, <Enter> to select a set of beams of one element"
 ```
 
-### Step 3: Configure Properties
-1.  The Property Dialog will appear automatically upon insertion.
-2.  Adjust parameters such as **Height**, **Width**, and **Clearance** as needed.
-3.  Click OK to generate the blocking.
+- **Click on Elements** to select one or more wall elements.
+- **Press Enter** to switch to beam-based selection, then select individual beams.
+
+If a single element is selected, an additional prompt appears:
+
+```
+Prompt: "Select 2 studs defining the distribution range, <Enter> to distribute over entire element"
+```
+
+- Pick two vertical studs to limit the blocking range, or press Enter for full-width distribution.
+
+### Step 4 -- Result
+
+The script creates blocking beams at each specified elevation. Intersecting vertical members are split or stretched to meet the blocking. The script then erases itself (it is a one-time insertion tool that creates permanent beam geometry).
 
 ## Properties Panel Parameters
 
 ### Geometry
+
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Height | Number | 0 | Defines the height of the blocking beam. Set to `0` to use the Element's structural zone height. |
-| Width | Number | 0 | Defines the width of the blocking beam. Set to `0` to use the Element's structural zone width. |
+| Height | Double | 0 | Height of the blocking beam. Set to **0** to match the element zone height automatically. |
+| Width | Double | 0 | Width (depth through the wall) of the blocking beam. Set to **0** to match the element zone width. |
 
 ### Beam Properties
+
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Material | Text | (Empty) | Specifies the material code (e.g., C24) for the blocking beams. |
-| Grade | Text | (Empty) | Specifies the timber grade (e.g., GL24h). |
-| Name | Text | (Empty) | Assigns a specific name label to the blocking entities. |
-| Color | Number | 4 | Sets the CAD display color (Index 0-255). |
-| Nailing | Dropdown | Disabled | Determines if the blocking acts as a nailing strip (`Enabled`) or purely structural (`Disabled`). |
+| Material | Text | *(empty)* | Material code for the blocking beams (e.g., C24). If left empty, inherits the element zone material. |
+| Grade | Text | *(empty)* | Timber grade designation. |
+| Name | Text | *(empty)* | Custom name label for the blocking beams. |
+| Color | Integer | 4 (Cyan) | CAD display color index (0--255). |
+| Nailing | Dropdown | Disabled | When **Enabled**, blocking is treated as a nailing strip. When **Disabled**, the beam code is set to suppress nailing. |
 
-### Alignment & Layout
+### Alignment
+
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Clearance | Text | 25 | Defines vertical spacing between rows. <br>- **Absolute**: e.g., `400;600` (mm). <br>- **Fraction**: e.g., `1/3;1/3` (Relative to bay height). <br>Separate multiple entries with a semicolon `;`. |
-| Bottom Clearance | Text | 25 | (Legacy/Specific) Defines clearance from the bottom rail. See `Clearance` for main spacing logic. |
-| Post Filter | Text | (Empty) | Criteria to identify vertical studs that should be stretched to meet the blocking. Use colors or beamtypes separated by semicolons (e.g., `Stud;Post`). |
-| Split Filter | Text | (Empty) | Criteria to identify members (e.g., diagonals) that should cut through the blocking rather than stop against it. |
-| Alignment | Dropdown | Icon Side | Sets horizontal alignment relative to the wall centerline (`Icon Side`, `Center`, or `Opposite Side`). |
-| Staggered | Dropdown | No | If `Yes`, offsets every second row of blocking to allow for continuous nailing or ventilation. |
-| Justification | Dropdown | Bottom | When using fractional clearance, determines if the fraction is calculated from the `Top`, `Middle`, or `Bottom` of the opening. |
-| Gap | Number | 0 | Sets a clearance tolerance around intersecting diagonal members (mm). Use negative values to exclude intersections. |
+| Bottom Clearance | Text | 25 | Vertical spacing from the bottom plate to each blocking row. Accepts multiple entries separated by semicolons. Supports two formats: absolute values (e.g., `400;800`) and fractions of the available height (e.g., `1/3;1/3;1/5`). |
+| Post Filter | Text | *(empty)* | Criteria to identify posts/studs that should receive the blocking as an integrated tool (notch). Enter color indices or beamtype names separated by semicolons (e.g., `4;Post`). |
+| Split Filter | Text | *(empty)* | Criteria to identify members (typically diagonal braces) that should be split by the blocking rather than notched. Enter color indices or beamtype names separated by semicolons. |
+| Alignment | Dropdown | Icon Side | Horizontal alignment of the blocking relative to the wall thickness: **Icon Side**, **Center**, or **Opposite Side**. |
+| Staggered Distribution | Dropdown | No | When **Yes**, alternates the vertical position of blocking in adjacent bays, creating a staggered pattern. |
+| Justification | Dropdown | Bottom | When using fractional clearance values, determines whether the fraction is measured to the **Top**, **Middle**, or **Bottom** face of the blocking beam. |
 
-### Configuration
+### Tooling
+
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Sequence | Number | 70 | Determines the execution order during element generation. Lower numbers run earlier. |
+| Gap | Double | 0 | Clearance gap between blocking and partially intersecting beams (mm). Set to a negative value to exclude partial intersection tooling entirely. When >= 0, the script creates `hsbBeamcutElement` tools for partial intersections. |
 
-## Right-Click Menu Options
+### Sequence
 
-| Menu Item | Description |
-|-----------|-------------|
-| Recalculate | Re-runs the script to apply property changes or adapt to geometry changes in the wall. |
-| Show Dialog | Opens the properties dialog to edit blocking parameters. |
-| MapIO | Opens the MapIO dialog for advanced input/output mapping. |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Sequence | Integer | 70 | Execution priority when used as an element TSL during `OnElementConstructed`. Lower values execute first. Supports negative values. |
 
-## Settings Files
-- **Filename**: None required.
-- **Location**: N/A
-- **Purpose**: This script relies on internal logic and Element properties; no external XML configuration file is mandatory for basic operation.
+## Clearance Syntax Details
+
+The **Bottom Clearance** field is the primary control for blocking row placement. Each semicolon-separated entry defines one row of blocking measured upward from the bottom plate (or from the previous blocking row).
+
+| Input | Meaning |
+|-------|---------|
+| `400` | One row of blocking at 400 mm above the bottom plate. |
+| `400;400;300` | Three rows at 400, 800, and 1100 mm respectively. |
+| `1/3;1/3;1/5` | Fractional placement relative to available inner height. Justification setting controls the reference face. |
+
+## Child Scripts
+
+This script creates instances of **hsbBeamcutElement** to handle partial beam intersections (when Gap >= 0). Users do not need to invoke this child script directly.
+
+## Behavior Details
+
+- **Adjacent wall detection**: For wall elements, the script automatically searches for studs in adjacent parallel walls within the same element group and includes them in the distribution logic.
+- **Opening avoidance**: Blocking bodies are automatically subtracted around element openings.
+- **Minimum length**: Blocking segments shorter than 50 mm are discarded. Split results shorter than 50 mm cause the split beam to be erased.
+- **Beam type**: All created blocking beams are assigned the `SFBlocking` beam type.
+- **Element TSL mode**: The script can be attached as an element-level TSL. It responds to `OnElementConstructed` and `OnElementDeleted` events, and supports `MapIO` for property dialog input during element creation.
 
 ## Tips
-- **Auto-Dimensions**: Leave `Height` and `Width` as `0` to ensure blocking automatically matches the wall's structural zone thickness if the wall design changes.
-- **Fractional Spacing**: Use the `Clearance` field with fractions (e.g., `1/2`) to place blocking exactly in the middle of a tall opening, regardless of the opening height.
-- **Filtering**: If your studs are not being cut/stretched correctly, check your `Post Filter`. You can filter by beam name (e.g., "Stud") or Color Index.
-- **Splitting Diagonals**: If you have diagonal bracing that needs to pass *through* the blocking without notching it heavily, add the bracing type to the `Split Filter`.
 
-## FAQ
-- **Q: Why is my blocking appearing in the wrong place vertically?**
-- **A: Check the `Clearance` string. Ensure you are using semicolons `;` to separate values if you have multiple rows. If using fractions, verify the `Justification` setting (Top/Middle/Bottom) to see where the reference point is.
+- Leave **Height** and **Width** at 0 to have blocking automatically adapt when the wall zone dimensions change.
+- Use fractional clearance values (e.g., `1/2`) to place blocking at the midpoint of a bay regardless of its actual height.
+- If diagonal braces need to pass through the blocking continuously, add their beam type or color to the **Split Filter**.
+- If studs should receive a notch where blocking meets them, add their beam type or color to the **Post Filter**.
+- Set **Staggered Distribution** to Yes for nailing strips so that joints do not align vertically across bays.
+- The **Sequence** number controls execution order when multiple element TSLs run during construction generation. Adjust it to ensure blocking runs after studs are placed but before sheet distribution.
 
-- **Q: The blocking is not cutting a hole for my diagonal brace.**
-- **A: Add the diagonal beam's Name or Type to the `Split Filter` property. This tells the script to treat that member as a "splitter" that passes through.
+## Related Scripts
 
-- **Q: The studs are not stretching up to touch the blocking.**
-- **A: Verify the `Post Filter` property. The studs must match the criteria defined there (e.g., if your filter is "Stud" but the beam is named "VerticalStud", it won't match).
-
-- **Q: How do I offset every other row?**
-- **A: Set the `Staggered` property to `Yes`. This is useful for nailing strips so joints don't line up vertically.
+| Script | Relationship |
+|--------|-------------|
+| hsbBeamcutElement | Automatically created by this script to handle partial beam intersections. |
+| hsbBlocking | Alternative blocking tool with different distribution logic. |
+| hsbSheetDistribution | Typically runs after blocking to distribute sheathing panels. |

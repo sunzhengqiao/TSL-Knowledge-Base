@@ -1,76 +1,166 @@
 # Rothoblaas ALU
 
 ## Overview
-Generates 3D geometry, machining (drills and slots), and BOM data for Rothoblaas ALU connectors (AluMini, AluMidi, AluMaxi) used for timber-to-timber or timber-to-concrete connections.
+
+This script places Rothoblaas ALU retractable aluminum connectors on timber beam-to-beam (or timber-to-concrete/steel) connections. It supports three product families:
+
+- **AluMini** -- Smallest profile, for light-duty connections
+- **AluMidi** -- Mid-range profile, most commonly used (default if no family is specified)
+- **AluMaxi** -- Largest profile, for heavy-duty connections
+
+Each connector is modeled as a 3D solid body and is automatically sized to fit the selected beams. The script machines the male beam by adding a slot cut and an optional beam cut-back, machines the female beam with a housing recess, and optionally drills shank pin holes. All hardware components (bracket, fasteners, shank pins) are registered in the project Bill of Materials automatically.
+
+**Version:** 1.18 (27 June 2025)
+**Manufacturer:** Rothoblaas (www.rothoblaas.com)
+**Keywords:** Connector, Hanger, ALU, Slot
+
+---
 
 ## Usage Environment
-| Space | Supported | Notes |
-|-------|-----------|-------|
-| Model Space | Yes | Generates 3D solid bodies and applies machining to beams. |
-| Paper Space | No | Does not create 2D annotations or drawings directly. |
-| Shop Drawing | No | Does not generate shop drawing views. |
+
+| Property | Value |
+|----------|-------|
+| Space | Model Space only |
+| Script Type | T (Tool) -- attaches to beam entities and recalculates when beams move |
+| Beams Required | 2 (one male beam, one female beam per connector instance) |
+
+---
 
 ## Prerequisites
-- **Required Entities**: At least 2 GenBeams.
-- **Minimum Beam Count**: 2 (One Main Beam, one or more Secondary Beams).
-- **Required Settings**: None (uses internal dimension catalogs).
 
-## Usage Steps
+- At least two GenBeam entities must exist in the drawing.
+- The male beam and female beam must meet at approximately 90 degrees in the horizontal (XY) plane. Non-perpendicular connections are rejected and the instance is deleted (a static cut is left on the male beam as a visual marker).
+- The beam dimensions must be sufficient for the chosen connector family and type height.
 
-### Step 1: Launch Script
-Command: `TSLINSERT` → Select `Rothoblaas ALU.mcr`
-*(Alternatively, launch via your custom Catalog or Toolbar if mapped).*
+---
 
-### Step 2: Select Main Beam
+## How to Use
+
+### Step 1 -- Launch the Script
+
+Insert through the hsbCAD toolbar, catalog browser, or by command:
+
 ```
-Command Line: Select Main Beam (Male):
-Action: Click on the beam that will host the main shank of the connector.
-```
-
-### Step 3: Select Secondary Beams
-```
-Command Line: Select Secondary Beam(s) [Female]:
-Action: Click on the intersecting beam(s) that will connect to the main beam.
-        Press Enter to finish selection.
+^C^C(hsb_scriptinsert "Rothoblass Alu" "Mini")
+^C^C(hsb_scriptinsert "Rothoblass Alu" "Midi")
+^C^C(hsb_scriptinsert "Rothoblass Alu" "Maxi")
 ```
 
-### Step 4: Configure Parameters
+If no catalog entry is used (or a reserved family keyword MINI/MIDI/MAXI is used), a dialog box appears for initial property configuration. If a specific catalog entry name is provided (e.g., "Mini185 no holes"), properties are set from the catalog without a dialog.
+
+### Step 2 -- Select Male Beam(s)
+
 ```
-Action: Select the script instance in the model.
-        Open the Properties Palette (Ctrl+1).
-        Adjust the 'Family' and 'Type' to fit your structural requirements.
+Command prompt: Select male beam(s)
 ```
 
-## Properties Panel Parameters
+Click one or more beams that will receive the connector shank (the vertical body) and the slot cut. Press Enter to confirm.
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| Family | Dropdown | MIDI | Selects the size series: **MINI** (Small), **MIDI** (Medium), or **MAXI** (Large). Determines thickness and height. |
-| Type | Integer | 1 | The specific length configuration of the connector. Higher numbers indicate longer connectors with more fasteners. |
-| Connector Mode | Dropdown | Wood/Wood (0) | **0**: Wood-to-Wood (uses nails/screws). **1**: Wood-to-Concrete/Steel (uses chemical dowels/anchors). |
-| Shank Drills | Boolean | Yes | If **Yes**, drills the main beam completely through for the connector shank. |
-| Slot Alignment | Dropdown | Auto | Controls the rotation of the slot/housing cut into the secondary beam (e.g., Top, Bottom, Auto). |
-| Depth | Double | Auto | Sets the depth of drill holes if they are not through-holes (0 or negative often implies full depth). |
+### Step 3 -- Select Female Beam(s)
 
-## Right-Click Menu Options
+```
+Command prompt: Select female beam(s)
+```
 
-| Menu Item | Description |
-|-----------|-------------|
-| Extend length to be cut from rod | Expands the available 'Type' list to include custom lengths up to the maximum available rod length from the manufacturer. |
+Click the beams that intersect the male beam(s) and will receive the connector wing and housing recess. Press Enter to confirm.
 
-## Settings Files
-- **Internal Data**: Uses hardcoded dimension arrays for Mini, Midi, and Maxi series.
-- **Mappings**: Can be configured via Execute Keys or Map files for pre-selecting families (optional).
+### Step 4 -- Automatic Instance Creation
 
-## Tips
-- **Auto-Detection**: The script attempts to auto-detect the largest fitting 'Type' based on the beam geometry. If the connector looks too small or large, manually adjust the 'Type' parameter.
-- **Pillar Beams**: When using Wood-to-Wood mode on a vertical pillar, the script automatically reduces the quantity of nails on the wing to prevent splitting.
-- **Visual Check**: Ensure the "Slot" in the secondary beam aligns correctly with the connector wings. Use the "Slot Alignment" property if the rotation is incorrect.
+The script filters female beams using a T-connection test (within 500 mm tolerance). For each valid male/female pair, a separate connector instance is created. The original insertion instance is then removed.
 
-## FAQ
-- **Q: Why are there no drills appearing in my main beam?**
-  A: Check the **Shank Drills** property in the palette. If it is set to "No", the holes will not be generated.
-- **Q: What happens if I switch Mode from Wood/Wood to Wood/Concrete?**
-  A: The script replaces standard wood fasteners (like Anker nails) with heavy-duty fasteners (like Chemical dowels) and adjusts the hole sizes accordingly.
-- **Q: How do I get a longer connector than the standard list allows?**
-  A: Right-click the script instance and select **Extend length to be cut from rod**. This updates the catalog list to include extended lengths.
+### Step 5 -- Review and Adjust
+
+Select any connector instance and open the Properties Palette (Ctrl+1) to adjust parameters. The connector recalculates automatically when any property changes.
+
+---
+
+## Properties Panel (OPM Parameters)
+
+### General
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| Type | Dropdown | Auto detect | Connector height selection. "Auto detect" picks the largest type that fits within the female beam depth. Available heights depend on the active family (Mini: 65--215 mm in 30 mm steps; Midi: 80--440 mm in 40 mm steps; Maxi: 384--896 mm in 64 mm steps). |
+| Connection Mode | Dropdown | Wood/Wood | Controls wing fastener type. Mini: Wood/Wood only. Midi: Wood/Wood, Wood/Concrete with Screw, Wood/Concrete with chemical Dowel. Maxi: Wood/Wood, Wood/Concrete with chemical Dowel. |
+
+### Shank Drills
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| Depth | Number (mm) | 0 | Depth of shank pin drill holes into the male beam. 0 = no pre-drilled holes (self-perforating pins used instead). A positive value drills from one side; use the "Flip Drill Side" right-click command to reverse direction. |
+
+### Alignment
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| Gap between Beams | Number (mm) | 3 | Gap between male and female beams at the connection face. The male beam is cut back by this amount. |
+| Offset Z-Direction | Number (mm) | 0 | Vertical offset of the connector position relative to the connection point. |
+
+### Housing
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| Housing Type | Dropdown | Centered | Recess cut into the female beam for the connector wing. Options: Bottom, Centered, Top, Full Height, None. When set to "None", the male beam cut-back is extended by the bracket thickness. |
+| Gap | Number (mm) | 0 | Clearance around the bracket inside the housing cut. |
+| Extra depth | Number (mm) | 0 | Additional depth beyond bracket thickness (e.g., for sealant or gasket layers). |
+
+### Slot
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| Slot | Dropdown | Top | Slot position in the male beam for the connector shank. Options: Top, Bottom, Full height. |
+| Gap (X) | Number (mm) | 20 | Extra slot length beyond the connector body in the beam axis direction. |
+| Gap (Y) | Number (mm) | 2 | Extra slot width beyond the shank thickness. |
+| Gap (Z) | Number (mm) | 20 | Extra slot depth beyond the connector body height. |
+| Alignment | Dropdown | Female beam | Slot axis alignment. "Female beam" aligns with the female beam axis (standard). "Male beam" aligns with the male beam axis (use for rotated beam situations). |
+
+### Display
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| Color | Integer | 252 | AutoCAD color index for the connector 3D body. |
+| Dimstyle | Dropdown | (Drawing default) | Dimension style used for annotations. |
+
+---
+
+## Right-Click Menu
+
+| Command | Description |
+|---------|-------------|
+| MINI / MIDI / MAXI | Switches the connector family. Only the two non-active families are shown. The Type resets to "Auto detect" after switching. |
+| Extend length to be cut from rod | Toggles extended type list for custom rod lengths (Midi up to 2200 mm, Maxi up to 2176 mm). Run again to revert to the standard catalog list. |
+| Flip Drill Side | Reverses the side of the male beam where shank pin drill holes are placed. |
+
+---
+
+## Hardware Bill of Materials
+
+Each connector instance automatically registers the following in the project BOM:
+
+| Component | Families | Details |
+|-----------|----------|---------|
+| ALU bracket | All | 1 piece per instance. Model name includes height, e.g., "AluMidi 160". Material: Aluminium. |
+| Wing fasteners (Wood/Wood) | Mini | HBS+ Screw, 5x60 mm. Base qty 7, +4 per type step. |
+| Wing fasteners (Wood/Wood) | Midi | Anker nail, 4x60 mm. Base qty 10 (standard) or 12 (pillar), increment 4 (standard) or 2 (pillar) per type step. |
+| Wing fasteners (Wood/Wood) | Maxi | Anker nail, 6x60 mm. Base qty 24, increment 8 (standard) or 4 (pillar) per type step. |
+| Wing fasteners (Wood/Concrete, Screw) | Midi only | Screw-in anchor, 10x80 mm. Base qty 3, +1 per type step. |
+| Wing fasteners (Wood/Concrete, Dowel) | Midi | Chemical dowel, 8x110 mm. Base qty 3, +1 per type step. |
+| Wing fasteners (Wood/Concrete, Dowel) | Maxi | Chemical dowel, 16x150 mm. Base qty 6, +2 per type step. |
+| Shank pin (Depth > 0) | Midi, Maxi | Steel pin, 12x[beam width] mm. Base qty 3 (Midi) or 6 (Maxi), +1 or +2 per type step. |
+| Self-perforating pin (Depth = 0) | Mini | 5x[length] mm. Base qty 2, +1 per type step. |
+| Self-perforating pin (Depth = 0) | Midi | 7x[length] mm. Base qty 3, +1 per type step. |
+| Self-perforating pin (Depth = 0) | Maxi | 7x[length] mm. Base qty 3, +1 per type step. |
+
+Pin lengths are rounded down to the nearest 10 mm step of the male beam depth (self-perforating pins are further reduced by 7 mm).
+
+---
+
+## Tips and Notes
+
+- **Auto-detect picks the largest valid type.** If no standard size fits, the script defaults to the smallest available type and prints a warning in the command line.
+- **Pillar connections receive reduced nailing.** When the female beam axis is parallel to the world Z-axis (vertical), the increment quantity for wing fasteners is halved automatically, matching the Rothoblaas partial nailing specification.
+- **Non-perpendicular connections are rejected.** The script validates approximate perpendicularity in the XY-plane. If rejected, it deletes itself and leaves a static cut on the male beam.
+- **Family is stored per instance.** Switching families via the right-click menu persists the change and resets the type to "Auto detect".
+- **Slot alignment may need adjustment.** For rotated (non-axis-aligned) male beams, switch the Alignment property from "Female beam" to "Male beam".
+- **Extended rod lengths are non-standard.** The "Extend length to be cut from rod" option unlocks custom fabrication heights. Confirm availability with Rothoblaas before specifying these in production.
+- **Technical data sheets** for load capacities and minimum beam dimensions are available at www.rothoblaas.com.

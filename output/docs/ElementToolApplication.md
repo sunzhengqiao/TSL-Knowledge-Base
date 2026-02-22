@@ -1,87 +1,127 @@
-# ElementToolApplication.mcr
+# ElementToolApplication
 
 ## Overview
-This script automates the generation of nail lines or visualizes glue areas on a timber element (such as floor sheathing or roof boarding) based on its contact with underlying beams or trusses. It handles rotated layouts, edge set-backs, and merges fragmented contact zones into continuous fastening lines.
+
+ElementToolApplication automatically generates glue lines or nail lines along the contact surfaces between structural members in different zones of a timber element. It detects coplanar faces between an upper zone (Zone B) and a lower zone (Zone A), then places either gluing areas or nailing lines at those interfaces. The tool instance remains linked to the element and recalculates whenever the element geometry changes.
 
 ## Usage Environment
-| Space | Supported | Notes |
-|-------|-----------|-------|
-| Model Space | Yes | Script operates directly on 3D model entities (Elements, GenBeams, Trusses). |
-| Paper Space | No | Not intended for 2D drawings or shop layouts. |
-| Shop Drawing | No | This is a fabrication/modeling tool, not a detailing tool. |
+
+| Space | Supported |
+|-------|-----------|
+| Model Space | Yes |
+| Paper Space | No |
+| Shop Drawing View | No |
 
 ## Prerequisites
-- **Required Entities**: One primary Element (e.g., a CLT panel or board) and at least one GenBeam or Truss positioned underneath it.
-- **Minimum Beam Count**: 1 (the underlying structural member).
-- **Required Settings**: None specific (uses standard hsbCAD Nail Catalog).
 
-## Usage Steps
+- At least one hsbCAD Element (wall, floor, or roof) must exist in the drawing.
+- The element must contain GenBeams or TrussEntities assigned to different zones.
+- PainterDefinition objects for the relevant element zones must be available. The script auto-creates default zone painters for zones found in the drawing (typically -1, 0, and +1) if none exist under the `TSL\ElementToolApplication\` collection.
+- Both the Upper Zone (Zone B) and Lower Zone (Zone A) must contain matching entities; if either zone yields no results, the instance erases itself automatically.
 
-### Step 1: Launch Script
-Command: `TSLINSERT` → Select `ElementToolApplication.mcr`
+## How to Use
 
-### Step 2: Select Element
+### Step 1: Launch
+
+Type `TSLINSERT` at the AutoCAD command line and select `ElementToolApplication.mcr` from the script browser. Alternatively, use the registered command:
+
 ```
-Command Line: Select Element:
-Action: Click on the panel or boarding element (the parent) where you want to apply nails or glue.
-```
-
-### Step 3: Select Supporting Entities
-```
-Command Line: Select beams/trusses (or press Enter to auto-detect):
-Action: Select the GenBeams or Trusses supporting the element. If the script supports auto-detection, you may press Enter to find beams immediately below the element.
+^C^C(defun c:TSLCONTENT() (hsb_ScriptInsert "ElementToolApplication")) TSLCONTENT
 ```
 
-### Step 4: Configure Parameters
-```
-Action: Press Esc to finish selection. The script will calculate preview lines.
-Open the Properties Palette (Ctrl+1) to adjust parameters such as spacing, offsets, or tool type.
-```
+### Step 2: Configure Tool Settings
 
-### Step 5: Commit Changes
-```
-Action: Right-click on the script instance and select "Create Naillines" from the context menu to finalize the generation of physical nail entities in the database.
-```
+On first placement a settings dialog appears. Configure the following parameters before confirming:
 
-## Properties Panel Parameters
+- **Type**: Choose between Glueing and Nailing. This controls which additional parameters are visible.
+- **Width** (Glueing only): Width of the glue area rectangle perpendicular to the contact edge. Set to 0 to draw a simple line instead of a filled area.
+- **Spacing** (Nailing only): Center-to-center distance between nail positions along each contact segment.
+- **Tool Index**: Select 1, 2, or 3. Controls display color and the tool index written to SubMapX output.
+- **Upper Zone**: Select a painter filter identifying the upper zone (Zone B) members. Only painters referencing a non-zero zone index are listed.
+- **Merge Value**: When greater than zero, upper zone profiles on the same plane separated by gaps smaller than this value are merged into a single continuous area before contact detection.
+- **Start/End Offset**: Shrinks the upper zone contact range by this distance at the start and end of each segment.
+- **Lower Zone**: Select a painter filter identifying the lower zone (Zone A) members. By default only zone 0 painters are listed, but if the selected Upper Zone index is greater than 1, intermediate zone painters are also made available.
+- **Start/End Offset Lower**: Trims the lower zone contact region at both ends.
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| **sToolType** | dropdown | Nail | Select **Nail** to create physical nail lines or **Glue** to create visual rectangular profiles only. |
-| **nZoneB** | index | 0 | The construction zone (color/layer) assigned to the generated nail line entity. |
-| **nToolIndex** | index | 0 | The specific nail catalog index (tool number) defining the nail type and size. |
-| **dSpacing** | double (mm) | 150.0 | The distance between individual nails along the line (pitch). |
-| **dToolWidth** | double (mm) | 0.0 | The width of the glue area (used only if ToolType is **Glue**). If 0, a simple line is drawn. |
-| **dOffsetA** | double (mm) | 0.0 | Set-back distance from the start of the contact surface. Use this to avoid nailing too close to the beam end. |
-| **dOffsetB** | double (mm) | 0.0 | Set-back distance from the end of the contact surface. Use this to avoid nailing too close to the beam end. |
-| **dMerge** | double (mm) | 1.0 | The gap tolerance. If contact surfaces are closer than this distance, they will be merged into one continuous line. |
-| **nZoneA** | index | 0 | The display zone for preview/visual calculation elements. |
+### Step 3: Select Entities
+
+After confirming the dialog, the script prompts for entity selection:
+
+- **Prompt 1**: `Select elements, <Enter> to select individual genbeams and/or trusses`
+  - Selecting whole elements creates one tool instance per element automatically.
+  - Press Enter without selecting elements to advance to the second prompt.
+- **Prompt 2** (if no elements were selected): `Select genbeams and/or trusses`
+  - Select individual GenBeams or TrussEntities. The script groups them by their parent element and creates one tool instance per element group.
+
+### Step 4: Automatic Processing
+
+The original insertion instance is erased and one or more permanent instances are created, each linked to an element. On each calculation cycle the instances:
+
+1. Identify which beams or trusses belong to Zone B and Zone A using the selected painter filters.
+2. Compute the bottom face profiles of Zone B members and subtract any no-nail zones defined on the element.
+3. Project Zone A member bodies onto the face plane to build shadow profiles, then find coplanar contact surfaces between the two sets.
+4. Apply Start/End Offsets to trim the contact regions.
+5. In Glueing mode: draw filled rectangular areas and write segment data to the instance SubMapX under the `Glue[]` key (start point, end point, tool index, zone, and rectangle shape).
+6. In Nailing mode: create `ElemNail` objects on the element for each contact segment using the configured spacing and tool index.
+
+### Step 5: Recalculation
+
+The tool instance tracks the parent element via `setDependencyOnEntity`. Whenever the element is modified the instance recalculates and updates all glue or nail lines automatically.
+
+## Properties Panel (OPM Parameters)
+
+Parameters marked with an asterisk (*) control the visibility of other parameters.
+
+### Tool Category
+
+| Parameter | Type | Default | Range / Options | Description |
+|-----------|------|---------|-----------------|-------------|
+| Type * | String (Enum) | Glueing | Glueing, Nailing | Determines whether the tool generates glue areas or nail lines. Switching this value hides or shows Width and Spacing. |
+| Width | Double | 5 mm | Any positive value | Width of the glue rectangle perpendicular to the contact edge. Only visible when Type is Glueing. Set to 0 for a simple line. |
+| Spacing | Double | 200 mm | Any positive value | Center-to-center spacing between nail positions. Only visible when Type is Nailing. |
+| Tool Index | Integer (Enum) | 1 | 1, 2, 3 | Index used for display color and organizing glue data in SubMapX. Also sets the color of created NailLine entities. |
+
+### Zone B Category (Upper Zone)
+
+| Parameter | Type | Default | Range / Options | Description |
+|-----------|------|---------|-----------------|-------------|
+| Upper Zone * | String (Enum) | First available | Painter names, non-zone-0 | Selects the painter filter that identifies upper zone (Zone B) members. Only painters from the `TSL\ElementToolApplication\` collection referencing a non-zero zone index are listed. |
+| Merge Value | Double | 0 mm | 0 or positive | When greater than zero, adjacent upper zone profiles on the same plane are expanded by this amount, combined, then shrunk back. This bridges small construction gaps between members. |
+| Start/End Offset | Double | 0 mm | 0 or positive | Trims the upper zone contact region by this distance at both ends of each segment. |
+
+### Zone A Category (Lower Zone)
+
+| Parameter | Type | Default | Range / Options | Description |
+|-----------|------|---------|-----------------|-------------|
+| Lower Zone * | String (Enum) | First available | Painter names, zone 0 (plus intermediate zones if Upper Zone index exceeds 1) | Selects the painter filter that identifies lower zone (Zone A) members. When the Upper Zone references zone index 2 or higher, painters for intermediate zones are also listed. |
+| Start/End Offset Lower | Double | 0 mm | 0 or positive | Trims the lower zone contact region at both ends by this distance. |
 
 ## Right-Click Menu Options
 
 | Menu Item | Description |
 |-----------|-------------|
-| **Create Naillines** | Commits the previewed geometry to the database as physical NailLine entities. |
-| **Add/Remove Entities** | Allows you to modify the selection of beams or trusses associated with the element without re-inserting the script. |
-| **Recalculate** | Refreshes the script based on current geometry or property changes (usually automatic, but available here). |
+| Add Entities | Prompts to select additional GenBeams or TrussEntities belonging to the same element and adds them to the processing scope. |
+| Remove Entities | Prompts to select GenBeams or TrussEntities and removes them from the scope. The tool recalculates using only the remaining members. |
+| Create Naillines | Only available when Type is Nailing. Converts the computed nail segments into permanent NailLine database entities. The NailLine color is set to the Zone B index. The resulting NailLine entities are independent of the tool after creation. |
 
-## Settings Files
-- **Filename**: None
-- **Location**: N/A
-- **Purpose**: This script relies on the standard hsbCAD Nail Catalog and does not require external XML settings files.
+## Technical Notes
 
-## Tips
-- **Merging Lines**: If you see multiple short nail lines where you expect one long line, increase the **dMerge** value.
-- **Edge Safety**: Use **dOffsetA** and **dOffsetB** to prevent nails from being placed too close to the edge of the beam or the element, which might be required by engineering standards.
-- **Rotated Systems**: The script supports trusses with rotated coordinate systems; ensure the beams are generally perpendicular to the element plane for accurate detection.
-- **Visualization**: Switch **sToolType** to **Glue** temporarily to visualize the exact contact area as a solid block if you are unsure where the nails are being placed.
+1. **Zone separation**: Members are filtered into Zone B (upper) and Zone A (lower) using PainterDefinition filters. The face normal of Zone B determines the direction in which contact is tested.
+2. **Perpendicularity filter**: GenBeams whose local X-axis is not perpendicular to the element face plane are silently excluded. This prevents incorrectly oriented studs from being processed.
+3. **Truss simplification**: For TrussEntities in Zone A, the body is reduced to a prismatic form derived from the shadow profile in the member's Y direction. This improves contact detection for complex truss geometries.
+4. **Z-plane grouping**: Zone B bottom faces are grouped by their elevation along the element Z axis (rounded to 1 mm). Members at the same height level are processed together, enabling Merge Value logic across adjacent members.
+5. **No-nail zones**: The element's no-nail profiles for both zones are subtracted from all upper zone contact areas before tool placement.
+6. **Roof element beam width**: For roof elements imported from IFC where the beam width is not set, the script automatically determines and sets the beam width from the largest Zone A member when in Nailing mode.
+7. **SubMapX output**: In Glueing mode, each segment's start point, end point, tool index, zone index, and PLine shape are written to `Glue[]` in the instance SubMapX. Downstream scripts or BOM tools can read this data.
+8. **Catalog insertion**: The script supports silent insertion via catalog presets. When invoked with an execute key matching a stored catalog name, the dialog is skipped and values are loaded from the catalog.
 
-## FAQ
-- **Q: The script reports "nothing to nail". Why?**
-  **A:** Ensure the beams or trusses are actually physically touching (overlapping) with the Element in 3D space. Also, ensure the beams are generally perpendicular to the element face; skewed beams may be filtered out.
-  
-- **Q: How do I switch between nailing and gluing?**
-  **A:** Change the **sToolType** property in the Properties Palette. **Glue** mode draws visuals only; **Nail** mode creates production data.
+## Tips and Notes
 
-- **Q: My nail lines are too short or don't cover the whole beam.**
-  **A:** Check your **dOffsetA** and **dOffsetB** values. If they are too high, they might be cutting off the nail lines. Also, check if the beam is fully underneath the element.
+- If the script reports "Could not find any entities in zone" and erases itself, verify that your PainterDefinition filters correctly target members in those zones. Open the Painter Manager and review the filter expressions for the painters listed under Upper Zone and Lower Zone.
+- The Merge Value is useful when sheathing boards have small construction gaps. Set it equal to the gap width (for example 3 mm) so the script treats adjacent boards as a continuous contact surface.
+- The Start/End Offset parameters enforce minimum edge distances. Setting them equal to the required edge distance prevents nails or glue from being placed within that distance of a member end.
+- When selecting individual GenBeams instead of whole elements, the script creates one tool instance per parent element. Members from different elements cannot be mixed in a single instance.
+- After using Add Entities or Remove Entities from the context menu, the tool runs two execution loops to save the updated entity set before recalculating geometry.
+- The Create Naillines action produces permanent NailLine entities independent of the tool. If the element changes after running Create Naillines, delete the outdated NailLines and run the action again.
+- Tool Index values 1, 2, and 3 map to AutoCAD color indices and distinguish tool data in SubMapX when multiple instances exist on the same element.
+- Version 1.1 (19.05.2025) added support for rotated truss coordinate systems. If a truss coordinate system is not aligned with the element plane, a warning is printed to the command line but processing continues with a fallback alignment.

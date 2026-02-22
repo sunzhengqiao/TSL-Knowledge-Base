@@ -1,82 +1,176 @@
-# hsbMetalPlate.mcr
+# hsbMetalPlate
 
 ## Overview
-This script creates and inserts standardized metal connection plates (splines) at the intersections of 2 or 3 timber beams. It automatically generates the 3D geometry of the plate and adds the hardware data to the Bill of Materials (BOM).
+
+`hsbMetalPlate` is a hsbCAD TSL script that places metal connector plates (gang-nail / toothed plates) at the joint between two or three GenBeam timber members. The plate is positioned on a coplanar face shared by the selected beams and is represented as a thin 3D solid that follows the joint if any connected beam moves. All product data (manufacturer, family, dimensions) is read from an external XML catalog file (`MetalPlateCatalog.xml`), so every placed plate corresponds to a real product.
+
+After placement, the plate entity is fully parametric: its product selection, alignment offsets, rotation, and side placement can be modified at any time through the AutoCAD Properties Palette (OPM). The script automatically registers a hardware component record (`HardWrComp`) on each placed plate, so the connector appears in Bills of Material and element hardware schedules without manual data entry.
+
+The initial release (version 1.0, 12 May 2021, issue HSB-11670) ships with catalog support for MiTek Tylok Plates, a line of toothed gang-nail plates manufactured from 0.95 mm G300 Z275 galvanised steel, available in eight sizes from 34 x 60 mm up to 34 x 480 mm.
 
 ## Usage Environment
-| Space | Supported | Notes |
-|-------|-----------|-------|
-| Model Space | Yes | This script operates in the 3D model to create physical connections. |
-| Paper Space | No | Not applicable for layout views. |
-| Shop Drawing | No | The geometry is created in the model, not directly on drawings. |
+
+- **Model Space only.** The script creates 3D geometry on timber members in the model space.
+- **Script type: Object (O-type).** Inserted as a standalone parametric entity that links itself to the connected beams. It does not cut or drill the beams.
+- **No pre-selected beams required** (`#NumBeamsReq 0`). Beams are selected interactively during the insertion workflow.
 
 ## Prerequisites
-- **Required Entities**: GenBeams (Timber beams).
-- **Minimum Beam Count**: 2 (or 3, depending on the Type setting).
-- **Required Settings**: `MetalPlateCatalog.xml` must exist in the company or install settings folder.
 
-## Usage Steps
+1. **At least two GenBeam members** must exist in the drawing. The beams must share a coplanar face -- two flat side faces of different beams lying in the same geometric plane and close enough to touch or overlap (within 0.1 mm tolerance).
+2. **The Metal Plate Catalog XML file** (`MetalPlateCatalog.xml`) must be accessible at one of the following locations:
+   - Company path: `<HsbCompany>\TSL\Settings\MetalPlateCatalog.xml`
+   - Fallback installation path: `<HsbInstall>\Content\General\TSL\Settings\MetalPlateCatalog.xml`
 
-### Step 1: Launch Script
-Command: `TSLINSERT` → Select `hsbMetalPlate.mcr`
+   If the catalog cannot be found at either location, the script displays an error message and deletes itself. During insertion, if the Settings folder does not exist under the company TSL path, the script creates it automatically.
+3. If no coplanar adjacent face pair is found among the selected beams, the script reports "Beams not OK" and cancels.
 
-### Step 2: Select Beams
-```
-Command Line: Select Genbeams
-Action: Select the timber beams you wish to connect (e.g., select 2 beams for a corner joint or 3 for a T-junction). Press Enter to confirm selection.
-```
+## How to Use
 
-### Step 3: Place Plate
-```
-Action: Move your cursor over the intersection of the selected beams.
-- The script will highlight valid intersection points dynamically.
-- Click once to select the specific intersection point where you want the plate placed.
-```
+### Single Insertion Mode (Default)
 
-### Step 4: Adjust Properties
-```
-Action: With the plate selected, open the Properties Palette (Ctrl+1).
-- Select the **Manufacturer** (e.g., Simpson, Meko).
-- Select the **Family** and **Product** (this sets the physical size of the plate).
-- Adjust alignment (Face, Side) or offsets if needed.
-```
+1. **Start the command** using `hsb_ScriptInsert "hsbMetalPlate"` from the AutoCAD command line, or launch it from the hsbCAD ribbon or menu if configured.
+2. **Select GenBeams:** A selection prompt appears asking you to select all timber members that should participate in the connection. Select two or more GenBeams and confirm the selection.
+3. **Product selection dialog:** If no OPM key is pre-specified (see Automation below), a cascading dialog sequence appears. Work through the three stages:
+   - First dialog: choose a **Manufacturer** (e.g., MiTek).
+   - Second dialog: choose a **Family** (e.g., Tylok Plates). The Manufacturer is locked once selected.
+   - Third dialog: choose a **Product** (e.g., 8T5). The Family is locked once selected.
+4. **Select insertion point (Jig):** After product selection, a graphical jig preview is activated. All valid plate positions are displayed as filled rectangular shapes on the beam faces. As you move the cursor, the candidate position beneath it is highlighted in a contrasting colour (green). Click on the desired plate location to confirm placement.
+   - During this step you can toggle between **2 Genbeams** and **3 Genbeams** connection mode by typing the keyword shown in the command prompt (e.g., type `3Genbeams` to switch to three-beam mode, or `2Genbeams` to switch back). The preview updates immediately to show valid positions for the selected mode.
+   - Press Escape to cancel placement without inserting.
+   - After placing a plate, the jig remains active so you can place additional plates at other positions on the same beam set. Press Escape or right-click to finish.
+5. The plate is inserted as a parametric entity. All properties can be adjusted in the OPM at any time.
 
-## Properties Panel Parameters
+### Multiple Insertion Mode
+
+When **Mode** is set to `Multiple` before confirming the insertion dialog, the script automatically places a plate instance at every valid coplanar face pair (or triplet, depending on Type setting) found among the selected beams. In this mode:
+
+- **Face** filtering controls which joints receive plates:
+  - **View Direction** -- only faces whose normal points toward the current view direction.
+  - **Normal to View Direction** -- only faces whose normal is perpendicular to the view.
+  - **All** -- all valid coplanar face pairs regardless of view orientation.
+- Each placed instance is automatically set back to Single mode and becomes an independent parametric entity.
+- If a plate entity somehow retains Multiple mode after insertion, it will erase itself and display a message, since Multiple mode is only supported during the insertion phase.
+
+### Automation via OPM Key
+
+The script supports automated insertion through an OPM key string passed via `_kExecuteKey`. The key can specify one, two, or three levels of the product hierarchy, separated by `?`:
+
+- `MiTek` -- sets the manufacturer, prompts for family and product via dialog.
+- `MiTek?Tylok Plates` -- sets manufacturer and family, prompts for product only.
+- `MiTek?Tylok Plates?8T5` -- sets all three, no dialogs shown.
+
+The script also supports catalog-based insertion: if the execute key matches a catalog entry name, the script loads all property values from that catalog entry without showing any dialogs.
+
+## Properties Panel (OPM Parameters)
+
+The following parameters are visible in the AutoCAD Properties Palette after the plate is placed. Some properties are only visible during insertion and are hidden afterwards.
+
+### Component
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Manufacturer | dropdown | --- | Selects the plate manufacturer. Updates the available families. |
-| Family | dropdown/text | | Selects the product series (updates available products). |
-| Product | dropdown/text | | Selects the specific plate model. Determines geometry size and thickness. |
-| Mode | dropdown | Single | Choose between inserting at one intersection (`Single`) or all found valid intersections (`Multiple`). |
-| Face | dropdown | View Direction | Sets the orientation relative to your current view (View Direction, Normal to View, All). |
-| Side | dropdown | One | Sets whether to insert one plate (`One`) or two plates sandwiching the joint (`Both`). |
-| Type | dropdown | 2 Genbeams | Defines the joint topology: connection of 2 beams or 3 beams. |
-| Offset Length | number | 0 | Shifts the plate along its length axis relative to the joint center. |
-| Offset Width | number | 0 | Shifts the plate along its width axis relative to the joint center. |
-| Rotate | number | 0 | Rotates the plate on the plane (degrees). |
+| Manufacturer | String (dropdown) | First manufacturer in catalog | Selects the plate manufacturer from the catalog. Changing this resets the Family and Product fields to the first available option under the new manufacturer. |
+| Family | String (dropdown) | First family of selected manufacturer | Selects the product family within the chosen manufacturer. Changing this resets the Product field. The family entry also defines the material description and optional hyperlink URL. |
+| Product | String (dropdown) | First product of selected family | Selects the specific plate model. The plate dimensions (Length and Width) are loaded from the catalog entry for the selected product. |
 
-## Right-Click Menu Options
+### Insertion Mode (visible during insertion only)
 
-| Menu Item | Description |
-|-----------|-------------|
-| Swap Side | Flips the metal plate to the opposite side of the joint. |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Mode | String (dropdown) | Single | Controls whether the plate is placed one at a time with jig preview (`Single`) or automatically at all valid positions (`Multiple`). Hidden after insertion. |
+| Face | String (dropdown) | View Direction | Controls which beam faces are considered for plate placement in Multiple mode. Options: `View Direction`, `Normal to View Direction`, `All`. Hidden after insertion. |
 
-## Settings Files
-- **Filename**: `MetalPlateCatalog.xml`
-- **Location**: `_kPathHsbCompany\TSL\Settings` or `_kPathHsbInstall\Content\General\TSL\Settings`
-- **Purpose**: Defines the library of available metal plates, including dimensions, thicknesses, and manufacturer details.
+### Alignment
 
-## Tips
-- **Dynamic Updates**: After insertion, you can change the Product in the properties palette to resize the plate without deleting and re-running the script.
-- **Fine-tuning**: Use the Offset Length and Offset Width properties to slide the plate into the exact position without moving the script itself.
-- **Visual Confirmation**: If the plate appears on the "back" side of the beam, use the **Swap Side** right-click option to flip it to the front.
-- **Catalog Management**: If the Manufacturer dropdown is empty, check your `MetalPlateCatalog.xml` file location.
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Side | String (dropdown) | One | Controls whether the plate is placed on one face of the joint or on both opposite faces simultaneously. Options: `One`, `Both`. When `Both` is selected, two plates are created at the same joint (mirrored on each side) and the Swap Side context menu option is hidden. The hardware quantity is set to 2 when Both is selected. |
+| Offset Length | Double (length) | 0 | Shifts the plate position along its length axis relative to the computed joint centre. Positive values move the plate in the length direction; negative values move it in the opposite direction. |
+| Offset Width | Double (length) | 0 | Shifts the plate position perpendicular to the length axis within the face plane. |
+| Rotate | Double (angle) | 0 | Rotates the plate about the face-plane normal at its centre point, allowing the plate to be oriented at an angle relative to the beam axis. |
+| Type | String (dropdown) | 2 Genbeams | Defines how many beams the plate spans. `2 Genbeams` spans a joint between two timbers; `3 Genbeams` places the plate at the common overlap zone of three timbers (e.g., a king-post truss node). This property is hidden after insertion; the beam count is fixed at placement time. |
 
-## FAQ
-- **Q: Why did the script delete itself immediately after I selected the beams?**
-  A: This usually happens if the `MetalPlateCatalog.xml` file is missing or cannot be found. Ensure the settings file is in the correct directory.
-- **Q: Can I use this for non-standard intersection angles?**
-  A: Yes, the script calculates the intersection plane based on the actual geometry of the selected beams, but you may need to use the Rotate property to align specific plate shapes.
-- **Q: How do I insert a plate on both sides of the beams automatically?**
-  A: Set the **Side** property to `Both` in the Properties Palette before or after insertion.
+### Catalog Products (MiTek Tylok Plates)
+
+The following products are available in the default catalog. All plates are 34 mm wide and made from 0.95 mm G300 Z275 galvanised steel. The 3D body thickness is fixed at 0.95 mm.
+
+| Product Name | Width (mm) | Length (mm) | Rows | Teeth per Row |
+|-------------|------------|-------------|------|---------------|
+| 2T5 | 34 | 60 | 2 | 5 |
+| 4T5 | 34 | 120 | 4 | 5 |
+| 6T5 | 34 | 180 | 6 | 5 |
+| 8T5 | 34 | 240 | 8 | 5 |
+| 10T5 | 34 | 300 | 10 | 5 |
+| 12T5 | 34 | 360 | 12 | 5 |
+| 14T5 | 34 | 420 | 14 | 5 |
+| 16T5 | 34 | 480 | 16 | 5 |
+
+Product codes follow the pattern `NTW` where N is the number of tooth rows along the length and W is the number of teeth per row across the width (always 5 for this family).
+
+## Right-Click Context Menu
+
+| Menu Item | Condition | Description |
+|-----------|-----------|-------------|
+| Swap Side | Visible only when Side = `One` | Flips the metal plate to the opposite face of the joint. Internally, the plane vector is negated, the length direction is reversed, and both the Offset Length and Rotate values are negated so that the plate orientation remains visually consistent on the opposite side. This option is hidden when Side is set to `Both`, since both faces already have a plate. |
+
+## How It Works (Technical Summary)
+
+### Face Detection Algorithm
+
+The script examines each selected GenBeam along all six face directions (+X, -X, +Y, -Y, +Z, -Z). For each face, it extracts a `PlaneProfile` (2D footprint on that face plane) from the beam's envelope body. It then tests every combination of beam pairs (or triplets for 3-beam mode) to find faces that:
+
+1. Have co-directional normal vectors (faces point the same way).
+2. Lie in the same geometric plane (distance between face origins along the normal is less than 0.1 mm).
+3. Have overlapping or adjacent footprints (the extended profiles intersect when each is grown by 20 mm).
+
+For each qualifying pair, the script computes the plate centre point at the geometric midpoint of the overlap zone and determines the plate length and width directions from the first beam's local axes.
+
+### 3D Geometry Generation
+
+After placement, the script creates the plate body as follows:
+1. A rectangular `PLine` is created at the computed centre point with dimensions from the catalog (Length x Width).
+2. The rectangle is extruded along the face normal by the plate thickness (0.95 mm) to create a `Body` solid.
+3. The body is rotated by the Rotate angle about the face normal.
+4. The body is translated by the Offset Length and Offset Width values.
+5. The plate is displayed as both a filled 2D profile (colour 252, light grey) and a 3D wireframe body.
+
+When Side is set to `Both`, the entire process runs twice -- once for each opposing face of the joint.
+
+### Hardware Registration
+
+After geometry creation, the script creates a `HardWrComp` record containing:
+- **Article number**: the Family name (e.g., "Tylok Plates")
+- **Quantity**: 1 for one-sided, 2 for both-sided placement
+- **Manufacturer**, **Model** (product name), **Material** (from the family definition)
+- **Dimensional scales**: DScaleX = plate length, DScaleY = plate width, DScaleZ = plate thickness
+- **Category**: "Connector"
+- **Group**: inherited from the primary beam's element group
+- **Linked entity**: the primary beam (gb0)
+
+This record ensures the plate appears correctly in BOM reports and hardware schedules.
+
+## Tips and Notes
+
+- **Valid placement requires coplanar faces.** If the selected beams do not share a common face plane (within 0.1 mm tolerance), the script displays "Beams not OK" and cancels. Ensure beams are actually touching or sharing a face before running the tool.
+
+- **Visual jig during placement.** In Single mode, all valid plate positions are displayed as filled preview rectangles. The position beneath the cursor is highlighted in green. This makes it straightforward to identify which joint you are targeting, especially in dense framing.
+
+- **The plate thickness is fixed at 0.95 mm.** This matches the standard gauge for MiTek Tylok toothed plates and is used for both the 3D body geometry and the BOM dimensional scaling.
+
+- **Hyperlink to product specification.** When a family entry in the catalog includes a `url` field, the script attaches a web hyperlink to the placed entity. For MiTek Tylok Plates, this links to the MiTek New Zealand product code report page. The link can be opened from the AutoCAD entity properties.
+
+- **Version compatibility checking.** When a new plate instance is created, the script compares the catalog version number stored in memory (from the drawing's MapObject) against the version in the XML file on disk. If they differ, a notice is printed to the command line, alerting you that the drawing was made with a different catalog version.
+
+- **Extending the catalog.** To add custom plate products or a new manufacturer, copy `MetalPlateCatalog.xml` to the company settings folder (`<HsbCompany>\TSL\Settings\`) and edit it following the existing XML structure. New manufacturers, families, and products will appear in the OPM dropdowns automatically. Increment the `Version` integer in the `GeneralMapObject` section when making changes so that existing drawings receive the version mismatch notice.
+
+- **Layer and group assignment.** The placed plate is assigned to layer `"i"` and added to the same group as the primary connected beam. This keeps hardware co-located with its parent framing member for selection and layer management.
+
+- **Toggling beam count during jig.** During the Single-mode jig phase, type the keyword displayed in the command prompt to toggle between `2 Genbeams` and `3 Genbeams` detection. The preview updates immediately so you can compare which mode suits the joint before committing.
+
+- **Multiple mode places only view-facing joints.** In Multiple mode with the default Face setting of `View Direction`, only joints whose face normal points toward the current view direction receive plates. Rotate your view or change the Face setting to `All` if you want to plate joints on all sides in a single operation.
+
+## Version History
+
+| Version | Date | Reference | Description |
+|---------|------|-----------|-------------|
+| 1.0 | 12 May 2021 | HSB-11670 | Initial release. Author: Marsel Nakuci. Supports 2-beam and 3-beam connections with MiTek Tylok Plates catalog. |

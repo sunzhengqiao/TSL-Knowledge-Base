@@ -1,107 +1,131 @@
-# hsbSplitSheets.mcr
+# hsbSplitSheets
+
+Distributes sheets or beams across an element zone using user-defined split points, expanding outward from a base point in all four directions.
+
+---
 
 ## Overview
-This script automatically tiles an element zone (wall, floor, or roof) with rectangular panels (sheets or beams). It allows you to fill a construction layer with standard-sized material starting from a user-defined origin, automatically cutting panels around openings and element boundaries.
 
-## Usage Environment
-| Space | Supported | Notes |
-|-------|-----------|-------|
-| Model Space | Yes | This script operates on 3D construction entities (Elements and Sheets). |
-| Paper Space | No | Not applicable for paper space layouts. |
-| Shop Drawing | No | This is a model generation tool, not a detailing tool. |
+**hsbSplitSheets** generates a grid-based panel layout within a wall, floor, or roof zone. You select a reference sheet to define the target zone, pick a starting point, and optionally add split points where panels should be divided. The tool fills the zone in all four directions from the base point, creating regularly spaced sheets that respect the zone boundary and openings. Results can be output as either sheets or beams.
+
+---
+
+## Environment
+
+| Property | Value |
+|----------|-------|
+| Type | O-Type (Object) |
+| Works In | Model Space |
+| Version | 1.8 |
+| Requires | A sheet assigned to an element |
+
+---
 
 ## Prerequisites
-- **Required Entities**: An existing hsbCAD Element (Wall, Floor, or Roof) containing at least one Sheet.
-- **Minimum Beam Count**: 0.
-- **Required Settings**: None specific, though a Material Catalog is recommended for assigning properties.
 
-## Usage Steps
+1. An element (wall, floor, or roof) must exist in the drawing.
+2. At least one sheet must be present in the target zone for zone selection.
+3. The sheet must belong to an element group.
 
-### Step 1: Launch Script
-Command: `TSLINSERT` → Select `hsbSplitSheets.mcr`
+---
 
-### Step 2: Select Reference Sheet
-```
-Command Line: |Select a sheet of desired zone|
-Action: Click on an existing sheet within the element/layer you wish to tile.
-```
-*This determines the target Element and the specific construction Zone (e.g., outer sheathing).*
+## Usage
 
-### Step 3: Define Origin Point
-```
-Command Line: |Select first distribution point|
-Action: Click in the model to set where the tiling grid starts (usually a bottom corner).
-```
+### Step 1: Select Target Zone
+When prompted, click on an existing sheet in the zone you want to panel. The tool reads zone properties (thickness, material, dimensions, gap) from this sheet.
 
-### Step 4: Define Split Points (Optional)
-```
-Command Line: |Select additional distribution point (optional)|
-Action: Click points to create "stop lines" for the tiling pattern, or press Enter to finish.
-```
+**Prompt:** "Select a sheet of desired zone"
 
-### Step 5: Configure Properties
-```
-Action: The Properties Palette (OPM) will open. Adjust panel size, gap, and material as needed.
-```
-*Note: Default values are automatically pulled from the Element's Zone properties if available.*
+### Step 2: Set Base Point
+Click to define the origin for the distribution. The sheet grid expands outward from this point.
 
-### Step 6: Generate
-```
-Action: Double-click the script instance OR Right-click and select "Create Sheets" (or "Create Beams").
-```
+**Prompt:** "Select first distribution point"
 
-## Properties Panel Parameters
+> If the current UCS Z-axis is parallel to World Z, the base point is automatically projected onto the element plane.
+
+### Step 3: Add Split Points (Optional)
+Add points where sheets should be divided. Press Escape or Enter to finish.
+
+**Prompt:** "Select additional distribution point (optional)"
+
+### Step 4: Preview and Adjust
+A gray 3D preview shows the proposed layout. Adjust parameters in the Properties Palette; the preview updates automatically. A crosshair marker indicates the base point.
+
+### Step 5: Execute
+Right-click and choose **Create Sheets** or **Create Beams** from the context menu. All existing sheets in the zone are removed and replaced with the new distribution. The tool instance deletes itself after execution.
+
+Double-clicking the tool also triggers execution.
+
+---
+
+## Parameters
 
 ### Compose Rule
+
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Source | dropdown | Zone contour | **Zone contour**: Fills the entire element outline.<br>**Generated sheets**: Only fills areas where sheets currently exist (updates layout). |
-| Merge Gap | number | 10 mm | Tolerance to merge adjacent profiles when updating existing sheets (closes small gaps). |
+| Source | Dropdown | Zone contour | Boundary source: **Zone contour** uses the element net profile; **Generated sheets** merges existing sheet outlines (respecting openings) |
+| Merge Gap | Length | 10 mm | Tolerance for closing small gaps when merging existing sheets |
+| Target Object | Dropdown | Sheets | Output type: **Sheets** or **Beams** |
+| Zone | Integer | Auto | Zone index (-5 to 5); set automatically from the selected sheet |
 
 ### Geometry
+
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Width | number | 1250 mm | The target width of the panels along the element's X-axis. |
-| Length | number | 3000 mm | The target length of the panels along the element's Y-axis. |
-| Thickness | number | 10 mm | The material thickness of the panels. |
-| Gap | number | 10 mm | The spacing (expansion gap) left between adjacent panels. |
+| Width | Length | 1250 mm | Standard panel width (horizontal direction) |
+| Length | Length | 3000 mm | Standard panel length (vertical direction) |
+| Thickness | Length | Auto | Read from zone height; editable |
+| Gap | Length | 10 mm | Spacing between adjacent panels |
 
 ### Properties
+
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Material | text | *empty* | The material name/grade assigned to the panels (from catalog). |
-| Label | text | *empty* | The main label identifier for the panels. |
-| Sub-label | text | *empty* | The sub-label identifier for the panels. |
-| Grade | text | *empty* | The structural grade or quality class. |
+| Material | String | Auto | Material code; inherited from zone |
+| Label | String | Empty | Primary label for generated objects |
+| Sublabel | String | Empty | Secondary label |
+| Grade | String | Empty | Material grade designation |
 
-### Output
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| Convert Type | dropdown | Beams | **Sheets**: Creates 2D contour objects with thickness.<br>**Beams**: Creates 3D volumetric bodies. |
+> When the zone defines variables for `width`, `height sheet`, and `gap`, these values are automatically applied on insertion.
 
-## Right-Click Menu Options
+---
 
-| Menu Item | Description |
-|-----------|-------------|
-| Create Sheets / Create Beams | Finalizes the process, erases old sheets in the zone, and generates the new panels. |
-| Add Split Points | Allows you to select additional points to modify the grid layout after insertion. |
-| Erase | Removes the script instance without generating geometry. |
+## Context Menu
 
-## Settings Files
-- **Filename**: None specific (uses hsbCAD Catalogs).
-- **Location**: N/A
-- **Purpose**: Material properties are pulled from the standard hsbCAD Material Catalog.
+| Command | Description |
+|---------|-------------|
+| **Create [Sheets/Beams]** | Executes the distribution, replacing all existing zone sheets. Label reflects current Target Object setting. |
+| **Add Split Points** | Opens point selection to add additional division locations to the existing layout. |
+
+---
 
 ## Tips
-- **Updating Layouts**: If you have an existing sheet layout and want to modify it (e.g., change width), select **Source: "Generated sheets"**. The script will calculate the new layout based on where sheets currently exist rather than the whole wall contour.
-- **Gap Calculation**: If the Element Zone variables define a specific gap, the script will automatically calculate the `Width` property as `(Zone Width - Gap)` to ensure a perfect fit.
-- **Visual Feedback**: After insertion, you can drag the **Origin Point** and **Split Points** (grips) in the model to visually adjust the tiling pattern before creating it.
-- **Origin Point**: The first point you pick acts as the "start" corner. Ensure it is placed logically relative to how you want the sheets to run (e.g., bottom-left of a wall).
+
+- Place split points at opening edges so panel joints align with windows and doors.
+- Use **Generated sheets** as source when you want to redistribute panels while preserving a custom zone boundary that differs from the net contour.
+- Panels smaller than 1 mm squared (sheets) or 1 mm cubed (beams) are automatically filtered out.
+- Generated objects inherit the zone color, material, label, sublabel, and grade you specify.
+- Increase **Merge Gap** when combining existing sheets that have small gaps between them.
+- The tool supports catalog-based insertion: properties can be preset through a catalog key.
+
+---
 
 ## FAQ
-- **Q: What is the difference between creating Sheets vs Beams?**
-  - A: **Sheets** are typically used for 2D representations with thickness (like OSB or Plywood in plans). **Beams** are volumetric 3D objects (like CLT panels or Timber frames) that have true volume and may interact differently with other 3D operations.
-- **Q: Why did my script disappear after I clicked Create?**
-  - A: This is normal behavior. The script acts as a temporary "calculator." Once you click "Create," it produces the final geometry and removes itself from the model to prevent duplication.
-- **Q: Can I use this to floor a whole house?**
-  - A: Yes. Select the floor sheet, pick the origin, and ensure **Source** is set to "Zone contour" to fill the entire floor outline.
+
+**Q: Why does the tool disappear after I click Create?**
+A: This is by design. The tool acts as a temporary layout calculator and removes itself after generating the final geometry.
+
+**Q: What is the difference between Sheets and Beams output?**
+A: Sheets are 2D panel objects with thickness (OSB, plywood). Beams are volumetric 3D solids suitable for CLT or mass timber workflows.
+
+**Q: Can I add more split points after the initial placement?**
+A: Yes. Right-click the tool and select **Add Split Points** to enter additional division locations.
+
+---
+
+## Related Scripts
+
+- **hsbSheetDistribution** -- Alternative sheet layout approach
+- **hsbRedistributeSheets** -- Redistribute existing sheets
+- **hsbSplitSheets** works within the element/zone framework alongside standard sheeting tools

@@ -1,69 +1,66 @@
 # Nail-App
 
 ## Overview
-Automatically applies nailing patterns to selected timber elements (such as walls or floors) based on predefined engineering configurations. This script spawns detailed sub-scripts to generate the geometry and then deletes itself.
+Batch-applies nailing rules to selected timber elements based on a stored XML configuration. The script reads rule sets from `Nail-Configuration.xml`, removes any existing nail lines and nailing TSL instances on each selected element, then creates new `Nail-SheetOnBeam` and/or `Nail-SheetOnSheet` instances according to the rules. The script erases itself after execution -- it acts purely as a generator tool.
 
 ## Usage Environment
 | Space | Supported | Notes |
 |-------|-----------|-------|
-| Model Space | Yes | Script must be run in the model. |
-| Paper Space | No | Not supported in layouts. |
-| Shop Drawing | No | Not intended for shop drawing generation. |
+| Model Space | Yes | Primary operating environment |
+| Paper Space | No | Not supported |
+| Shop Drawing | No | Not supported |
+
+## Script Metadata
+| Property | Value |
+|----------|-------|
+| Type | O (Object) |
+| Version | 1.5 |
+| Keywords | Nailing; Nail; Element; CNC |
+| Required Beams | 0 |
+| Plugin Mode | Supported (v1.5+) |
 
 ## Prerequisites
-- **Required Entities**: Element (e.g., a Wall or Floor panel).
-- **Minimum Beam Count**: N/A (Requires an Element containing beams/sheets).
-- **Required Settings**:
-  - `Nail-Configuration.xml` (Must exist in Company or Install settings path).
-  - Helper scripts `Nail-SheetOnBeam` and `Nail-SheetOnSheet` must be installed.
+- **Configuration file**: `Nail-Configuration.xml` must exist in the company path (`_kPathHsbCompany\TSL\Settings\`) or the install path (`_kPathHsbInstall\Content\General\TSL\Settings\`).
+- **Child scripts**: `Nail-SheetOnBeam` and `Nail-SheetOnSheet` must be installed; these are the scripts actually created on the elements.
+- **Elements with sheets**: Target elements must contain at least one sheet. Elements without sheets are skipped.
 
 ## Usage Steps
 
-### Step 1: Launch Script
-Command: `TSLINSERT` → Select `Nail-App.mcr` from the list.
+### Step 1: Launch
+Run `TSLINSERT` and select `Nail-App`, or use the command line alias: `(hsb_ScriptInsert "Nail-App")`.
 
 ### Step 2: Select Configuration
-```
-Command Line: (Dynamic Dialog appears if multiple configurations exist)
-Action: Select the desired Nailing Rule Set from the drop-down list (e.g., "Roof Sheathing 150/300").
-```
-*Note: If only one configuration exists in the settings file, this step may be skipped automatically.*
+If multiple configurations exist in the settings file, a dialog appears to choose the desired rule set. If only one configuration exists, this step is skipped.
 
 ### Step 3: Select Elements
-```
-Command Line: |Select elements|
-Action: Click on the Element(s) (Walls/Floors) you wish to apply nailing to. Press Enter to confirm selection.
-```
+At the prompt "Select elements", click on the wall, floor, or roof elements to process. Press Enter to confirm.
 
-### Step 4: Processing
-The script will automatically remove any existing nail lines and TSL instances on the selected elements and generate the new nailing patterns.
+### Step 4: Automatic Processing
+For each selected element the script:
+1. Removes all existing nail lines on the element.
+2. Removes all existing `Nail-SheetOnBeam` / `Nail-SheetOnSheet` instances on the element.
+3. Creates new TSL instances for each rule defined in the selected configuration, passing the stored property values (PropInt, PropDouble, PropString) to each child script.
+4. Erases itself from the drawing.
 
 ## Properties Panel Parameters
-
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Configuration | dropdown | (First item in list) | Defines the name of the configuration (Rule Set) to apply. This determines nailing spacing, offsets, and nail types. |
+| Configuration | String (dropdown) | First available | Selects which named rule set to apply from the settings file. |
 
-## Right-Click Menu Options
-
-| Menu Item | Description |
-|-----------|-------------|
-| None | The script instance erases itself immediately after execution, so there are no right-click menu options available after insertion. |
-
-## Settings Files
+## Settings File
 - **Filename**: `Nail-Configuration.xml`
-- **Location**: `_kPathHsbCompany\TSL\Settings` or `_kPathHsbInstall\Content\General\TSL\Settings\`
-- **Purpose**: Stores the nailing rule configurations, including specific parameters for different connection types (Sheet to Beam, Sheet to Sheet).
+- **Lookup order**: Company path first, then install path.
+- **Version check**: On creation the script compares the version stored in the drawing (MapObject) against the version in the XML file and warns if they differ.
+- **Import/Export**: Use the hsbCAD ribbon command "XML-Settings" or the `hsbTslSettingsIO` script to transfer configurations between drawings.
 
 ## Tips
-- **Self-Deleting Tool**: This script removes itself from the drawing immediately after running. To modify the nailing, you must edit the generated child TSLs or run the Nail-App tool again.
-- **Cleanup**: The script automatically deletes existing nail lines and associated nailing TSLs on the selected elements before applying the new pattern.
-- **Preparation**: Ensure your configurations are created in the XML file first (usually done by running the helper scripts individually and saving settings).
+- This is a self-deleting tool. After execution only the child nailing TSLs remain on the elements. To change nailing, either edit the child TSL properties or re-run Nail-App with a different configuration.
+- Configurations are created by running `Nail-SheetOnBeam` or `Nail-SheetOnSheet` individually, adjusting properties, and saving rules via their context commands.
+- The script supports plugin mode (silent execution) via `_kExecuteKey` -- catalog entries or the last-inserted preset can be applied without a dialog.
 
-## FAQ
-- **Q: Why did the tool disappear after I selected the elements?**
-  A: This is intentional behavior. The "Nail-App" acts as a generator tool. It creates the specific nailing instances required and then self-destructs to keep the drawing clean.
-- **Q: I get an error saying "No configurations found". What do I do?**
-  A: The `Nail-Configuration.xml` file is likely empty or missing. You need to run the dependent scripts (like `Nail-SheetOnBeam`) to generate and save configurations to the settings file first.
-- **Q: Can I edit the nails later?**
-  A: Yes, but you cannot edit the "Nail-App" instance (since it is gone). You must modify the properties of the individual nailing instances (e.g., `Nail-SheetOnBeam`) that were created on the element, or re-run the Nail-App tool with a different configuration.
+## Related Scripts
+| Script | Relationship |
+|--------|-------------|
+| Nail-SheetOnBeam | Child -- created by Nail-App to define sheet-to-beam nailing |
+| Nail-SheetOnSheet | Child -- created by Nail-App to define sheet-to-sheet nailing |
+| hsbTslSettingsIO | Utility for importing/exporting the XML configuration |

@@ -1,7 +1,27 @@
-# GE_CLONE_MVBLOCKS.mcr
+# GE_CLONE_MVBLOCKS - MVBlock Cloning & Special Framing
 
 ## Overview
-This script converts selected AutoCAD Architecture (ACA) MVBlocks into specific hsbCAD wall framing elements. It automatically generates wall openings for recessed fixtures or inserts blocking and no-stud area scripts for cabinets and plumbing based on the block's classification property.
+
+The GE_CLONE_MVBLOCKS script is used in the cloning process (`hsb_structuralclone`) or conversion process (`hsb_acatohsb`) and will insert special TSLs based on mvBlock classifications. It will be attached to MVBlocks only.
+
+## Purpose
+
+This script automatically creates special framing elements and openings in walls based on the classification of MVBlocks (Masonry/Virtual Blocks). It handles different types of fixtures including:
+
+- **Cabinets** (Base, Tall, Wall)
+- **Recessed fixtures** (creating framed openings)
+- **Plumbing fixtures** (voids and tub/showers)
+
+## Script Information
+
+| **Property** | **Value** |
+|--------------|-----------|
+| **Type** | Object (O) |
+| **Version** | 1.3 |
+| **Last Updated** | April 18, 2013 |
+| **Author** | David Rueda (dr@hsb-cad.com) |
+| **Requires Beams** | 0 |
+| **Requires Points** | 0 |
 
 ## Usage Environment
 | Space | Supported | Notes |
@@ -10,23 +30,53 @@ This script converts selected AutoCAD Architecture (ACA) MVBlocks into specific 
 | Paper Space | No | Not applicable. |
 | Shop Drawing | No | This script generates model elements, not drawing annotations. |
 
-## Prerequisites
-- **Required Entities:** AutoCAD Architecture MVBlocks (representing fixtures/furniture) and hsbCAD Walls (`ElementWallSF`).
-- **Classification:** Selected MVBlocks must have a Classification property named `ITWBFraming` with specific values (e.g., "CABINET - BASE", "RECESSED", "PLUMBING - VOID").
-- **Required Scripts:** The scripts `GE_WALL_SECTION_BLOCKING` and `GE_WALL_NO_STUD_AREA_BLOCKING` must be present in your TSL catalog to generate the framing for cabinets and plumbing.
+## Supported MVBlock Classifications
 
-## Usage Steps
+### Cabinet Types
+1. **CABINET - BASE**
+   - Creates upper backing blocking
+   - Used for base cabinets against walls
 
-### Step 1: Launch Script
-Command: `TSLINSERT` → Select `GE_CLONE_MVBLOCKS.mcr` from the catalog.
+2. **CABINET - TALL**
+   - Creates upper backing blocking
+   - Used for tall/heavy cabinets
 
-### Step 2: Select MVBlocks
-```
-Command Line: 
-Select a set of MVBlocks
-Action: 
-Select the desired AutoCAD MVBlocks (e.g., cabinets, light fixtures, toilet blocks) in the drawing and press Enter.
-```
+3. **CABINET - WALL**
+   - Creates both upper and lower backing blocking
+   - Used for wall-mounted cabinets
+
+### Special Fixtures
+1. **RECESSED**
+   - Creates framed openings in walls
+   - Automatically calculates opening dimensions from block properties
+   - Uses "FramedOpeningStyleFixed" property set for dimensions
+
+2. **PLUMBING - VOID 12**
+   - Creates a cylindrical void representation (12" diameter)
+   - Used for plumbing voids in walls
+
+3. **PLUMBING - TUB SHOWER CENTERED**
+   - Creates a cylindrical tub representation
+   - Used for centered tub/showers
+
+## How It Works
+
+### During Insertion
+1. Prompts user to select a set of MVBlocks
+2. Clones itself for each selected MVBlock
+3. Processes each block based on its classification
+
+### During Processing
+1. **Detects MVBlock classification** from the "ITWBFraming" property
+2. **Identifies intersecting walls** by:
+   - Moving the block 2 inches towards the wall
+   - Checking for intersection with wall bodies
+   - Creating cut geometry to find exact intersection points
+
+3. **Creates appropriate framing elements**:
+   - For cabinets: Creates `GE_WALL_SECTION_BLOCKING` TSLs
+   - For recessed fixtures: Creates framed openings
+   - For plumbing: Creates special cylindrical voids
 
 ## Properties Panel Parameters
 
@@ -46,6 +96,23 @@ Select the desired AutoCAD MVBlocks (e.g., cabinets, light fixtures, toilet bloc
 - **Location**: TSL Catalog
 - **Purpose**: These scripts are automatically inserted to generate the specific timber blocking or void areas for the different MVBlock types.
 
+## Key Features
+
+### Automatic Wall Detection
+- Works with walls that have hsbCAD data
+- Can work with walls that don't have hsbCAD data (uses basic wall geometry)
+- Handles walls with model display turned off
+
+### Precise Placement
+- Calculates intersection points using body geometry
+- Places framing elements at exact locations
+- Handles elevation calculations automatically
+
+### Special Handling for Recessed Fixtures
+- Creates proper openings in walls
+- Stores rough dimensions when applicable
+- Automatically calculates center points for opening placement
+
 ## Tips
 - **Classification is Key:** Ensure your MVBlocks have the `ITWBFraming` property set correctly before running the script. Without this, the script will not know what type of framing to create.
 - **Intersection:** The MVBlock must physically intersect with a wall body. If the block is floating in front of the wall without touching it, the script will fail to place the opening or blocking.
@@ -60,3 +127,47 @@ Select the desired AutoCAD MVBlocks (e.g., cabinets, light fixtures, toilet bloc
 
 - **Q: I moved my cabinet; how do I update the framing?**
   A: The generated blocking/opening is not linked to the original block. Delete the previously generated blocking/opening, select the moved cabinet, and run the script again.
+
+## Revision History
+
+| Version | Date | Author | Description |
+|---------|------|--------|-------------|
+| 1.3 | April 18, 2013 | David Rueda | Bugfix: Filtering out non valid SFWall or Wall entities |
+| 1.2 | April 2, 2013 | David Rueda | Bugfix: Searching body was cutting all blocking body (deleting), as result no point was available hence error message |
+| 1.1 | April 1, 2013 | David Rueda | Bugfix: when bdMvbMoved the assignation of points where being done when no points where available |
+| 1.0 | January 31, 2013 | David Rueda | Version control |
+| 0.9 | May 15, 2012 | David Rueda | Thumbnail added, Description made visible to user |
+| 0.8 | May 2, 2012 | R. L | In placing the opening it will find the center point of the MvBlock body that intersects with the wall body and base the opening location on the center point of the resulting body |
+| 0.7 | April 19, 2012 | R. L | Will now dbCreate an opening for Recessed MVBlocks. No data is attached to the opening |
+| 0.6 | November 1, 2011 | David Rueda | Added flag to cloned GE_WALL_SECTION_BLOCKING TslInst to make it load values from certain catalog |
+| 0.5 | September 6, 2011 | R. L | Will move a block 2 inches upwards in case it cuts the wall. Will take the realbody of the block with an isometric vector to make sure it gets the body of model display |
+| 0.4 | September 8, 2010 | R. L | Added special framing for tubs and toilets ("PLUMBING - VOID 12","PLUMBING - TUB SHOWER CENTERED") |
+| 0.3 | July 16, 2010 | R. L | Fixed lower block location in no stud area |
+| 0.2 | June 24, 2010 | R. L | Can insert on a wall with no hsbCAD data |
+| 0.1 | June 22, 2010 | R. L | Used to clone or convert ACA rules for MVBlocks |
+
+## Dependencies
+
+- Requires MVBlock entities with proper classification in the "ITWBFraming" property
+- Works with ElementWallSF, ElementRoof, and basic Wall entities
+- Uses standard TSL framework for creating child TSL instances
+
+## Integration
+
+This script is designed to work seamlessly with:
+- hsbCAD structural cloning tools
+- AutoCAD Architecture content conversion
+- MVBlock-based fixture placement workflows
+
+## Usage Steps
+
+### Step 1: Launch Script
+Command: `TSLINSERT` → Select `GE_CLONE_MVBLOCKS.mcr` from the catalog.
+
+### Step 2: Select MVBlocks
+```
+Command Line:
+Select a set of MVBlocks
+Action:
+Select the desired AutoCAD MVBlocks (e.g., cabinets, light fixtures, toilet blocks) in the drawing and press Enter.
+```

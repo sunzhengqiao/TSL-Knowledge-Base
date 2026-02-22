@@ -1,77 +1,130 @@
-# sdUK_ShowSIPList.mcr
+# sdUK_ShowSIPList - SIP Panel List Generator
 
 ## Overview
-This script generates a sorted schedule of Structural Insulated Panel (SIP) labels. It allows you to create a list of panels either by manually selecting them in the model or by automatically extracting them from a specific shop drawing view.
+The **sdUK_ShowSIPList** script generates a shop drawing list of SIP (Structural Insulated Panel) panels that share the same position number (Posnum). This tool is specifically designed for creating fabrication documentation in both model space and paper space environments.
+
+**Script Location:** `TSL/sdUK_ShowSIPList.mcr`
+**Author:** Chirag Sawjani
+**Version:** 1.2 (as of 10.10.2018)
+
+## Overview
+Generates a text list of SIP (Structural Insulated Panel) panels that share the same position number for shop drawings. Designed for UK market workflows, this script helps fabricators quickly identify all panels with matching position numbers on a single drawing sheet. The panel names are displayed alphabetically for easy reference.
 
 ## Usage Environment
 | Space | Supported | Notes |
 |-------|-----------|-------|
-| Model Space | Yes | Select panels directly using the "Model" mode. |
-| Paper Space | Indirectly | Use "shopdraw multipage" mode to select a view frame. |
-| Shop Drawing | Yes | Specifically supports "shopdraw multipage" environments. |
+| Model Space | Yes | Directly select SIP entities from the model to generate a panel list. |
+| Paper Space | Yes | Primary use case - works with ShopDrawView entities in shop drawing layouts. |
+| Shop Drawing | Yes | Integrates with hsbCAD multipage shop drawing system via ViewData. |
 
 ## Prerequisites
-- **Required Entities**: Structural Insulated Panels (SIPs) must exist in the drawing. If using Shop Draw mode, a valid Shop Drawing View must be present.
-- **Minimum Selection**: At least one SIP (Model mode) or one View (Shop Draw mode).
+- **Required entities**: SIP panels with assigned position numbers (posnum).
+- **Minimum beam count**: 0 (operates on SIP entities, not beams).
+- **Required settings files**: None.
+- **Additional requirements**:
+  - For shop drawing mode: A valid ShopDrawView entity containing SIP panel data.
+  - Panels must have labels and sublabels properly assigned.
 
 ## Usage Steps
 
 ### Step 1: Launch Script
-Command: `TSLINSERT` → Select `sdUK_ShowSIPList.mcr` from the list.
+Command: `TSLINSERT` -> Select `sdUK_ShowSIPList.mcr`
 
-### Step 2: Configure Properties
-Before insertion, the Properties Palette (OPM) will display.
-1.  Set the **Drawing space** property to `|Model|` (for 3D model selection) or `|shopdraw multipage|` (for drawing views).
-2.  Adjust the **Dim Style**, **Color**, and **Panel list heading** as desired.
+### Step 2: Configure Settings
+```
+Dialog: Script configuration dialog appears
+Action: Adjust display color, dimension style, and heading text as needed.
+```
 
-### Step 3: Insertion Point
+### Step 3: Pick Insertion Point
 ```
 Command Line: Pick a point for edge details
-Action: Click in the drawing where you want the top-left corner of the list to appear.
+Action: Click to place the panel list location on your drawing. The list extends downward from this point.
 ```
 
-### Step 4: Select Source (Mode Dependent)
-The next prompt depends on the **Drawing space** property selected in Step 2.
-
-**If "|Model|" is selected:**
+### Step 4: Select Source
+**For Model Mode:**
 ```
 Command Line: Please select Elements
-Action: Click on one or more SIP panels in the model and press Enter.
+Action: Select one or more SIP panels directly from model space and press Enter.
 ```
-*Note: The script will use the first selected panel to find all other panels in the model with the same Position Number.*
 
-**If "|shopdraw multipage|" is selected:**
+**For Shopdraw Multipage Mode:**
 ```
 Command Line: Select the view entity from which the module is taken
-Action: Click on the border/frame of the Shop Drawing View containing the panels.
+Action: Click on the ShopDrawView entity that contains the panels.
 ```
+
+### Step 5: View Results
+The script displays:
+1. A heading line (customizable)
+2. An alphabetically sorted list of all panels sharing the same position number
+3. Each line shows the combined label + sublabel (e.g., "A1a", "A1b", "B2a")
 
 ## Properties Panel Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Drawing space | dropdown | *None* | Determines the selection method. Choose `|Model|` to pick panels directly, or `|shopdraw multipage|` to select a view frame. |
-| Dim Style | dropdown | *Current* | Selects the dimension style (font, text height) to apply to the generated list text. |
-| Color | number | 1 | Sets the AutoCAD color index (1-255) for the text. (1 = Red). |
-| Panel list heading | text | Panel List: | The title text displayed at the very top of the generated list. |
+| Drawing space | PropString (dropdown) | Model | Choose "Model" for direct model space selection or "shopdraw multipage" for shop drawing viewport mode. |
+| Dim Style | PropString (dropdown) | (Drawing default) | Select the dimension style to control text appearance, font, and height. |
+| Color | PropInt | 1 (Red) | Set the display color for the list text using AutoCAD Color Index (ACI). |
+| Panel list heading: | PropString | "Panel List:" | Customize the heading text displayed above the panel list. |
+
+### Parameter Details
+
+**Drawing space**
+- **Model**: Prompts you to select SIP entities directly from the model.
+- **shopdraw multipage**: Uses the linked ShopDrawView entity to find associated SIP panels automatically through the ViewData system.
+
+**Dim Style**
+The selected dimension style determines:
+- Text height
+- Font style
+- Line spacing between entries (text height + 20mm)
+
+**Color**
+Standard AutoCAD Color Index values:
+- 1 = Red (default)
+- 2 = Yellow
+- 3 = Green
+- 7 = White/Black (depends on background)
 
 ## Right-Click Menu Options
-No specific custom context menu options are defined for this script.
+This script does not define custom context menu items. Standard TSL context menu options apply.
 
 ## Settings Files
-No external settings files are required for this script.
+- **Filename**: None used.
 
 ## Tips
-- **Smart Grouping**: You do not need to select every single individual panel if they belong to the same assembly. The script detects the Position Number of your selection and automatically includes all panels in the model that share that number.
-- **Sorting**: The list is automatically sorted alphabetically to ensure consistency in your drawings.
-- **Text Appearance**: Ensure your chosen **Dim Style** is sized appropriately for the scale of your drawing so the list is legible.
+- **Position Number Grouping**: The script automatically finds all SIP panels sharing the same position number as the first selected/detected panel. This is useful for showing panel counts and identifying identical fabrication units.
+
+- **Alphabetical Sorting**: Panel names are sorted alphabetically, making it easy to locate specific panels in large lists.
+
+- **Text Spacing**: The list uses your dimension style's text height plus a 20mm gap between lines. Choose a dimension style with appropriate text height for your drawing scale.
+
+- **Empty Collections**: If the selected panel has a unique position number (no other panels share it), only that single panel's label will be displayed.
+
+- **Automatic Updates**: If panels are added or removed from the model, or if position numbers change, the list automatically updates when the drawing regenerates.
+
+- **Label Format**: The displayed name combines the panel's main label with its sublabel (e.g., "A1" + "a" = "A1a"). Ensure your panels have proper labeling before generating the list.
+
+- **Invalid ViewData**: In shop drawing mode, if no valid ViewData is found for the selected viewport, the script displays only the script name as a placeholder.
 
 ## FAQ
-- **Q: Why are there more panels in my list than I selected?**
-  **A**: The script is designed to group panels by their Position Number. If you select one panel from a group, the script finds and lists every panel in the current model that shares that Position Number.
+- **Q: Why is only the script name showing instead of my panel list?**
+  - A: In shopdraw multipage mode, this occurs when the selected ShopDrawView has no valid ViewData. Ensure the view entity is properly linked to model data.
 
-- **Q: Can I use this in a layout (Paper Space) directly?**
-  **A**: You should use the "shopdraw multipage" mode. This allows you to select a view frame, and the script will extract the relevant panel data from that view to generate the list.
+- **Q: How do I change the list heading?**
+  - A: Select the script instance, open Properties (Ctrl+1), and modify the "Panel list heading:" parameter.
+
+- **Q: Can I list panels from multiple position numbers?**
+  - A: No, the script groups panels by a single position number. Run the script multiple times for different position number groups.
+
+- **Q: Why are some panels missing from the list?**
+  - A: The script only shows panels with matching position numbers. Verify that all expected panels have the same posnum value assigned.
+
+- **Q: Why are there more panels in my list than I selected?**
+  - A: The script is designed to group panels by their Position Number. If you select one panel from a group, the script finds and lists every panel in the current model that shares that Position Number.
 
 - **Q: The text is too small to read.**
-  **A**: Change the **Dim Style** property to a style that uses a larger text height, or modify the text height in your AutoCAD dim style settings.
+  - A: Change the **Dim Style** property to a style that uses a larger text height, or modify the text height in your AutoCAD dim style settings.

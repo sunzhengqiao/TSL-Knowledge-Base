@@ -1,75 +1,185 @@
-# instaCell.mcr
+# instaCell
+
+MEP (Mechanical, Electrical, Plumbing) Installation Cell Tool
+
+---
 
 ## Overview
-Inserts and manages installation "cells" (e.g., electrical boxes, switches, service penetrations) that combine visual block representations with physical CNC machining operations (drilling, mortising, cutting).
 
-## Usage Environment
+The **instaCell** script creates a single installation cell that represents a penetration or routing point for MEP services (electrical outlets, plumbing fixtures, HVAC connections) in timber panels. These cells are designed to work within the **instaCombination** system, which manages multiple cells along a defined path.
 
-| Space | Supported | Notes |
-|-------|-----------|-------|
-| Model Space | Yes | Primary environment for inserting cells and generating machining. |
-| Paper Space | No | Not supported. |
-| Shop Drawing | No | Not supported. |
+This tool is particularly useful for:
+- Electrical installations (outlets, switches, junction boxes)
+- Sanitary/plumbing penetrations
+- HVAC routing through CLT/SIP panels
+- Any MEP service requiring defined openings in timber construction
+
+The script creates parametric machining operations (drills, mortises, beam cuts, or octagon cuts) that automatically update when the parent element or combination changes.
+
+---
+
+## Environment
+
+| Property | Value |
+|----------|-------|
+| Type | O (Object) |
+| Version | 3.4 |
+| Keywords | Electra, Sanitary, Sip, Installation, CLT, BSP |
+| Requires | Part of "insta" suite (instaCombination, instaCell, instaConduit) |
+| Model Space | Yes |
+| Paper Space | No |
+
+---
 
 ## Prerequisites
-- **Required Entities**: A host `Element` (Stickframe Wall or Roof) or `GenBeam` is optional but recommended for machining. If no host is selected, the cell acts as a standalone block.
-- **Settings Files**: `instaCombination.xml` (Located in Company or Install path).
-- **Block Library**: Access to the folder `hsbCompany\Block\insta` (or custom path defined in settings) to read/write block definitions.
 
-## Usage Steps
+Before using instaCell, ensure:
 
-### Step 1: Launch Script
-```
-Command Line: TSLINSERT
-Action: Select 'instaCell.mcr' from the list of available scripts.
-```
+1. **Parent Combination**: An **instaCombination** must already exist in the drawing. The cell cannot function independently.
 
-### Step 2: Define Placement
-```
-Command Line: Select Element or [Pick Point]:
-Action: Click on a timber beam or wall element to host the cell, or press Enter to place it in free space (Model Space only).
-```
+2. **Target Element**: The cell must be placed on one of the following:
+   - Stickframe wall element (ElementWallSF)
+   - Stickframe roof element (ElementRoof)
+   - SIP panel
+   - Loose GenBeam
 
-### Step 3: Configure Properties
-```
-Action: Select the inserted instance and open the Properties (OPM) palette.
-Details: Enter the Blockname, Category, and Sub Category to load the correct visual block and machining tools.
-```
+3. **Block Library** (Optional): For visual symbols, blocks can be stored in:
+   - Company path: `[Company]\Block\insta\`
+   - Organized by Category and Subcategory subfolders
 
-## Properties Panel Parameters
+4. **Settings File**: Configuration is read from `instaCombination.xml` located in:
+   - Company: `[Company]\TSL\Settings\`
+   - Install: `[Install]\Content\General\TSL\Settings\`
+
+---
+
+## Usage
+
+### Inserting a New Cell
+
+1. Run the insertion command or select from the TSL browser
+2. A properties dialog appears to configure the cell
+3. Select an existing **instaCombination** when prompted: "Select combination"
+4. Click a point to position the cell along the combination path
+
+### Workflow
+
+1. **Create Combination First**: Insert an instaCombination on your target element
+2. **Add Cells**: Insert instaCell instances and link them to the combination
+3. **Configure Tools**: Set the tool type (Drill, Mortise, etc.) and dimensions
+4. **Assign Block**: Select a symbol block for element view display
+5. **Add Hardware**: Attach hardware components if needed
+
+---
+
+## Parameters
+
+### Tool Category
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Blockname | String | Empty | The specific name of the block definition (DWG file) to use (e.g., "Socket_1G"). |
-| Category | String | Electra | The main group for organizing blocks (e.g., "Electra", "Plumbing"). Used for folder structure. |
-| Sub Category | String | Switches | The subgroup for organizing blocks (e.g., "Switches", "Lights"). Used for sub-folder structure. |
+| **Tool** | List | Drill | Tool type: Drill, Mortise, Beamcut, or Octagon |
+| **Diameter** (or Width) | Double | 68 mm | Diameter for drills/octagons, width for mortise/beamcut |
+| **Height** | Double | 68 mm | Height of mortise/beamcut; tangent height for octagon (0 = regular octagon). Hidden for Drill tool. |
+| **Depth** | Double | 68 mm | Cutting depth (0 = complete through) |
+| **Radius** | Double | 0 | Explicit corner radius for mortise (when height > 0). Only visible for Mortise tool. |
+| **Tool Index** | Integer | 1 | CNC tool index for element tools. Hidden if element does not support tools. |
+| **Diameter Through Drill** | Double | 0 | Optional secondary through-drill diameter (0 = none) |
+| **Offset** | Double | 1 mm | Spacing offset to adjacent cells |
 
-## Right-Click Menu Options
+### Model Category
 
-| Menu Item | Description |
-|-----------|-------------|
-| Hide Tools | Hides all CNC tools (drills, mortises, cuts) in the model view. |
-| Show Tools | Displays all CNC tools associated with the cell. |
-| Swap Width <-> Height | Swaps the width and height dimensions for mortise or beamcut tools. |
-| Set block definition | Opens a dialog to define or update the current block, saving it to the DWG library. |
-| Store hardware in block definition | Clones hardware from this specific instance and saves it into the block definition, making it standard for all instances of this block. |
-| Show all Commands for UI Creation | Displays a list of command strings used to create custom tool buttons for this script. |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| **Blockname** | List | Disabled | Symbol block for element view display. Lists all available blocks from the block library. |
 
-## Settings Files
-- **Filename**: `instaCombination.xml`
-- **Location**: `_kPathHsbCompany\TSL\Settings` or `_kPathHsbInstall\Content\General\TSL\Settings\`
-- **Purpose**: Controls script settings including display styles, block file paths, and version management.
+### Tool Types Explained
+
+- **Drill**: Circular hole with specified diameter and depth
+- **Mortise**: Rectangular pocket with rounded corners, ideal for outlet boxes
+- **Beamcut**: Full-depth rectangular cut through the member
+- **Octagon**: Eight-sided cut, with adjustable tangent height for shape control
+
+---
+
+## Context Menu
+
+Right-click on an instaCell to access these commands:
+
+| Command | Description |
+|---------|-------------|
+| **Hide Tools** | Hide CNC tool visualization in element view |
+| **Show Tools** | Display CNC tool visualization |
+| **Swap Width <-> Height** | Exchange width and height values (Mortise/Beamcut only, when dimensions differ) |
+| **Set block definition** | Select a block reference and configure its category/subcategory, then save to the block library |
+| **Store hardware in block definition** | Save current hardware components into the block file for reuse across all instances |
+| **Show all Commands for UI Creation** | Display command strings for creating custom toolbar buttons |
+
+---
 
 ## Tips
-- **Folder Management**: When using the "Set block definition" command, the script automatically creates the Category and Sub Category folders in your block library if they do not exist.
-- **Visualizing Machining**: Use the "Show Tools" context menu option to verify that the correct holes or cuts are generated in the host timber.
-- **Batch Updates**: If you modify a block definition using the context menu, all existing instances in the model referencing that block name can be updated.
-- **Creating UI**: Use "Show all Commands for UI Creation" to get the specific strings needed to add buttons to your toolbars or ribbon for quick insertion of specific cells.
+
+### Block Management
+
+- Blocks are automatically discovered from `[Company]\Block\insta\` with category/subcategory folder structure
+- When selecting a new block, it is automatically imported and tagged with instaCell metadata
+- Hardware components attached to the cell can be stored within the block definition for reuse
+- The "Store hardware in block definition" option is only available when a valid block is selected
+
+### Tool Selection
+
+- Use **Drill** for round penetrations (cables, pipes)
+- Use **Mortise** for electrical boxes and rectangular fixtures
+- Use **Beamcut** for full-depth rectangular openings
+- Use **Octagon** for specialized hardware requiring non-circular, non-rectangular cuts
+- When switching from Drill to Mortise/Beamcut, Height is automatically set equal to Width
+- When switching to Drill or Octagon, Height is automatically reset to 0
+
+### Performance
+
+- Block definitions are cached in a MapObject for faster loading in drawings with many blocks
+- Set tool mode to "byCombination" (in parent instaCombination) to defer machining operations and process multiple cells efficiently
+- When in "byCombination" mode, tool outlines are displayed but not applied to beams
+
+### Element Tools
+
+- For stickframe walls and roofs, element-level CNC tools (ElemDrill, ElemMill) are automatically generated
+- Tool visibility can be toggled via the context menu
+- The cell is automatically assigned to the appropriate element zone based on face direction
+- Zone 0 assignments use Z-Layer for layer management
+
+### Visual Indicators
+
+- A half-filled display indicates which face the cell penetrates from
+- Different colors distinguish front-face vs. back-face installations (configurable in settings)
+- The block symbol is displayed in element view at the configured scale
+- Plan view and element view have independent color and scale settings
+
+### Creating Custom Toolbar Buttons
+
+Use the "Show all Commands for UI Creation" context menu option to get copy-paste ready command strings for:
+- Direct insertion: `^C^C(defun c:TSLCONTENT() (hsb_ScriptInsert "instaCell")) TSLCONTENT`
+- Catalog-based insertion (silent, no dialog): `^C^C(defun c:TSLCONTENT() (hsb_ScriptInsert "instaCell" "CatalogName")) TSLCONTENT`
+- Tool visibility control
+- Block definition management
+
+### Version Compatibility
+
+- On first insertion, the script compares settings file versions between Company and Install paths
+- A notice is displayed if versions differ, allowing you to review and update settings as needed
+
+---
 
 ## FAQ
-- **Q: Why did I get a notice about version mismatch when inserting?**
-  **A:** The script detected that the version of `instaCombination.xml` in your Company folder differs from the default installation version. Review the settings to ensure compatibility.
-- **Q: Can I use this without a beam?**
-  **A:** Yes, you can pick a point in free space to insert the visual block, but no machining tools will be generated without a host beam or element.
-- **Q: How do I add standard screws to this electrical box?**
-  **A:** Insert the screws as hardware on the instance, then right-click and select "Store hardware in block definition" to save them as part of the block for future use.
+
+**Q: Why did I get a notice about version mismatch when inserting?**
+A: The script detected that the version of `instaCombination.xml` in your Company folder differs from the default installation version. Review the settings to ensure compatibility.
+
+**Q: Can I use this without a beam?**
+A: The cell requires an instaCombination parent. Without a valid element or GenBeam, the instance will be deleted with the message "Invalid reference. Tool will be deleted".
+
+**Q: How do I add standard hardware to an electrical box?**
+A: Insert the hardware on the instance using the hardware dialog, then right-click and select "Store hardware in block definition" to save them as part of the block for future use.
+
+**Q: What happens if my selected block is not found?**
+A: The Blockname is automatically reset to "Disabled" with a message indicating the change.

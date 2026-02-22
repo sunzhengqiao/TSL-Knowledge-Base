@@ -1,63 +1,135 @@
-# sdUK_SIPShowEdgeDirections.mcr
+# sdUK_SIPShowEdgeDirections
 
 ## Overview
-This script is an automated shop drawing utility for Structural Insulated Panels (SIPs). It detects and annotates panel edges in generated views, adding labels (e.g., "E1") and directional arrows to clearly indicate edge orientation and bevel angles.
 
-## Usage Environment
-| Space | Supported | Notes |
-|-------|-----------|-------|
-| Model Space | No | This script does not run manually in model space. |
-| Paper Space | Yes | It runs automatically when shop drawing layouts are generated. |
-| Shop Drawing | Yes | This script must be assigned to a Sip entity within a Shop Drawing Style. |
+**sdUK_SIPShowEdgeDirections** is a shop drawing annotation script that displays edge direction indicators on SIP (Structural Insulated Panel) elements. It works in conjunction with the `sdUK_SIPShowEdgeDetails` script to provide visual reference labels (E1, E2, E3, etc.) for each panel edge, helping fabricators and installers identify edge positions and orientations.
+
+The script automatically calculates the normal direction of each SIP edge, positions directional arrows, and places edge reference labels at appropriate offsets from the panel perimeter. This visual annotation system ensures that edge-specific details can be easily cross-referenced in fabrication documentation.
+
+## Environment
+
+| Property | Value |
+|----------|-------|
+| Script Type | E-Type (Entity Script) |
+| Environment | Paper Space / Shop Drawings |
+| Requires | 1 SIP panel |
+| Version | 1.2 (January 21, 2021) |
+
+This script is designed for the shop drawing engine and generates dimension requests that appear on 2D fabrication views.
 
 ## Prerequisites
-- **Required Entities**: Sip (Structural Insulated Panel).
-- **Minimum Beam Count**: 1 SIP.
-- **Required Settings**: The script must be assigned to the desired entity in the Shop Drawing Style configuration.
 
-## Usage Steps
+Before using this script, ensure the following conditions are met:
 
-### Step 1: Configure Shop Drawing Style
-1. Open the **Shop Drawing Style** editor in hsbCAD.
-2. Navigate to the entity mapping or TSL assignment section for **Sip** entities.
-3. Add `sdUK_SIPShowEdgeDirections.mcr` to the list of scripts to run for the Sip.
+1. **Valid SIP Panel**: The script must be attached to a valid SIP (Structural Insulated Panel) entity
+2. **Drawing Setup**: The shop drawing view must be configured to display the SIP in plan view (normal to the panel face)
+3. **Related Script**: Works alongside `sdUK_SIPShowEdgeDetails` for complete edge documentation
 
-### Step 2: Generate Shop Drawing
-1. Run the **Generate Shop Drawing** command (usually via the hsbCAD toolbar).
-2. Select the desired SIPs or the entire model.
-3. The script will execute automatically during the view generation process.
+**Note**: As of version 1.2, the script also accepts panels that are not linked to an Element, providing greater flexibility when documenting standalone SIP panels.
 
-### Step 3: Review Annotations
-1. Open the generated layout in Paper Space.
-2. Inspect the views of the SIPs.
-3. You will see edge labels and directional arrows placed on the panel edges in Normal (perpendicular) views.
+## Usage
 
-## Properties Panel Parameters
+### Automatic Placement via Shop Drawing Engine
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| N/A | N/A | N/A | This script does not expose any user-editable parameters in the Properties Palette. |
+The script is typically invoked automatically by the hsbCAD shop drawing engine when generating fabrication drawings for SIP panels:
 
-## Right-Click Menu Options
+1. Configure your shop drawing settings to include SIP edge annotations
+2. Generate the shop drawing for the Element or SIP panel
+3. The edge direction arrows and labels appear automatically on applicable views
 
-| Menu Item | Description |
-|-----------|-------------|
-| N/A | This script does not add specific items to the entity right-click menu. |
+### Manual Placement
 
-## Settings Files
-- **Filename**: None required.
-- **Location**: N/A
-- **Purpose**: The script operates entirely based on the geometry of the selected SIP and does not require external XML configuration files.
+To manually attach this script to a SIP panel:
+
+1. Select the SIP panel in Model Space
+2. Navigate to **hsbCAD Tools > TSL Scripts**
+3. Locate and select `sdUK_SIPShowEdgeDirections`
+4. The script attaches to the selected SIP
+
+### Behavior
+
+When executed, the script:
+
+1. Retrieves the SIP geometry and coordinate system
+2. Identifies all SIP edges using the `sipEdges()` method
+3. For each edge, calculates:
+   - The edge midpoint
+   - The edge normal direction (perpendicular to edge)
+   - The bevel angle (if edge is not perpendicular to panel face)
+   - An appropriate offset distance for label placement
+4. Creates dimension requests with:
+   - Edge reference labels (E1, E2, E3, etc.)
+   - Directional arrows indicating edge orientation
+
+## Parameters
+
+This script does not expose any user-configurable parameters in the OPM (Object Property Manager). All behavior is determined automatically based on the SIP geometry.
+
+### Calculated Values
+
+| Value | Description |
+|-------|-------------|
+| Edge Reference | Sequential labels E1, E2, E3... for each SIP edge |
+| Offset Distance | Calculated based on recess depth + 70mm, or panel thickness x tan(bevel angle) for beveled edges |
+| Bevel Angle | Automatically detected from edge normal relative to panel Z-axis |
+
+## Output Annotations
+
+The script generates the following dimension request objects:
+
+### Edge Labels
+
+- **Type**: `DimRequestText`
+- **Format**: E1, E2, E3, etc.
+- **Position**: Offset from edge midpoint, outside the panel perimeter
+- **Stereotype**: "Edge"
+
+### Direction Arrows
+
+- **Type**: `DimRequestPLine`
+- **Shape**: Arrow polyline indicating edge direction
+- **Arrow Size**: 100mm length with 30mm arrowhead
+- **Line Type**: ByBlock
+- **Stereotype**: "Edge"
+
+## Menu
+
+This script does not define a context menu. It operates as a background annotation generator for the shop drawing engine.
 
 ## Tips
-- **View Orientation**: The script is designed to annotate "Normal" views (views looking perpendicularly at the panel surface). Edge labels may not appear in section or elevation cuts.
-- **Text Placement**: The script automatically calculates the position of the label. If the calculated position falls inside the panel profile, it will automatically flip the leader and text to the outside to ensure legibility.
-- **Unlinked Panels**: You can use this script on standalone panels that are not linked to a larger wall element.
 
-## FAQ
-- **Q: Why don't I see edge labels on my drawing?**
-  - A: Ensure that the view showing the panel is a "Normal" view (Top or Bottom view relative to the panel plane). The script skips non-normal views to avoid clutter.
-- **Q: Can I change the text size or arrow style?**
-  - A: This script uses fixed internal settings for geometry. To change styles, you would need to modify the script source code or adjust the CAD layer settings for the generated entities.
-- **Q: Does this work for curved walls?**
-  - A: The script processes standard SIP geometry. Results on complex or highly curved geometry may vary based on the specific edge definitions.
+### Best Practices
+
+- **Pair with sdUK_SIPShowEdgeDetails**: This script provides edge reference labels that correspond to detailed edge information generated by the companion script. Use both together for complete edge documentation.
+
+- **View Orientation**: Edge annotations only appear on views where the panel face is visible (plan views looking normal to the panel). Edge views will not display these annotations.
+
+- **Beveled Edges**: The script automatically adjusts label positioning for beveled edges to prevent overlap with the panel geometry.
+
+### Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| "No Sip found. Instance erased." | Ensure the script is attached to a valid SIP panel, not a beam or other entity type |
+| Labels not appearing | Verify the shop drawing view is looking normal to the panel face (plan view) |
+| Labels overlapping panel | The script uses shadow profile checking to position labels outside the panel; if issues persist, check for complex panel shapes |
+
+### Technical Notes
+
+- The script uses `envelopeBody()` rather than `realBody()` for performance when calculating label positions
+- Edge normals are visualized during script execution using `.vis()` for debugging purposes
+- The parent key for all dimension requests is "Dim sdUK_SIPShowEdgeDirections"
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 1.0 | July 13, 2012 | Initial release |
+| 1.1 | June 11, 2015 | Modified coordinate system due to SIP coordsys change in version 19.1.104 |
+| 1.2 | January 21, 2021 | HSB-10404: Now accepts panels not linked to an Element |
+
+## Related Scripts
+
+- `sdUK_SIPShowEdgeDetails` - Displays detailed edge information (recess depths, edge profiles)
+- `sdUK_SIPShowGenDim` - General SIP dimensioning
+- `sdUK_SIPShow*` - Other UK SIP shop drawing annotation scripts

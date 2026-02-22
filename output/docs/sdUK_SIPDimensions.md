@@ -1,79 +1,205 @@
-# sdUK_SIPDimensions.mcr
+# sdUK_SIPDimensions
+
+Automatic dimensioning script for SIP (Structural Insulated Panel) components in shop drawings. This script generates comprehensive dimension requests for contours, drills, openings, beam cuts, and angular measurements on SIP panels.
 
 ## Overview
-This script automates the creation of detailed dimension requests for Structural Insulated Panel (SIP) shop drawings. It generates linear dimensions, drill annotations, angle dimensions, and contour measurements based on specific layout stereotypes and user configurations.
 
-## Usage Environment
+The sdUK_SIPDimensions script automatically creates dimensioning for SIP panels in shop drawing layouts. It analyzes the panel geometry and generates dimension requests for:
+
+- **Contour dimensions** - Shape and edge measurements at vertices
+- **Drill dimensions** - Location and diameter of all drill holes with configurable display modes
+- **Opening dimensions** - Positions of window/door cutouts in SIPs and Sheets
+- **Extreme dimensions** - Overall length and width measurements
+- **Angular dimensions** - Non-90-degree angles in the contour with proximity filtering
+- **Beam cut dimensions** - Housing and dado cut locations
+- **Radial dimensions** - Arc radius measurements for curved contours
+
+The script works with the hsbCAD shop drawing engine to automatically place dimensions according to your layout definition settings.
+
+## Environment
+
 | Space | Supported | Notes |
 |-------|-----------|-------|
-| Model Space | Partial | Script is attached to beams in Model Space but does not generate visible geometry there. |
-| Paper Space | Yes | Dimensions are generated here when the Shopdrawing Layout is processed. |
-| Shop Drawing | Yes | This is the primary environment; the script is executed by the Shopdrawing engine. |
+| Model Space | Partial | Script attaches to beams in Model Space but does not generate visible geometry there |
+| Paper Space | Yes | Dimensions are generated when the shop drawing layout is processed |
+| Shop Drawing | Yes | Primary environment; executed by the shop drawing engine |
+
+- **Script Type**: E-Type (Entity-based)
+- **Required Beams**: 1 (operates on a single GenBeam, SIP, or Sheet)
+- **DXA Output**: Yes (exports dimension data)
 
 ## Prerequisites
-- **Required entities**: One or more `GenBeam` entities (typically representing Structural Insulated Panels).
-- **Minimum beam count**: 1.
-- **Required settings files**: 
-  - Dependency script `mapIO_GetArcPLine.mcr` must be available in the TSL search path.
-  - **Layout Definition**: Must contain the Stereotypes: "Contour", "Extremes", "Beamcut", and "Opening" (or custom names matching the script properties).
 
-## Usage Steps
+1. **Required Script**: The script requires `mapIO_GetArcPLine.mcr` to be available in the drawing or TSL search paths. This helper script converts segmented polylines to arcs for proper radial dimensioning.
 
-### Step 1: Launch Script
-**Command**: `TSLINSERT` → Select `sdUK_SIPDimensions.mcr` from the list.
+2. **Layout Definition**: Configure appropriate stereotypes in your layout definition for:
+   - `Contour` - Contour edge dimensions
+   - `Extremes` - Overall dimension lines
+   - `Drill` / `OppositeDrill` - Hole location dimensions
+   - `Beamcut` - Housing and dado cut dimensions
+   - `Opening` - Window/door opening dimensions
 
-### Step 2: Select Element
-```
-Command Line: Select GenBeam
-Action: Click on the timber beam or SIP element you wish to dimension.
-```
+3. **Multipage Style**: Add this script to the ruleset of a multipage style that processes SIP panels.
 
-### Step 3: Set Reference Point
-```
-Command Line: Select point near tool
-Action: Click in the 3D model to define the side or location where the dimensioning logic should originate relative to the beam.
-```
-*(Note: After these steps, the script is attached to the element. Actual dimensions appear when the Shopdrawing is generated.)*
+## Usage
 
-## Properties Panel Parameters
+### Automatic Execution (Recommended)
+
+1. Configure your multipage style to include this script in its ruleset
+2. Generate shop drawings using the shop drawing engine
+3. The script automatically processes each SIP panel and creates dimension requests
+4. Dimensions appear according to your layout definition settings
+
+### Manual Insertion
+
+1. Command: `TSLINSERT` and select `sdUK_SIPDimensions.mcr`
+2. When prompted "Select GenBeam", click on the SIP panel or timber beam
+3. When prompted "Select point near tool", click to define the dimension reference location
+4. The script generates dimension requests for all views
+
+### Editing Settings
+
+1. Select an existing instance of the script
+2. Access Properties through right-click menu or Properties Palette
+3. The MapIO dialog displays all configurable parameters
+4. Modify settings and click OK to apply changes
+
+## Parameters
+
+### Drill Dimension Settings
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| ChainContentDrill | dropdown | Chain Dimension | Defines the text content for chain dimensions at drill points (e.g., position only, or position + diameter). |
-| DiameterUnit | dropdown | DWG Unit | Sets the unit of measurement for drill diameter annotations (mm, in, etc.). |
-| AddExtremes | dropdown | No | If "Yes", adds an overall dimension line showing the total length/height of the beam. |
-| AddAngles | dropdown | Add | Controls the display of angular dimensions for non-orthogonal cuts. Options include suppressing duplicate nearby angles. |
-| SegmentToArcLength | number | 5 mm | Maximum length for a straight segment to be treated as an arc (smoothing tolerance). |
-| ExtrProfDimMode | dropdown | Low Detail | Level of detail for dimensioning the beam's cross-section (Low, High, or None). |
-| StereotypeOppositeDrill | dropdown | No | If "Yes", applies a specific stereotype to drills located on the side of the beam opposite to the current view. |
-| DrawDrillCircles | text | | Configuration string to force the drawing of 2D circles for drills instead of standard machining symbols. |
-| StereotypeContour | text | Contour | Assigns a specific stereotype (style/layer) to dimensions measuring the outer contour. Use '---' to suppress. |
-| StereotypeExtremes | text | Extremes | Assigns a specific stereotype to overall extreme dimensions. Use '---' to suppress. |
-| StereotypeBeamcut | text | Beamcut | Assigns a specific stereotype to dimensions for machining features like housings. Use '---' to suppress. |
-| StereotypeOpening | text | Opening | Assigns a specific stereotype to dimensions for internal openings. Use '---' to suppress. |
-| DimAnglesOffset | number | 25 mm | The offset distance from the beam edge where angular dimension lines are placed. |
+| Chain Content (Drill) | Dropdown | Chain Dimension | Controls how drill dimensions are displayed |
+| Diameter Units | Dropdown | DWG Unit | Unit for diameter/radius values (DWG Unit, m, cm, mm, in, ft) |
+| use Stereotype 'OppositeDrill' | Yes/No | No | Drills on the back face use "OppositeDrill" stereotype |
+| draw Drills as Circles | String | (empty) | Color codes for drawing drill circles |
 
-## Right-Click Menu Options
+**Chain Content Options:**
+- **Chain Dimension** - Position only, with radial dimension for diameter
+- **Chain Dimension with Diameter** - Position plus diameter text on center point
+- **Diameter only** - Shows diameter text without chain positions
+- **Diameter at Reference Point** - Shows diameter at reference with quantity prefix
+- **Individual Diameter at Drill Point** - Creates individual stereotypes per diameter size
+- **Suppress Drill Dimensions** - Hides all drill-related dimensions
+
+### Contour Dimension Settings
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Additional Dimline Extremes | Yes/No | No | Adds extra dimension line for overall extreme points |
+| Add Contour Angles | Dropdown | Add | Controls angular dimensions for non-90-degree corners |
+| Angular Dimension Offset | Double | 25 mm | Distance offset for angular dimension placement |
+| Segment to Arc Length | Double | 5 mm | Maximum segment length convertible to arc for radial dimensioning |
+| Extrusion Profile Dimensioning | Dropdown | Low Detail | Detail level for extrusion-based beam profiles |
+
+**Add Contour Angles Options:**
+- **Add** - Shows all non-90-degree angles
+- **Add and suppress same angle near by** - Filters duplicate angles on adjacent vertices
+- **Do not show** - Hides all angular dimensions
+
+**Extrusion Profile Dimensioning Options:**
+- **Low Detail** - Uses boxed (rectangular) shape for dimensions
+- **High Detail** - Uses full extrusion profile contour
+- **Do not show** - Suppresses profile dimensions
+
+### Stereotype Settings
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Stereotype Contour Dimensioning | String | Contour | Stereotype for contour dimensions |
+| Stereotype Extreme Dimensioning | String | Extremes | Stereotype for overall dimensions |
+| Stereotype Beamcut Dimensioning | String | Beamcut | Stereotype for housing/dado dimensions |
+| Stereotype Opening Dimensioning | String | Opening | Stereotype for opening dimensions |
+
+Enter `---` in any stereotype field to suppress that dimension type.
+
+## Menu Options
 
 | Menu Item | Description |
 |-----------|-------------|
-| Properties | Opens the AutoCAD Properties Palette (OPM) to configure the dimensioning parameters listed above. |
-| Recalculate | Manually forces the script to re-run (useful if the beam geometry changed but the shopdrawing hasn't been regenerated yet). |
+| Properties | Opens the AutoCAD Properties Palette (OPM) for parameter configuration |
+| Recalculate | Forces the script to re-run when beam geometry has changed |
 
-## Settings Files
-- **Filename**: `mapIO_GetArcPLine.mcr`
-- **Location**: TSL Search Path (Company or Install folder)
-- **Purpose**: Provides logic to read arc geometry from polylines, which is necessary for accurate dimensioning of curved contours.
+Settings are accessed through the MapIO dialog when the script is selected, presenting all parameters organized into logical groups.
 
 ## Tips
-- **Stereotypes matter**: Ensure your Layout Definition contains Stereotypes (e.g., "Contour", "Opening") that exactly match the values in the script properties. If they do not match, dimensions will not be visible in the generated drawing.
-- **Clutter Control**: If a drawing is too busy, set `AddExtremes` to "No" or use `StereotypeOpening` set to `---` to hide specific dimension types.
-- **Flipping Dimensions**: You can use the grip on the script instance in the model to move the reference point (`_Pt0`) to the other side of the beam, which may flip the dimension side in the layout.
+
+### Optimizing Dimension Output
+
+- **Suppress unnecessary dimensions**: Enter `---` in stereotype fields to hide specific dimension types
+- **Control drill display**: Use "Suppress Drill Dimensions" option if drills are dimensioned elsewhere
+- **Manage clutter**: Enable "Add and suppress same angle near by" to reduce redundant angular dimensions at closely spaced vertices
+
+### Working with Multiple Drill Sizes
+
+- When multiple drill diameters exist, the script automatically switches from "Diameter at Reference Point" to "Diameter only" mode
+- A message appears in the command line when this automatic switch occurs
+- Use "Individual Diameter at Drill Point" for clearest identification - creates unique stereotypes like "Drill20", "Drill25" based on diameter in mm
+
+### Drawing Drill Circles
+
+The "draw Drills as Circles" parameter accepts special formatting:
+- `*;*` - Draw circles using component/zone colors (front; back)
+- `1;2` - Draw front-side drills in color 1, back-side in color 2
+- `*` - Single color for viewing side only using component color
+- Complete (through) drills are drawn in the main view color
+
+### Arc Detection
+
+The script automatically detects curved edges approximated with straight segments:
+- Segments shorter than "Segment to Arc Length" may be combined into arcs
+- For polylines with many even-length segments (like rounded extrusions), the threshold auto-adjusts
+- A message appears when segment length is automatically adjusted
+- Radial dimensions are added for all detected arcs
+
+### View-Specific Behavior
+
+The script processes three view directions:
+- **Front View** (Y-axis normal): Full contour, drill, and extreme dimensioning
+- **Top View** (Z-axis normal): Includes opening dimensions for SIPs and Sheets
+- **Side View** (X-axis normal): Contour and extreme dimensions, extrusion profile handling
+
+Dimension requests include view restrictions, ensuring dimensions only appear in appropriate viewports.
+
+### Stereotype Configuration
+
+Configure stereotypes in your layout definition to control:
+- Dimension style (text height, arrow type, precision)
+- Layer assignment and visibility
+- Color and linetype appearance
+- Offset distance from geometry
+
+Each stereotype can be independently styled, allowing distinct appearances for contour vs. drill vs. opening dimensions.
+
+### Performance Considerations
+
+- The script uses envelope bodies (`envelopeBody()`) for better performance
+- Complex SIP panels with many openings may take longer to process
+- Ensure `mapIO_GetArcPLine.mcr` is accessible to avoid arc detection errors
 
 ## FAQ
-- **Q: Why don't I see dimensions immediately after inserting the script?**
-  **A:** This is a Shopdrawing script. Dimensions are generated when you create or update the Shopdrawing Layout (Paper Space), not directly in the Model Space.
-- **Q: My drill holes are not dimensioning.**
-  **A:** Check the `ChainContentDrill` property. If it is set to "Suppress Drill Dimensions", no drill annotations will be created.
-- **Q: How do I change the unit for hole sizes only?**
-  **A:** Use the `DiameterUnit` property. This allows you to display hole diameters in a different unit (e.g., inches) than the rest of the drawing.
+
+**Q: Why don't I see dimensions immediately after inserting the script?**
+
+A: This is a shop drawing script. Dimensions are generated when you create or update the shop drawing layout (Paper Space), not directly in Model Space.
+
+**Q: My drill holes are not dimensioning.**
+
+A: Check the "Chain Content (Drill)" property. If set to "Suppress Drill Dimensions", no drill annotations are created. Also verify the "Drill" stereotype exists in your layout definition.
+
+**Q: How do I change the unit for hole sizes only?**
+
+A: Use the "Diameter Units" property. This allows displaying hole diameters in a different unit (e.g., inches) than the rest of the drawing.
+
+**Q: Why do some angular dimensions not appear?**
+
+A: Angular dimensions are only shown for acute angles (less than 90 degrees). 90-degree and obtuse angles are suppressed. Also, points that fall on drill circle edges are excluded from angular dimensioning.
+
+**Q: The script reports "No GenBeam found" and erases itself.**
+
+A: Ensure you have selected a valid SIP panel, Sheet, or Beam entity. The script requires at least one GenBeam to operate.
+
+**Q: How do I flip which side dimensions appear on?**
+
+A: Move the reference point (`_Pt0`) to the opposite side of the beam using the grip point. This changes the dimension placement side in the layout.

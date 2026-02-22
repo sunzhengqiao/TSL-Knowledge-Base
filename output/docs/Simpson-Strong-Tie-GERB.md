@@ -1,70 +1,83 @@
-# Simpson-Strong-Tie-GERB.mcr
+# Simpson Strong-Tie GERB (Gerberverbinder)
 
 ## Overview
-Automatically inserts Simpson Strong-Tie Gerber Hangers (GERB series) to create suspended connections between two timber beams. It manages 3D visualization, applies necessary cuts to the timber, and generates material lists (BOM) for the connector and nails.
+
+Places Simpson Strong-Tie Gerberverbinder (GERB series) beam splice connectors between two parallel, collinear timber beams of identical cross-section. The script automatically determines the correct connector model based on beam height, applies gap cuts to both beams, generates the 3D metal part geometry, and writes hardware components (connector and nails) to the Bill of Materials.
+
+Product reference: Simpson Strong-Tie GERB series (GERB125 through GERB220).
 
 ## Usage Environment
-| Space | Supported | Notes |
-|-------|-----------|-------|
-| Model Space | Yes | The script operates in the 3D model environment. |
-| Paper Space | No | |
-| Shop Drawing | No | |
+
+| Space | Supported |
+|-------|-----------|
+| Model Space | Yes |
+| Paper Space | No |
+| Shop Drawing | No |
+
+**Script type**: O-Type (Object)
 
 ## Prerequisites
-- **Required entities**: Beam or GenBeam.
-- **Minimum beam count**: 2 (must be a valid pair of beams).
-- **Required settings**: Catalog entries for the script name 'Simpson-Strong-Tie-GERB'.
+
+- At least two parallel beams with the same cross-section, aligned on the same axis
+- Beam height must match one of the supported GERB sizes: 125, 150, 160, 175, 180, 200, or 220 mm
+- Only connections aligned with the World Z-axis (_ZW) are supported
 
 ## Usage Steps
 
-### Step 1: Launch Script
-Command: `TSLINSERT` → Select `Simpson-Strong-Tie-GERB.mcr`
+### Workflow A: Automatic Pair Detection
 
-### Step 2: Configure Properties (If applicable)
-```
-Action: If no specific execute key is preset, a dialog box appears.
-Action: Select the Connector 'Type' (default is Automatic) and 'Nailing Pattern' in the dialog.
-Action: Click OK to proceed.
-```
+1. Launch the script via `TSLINSERT` and select `Simpson-Strong-Tie-GERB`.
+2. A dialog appears. Select connector type (default: Automatic), nailing pattern, and nail type. Click OK.
+3. At the prompt "Select beam(s)", select all beams that should receive splice connections.
+4. The script scans every beam pair for valid end-to-end connections. For each valid pair found (parallel, same axis, same section, gap within tolerance), a connector instance is created automatically.
 
-### Step 3: Select Beams
-```
-Command Line: Select beam(s)
-Action: Click on the two beams you wish to connect end-to-end.
-Note: The beams must be parallel, aligned on the same axis, and have the same cross-section for the script to detect a valid pair.
-```
+### Workflow B: Manual Split with Point Selection
+
+If no valid beam pair is detected among the selected beams (e.g., a single continuous beam), the script prompts:
+
+1. "Select the Point" -- click a location along the beam where the splice should occur.
+2. The beam is split at that point. All parallel beams in the selection that intersect the cutting plane are also split.
+3. A connector is placed at each split location.
 
 ## Properties Panel Parameters
 
+### General
+
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Type | dropdown | Automatic | Defines the model of the connector (e.g., GERB125, GERB150). 'Automatic' detects the correct size based on beam height. |
-| Gap | number | 10 mm | Defines the clearance space between the end of the supported beam and the supporting beam. |
-| Nailing Pattern | dropdown | Full Nailing | Defines the nail density. 'Full Nailing' uses maximum nails; 'Part Nailing' uses fewer nails. |
-| Nail type | dropdown | CNA4,0x40 | Defines the specific screw product used to attach the hanger (e.g., CNA4,0x50). |
+| Type | Dropdown (read-only) | Automatic | Connector model. Automatically determined from beam height. Values: Automatic, GERB125, GERB150, GERB160, GERB175, GERB180, GERB200-DE, GERB220. |
+| Gap | Length | 10 mm | Clearance between beam ends at the splice. Controls the cut positions on both beams. |
 
-## Right-Click Menu Options
+### Nailing
 
-| Menu Item | Description |
-|-----------|-------------|
-| Swap X-(-X) | Toggles the orientation of the connector 180 degrees along the beam axis (mirrors the hanger). This can also be triggered by Double-Clicking the connector. |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Nailing Pattern | Dropdown | Full Nailing | Nail density. "Full Nailing" uses the maximum number of nails per the product specification. "Part Nailing" uses a reduced count. |
+| Nail type | Dropdown | CNA4,0x40 | Nail product. Options: CNA4,0x40, CNA4,0x50, CNA4,0x60. |
 
-## Settings Files
-- **Catalog Entries**: Required for 'Simpson-Strong-Tie-GERB'
-- **Location**: Company or Install path
-- **Purpose**: Provides default configurations and execute keys for the script.
+## Right-Click Context Menu
+
+| Menu Item | Action |
+|-----------|--------|
+| Swap X-(-X) | Mirrors the connector about the YZ plane (flips left/right along the beam axis). Also triggered by double-clicking the connector. |
+
+## Behavior Details
+
+- **Automatic model selection**: The script matches beam height (in the connection's Z-direction, aligned with World Z) against the GERB product table. If no exact match is found, the tool reports "Invalid geometry" and deletes itself.
+- **Gap enforcement**: During insertion, beam pairs whose end gap exceeds the defined Gap value are skipped.
+- **Beam cuts**: Both beams receive stretch-type cuts at the splice point, maintaining the defined gap.
+- **Duplication prevention**: On creation, the script checks all existing instances in Model Space. If a connector already exists for the same beam pair, the new instance is erased.
+- **Compare key**: Position number assignment uses the combination of script name, connector type, nailing pattern, and nail type.
+- **Hardware BOM output**: Each instance writes two hardware components -- one for the GERB connector (manufacturer: Simpson StrongTie, material: S 250 GD +Z 275 per DIN EN 10346) and one for the nails with computed quantity.
+
+## Catalog / Silent Insert
+
+The script supports catalog-based insertion via `_kExecuteKey`. If a matching catalog entry name is found, properties are loaded from that catalog entry. Otherwise, the last-inserted configuration is applied.
 
 ## Tips
-- **Automatic Detection**: Use the 'Automatic' Type setting to let the script select the correct hanger size based on your beam height (supports 125, 150, 160, 175, 180, 200, and 220 mm heights).
-- **Beam Alignment**: Ensure the two beams are perfectly collinear and parallel; otherwise, the script will not create a connection.
-- **Quick Flip**: Double-click the connector in the model to quickly flip its orientation instead of using the right-click menu.
 
-## FAQ
-- **Q: Why did the connector not appear after I selected the beams?**
-  **A**: The script requires a pair of beams that are parallel, aligned, and have the same cross-section. If the beams are skewed or have different heights, the connection will not be generated.
-
-- **Q: Can I adjust the space between the beams after insertion?**
-  **A**: Yes. Select the connector, open the Properties palette (Ctrl+1), and change the 'Gap' value.
-
-- **Q: What happens if my beam height doesn't match a standard GERB size?**
-  **A**: If 'Type' is set to 'Automatic' and no match is found, the tool will report "Invalid geometry" and delete itself. You must manually select a specific 'Type' that fits your construction context.
+- Use "Automatic" type to let the script pick the correct GERB model; manually overriding is not needed unless beam geometry is unconventional.
+- Ensure beams are truly collinear -- even small offsets in Y or Z will cause the script to reject the pair.
+- After placement, you can drag the insertion point (_Pt0) along the beam axis to reposition the splice, provided it stays within the valid range of both beams.
+- Double-click the connector for a quick mirror flip instead of using the context menu.
+- The "Type" property is read-only in the Properties palette; it is determined by geometry and cannot be changed manually after insertion.

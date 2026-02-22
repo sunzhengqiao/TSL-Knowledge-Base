@@ -1,87 +1,196 @@
 # HSB_R-Tube
 
 ## Overview
-Inserts a ventilation or service tube (chimney/soil stack) through a roof element. It automatically generates structural framing trimmers, cuts holes in rafters/sheathing, and applies CNC tooling based on specified dimensions.
+
+| Property | Value |
+|----------|-------|
+| **Script Name** | HSB_R-Tube |
+| **Type** | Object (O) |
+| **Version** | 4.26 |
+| **Category** | Roof Opening / Tube Installation |
+| **Description** | Adds a tube (pipe penetration) to a roof element with automatic trimmer framing |
+
+## Summary
+
+This TSL script creates a tube/pipe penetration through a roof element. The tube is placed at a specified insertion point and can be oriented vertically or perpendicular to the roof element. The script automatically generates trimmer beams around the tube to frame the opening, cuts openings in internal and external sheeting, and optionally creates a top sheet and hardware component for the tube.
 
 ## Usage Environment
-| Space | Supported | Notes |
-|-------|-----------|-------|
-| Model Space | Yes | Generates 3D beams, sheets, and bodies. |
-| Paper Space | No | Not designed for 2D shop drawings. |
-| Shop Drawing | No | Model-space script only. |
 
-## Prerequisites
-- **Required Entities**: A Roof Element (e.g., `Element` or flat roof).
-- **Minimum Beam Count**: 1 (The element must contain structural beams to trim or drill).
-- **Required Settings**: None strictly required, though a Joinery Catalog file is needed if using the integrated timber connections option.
+| Environment | Supported |
+|-------------|-----------|
+| Model Space | Yes |
+| Paper Space | No |
+| Roof Elements | Yes |
+| Wall Elements | No |
+| Floor Elements | No |
+| Purlin Elements | Yes (limited) |
 
-## Usage Steps
+## Usage Workflow
 
-### Step 1: Launch Script
-Command: `TSLINSERT` → Select `HSB_R-Tube.mcr` from the list.
-
-### Step 2: Select Roof Element
-```
-Command Line: Select Roof Element:
-Action: Click on the roof element (or the surface of the element) where you want to insert the tube.
-```
-The script will attach to the element and generate initial geometry at the origin (0,0) of that element's coordinate system.
-
-### Step 3: Configure Position
-1. Select the inserted script instance.
-2. Open the **Properties Palette** (Ctrl+1).
-3. Adjust the **Reference Position** (e.g., Eaves, Ridge) to align the insertion logic.
-4. Set **OffsetFromLeft** and **OffsetFromRight** to move the tube to the desired location on the roof slope.
-
-### Step 4: Adjust Geometry and Structure
-1. Modify **Tube Diameter** to match your specific pipe size.
-2. Toggle **Apply Horizontal Trimmers** and **Apply Vertical Trimmers** as needed for structural support.
-3. Set **Split Rafters** to `Yes` to cut existing rafters and frame the opening, or `No` to simply drill holes through them.
+1. **Insert the TSL**: Run the `HSB_R-Tube` command
+2. **Select Element**: Click on a roof element where the tube should be placed
+3. **Select Position**: Click to specify the insertion point for the tube
+4. **Configure Properties**: Adjust tube diameter, trimmer configuration, and other parameters in the Properties Palette (OPM)
+5. **Optional Actions**: Use context menu options to copy the tube to another element or delete it
 
 ## Properties Panel Parameters
 
+### Tube Category
+
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| **TubeDiameter** | Number | 100 mm | The outer diameter (or width if rectangular) of the tube. Defines cutout sizes. |
-| **LengthExtension** | Number | 0 mm | Additional length added to the tube model beyond the roof surface (useful for insulation/flashings). |
-| **AngleToVertical** | Number | 0° | Tilt of the tube. 0° = Plumb (vertical). Set to roof pitch to make tube perpendicular to the roof surface. |
-| **ReferencePosition** | Dropdown | Eaves | Determines the reference line for calculating the tube's insertion point (e.g., Eaves, Ridge, Valley). |
-| **OffsetFromLeft** | Number | 0 mm | Horizontal distance from the reference line to the tube center. |
-| **OffsetFromRight** | Number | 0 mm | Horizontal offset from the right reference point. |
-| **ApplyHorizontalTrimmers** | Boolean | Yes | Creates top and bottom trimmers parallel to the rafters. |
-| **ApplyVerticalTrimmers** | Boolean | Yes | Creates side trimmers (studs) perpendicular to the rafters. |
-| **dBmW** (Trimmer Width) | Number | 45 mm | The width/thickness of the generated trimmer beams. |
-| **dHTrimmers** (Trimmer Height) | Number | -1 mm | The height of the trimmer beams. A value of -1 matches the parent rafter height. |
-| **SplitRafters** | Boolean | No | If Yes, cuts existing rafters and creates new segments stopping at the trimmers. If No, drills holes through rafters. |
-| **CreateTubeAsBeam** | Boolean | No | If Yes, creates the tube as a structural GenBeam (for BOM listing). If No, creates it as a graphical Hardware body. |
-| **ApplySheet** | Boolean | Yes | If Yes, cuts the roof sheathing to accommodate the tube. |
-| **SheetZone** | Integer | 5 | Specifies which layer of the roof sheathing (e.g., top layer) to cut. |
-| **IntegratedTimberTslCatalog** | String | (Empty) | Name of a joinery catalog (e.g., dovetails) to apply auto-connections between trimmers and rafters. |
+| Opening shape | List | Round | Shape of the opening: Round or Rectangular |
+| Diameter | List | 110mm | Tube diameter (110, 125, 160, 200, 250, 315, 400, 500 mm) |
+| Overrule diameter | Double | 0 | Custom diameter if greater than zero |
+| Opening width | Double | 100mm | Width for rectangular openings |
+| Opening height | Double | 100mm | Height for rectangular openings |
+| Article number | String | - | Hardware article number for the tube |
+| Description | String | "PVC Buis" | Tube description text |
+| Material | String | "PVC" | Tube material specification |
+| Tube color | Integer | -1 | Color index for tube display |
+| Offset tube above battens | Double | 0 | Extension above battens |
+| Offset tube below internal sheeting | Double | 0 | Extension below internal sheeting |
+| Draw tube | Yes/No | Yes | Toggle tube 3D visualization |
+| Create section of tube as sheet | Yes/No | Yes | Create tube section as sheet in zone 10 |
+| Create tube as beam | No/Yes | No | Create tube as beam for beam reports |
 
-## Right-Click Menu Options
+### Position Category
 
-| Menu Item | Description |
-|-----------|-------------|
-| **Copy to Element** | Prompts you to select a different roof element and duplicates the current tube configuration to the new element. |
-| **Recalculate** | Refreshes the script geometry based on current property values (useful if manual edits broke associations). |
-| **Erase** | Deletes the script instance. If rafters were split, the script attempts to restore/merge them back into their original state. |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Orientation | List | Vertical | Tube orientation: Vertical or Perpendicular to element |
+| Reference | List | Inside frame | Reference position: Inside frame or Inside element |
+| Angle | Angle | 0 | Rotation angle of the tube |
 
-## Settings Files
-- **Beam Filters**: `HSB_G-FilterGenBeams` (Optional)
-  - Used if you need to filter which specific beams within the element are treated as rafters for trimming/drilling.
-- **Joinery Catalogs**: User-defined catalogs (e.g., `.cat` or specific TSL catalogs).
-  - Referenced by the `IntegratedTimberTslCatalog` property to add woodworking joints to the trimmers.
+### Construction Category
 
-## Tips
-- **Splitting vs. Drilling**: Use **Split Rafters** (`Yes`) for large openings that require structural headers. Use **Drill** (`No`) for small vents where keeping the rafter continuous is acceptable.
-- **Vertical vs. Perpendicular**: Most ventilation pipes need to be plumb (`AngleToVertical` = 0). However, some flues must exit perpendicular to the roof surface; set `AngleToVertical` to your roof pitch angle in this case.
-- **Mirroring Roofs**: If you mirror a roof element that contains this script, the script may self-delete if the new insertion point falls outside the element profile. Simply re-run the script on the mirrored element.
-- **Oval Tubes**: You can create a rectangular or oval profile by setting the `TubeDiameter` (Width) and ensuring a secondary height dimension is active (if the script supports separate height inputs, otherwise it assumes circular based on available parameters).
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Allow rafters to split | Yes/No | Yes | Allow rafters to be split by the tube opening |
+| Beamcode split rafters above tube | String | - | Beam code for split rafters above tube |
+| Trimmer configuration | List | Horizontal and vertical trimmers | Options: Only top trimmer, Horizontal and vertical trimmers, Horizontal trimmers only, No trimmers |
+| Apply left trimmer | Yes/No | Yes | Apply left vertical trimmer |
+| Apply right trimmer | Yes/No | Yes | Apply right vertical trimmer |
+| Width trimmers | Double | -1 | Custom width for trimmer beams |
+| Height trimmers | Double | -1 | Custom height for trimmer beams |
+| Place extra beam | Yes/No | No | Place extra beam with remaining height |
+| Alignment top | List | Top | Alignment of top trimmer: Top or Bottom |
+| Alignment bottom | List | Top | Alignment of bottom trimmer: Top or Bottom |
+| Squared | No/Yes | No | Cut beams squared or along element slope |
+| Offset vertical trimmers from tube | Double | 2mm | Gap between vertical trimmers and tube |
+| Offset horizontal trimmers from tube | Double | 2mm | Gap between horizontal trimmers and tube |
+| Align trimmers with tube | Yes/No | Yes | Align trimmer orientation with tube direction |
 
-## FAQ
-- **Q: Why did my roof rafters disappear or get split unexpectedly?**
-  - A: You likely have the **Split Rafters** property set to `Yes`. Change it to `No` if you only want a hole drilled through the rafters without cutting them into segments.
-- **Q: The tube is not cutting through the roof sheathing.**
-  - A: Check that **ApplySheet** is set to `Yes` and verify that the **SheetZone** number corresponds to the layer where your sheathing exists.
-- **Q: I copied the script to another roof, but it positioned wrong.**
-  - A: The position depends on the **Reference Position** and **Offsets**. Since different roof elements may have different lengths/widths, the same offset value might place the tube in a different relative spot. Adjust the **OffsetFromLeft** property for the new instance.
+### Beam Properties Category
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Beam code top trimmer | String | - | Beam code for top horizontal trimmer |
+| Beam code bottom trimmer | String | - | Beam code for bottom horizontal trimmer |
+| Beam code left trimmer | String | - | Beam code for left vertical trimmer |
+| Beam code right trimmer | String | - | Beam code for right vertical trimmer |
+
+### Sheeting Category
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Create top sheet | Yes/No | Yes | Create top sheet around tube |
+| Top sheet deepend | No/Yes | No | Deepen top sheet into rafters |
+| Size sheet below tube | Double | 100mm | Top sheet size below tube |
+| Size sheet above tube | Double | 100mm | Top sheet size above tube |
+| Thickness top sheet | Double | 18mm | Top sheet thickness |
+| Gap around top sheet | Double | 2mm | Gap around top sheet |
+| Color top sheet | Integer | 1 | Color index for top sheet |
+| Material top sheet | String | - | Material specification for top sheet |
+| Label top sheet | String | - | Label text for top sheet |
+| Gap around tube for sheet cut out | Double | 2mm | Gap around tube in sheet cutouts |
+| Bottom gap for sheet cut out | Double | 2mm | Bottom gap for rectangular cutouts |
+| Top gap for sheet cut out | Double | 2mm | Top gap for rectangular cutouts |
+| Left gap for sheet cut out | Double | 2mm | Left gap for rectangular cutouts |
+| Right gap for sheet cut out | Double | 2mm | Right gap for rectangular cutouts |
+| Depth beamcut gap | Double | 2mm | Depth gap for beam cut |
+| Height beamcut gap | Double | 2mm | Height gap for beam cut |
+| Width beamcut gap | Double | 2mm | Width gap for beam cut |
+
+### Markup and Measurement Category
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Visualisation zone | List | 0 | Zone index for tube visualization |
+| Visualisation layer | List | Zone | Element layer (Zone, Info, Dimension, Tooling) |
+| Label color | Integer | -1 | Color for tube label |
+| Export label | Yes/No | Yes | Export label in drawings |
+| Tube label format | String | "ø@(Diameter)" | Label format with placeholders @(Diameter), @(Width), @(Height) |
+| Dimension style label | List | - | Dimension style for label |
+| Text height label | Double | 0 | Custom text height (0 = use dimension style) |
+| X-Offset tube label | Double | 0 | Horizontal offset for label position |
+| Y-Offset tube label | Double | 0 | Vertical offset for label position |
+| Subtype prefix | String | - | Prefix for dimension subtypes |
+
+### Filter Category
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Filter definition beams | List | - | Filter definition using HSB_G-FilterGenBeams |
+
+### Element Tool Category
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Add element tool vertical | No/Yes | No | Add vertical element milling tool |
+| Add element tool perpendicular | No/Yes | No | Add perpendicular element milling tool |
+| Toolindex | Integer | 1 | Tool index for CNC operations |
+| Extra depth | Double | 1mm | Extra depth for element tool |
+
+### Tilelath Cutout Category
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Add extra counterbattens | No/Yes | No | Add extra counter battens around tube |
+| Add tilelath cutout | No/Yes | No | Add cutout for tile laths |
+| Offset from tube horizontal | Double | 1mm | Horizontal offset for tile lath cutout |
+| Offset from tube vertical | Double | 1mm | Vertical offset for tile lath cutout |
+| Minimum distance to add counterbattens | Double | 1mm | Minimum distance threshold |
+
+### Integrate Timbers Category
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Integrate timber catalog | List | - | Catalog for HSB_T-IntegrateTimber |
+
+## Context Menu Options
+
+| Option | Description |
+|--------|-------------|
+| Delete tube | Removes the tube and all associated entities from the element |
+| Copy to other element | Copies the tube configuration to another roof element at a new position |
+
+## Tips and Best Practices
+
+1. **Orientation Selection**: Use "Vertical" orientation for vertical pipe penetrations. Use "Perpendicular to element" for penetrations that follow the roof slope angle.
+
+2. **Trimmer Configuration**:
+   - For small openings, "Only trimmer at top" may be sufficient
+   - For standard penetrations, use "Horizontal and vertical trimmers" for proper framing
+   - Use "No trimmers" when only the sheet cutout is needed
+
+3. **Rectangular Openings**: When using rectangular openings, set both Opening width and Opening height to define the penetration size.
+
+4. **Label Formatting**: The tube label supports placeholders:
+   - `@(Diameter)` - Inserts the tube diameter
+   - `@(Width)` - Inserts the opening width
+   - `@(Height)` - Inserts the opening height
+   - Use semicolons (`;`) to split labels into multiple lines
+
+5. **Filter Integration**: Use the filter definition to control which beams are affected by the tube opening. Create filters using the `HSB_G-FilterGenBeams` TSL.
+
+6. **CNC Output**: Enable element tools for automatic CNC milling path generation for the tube cutout.
+
+7. **Hardware Tracking**: Set the Article number and Description for proper hardware tracking and reports.
+
+8. **Copy Functionality**: Use "Copy to other element" to quickly replicate identical tube configurations across multiple roof elements.
+
+## Related Scripts
+
+- `HSB_G-FilterGenBeams` - Beam filtering definitions
+- `HSB_T-IntegrateTimber` - Timber integration at connections

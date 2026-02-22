@@ -1,74 +1,117 @@
-# hsbFillet.mcr
+# hsbFillet
 
 ## Overview
-This script creates decorative or functional fillets (rounded edges) on timber beams. It allows you to apply a fillet around the entire beam circumference or along a specific user-defined path on the beam surface.
+
+`hsbFillet` cuts a quarter-round chamfer (fillet) along the edge of a timber beam. The rounded profile is machined into the beam by applying a `SolidSubtract` body for 3D visualization and a `PropellerSurfaceTool` for CNC routing output.
+
+Two operating modes are available:
+
+- **Circumference mode** -- the fillet runs around the full perimeter of the beam cross-section on the selected face(s). Supports batch-processing multiple beams in one operation.
+- **Path mode** -- the fillet runs along a user-defined segment of the beam perimeter, picked by two points on the beam surface.
+
+The script calculates the exact arc geometry from the tool radius and requested depth, ensuring the fillet is tangent to both faces of the beam corner. Curved (glulam) beams are supported in both modes.
+
+All tooling data is written to the beam via `addTool`, so the fillet appears in 3D, in fabrication drawings, and in CNC machine output automatically.
+
+**Script version:** 1.3 (03 August 2020)
+**Author:** david.delombaerde@hsbcad.com
+
+---
 
 ## Usage Environment
-| Space | Supported | Notes |
-|-------|-----------|-------|
-| Model Space | Yes | Script explicitly runs in Model Space. |
-| Paper Space | No | Not supported in layout views. |
-| Shop Drawing | No | This is a modeling/scripting tool, not a detailing tool. |
+
+| Environment | Supported | Notes |
+|---|---|---|
+| Model Space (3D) | Yes | All instances are created in Model Space. |
+| Paper Space / Layout | No | This is a 3D machining tool. |
+| Shop Drawing | No | Fillet data feeds into CNC output, not shop drawing layout. |
+
+- **Script type:** O-Type (Object). `#NumBeamsReq 0` -- beams are selected interactively during insertion.
+- **External settings files:** None required.
+
+---
 
 ## Prerequisites
-- **Required Entities:** At least one GenBeam (Timber Beam) must exist in the drawing.
-- **Minimum Beam Count:** 1.
-- **Required Settings:** None specific to external files.
 
-## Usage Steps
+1. At least one timber beam (`GenBeam`) must exist in the drawing. If no beam is selected, the instance is removed silently.
+2. In Path mode, the two pick points must lie on the same cross-sectional perimeter contour of the beam.
+3. The requested Depth must be geometrically compatible with the Tool Radius. If the depth is too large, it is automatically clamped to the maximum valid value and a warning is displayed: `Depth of tool is not valid. Depth will be set to the maximum depth.`
+4. For curved beams in Path mode, the beam must have a valid `CurvedStyle` defined.
 
-### Step 1: Launch Script
-Command: `TSLINSERT` → Select `hsbFillet.mcr` from the file dialog.
+---
 
-### Step 2: Configure Insertion Mode
-A dialog will appear upon insertion (if no command key is preset). You can adjust the **Insertion Mode**, **Alignment**, and **Depth** here or later in the Properties Panel. Click OK to proceed.
+## How to Use
 
-### Step 3: Select Beam(s)
-```
-Command Line: Select beam(s)
-Action: Click on one or multiple beams in the model.
-```
-*Note: If in "Path" mode, only the first beam selected will be processed. If in "Circumference" mode, all selected beams will be processed.*
+### Step 1 -- Launch the tool
 
-### Step 4: Define Path (Path Mode Only)
-*If you selected **Circumference** mode, the script finishes automatically after selection. If you selected **Path** mode, proceed to the following prompts:*
+Type `hsbFillet` at the AutoCAD command prompt or activate it from the hsbCAD tool palette.
 
-```
-Command Line: Select first point on beam
-Action: Click a point on the beam surface where the fillet should start.
-```
+### Step 2 -- Set parameters in the dialog
 
-```
-Command Line: Select next point on same ring
-Action: Click the end point on the same cross-sectional ring (contour) to define the length of the fillet.
-```
+A settings dialog opens automatically. Set:
+- **Insertion Mode** -- Circumference (full perimeter) or Path (user-defined segment).
+- **Alignment** -- which face of the beam receives the fillet.
+- **Depth** -- material removal depth for the roundover.
 
-## Properties Panel Parameters
+If launched with a catalog key (silent mode), the dialog is skipped and catalog settings are applied directly.
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| (A) Insertion Mode | dropdown | Circumference | Determines if the fillet is applied around the whole beam or along a specific path. Options: `Circumference`, `Path`. |
-| (B) Alignment | dropdown | Reference Side | Sets the side of the beam to apply the fillet relative to the reference face. Options: `Reference Side`, `Opposite Side`, `Both Sides`. |
-| (C) Depth | number | 4 | The distance the fillet cuts into the material from the edge (in mm). |
-| ToolIndex | number | 1 | The identifier for the CNC tool to be used for this operation. |
-| Radius | number | 80 | The physical radius of the milling cutter used to calculate the fillet curvature (in mm). |
+### Step 3 -- Select beams
+
+The command line prompts: **Select beam(s)**
+
+Select one or more beams using standard AutoCAD selection methods.
+
+- In **Circumference mode**, all selected beams are processed. One fillet instance is created per beam.
+- In **Path mode**, only the first selected beam is processed.
+
+### Step 4 -- Define the path segment (Path mode only)
+
+Two additional prompts appear:
+
+1. **Select first point on beam** -- Click a point on the beam surface. The script snaps it to the nearest cross-sectional contour.
+2. **Select next point on same ring** -- Click a second point on the same perimeter contour.
+
+After both points are picked, the script highlights one of the two possible paths between the points. Press Enter to accept, or type `S` (SwapDirection) to switch to the other direction around the perimeter.
+
+### Step 5 -- Review and adjust in OPM
+
+After insertion, select any fillet instance and open the Properties Palette (Ctrl+1) to modify parameters. Changes recalculate immediately.
+
+---
+
+## Properties Panel (OPM Parameters)
+
+### General
+
+| Property | Type | Default | Options / Range | Description |
+|---|---|---|---|---|
+| **(A) Insertion Mode** | String (dropdown) | Circumference | Circumference; Path | Full beam perimeter or user-defined segment. |
+| **(B) Alignment** | String (dropdown) | Reference Side | Reference Side; Opposite Side; Both Sides | Which face receives the fillet. Both Sides applies fillet operations to both faces symmetrically. |
+| **(C) Depth** | Double (length) | 4 mm | 0 to max determined by Tool Radius | Depth of material removed from the beam edge. Clamped automatically if exceeding the geometric maximum for the tool radius. |
+
+### Tool Settings
+
+| Property | Type | Default | Options / Range | Description |
+|---|---|---|---|---|
+| **ToolIndex** | Integer | 1 | Positive integer | CNC tool number passed to the `PropellerSurfaceTool`. Must match the tool slot in your CNC machine configuration. |
+| **Radius** | Double (length) | 80 mm | Positive value | Physical radius of the milling cutter. Defines the arc geometry together with Depth. Larger radius produces a gentler curve. |
+
+---
 
 ## Right-Click Menu Options
-*None specific to this script were detected in the analysis.*
 
-## Settings Files
-*No external settings files (XML) are required for this script.*
+None. All parameter adjustments are made through the Properties Palette.
 
-## Tips
-- **Bulk Processing:** Use the **Circumference** mode if you need to round the edges of many beams at once. You can select multiple beams during the insertion prompt.
-- **Path Selection:** When using **Path** mode, ensure your two points are on the same "ring" (cross-section) for the best results. The script calculates the geometry based on the beam's reference system.
-- **CNC Data:** Ensure the **ToolIndex** matches your actual machine library to ensure the correct tool is selected during manufacturing.
-- **Visualizing Depth:** The **Depth** parameter controls how "sharp" or "deep" the roundover is. Larger values create a more aggressive cut.
+---
 
-## FAQ
-- **Q: I selected multiple beams, but only the first one got a fillet. Why?**
-  **A:** You are likely using **Path** mode. In Path mode, the script only processes the single beam you are interacting with to define the start and end points. Switch to **Circumference** mode to process multiple beams simultaneously.
-- **Q: How do I round the bottom edge only?**
-  **A:** Set the **Alignment** property to `Reference Side` or `Opposite Side` depending on how your beam is constructed and which side you need. Use `Both Sides` to round symmetrical edges.
-- **Q: What does the Radius property actually do?**
-  **A:** It simulates the size of the cutter. A larger radius creates a gentler, shallower curve, while a smaller radius creates a tighter, more pronounced roundover.
+## Tips and Notes
+
+- **Set Tool Radius first, then Depth.** The maximum achievable fillet depth is calculated from the tool radius. Setting a radius that matches your actual cutter ensures the depth range is correct.
+- **Circumference mode is the efficient batch workflow.** Select any number of beams and one parametric fillet instance is created per beam in a single operation.
+- **Path mode processes one beam at a time.** Even if multiple beams are selected, only the first is processed. Run the tool again for additional beams.
+- **Alignment controls display color.** Color 3 (green) for Reference Side and Both Sides; color 4 (cyan) for Opposite Side.
+- **Curved beams are fully supported.** The script detects curved style automatically and reconstructs the perimeter contour using arc (bulge) geometry, ensuring the fillet follows the true curved surface.
+- **Automatic recalculation.** The fillet recalculates when the linked beam changes length or position (via `setDependencyOnBeamLength`).
+- **Self-cleaning.** If the linked beam is deleted or the contour cannot be resolved, the fillet instance removes itself automatically.
+- **Silent insertion via catalog key.** When launched with `_kExecuteKey` set to a valid catalog name, the dialog is skipped and settings are loaded from the catalog entry.
+- **Units are drawing-independent.** All dimensional defaults use `U()` conversion, so the tool works in both metric and imperial drawing templates.

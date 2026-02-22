@@ -1,84 +1,132 @@
-# NA_DIM_GENBEAMS_DIAGONAL.mcr
+# NA_DIM_GENBEAMS_DIAGONAL
 
 ## Overview
-This script automatically creates a diagonal dimension line for generic beams (GenBeams) displayed in a Paper Space viewport. It calculates the dimension based on filtered beam properties and allows users to choose between the longest or shortest diagonal of the selected elements.
+
+| Property | Value |
+|----------|-------|
+| Script Name | NA_DIM_GENBEAMS_DIAGONAL |
+| Type | Object (O) |
+| Version | 0.1 |
+| Category | Shop Drawing / Dimensioning |
+| Purpose | Creates diagonal dimension lines for GenBeams (general beams) in shop drawing viewports |
 
 ## Usage Environment
-| Space | Supported | Notes |
-|-------|-----------|-------|
-| Model Space | No | This script operates within Paper Space layouts. |
-| Paper Space | Yes | This is the primary environment; a Viewport must be selected. |
-| Shop Drawing | No | This is a general detailing script, not a shop drawing generator. |
 
-## Prerequisites
-- **Required Entities**: A Viewport on a Paper Space layout containing a valid Element with GenBeams.
-- **Minimum beam count**: 0.
-- **Required settings**: The script relies on existing hsbCAD PainterDefinitions and PropertyDefinitions for filtering beams.
+| Environment | Supported |
+|-------------|-----------|
+| Model Space | No |
+| Paper Space | Yes |
+| Shop Drawing | Yes |
+| Element Viewport | Required |
 
-## Usage Steps
+## Description
 
-### Step 1: Launch Script
-Command: `TSLINSERT` → Select `NA_DIM_GENBEAMS_DIAGONAL.mcr`
+This script creates diagonal dimension annotations for beams and sheets in element viewport shop drawings. It can be used as a standalone dimensioning tool or linked to a parent `NA_DIM_GENBEAMS_AT_VIEWPORT_SIDE` TSL to inherit dimension line direction and starting point.
 
-### Step 2: Select Existing TSL (Optional)
-```
-Command Line: Optional: Select viewport side TSL to use its starting point and direction for diagonal dimension line
-Action: If you have an existing 'NA_DIM_GENBEAMS_AT_VIEWPORT_SIDE' script on your drawing and wish to use its configuration, click it. Otherwise, press Enter or Esc to skip this step.
-```
+The script calculates diagonal dimensions by:
+1. Extracting beam/sheet outlines at the specified zone
+2. Joining outlines into a unified profile
+3. Finding extreme edges based on sorting direction
+4. Creating a diagonal dimension line between identified points
 
-### Step 3: Select Viewport
-```
-Command Line: Select element viewport
-Action: Click on the viewport frame (or inside it) that contains the element you want to dimension.
-```
+## Usage Workflow
 
-### Step 4: Configuration
-After insertion, the script runs using default settings. To configure the dimension, select the script instance and use the Properties Palette or the Right-Click menu to adjust filters, text styles, and diagonal options.
+1. **Insert the TSL**: Run the script in a Paper Space viewport
+2. **Select Viewport** (Option A): Click to select an element viewport containing beams to dimension
+3. **Or Link to Parent TSL** (Option B): Select an existing `NA_DIM_GENBEAMS_AT_VIEWPORT_SIDE` instance to inherit its dimension direction
+4. **Configure Properties**: Use the Properties Panel (OPM) to adjust dimension options, beam filtering, and styling
+5. **Position via Grip Point**: Drag the dimension line grip point to adjust positioning if needed
 
 ## Properties Panel Parameters
 
+### Dimension Options
+
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| Default language | dropdown | en-US | Sets the language for script messages (en-US or fr-CA). |
-| **Genbeam selection** | | | |
-| Genbeam filter | dropdown | First in list | Selects the PainterDefinition to filter which beams to include. |
-| Genbeam subfilter | dropdown | First in list | Selects a Property Definition to further refine the beam selection. |
-| Genbeam property name | dropdown | First in list | The specific property name used for filtering. |
-| Genbeam property minimum | number | 0 | Minimum value for the property filter. |
-| Genbeam property maximum | number | 99999 | Maximum value for the property filter. |
-| Side selection | dropdown | Top | Selects which side of the element to dimension (Top or Bottom). |
-| **Dimension styling** | | | |
-| Dimension style | dropdown | Standard | The AutoCAD dimension style to apply. |
-| Text height | number | 2.5 | Height of the dimension text. |
-| Text side | dropdown | Above dimension line | Places text above or below the dimension line. |
-| Text orientation | dropdown | Parallel | Aligns text parallel or perpendicular to the dimension line. |
-| Project points to dimension line | dropdown | Yes | If Yes, projects points onto the dimension line; if No, uses raw coordinates. |
-| Dimension line offset | number | 5 | Distance between the dimension line and the measured geometry. |
-| Diagonal to dimension | dropdown | Longest diagonal | Chooses between dimensioning the longest or shortest diagonal of the profile. |
+| Sort edges in direction | Selection | Longest side of bounding box | Direction used to identify extreme edges for diagonal calculation. Options: Vertical, Horizontal, Longest side of bounding box, Shortest side of bounding box, From viewport side TSL |
+| Diagonal to dimension | Selection | Longest diagonal | Which diagonal to measure. Options: Shortest diagonal, Longest diagonal |
 
-## Right-Click Menu Options
+### Beams/Sheets to Dimension
 
-| Menu Item | Description |
-|-----------|-------------|
-| Edit dimension properties / Modifier les propriétés de cote | Opens a dialog box to modify global dimension properties, such as filters and text styles. |
-| Add properties override for current element / Ajouter un remplacement de propriétés pour l’élément actuel | Saves the current settings specifically for the Element in the selected viewport. This allows different settings for different elements. |
-| Remove properties override for current element / Supprimer le remplacement de propriétés pour l’élément actuel | Deletes the element-specific settings and reverts to the global default settings. |
-| Reset grip points for current element / Réinitialiser les points de préhension pour l’élément actuel | Clears the internal grip point logic for the current element. |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Element zone | Selection | Zone 0 | Zone containing beams/sheets to dimension. Zone 0 = inside element container. Zones 1-5 = front/top of container, Zones -1 to -5 = back/bottom of container |
+| Include filter | Selection | None | Painter definition (GenBeam type) to include specific beams. Applies as addition filter |
+| Exclude filter | Selection | None | Painter definition (GenBeam type) to exclude specific beams. Applies as subtraction filter after include filter |
 
-## Settings Files
-- **Filename**: None
-- **Location**: N/A
-- **Purpose**: This script uses internal hsbCAD definitions (Painter/Property definitions) and does not require an external settings XML file.
+### Dimension Style and Positioning
 
-## Tips
-- **Filtering**: Use the "Genbeam filter" property to target specific types of beams (e.g., only rafters or only joists).
-- **Overrides**: If you have multiple elements on one sheet that require different dimension configurations (e.g., different text heights), use the "Add properties override" option on each script instance rather than changing the global properties.
-- **Diagonal Choice**: If dimensioning a rectangular wall, "Longest diagonal" gives the overall span, while "Shortest diagonal" might be useful for specific panel checks.
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| Dimension line offset | Double | 0 | Offset distance from dimensioned points in paper space units. Set >0 to move dimension line away from measured object |
+| Project points to dimension line | Selection | No | If Yes, projects dimensioned points onto dimension line. If No, draws extension lines from points to dimension line |
+| Dimension style | Selection | NA Shopdrawing | AutoCAD dimension style to apply |
+| Text height | Double | 0 | Override dimension text height in paper space units. Set >0 to override style default |
+| Text side | Selection | Above dimension line | Position of dimension text relative to dimension line. Options: Above dimension line, Below dimension line |
+| Text orientation | Selection | Parallel | Text orientation relative to dimension line. Options: Parallel, Perpendicular |
 
-## FAQ
-- **Q: Why did my script instance disappear?**
-- **A:** The script requires a valid Viewport linked to an Element. If the viewport or element is deleted, or if the script is inserted in a cycle that duplicates it, it will automatically erase itself to prevent errors.
-- **Q: Can I use this script in Model Space?**
-- **A:** No, this script is designed specifically for creating dimensions in Paper Space viewports.
-- **Q: How do I change which beams are dimensioned?**
-- **A:** Use the Properties Palette to change the "Genbeam filter" or "Genbeam property name" to match the specific attributes of the beams you wish to measure.
+## Context Menu Options
+
+| Option | Description |
+|--------|-------------|
+| Edit dimension properties | Opens the properties dialog to modify dimension settings |
+| Add properties override for current element | Creates element-specific property overrides |
+| Remove properties override for current element | Removes element-specific property overrides |
+| Reset grip points for current element | Resets manually adjusted grip point positions |
+
+## How It Works
+
+### Edge Sorting Logic
+
+The script determines which edges to use for diagonal calculation based on the "Sort edges in direction" setting:
+
+- **Vertical/Horizontal**: Uses layout Y or X axis in model space
+- **Longest/Shortest side of bounding box**: Automatically detects bounding box orientation
+- **From viewport side TSL**: Inherits direction from linked parent TSL (requires prior selection of `NA_DIM_GENBEAMS_AT_VIEWPORT_SIDE`)
+
+### Beam Filtering
+
+1. First, beams are collected from the specified element zone
+2. If Include filter is set, only beams matching the Painter Definition are kept
+3. If Exclude filter is set, matching beams are removed from the result
+
+### Outline Processing
+
+- Individual beam outlines are extracted by projecting to the viewport plane
+- Outlines are joined into a single profile with smoothing
+- Extreme edges are identified based on sorting direction
+- Diagonal is calculated between first and last edge endpoints
+
+## Tips and Best Practices
+
+1. **Link to Parent TSL**: For consistent dimensioning across multiple viewports, link this script to `NA_DIM_GENBEAMS_AT_VIEWPORT_SIDE` to inherit dimension direction
+
+2. **Zone Selection**: Use Zone 0 for main element beams. Use positive zones (1-5) for beams at the front/top and negative zones (-1 to -5) for beams at the back/bottom of the element container
+
+3. **Filtering Strategy**: Use Include filter to dimension only specific beam types (e.g., studs only), then use Exclude filter to remove unwanted members (e.g., headers or sills)
+
+4. **Text Positioning**: For diagonal dimensions, "Above dimension line" typically provides better readability when the dimension line slopes upward left-to-right
+
+5. **Grip Point Adjustment**: After initial placement, use grip points to fine-tune the dimension line position without changing properties
+
+6. **Element Overrides**: When the same viewport is used for multiple elements, create element-specific overrides to customize dimension settings per element
+
+## Related Scripts
+
+- **NA_DIM_GENBEAMS_AT_VIEWPORT_SIDE**: Parent script that can provide dimension direction reference
+- **NA_DIM_GENBEAM_EDGES_TO_REFERENCE**: For reference-based dimensioning
+- **NA_DIM_GENBEAMS_REFERENCED_TO_GENBEAM_STACK**: For stacked beam dimensioning
+
+## Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| 0.16 | 2023-10-03 | Added option to pack dimensioned beams/sheets to reduce the amount of points to dimension |
+| 0.15 | 2023-09-26 | Corrected closest edge point detection |
+| 0.14 | 2023-09-25 | Fixed bug with middle point |
+
+## Language Support
+
+This script supports the following languages:
+- English (en-US)
+- French Canadian (fr-CA)

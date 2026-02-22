@@ -1,7 +1,11 @@
 # hsbCLT-SetProperties.mcr
 
 ## Overview
+
 This script allows you to batch update metadata properties (Material, Grade, Information, and Labels) for CLT panels. You can apply updates to panels selected directly or indirectly by selecting their parent entities, such as master panels, trucks, or packages.
+
+**Script Type:** Object (O-Type)
+**Version:** 1.4
 
 ## Usage Environment
 
@@ -12,6 +16,7 @@ This script allows you to batch update metadata properties (Material, Grade, Inf
 | Shop Drawing | No | Not a drawing generation script. |
 
 ## Prerequisites
+
 - **Required Entities**: MasterPanels, ChildPanels, Sip entities, or TslInst freight items (Trucks, Packages).
 - **Minimum Count**: At least one relevant entity must be selected to perform an update.
 - **Required Settings**: None.
@@ -19,10 +24,13 @@ This script allows you to batch update metadata properties (Material, Grade, Inf
 ## Usage Steps
 
 ### Step 1: Launch Script
-Command: `TSLINSERT` → Select `hsbCLT-SetProperties.mcr`
+
+Command: `TSLINSERT` then select `hsbCLT-SetProperties.mcr`
 
 ### Step 2: Configure Properties
-**Action**: A dialog (Dynamic Dialog) or the Properties Palette will appear automatically.
+
+**Action**: A dialog or the Properties Palette will appear automatically.
+
 1. Enter the values you wish to apply to the panels.
 2. **Important**:
    - Leave a field **Blank** to keep the existing value on the panels.
@@ -30,10 +38,12 @@ Command: `TSLINSERT` → Select `hsbCLT-SetProperties.mcr`
 3. Press **Enter** or click **OK** to confirm the settings.
 
 ### Step 3: Select Entities
+
 ```
 Command Line: Select panels(s) or any referenced entity (child or master panels, freight item(s), packages or trucks)
 Action: Click on the desired objects in the model.
 ```
+
 - You can select individual panels, or click on a **Truck/Package** to update all panels inside it.
 - You can click on a **Master Panel** to update its children.
 - Press **Enter** to finalize the selection and apply the changes.
@@ -49,6 +59,23 @@ Action: Click on the desired objects in the model.
 | Sublabel | Text | "" | Sets the secondary sublabel. Leave blank to keep current; enter "---" to clear. |
 | Sublabel2 | Text | "" | Sets the tertiary sublabel. Leave blank to keep current; enter "---" to clear. |
 
+## Selection Resolution
+
+The script resolves panel selections through nested structures:
+
+```
+Trucks
+  -> Packages
+       -> Freight Items
+            -> Panels (Sip)
+
+Master Panels
+  -> Child Panels
+       -> Panels (Sip)
+```
+
+This means selecting a truck will update all panels contained in all packages within that truck.
+
 ## Right-Click Menu Options
 
 | Menu Item | Description |
@@ -56,16 +83,20 @@ Action: Click on the desired objects in the model.
 | None | This script runs immediately upon insertion and erases itself; it does not persist as an object with context menus. |
 
 ## Settings Files
+
 - **Filename**: None required.
 - **Location**: N/A
 - **Purpose**: N/A
 
 ## Tips
+
 - **Smart Selection**: To save time, select a "Truck" or "Package" entity. The script will automatically find and update all panels contained within it.
 - **Resetting Values**: If you need to erase data from a specific property field (e.g., remove the Grade), use the special code `---` in the input field.
 - **Partial Updates**: You do not need to fill in every field. Only the fields containing text will be updated on the selected panels.
+- **Silent Execution**: The script supports catalog-based execution via `_kExecuteKey` for automated workflows.
 
 ## FAQ
+
 - **Q: How do I clear a property so it is empty?**
   A: Enter exactly `---` (three hyphens/dashes) into the property field before selecting the panels.
 - **Q: What happens if I leave a field blank?**

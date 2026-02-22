@@ -1,104 +1,222 @@
-# hsbCLT-T-Connector.mcr
+# hsbCLT-T-Connector
 
 ## Overview
-This script generates a T-shaped steel connector plate designed for CLT (Cross Laminated Timber) panels. It creates the steel plate geometry, machines a slot into the timber to embed the plate, and applies a pattern of fastener holes through both the plate and the wood.
 
-## Usage Environment
-| Space | Supported | Notes |
-|-------|-----------|-------|
-| Model Space | Yes | Script must be run in the 3D model on Sip entities. |
-| Paper Space | No | Not supported for layout views. |
-| Shop Drawing | No | This is a model generation script, not a 2D detailing tool. |
+The **hsbCLT-T-Connector** creates a T-shaped metal connector for Cross-Laminated Timber (CLT) panels. This connector is used to join CLT panels at T-junctions, where one panel (the "male" panel) meets another panel (the "female" panel) perpendicularly. The script automatically creates the metal connector geometry, cuts a slot in the male CLT panel for insertion, and generates drill patterns for fastening.
+
+| Property | Value |
+|----------|-------|
+| **Script Type** | Object (O-Type) |
+| **Version** | 1.0 |
+| **Author** | th@hsbCAD.de |
+| **Date** | September 16, 2014 |
+| **Requires Beams** | 0 |
+| **Grip Points** | 0 |
+
+## Purpose
+
+This tool is designed for timber structure designers who need to create structural connections between CLT panels at T-junctions. It automates the following tasks:
+
+- Creates a T-shaped metal plate geometry
+- Cuts a precise slot in the male CLT panel to receive the connector
+- Generates drill hole patterns for fastener installation
+- Optionally stretches the male panel edge to meet a perpendicular female panel
+
+## Environment
+
+| Setting | Value |
+|---------|-------|
+| **Workspace** | Model Space |
+| **Context** | CLT panel connections and assemblies |
+| **Drawing Units** | Millimeters (mm) |
+| **DXA Output** | Enabled |
+| **ImplInsert** | Enabled |
 
 ## Prerequisites
-- **Required Entities**: At least one CLT Panel (Sip entity).
-- **Minimum Beam Count**: 1 Panel (Primary).
-- **Required Settings**: None.
 
-## Usage Steps
+Before using this tool, ensure the following:
 
-### Step 1: Launch Script
-Command: `TSLINSERT` → Select `hsbCLT-T-Connector.mcr` from the list.
+1. **Male CLT Panel Required:** At least one CLT panel (SIP) must exist in the drawing to serve as the "male" panel. This is the panel that will receive the slot cut.
 
-### Step 2: Configure Properties
-```
-Dialog Box: hsbCLT-T-Connector
-Action: If no catalog key is preset, a dialog appears. Adjust dimensions (Length, Width, Height, etc.) and click OK.
-```
+2. **Female CLT Panel (Optional):** A second non-parallel CLT panel can be selected as the "female" panel for automatic stretching functionality.
 
-### Step 3: Select Male CLT Panel
-```
-Command Line: Select male CLT Panel
-Action: Click on the CLT panel that will host the T-connector (the panel receiving the slot).
-```
+3. **Edge Proximity:** Position your insertion point at or near the edge where you want the connector placed.
 
-### Step 4: Select Female CLT Panel
-```
-Command Line: Select female CLT Panel (optional)
-Action: Click the adjacent CLT panel if you want the script to automatically stretch the male panel edge to meet the female panel. Press Enter to skip this step.
-```
+## Usage
 
-### Step 5: Define Insertion Point
-```
-Command Line: 
-Action: Click on or near the edge of the Male CLT Panel where you want the connector to be placed. The script will snap to the nearest edge.
-```
+### Step-by-Step Insertion Workflow
 
-## Properties Panel Parameters
+1. **Launch the script** from the hsbCAD menu or toolbar
+
+2. **Configure Settings:** If not using a catalog key, a configuration dialog will appear allowing you to set initial parameters
+
+3. **Select the Male CLT Panel:** Click on the primary panel where the slot will be cut. This panel must be a valid SIP (Structural Insulated Panel)
+
+4. **Optionally Select the Female CLT Panel:** If you want to enable automatic panel stretching:
+   - Click on a second panel that is NOT parallel to the male panel
+   - Press Enter to skip this step if stretching is not needed
+
+5. **Pick the Insertion Point:** Click near the edge where you want the connector located. The script automatically identifies the nearest edge and positions the connector accordingly
+
+### Command Prompts
+
+| Prompt | Description |
+|--------|-------------|
+| "Select male CLT Panel" | Required selection of the primary panel |
+| "Select female CLT Panel (optional)" | Optional selection for stretching functionality |
+| Point selection | Click to place the connector |
+
+### Automatic Behaviors
+
+| Behavior | Description |
+|----------|-------------|
+| **Edge Detection** | The script finds the closest edge to your insertion point |
+| **Slot Cutting** | A slot is automatically cut into the male panel to accommodate the connector |
+| **Panel Stretching** | If a female panel is selected and is perpendicular, the male panel edge is stretched to meet it |
+| **Drill Pattern** | Holes are drilled through both the connector and the CLT panel for fastening |
+| **Group Assignment** | The connector is automatically assigned to group 'I' of the male panel |
+
+## Parameters
+
+Parameters are organized into categories and accessible via the AutoCAD Properties Palette (OPM).
 
 ### Geometry
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| Length | Number | 300 | The horizontal length of the connector plate flange. |
-| Width | Number | 100 | The vertical height of the connector plate flange. |
-| Height | Number | 215 | The depth of the connector web (the part inserted into the wood). |
-| Thickness | Number | 10 | The material thickness of the steel plate. |
+
+These parameters define the physical dimensions of the T-shaped metal connector.
+
+| Parameter | Default | Range | Description |
+|-----------|---------|-------|-------------|
+| **Length** | 300 mm | > 0 | Overall length of the T-connector along the panel edge |
+| **Width** | 100 mm | > 0 | Width of the connector base (horizontal flange that extends outward) |
+| **Height** | 215 mm | > 0 | Height of the connector (vertical portion that inserts into the slot) |
+| **Thickness** | 10 mm | > 0 | Metal plate thickness of the connector |
 
 ### Location
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| Edge Offset | Number | 40 | Distance from the edge of the panel to the start of the connector. |
-| Center Offset | Number | 0 | Vertical offset relative to the center of the panel thickness. |
 
-### Tolerances
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| GapX | Number | 10 | Horizontal clearance for the slot (Length + 2*GapX). |
-| GapY | Number | 1 | Vertical clearance for the slot. |
-| GapZ | Number | 1 | Thickness clearance for the slot (Thickness + 2*GapZ). |
+These parameters control the positioning of the connector relative to the panel.
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| **Edge Offset** | 40 mm | Distance from the panel edge to the connector position. Positive values move the connector inward from the edge |
+| **Center Offset** | 0 mm | Offset along the panel thickness direction (Z-axis) for fine-tuning placement. Use for connectors that need to be centered or offset from the panel centerline |
+
+### Slot
+
+These parameters control the clearance between the connector and the slot cut into the CLT panel. Proper gap settings ensure the connector can be inserted during assembly.
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| **Gap X** | 10 mm | Clearance in the length direction (along the panel edge). Larger values allow more tolerance |
+| **Gap Y** | 1 mm | Clearance in the height direction (connector insertion depth). Minimal gap for tight fit |
+| **Gap Z** | 1 mm | Clearance in the thickness direction (panel thickness). Minimal gap for alignment |
+
+**Slot Formula:** The slot dimensions are calculated as:
+- Slot Length = Connector Length + (2 x Gap X)
+- Slot Height = Connector Height + Gap Y
+- Slot Width = Connector Thickness + (2 x Gap Z)
 
 ### Drill Pattern
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| Diameter | Number | 14 | Diameter of the fastener holes. |
-| Rows | Number | 5 | Number of fastener holes in the vertical direction. |
-| Row Offset | Number | 42 | Spacing between rows of fasteners. |
-| Columns | Number | 5 | Number of fastener holes in the horizontal direction. |
-| Column Offset | Number | 42 | Spacing between columns of fasteners. |
-| PatternMode | Dropdown | \|1 Pattern\| | Selects between a single pattern or a mirrored double pattern. |
-| PatternOffsetX | Number | 0 | Horizontal shift of the drill pattern origin. |
-| PatternOffsetY | Number | 0 | Vertical shift of the drill pattern origin. |
 
-## Right-Click Menu Options
+These parameters control the fastener hole pattern on the connector.
 
-| Menu Item | Description |
-|-----------|-------------|
-| Recalculate | Updates the connector geometry and machining based on current properties or entity movements. |
+| Parameter | Default | Range | Description |
+|-----------|---------|-------|-------------|
+| **Diameter** | 14 mm | > 0 | Diameter of the drill holes for fasteners. Must match your fastener specifications |
+| **Rows** | 5 | >= 1 | Number of rows in the drill pattern (vertical direction) |
+| **Offset Row** | 42 mm | > 0 | Spacing between adjacent rows |
+| **Columns** | 5 | >= 1 | Number of columns in the drill pattern (horizontal direction) |
+| **Offset Column** | 42 mm | > 0 | Spacing between adjacent columns |
+| **Pattern Mode** | 1 Pattern | 1 or 2 | Select "1 Pattern" for a single centered pattern, or "2 Patterns" for mirrored patterns on both sides of the connector |
+| **Pattern Offset X** | 0 mm | >= auto | Horizontal offset for pattern positioning. In 2-pattern mode, this value is auto-corrected if too small |
+| **Pattern Offset Y** | 0 mm | any | Vertical offset for pattern positioning |
 
-## Settings Files
-- **Filename**: None
-- **Location**: N/A
-- **Purpose**: This script uses standard properties and does not require an external settings file.
+**Pattern Mode Details:**
+- **1 Pattern:** Creates a single centered drill pattern. Best for standard connections
+- **2 Patterns:** Creates two mirrored patterns on opposite sides of the connector. Best for heavy-load applications requiring more fasteners
 
-## Tips
-- **Automatic Stretching**: If you select a Female Panel in Step 4 that is perpendicular to the Male Panel, the script will automatically shorten (stretch) the Male Panel edge to meet the Female Panel, minus the specified Edge Offset.
-- **Grip Editing**: You can select the inserted connector and drag the insertion point grip to a different edge. The connector will automatically re-orient to the new edge.
-- **Double Pattern**: When using "2 Patterns" mode, the script automatically calculates the necessary horizontal offset (`PatternOffsetX`) to prevent the two drill grids from overlapping each other.
+**Auto-Correction:** When using 2-pattern mode, if Pattern Offset X is too small, it is automatically adjusted to: `((Columns - 1) / 2 + 0.5) x Offset Column`
 
-## FAQ
-- **Q: Why did my connector disappear?**
-  - **A:** The script may have failed to find a valid edge near your insertion point. Ensure you click close to the edge of the CLT panel.
-- **Q: Can I use this to connect two walls?**
-  - **A:** Yes, by selecting the second wall as the "Female Panel", the script will adjust the length of the first wall to create a tight connection.
-- **Q: How do I change the hole spacing after insertion?**
-  - **A:** Select the connector, open the Properties palette (Ctrl+1), and modify the "Row Offset" or "Column Offset" values under the Drill Pattern section.
+## Menu Options
+
+This script supports catalog-based insertion for standardized configurations:
+
+| Trigger | Behavior |
+|---------|----------|
+| **Execute Key Present** (`_kExecuteKey` is set) | Automatically loads predefined property values from the catalog |
+| **No Execute Key** | Displays configuration dialog on insertion for manual parameter setting |
+
+## Tips and Best Practices
+
+### Panel Selection
+
+1. **Selection Order Matters:** Always select the male panel first. The male panel is the one that receives the slot cut. The second (female) panel should be perpendicular to the male panel.
+
+2. **Edge Selection:** Click your insertion point close to the intended edge. The script calculates the distance to all panel edges and selects the nearest one. Greater accuracy in clicking results in more predictable placement.
+
+### Panel Stretching
+
+3. **Using Female Panel Stretching:** When you select a second (female) panel:
+   - The female panel must NOT be parallel to the male panel
+   - The female panel's Z-axis must be parallel to the insertion edge normal
+   - The male panel edge will stretch to meet the female panel
+   - This creates tight, precise T-junctions
+
+4. **Multiple Connectors:** Each connector tracks which edge it was placed on. Multiple connectors can be placed on different edges of the same panel without interfering with each other's stretching behavior.
+
+### Pattern Configuration
+
+5. **Pattern Mode Selection:**
+   - Use "1 Pattern" for standard connections with fasteners centered on the connector
+   - Use "2 Patterns" for heavier loads or larger connectors requiring fasteners on both sides
+   - The auto-correction feature prevents overlapping patterns in 2-pattern mode
+
+6. **Drill Hole Planning:** Ensure the drill pattern fits within your connector dimensions. Consider:
+   - Pattern Width = (Columns - 1) x Offset Column
+   - Pattern Height = (Rows - 1) x Offset Row
+   - Verify these values fit within the connector Length and Height
+
+### Gap Settings
+
+7. **Manufacturing Tolerances:** The default gap values provide reasonable clearance for typical manufacturing tolerances:
+   - Increase gap values if you need more tolerance for site installation
+   - Decrease them for tighter fits (not recommended for manufacturing)
+   - Gap X (10mm) is larger to allow insertion clearance
+   - Gap Y and Z (1mm each) are minimal for alignment precision
+
+### Visualization
+
+8. **Connector Color:** The connector is displayed in color 252 (light gray) for visibility. This helps distinguish it from CLT panels during design review.
+
+9. **Modifying After Placement:** All parameters can be adjusted in the Properties Palette after placement. The connector, slot, and drill pattern will automatically update when you change any parameter.
+
+## Troubleshooting
+
+| Problem | Possible Cause | Solution |
+|---------|---------------|----------|
+| Script erases immediately | No CLT panel selected | Ensure you select a valid SIP panel |
+| "Unexpected error" message | Cannot identify valid edge | Click closer to an actual panel edge |
+| Panel does not stretch | Female panel is parallel to male | Select a non-perpendicular panel |
+| Connector in wrong position | Insertion point far from intended edge | Click closer to the target edge |
+| Patterns overlap in 2-pattern mode | Pattern Offset X too small | Value is auto-corrected; adjust manually if needed |
+
+## Technical Details
+
+### Script Behavior
+
+- **Recalculation:** The script recalculates automatically when any parameter changes or when linked panels move
+- **Slot Direction:** The slot is cut in the -Z direction from the insertion point, with the slot normal in the -Y direction
+- **Drill Pattern Origin:** The drill pattern starts at the lower portion of the connector's vertical section
+
+### Dependencies
+
+- The connector is automatically set to erase and copy with the associated beam/group
+- The script assigns itself to group 'I' of the male panel for organizational purposes
+
+## Related Scripts
+
+| Script | Description |
+|--------|-------------|
+| hsbCLT-X-Fix-Connector | X-shaped connector for CLT panels |
+| hsbCLT-X-Fix-C | C-shaped connector variant |
+| hsbCLT-Slot | General slot cutting tool for CLT |
+| hsbCLT-Pocket | Pocket creation for CLT panels |
